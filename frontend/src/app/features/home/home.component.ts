@@ -1,9 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIf, SlicePipe } from '@angular/common';
-import { LearningPathsService } from '../../core/services/learning-paths.service';
-import { CoursesService } from '../../core/services/courses.service';
-import { CategoriesService } from '../../core/services/categories.service';
+import { HomeService } from '../../core/services/home.service';
 import { LearningPath, Course, Category } from '../../core/models';
 
 @Component({
@@ -604,24 +602,20 @@ import { LearningPath, Course, Category } from '../../core/models';
   `]
 })
 export class HomeComponent implements OnInit {
-  private learningPathsSvc = inject(LearningPathsService);
-  private coursesSvc       = inject(CoursesService);
-  private categoriesSvc    = inject(CategoriesService);
+  private homeSvc = inject(HomeService);
 
   learningPaths  = signal<LearningPath[]>([]);
   featuredCourses = signal<Course[]>([]);
   categories     = signal<Category[]>([]);
 
   ngOnInit() {
-    this.categoriesSvc.getAll().subscribe(cats => this.categories.set(cats));
-
-    this.learningPathsSvc.getAll({ per_page: 3 } as never).subscribe(res =>
-      this.learningPaths.set(res.data)
-    );
-
-    this.coursesSvc.getAll({ independent: true, per_page: 4 } as never).subscribe(res =>
-      this.featuredCourses.set(res.data)
-    );
+    // Una sola llamada agregada (categorías + rutas + cursos) en vez de 3
+    // requests que pagaban cada uno el arranque en frío de la BD.
+    this.homeSvc.getHome().subscribe(home => {
+      this.categories.set(home.categories);
+      this.learningPaths.set(home.learning_paths.data);
+      this.featuredCourses.set(home.courses.data);
+    });
   }
 
   difficultyLabel(d: string): string {

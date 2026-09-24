@@ -66,9 +66,13 @@ import { AiConversation, AiMessage } from '../../core/models';
               <div class="message message--assistant">
                 <div class="message__avatar">🤖</div>
                 <div class="message__bubble">
-                  <div class="typing-indicator">
-                    <span></span><span></span><span></span>
-                  </div>
+                  @if (assistantStream()) {
+                    <div class="message__content">{{ assistantStream() }}<span class="stream-cursor">▍</span></div>
+                  } @else {
+                    <div class="typing-indicator">
+                      <span></span><span></span><span></span>
+                    </div>
+                  }
                 </div>
               </div>
             }
@@ -238,6 +242,16 @@ import { AiConversation, AiMessage } from '../../core/models';
       30% { transform: translateY(-6px); }
     }
 
+    .stream-cursor {
+      color: var(--accent);
+      animation: cursor-blink 1s step-end infinite;
+    }
+
+    @keyframes cursor-blink {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0; }
+    }
+
     .chat-input-area {
       display: flex;
       gap: var(--sp-3);
@@ -277,6 +291,7 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   messages       = signal<AiMessage[]>([]);
   loadingConvs   = signal(true);
   thinking       = signal(false);
+  assistantStream = signal('');
   inputText      = '';
 
   ngOnInit() {
@@ -296,6 +311,7 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
 
   loadConversation(conv: AiConversation) {
     this.activeConv.set(conv);
+    this.assistantStream.set('');
     this.aiChatSvc.getConversation(conv.id).subscribe(full => {
       this.messages.set(full.messages ?? []);
     });
@@ -306,6 +322,7 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
       this.conversations.update(list => [conv, ...list]);
       this.activeConv.set(conv);
       this.messages.set([]);
+      this.assistantStream.set('');
     });
   }
 
@@ -320,14 +337,25 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     this.messages.update(m => [...m, tempMsg]);
     this.inputText = '';
     this.thinking.set(true);
+    this.assistantStream.set('');
 
-    this.aiChatSvc.sendMessage(this.activeConv()!.id, content).subscribe({
-      next: (reply) => {
-        this.messages.update(m => [...m, reply]);
-        this.thinking.set(false);
-        this.loadConversations();
-      },
-      error: () => this.thinking.set(false),
+    // Streaming SSE: la respuesta del asistente crece token a token.
+    this.aiChatSvc.streamMessage(this.activeConv()!.id, content, delta => {
+      this.assistantStream.update(t => t + delta);
+    }).then(full => {
+      if (full) {
+        const assistantMsg: AiMessage = {
+          id: Date.now() + 1, conversation_id: this.activeConv()!.id,
+          role: 'assistant', content: full, created_at: new Date().toISOString(),
+        };
+        this.messages.update(m => [...m, assistantMsg]);
+      }
+      this.thinking.set(false);
+      this.assistantStream.set('');
+      this.loadConversations();
+    }).catch(() => {
+      this.thinking.set(false);
+      this.assistantStream.set('');
     });
   }
 
