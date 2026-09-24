@@ -18,6 +18,12 @@ class CategorySeeder extends Seeder
             ['name' => 'Sistemas Operativos',   'slug' => 'sistemas-operativos',  'icon' => 'Monitor',      'color' => '#FF5252', 'description' => 'Conceptos de sistemas operativos y concurrencia'],
             ['name' => 'Estructuras de Datos',  'slug' => 'estructuras-de-datos', 'icon' => 'TreePine',     'color' => '#AB47BC', 'description' => 'Listas, árboles, grafos y más'],
             ['name' => 'Desarrollo Web',        'slug' => 'desarrollo-web',       'icon' => 'Globe',        'color' => '#26C6DA', 'description' => 'Frontend, backend y fullstack'],
+            ['name' => 'Desarrollo Backend',     'slug' => 'desarrollo-backend',   'icon' => 'Server',       'color' => '#64B5F6', 'description' => 'APIs, servidores, bases de datos y lógica de negocio'],
+            ['name' => 'Desarrollo Frontend',    'slug' => 'desarrollo-frontend',  'icon' => 'Palette',      'color' => '#F06292', 'description' => 'Interfaces, componentes, frameworks y experiencia de usuario'],
+            ['name' => 'DevOps',                 'slug' => 'devops',               'icon' => 'Container',    'color' => '#81C784', 'description' => 'CI/CD, contenedores, cloud y automatización'],
+            ['name' => 'Git y Control de Versiones', 'slug' => 'git',              'icon' => 'GitFork',      'color' => '#FF7043', 'description' => 'Git, ramas, colaboración y flujos de trabajo'],
+            ['name' => 'Ingeniería de Software', 'slug' => 'ingenieria-software',  'icon' => 'ClipboardList','color' => '#9575CD', 'description' => 'Requerimientos, diseño, arquitectura y gestión de proyectos'],
+            ['name' => 'IA para Desarrollo',     'slug' => 'ia-desarrollo',        'icon' => 'Sparkles',     'color' => '#4DB6AC', 'description' => 'LLMs, prompt engineering y desarrollo asistido por IA'],
         ];
 
         foreach ($categories as $cat) {
