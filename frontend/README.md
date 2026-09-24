@@ -1,59 +1,47 @@
-# Frontend
+# SysEng Academy — Frontend 🎓
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.0.
+SPA del frontend de **SysEng Academy**: plataforma de aprendizaje para estudiantes de Ingeniería de Sistemas.
 
-## Development server
+- **Framework**: Angular 22 (standalone components + signals)
+- **Estilos**: design system propio (variables CSS + SCSS)
+- **Rendimiento**: lazy loading por ruta; home con **una sola llamada** a `GET /api/home`; chat IA con streaming SSE token a token
 
-To start a local development server, run:
+> 📖 Documentación general del proyecto (arquitectura, montaje, usuarios seed): [README raíz](../README.md)
 
-```bash
-ng serve
+## Scripts
+
+| Comando | Descripción |
+|---|---|
+| `bun run start` | Servidor de desarrollo → http://localhost:4200 (hot reload) |
+| `bun run build` | Compilación de producción (`dist/`) |
+| `bun run watch` | Build de desarrollo con watch |
+| `bun run test` | Tests unitarios (Karma) |
+
+> Requiere **Bun ≥ 1.4** (o Node 22+; `packageManager: bun@1.4.2`).
+
+## Rutas
+
+| Ruta | Página |
+|---|---|
+| `/` | Home (categorías + rutas + cursos destacados desde `/api/home`) |
+| `/rutas` | Rutas de aprendizaje |
+| `/cursos` · `/cursos/:slug` | Catálogo y detalle de curso |
+| `/asistente` | Chat con asistente de IA (streaming SSE) |
+| `/perfil` | Perfil e inscripciones del usuario |
+| `/auth/login` · `/auth/registro` | Autenticación (JWT) |
+
+## Estructura
+
+```
+src/app/
+├── app.routes.ts   → definición de rutas con lazy loading
+├── core/           → servicios, guards y utilidades compartidas
+├── features/       → páginas y componentes por funcionalidad
+└── layout/         → shell de la aplicación (header, footer, navegación)
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Consumo de API
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Endpoints en el backend Laravel (`http://localhost:8000` por defecto, configurable vía proxy/environment).
+- El home carga en una sola petición (`GET /api/home`, cacheada en backend).
+- El asistente lee `POST /api/ai/conversations/{id}/stream` con `fetch` y renderiza la respuesta en streaming con cursor de escritura.

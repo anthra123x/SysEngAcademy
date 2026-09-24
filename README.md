@@ -16,7 +16,7 @@ ariscourse/
 - **Rendimiento**: caché de respuestas en **archivo** (`CACHE_STORE=file`) para contenido público (categorías, rutas, cursos, home) con TTLs de 5 min a 24 h. El endpoint **`GET /api/home`** agrega categorías + rutas + cursos en **una sola llamada** cacheada. Los seeders hacen `Cache::flush()` al final para que el contenido nuevo invalide la caché.
 - **Dominio**: usuarios (student/instructor/admin), categorías, rutas de aprendizaje con niveles, cursos → módulos → lecciones, quizzes, inscripciones y progreso de lecciones.
 - **IA**: servicio multi-proveedor (`App\Services\AiService`) — OpenAI, Gemini o Anthropic (en producción: OpenRouter). El chat soporta **streaming SSE** (`POST /api/ai/conversations/{id}/stream`) para mostrar la respuesta token a token.
-- **BD**: PostgreSQL (por defecto Neon en la nube). 19 migraciones + seeders de contenido real.
+- **BD**: PostgreSQL (por defecto Neon en la nube). 15 migraciones + seeders de contenido real.
 
 | Endpoint público | Descripción |
 |---|---|
@@ -89,7 +89,7 @@ POST /api/ai/conversations/{id}/stream   →  text/event-stream (SSE)
 
 ```bash
 cd backend
-php artisan test          # 10 tests: smoke API, home agregado, JWT/login/logout
+php artisan test          # 14 tests: smoke API, home agregado, JWT/login/logout, guard JWT
 vendor/bin/pint           # estilo de código (Laravel Pint)
 ```
 
