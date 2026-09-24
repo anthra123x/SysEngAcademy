@@ -87,4 +87,42 @@ class ApiSmokeTest extends TestCase
             ->assertOk()
             ->assertJsonPath('progress_percent', 25);
     }
+
+    public function test_home_agrega_contenido_publico_en_una_llamada(): void
+    {
+        $this->getJson('/api/home')
+            ->assertOk()
+            ->assertJsonStructure([
+                'categories',
+                'learning_paths' => ['data'],
+                'courses' => ['data'],
+            ]);
+    }
+
+    public function test_jwt_permite_rutas_protegidas_y_logout_lo_revoca(): void
+    {
+        $login = $this->postJson('/api/auth/login', [
+            'email' => 'estudiante@sysengacademy.dev',
+            'password' => 'estudiante1234',
+        ])->assertOk();
+
+        $token = $login->json('token');
+
+        // El token es un JWT (3 segmentos separados por punto)
+        $this->assertSame(3, count(explode('.', $token)));
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/auth/me')
+            ->assertOk()
+            ->assertJsonPath('role', 'student');
+
+        // Logout revoca el JWT (blacklist) → el mismo token ya no sirve
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/auth/logout')
+            ->assertOk();
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/auth/me')
+            ->assertUnauthorized();
+    }
 }
