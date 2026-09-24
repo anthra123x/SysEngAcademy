@@ -638,6 +638,9 @@ export class HomeComponent implements OnInit {
       'poo': '🧩', 'bases-de-datos': '🗄️',
       'redes': '🌐', 'sistemas-operativos': '🖥️',
       'estructuras-de-datos': '🌳', 'desarrollo-web': '🕸️',
+      'desarrollo-backend': '⚙️', 'desarrollo-frontend': '🎨',
+      'devops': '🐳', 'git': '🌿',
+      'ingenieria-software': '📋', 'ia-desarrollo': '🤖',
     };
     return map[slug] ?? '📚';
   }
