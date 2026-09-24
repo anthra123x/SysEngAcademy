@@ -8,25 +8,29 @@ use App\Models\Lesson;
 use App\Models\LessonProgress;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class LessonController extends Controller
 {
     public function show(Request $request, string $slug)
     {
-        $lesson = Lesson::with(['module.course', 'quiz.questions.answers'])
-            ->where('slug', $slug)
-            ->firstOrFail();
+        $lesson = Cache::remember("api.lesson.v1.{$slug}", now()->addMinutes(10), function () use ($slug) {
+            return Lesson::with(['module.course', 'quiz.questions.answers'])
+                ->where('slug', $slug)
+                ->firstOrFail()
+                ->toArray();
+        });
 
         // Acceso libre si es preview, de lo contrario requiere inscripción
-        if (! $lesson->is_preview) {
-            $user = $request->user('sanctum');
+        if (! $lesson['is_preview']) {
+            $user = $request->user('jwt') ?: $request->user('sanctum');
 
             if (! $user) {
                 throw new AuthenticationException('Debes iniciar sesión para acceder a esta lección.');
             }
 
-            $courseId = $lesson->module->course_id;
+            $courseId = $lesson['module']['course_id'];
             $enrolled = $user->enrollments()
                 ->where('course_id', $courseId)->exists();
 

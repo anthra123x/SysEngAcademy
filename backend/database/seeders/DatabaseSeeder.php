@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,5 +15,9 @@ class DatabaseSeeder extends Seeder
             LearningPathSeeder::class,
             CourseSeeder::class,
         ]);
+
+        // El contenido sembrado invalida cualquier caché previa para que
+        // las respuestas de la API se regeneren con los datos nuevos.
+        Cache::flush();
     }
 }
