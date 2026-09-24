@@ -18,6 +18,7 @@ class AiService
     {
         return match ($this->provider) {
             'openai' => $this->chatWithOpenAI($conversation, $userMessage),
+            'openrouter' => $this->chatWithOpenRouter($conversation, $userMessage),
             'gemini' => $this->chatWithGemini($conversation, $userMessage),
             'anthropic' => $this->chatWithAnthropic($conversation, $userMessage),
             default => $this->placeholder(),
@@ -38,6 +39,22 @@ class AiService
                 'model' => config('ai.model', 'gpt-4o-mini'),
                 'messages' => $messages,
             ]);
+
+        return $response->json('choices.0.message.content', $this->placeholder());
+    }
+
+    protected function chatWithOpenRouter(AiConversation $conversation, string $userMessage): string
+    {
+        $messages = $this->buildMessageHistory($conversation, $userMessage);
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer '.config('ai.api_key'),
+            'X-Title'       => 'SysEng Academy',
+            'HTTP-Referer'  => config('app.url', 'http://localhost:4200'),
+        ])->post('https://openrouter.ai/api/v1/chat/completions', [
+            'model'    => config('ai.model', 'openai/gpt-4o-mini'),
+            'messages' => $messages,
+        ]);
 
         return $response->json('choices.0.message.content', $this->placeholder());
     }
