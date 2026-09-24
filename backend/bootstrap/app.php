@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,7 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // API pura: sin ruta web "login". Los invitados no autenticados
+        // lanzan AuthenticationException en vez de redirigir a una ruta
+        // inexistente (evita 500 "Route [login] not defined" → 401 JSON).
+        $middleware->redirectGuestsTo(
+            fn (): never => throw new AuthenticationException('Unauthenticated.'),
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
