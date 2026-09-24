@@ -22,6 +22,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | JWT (stateless)
+    |--------------------------------------------------------------------------
+    |
+    | Clave para firmar JWTs (HS256). Si no se define JWT_SECRET se usa
+    | APP_KEY. JWT_TTL es la validez en minutos de un token emitido.
+    |
+    */
+
+    'jwt_secret' => env('JWT_SECRET'),
+
+    'jwt_ttl' => (int) env('JWT_TTL', 10080),
+
+    /*
+    |--------------------------------------------------------------------------
     | Authentication Guards
     |--------------------------------------------------------------------------
     |
@@ -40,6 +54,11 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        'jwt' => [
+            'driver' => 'jwt',
             'provider' => 'users',
         ],
     ],
