@@ -49,14 +49,79 @@ class AiService
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer '.config('ai.api_key'),
-            'X-Title'       => 'SysEng Academy',
-            'HTTP-Referer'  => config('app.url', 'http://localhost:4200'),
+            'X-Title' => 'SysEng Academy',
+            'HTTP-Referer' => config('app.url', 'http://localhost:4200'),
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model'    => config('ai.model', 'openai/gpt-4o-mini'),
+            'model' => config('ai.model', 'openai/gpt-4o-mini'),
             'messages' => $messages,
         ]);
 
         return $response->json('choices.0.message.content', $this->placeholder());
+    }
+
+    /**
+     * Variante en streaming (SSE) del chat con OpenRouter.
+     *
+     * Lee los eventos del proveedor y llama a $onDelta por cada fragmento
+     * de texto; devuelve el texto completo acumulado (o el placeholder si
+     * el proveedor falló y $onError fue invocado).
+     */
+    public function streamChat(AiConversation $conversation, string $userMessage, callable $onDelta, callable $onError): string
+    {
+        $messages = $this->buildMessageHistory($conversation, $userMessage);
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer '.config('ai.api_key'),
+            'X-Title' => 'SysEng Academy',
+            'HTTP-Referer' => config('app.url', 'http://localhost:4200'),
+        ])->withOptions(['stream' => true, 'timeout' => 300])->post('https://openrouter.ai/api/v1/chat/completions', [
+            'model' => config('ai.model', 'openai/gpt-4o-mini'),
+            'messages' => $messages,
+            'stream' => true,
+        ]);
+
+        if ($response->failed()) {
+            $onError($response->body());
+
+            return $this->placeholder();
+        }
+
+        $stream = $response->toPsrResponse()->getBody()->detach();
+        $full = '';
+
+        if (is_resource($stream)) {
+            while (! feof($stream)) {
+                $line = fgets($stream);
+
+                if ($line === false) {
+                    break;
+                }
+
+                $line = trim($line);
+
+                if (! str_starts_with($line, 'data:')) {
+                    continue;
+                }
+
+                $data = trim(substr($line, 5));
+
+                if ($data === '[DONE]') {
+                    break;
+                }
+
+                $json = json_decode($data, true);
+                $delta = $json['choices'][0]['delta']['content'] ?? null;
+
+                if ($delta !== null && $delta !== '') {
+                    $full .= $delta;
+                    $onDelta($delta);
+                }
+            }
+
+            fclose($stream);
+        }
+
+        return $full !== '' ? $full : $this->placeholder();
     }
 
     protected function chatWithGemini(AiConversation $conversation, string $userMessage): string
