@@ -17,6 +17,11 @@ import { LearningPath, LearningPathLevel } from '../../../core/models';
         <div class="path-hero" [style.background]="heroGradient()">
           <div class="container path-hero__inner">
             <div>
+              <nav class="breadcrumb" aria-label="Migas de pan">
+                <a routerLink="/">Inicio</a><span class="breadcrumb__sep">/</span>
+                <a routerLink="/rutas">Rutas</a><span class="breadcrumb__sep">/</span>
+                <span class="breadcrumb__current">{{ path()!.title }}</span>
+              </nav>
               @if (path()!.category) {
                 <span class="badge badge-primary">{{ path()!.category!.name }}</span>
               }
@@ -75,7 +80,7 @@ import { LearningPath, LearningPathLevel } from '../../../core/models';
   `,
   styles: [`
     .path-hero {
-      padding: var(--sp-12) 0;
+      padding: calc(var(--header-height) + var(--sp-12)) 0 var(--sp-12);
       border-bottom: 1px solid var(--border);
 
       &__inner {
@@ -86,14 +91,28 @@ import { LearningPath, LearningPathLevel } from '../../../core/models';
         @media (max-width: 768px) { flex-direction: column; }
       }
 
-      h1 { font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--text-primary); margin: var(--sp-4) 0; line-height: 1.2; }
-      p { color: var(--text-secondary); max-width: 600px; line-height: 1.6; margin-bottom: var(--sp-6); }
+      .badge { margin-top: var(--sp-3); }
+
+      h1 { font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--text-primary); margin: var(--sp-4) 0; line-height: 1.15; text-wrap: balance; }
+      p { color: var(--text-secondary); max-width: 62ch; line-height: 1.6; margin-bottom: var(--sp-6); }
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+
+      a { color: var(--text-muted); &:hover { color: var(--primary); } }
+      &__sep { color: var(--border-hover); }
+      &__current { color: var(--text-secondary); font-weight: var(--font-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40ch; }
     }
 
     .path-stats { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
     .stat-pill { background: var(--bg-surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 4px 12px; font-size: var(--text-sm); color: var(--text-secondary); }
 
-    .levels-section { padding: var(--sp-10) var(--sp-6); h2 { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--sp-8); } }
+    .levels-section { padding: var(--sp-12) 0; h2 { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--sp-8); } }
 
     .level-card {
       background: var(--bg-surface);

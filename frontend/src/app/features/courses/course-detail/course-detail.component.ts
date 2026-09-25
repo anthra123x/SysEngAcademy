@@ -18,6 +18,11 @@ import { Course } from '../../../core/models';
         <div class="detail-hero" [style.background]="heroGradient()">
           <div class="container detail-hero__inner">
             <div class="detail-hero__content">
+              <nav class="breadcrumb" aria-label="Migas de pan">
+                <a routerLink="/">Inicio</a><span class="breadcrumb__sep">/</span>
+                <a routerLink="/cursos">Cursos</a><span class="breadcrumb__sep">/</span>
+                <span class="breadcrumb__current">{{ course()!.title }}</span>
+              </nav>
               <div class="detail-hero__badges">
                 @if (course()!.category) {
                   <span class="badge badge-primary">{{ course()!.category!.name }}</span>
@@ -120,7 +125,7 @@ import { Course } from '../../../core/models';
   `,
   styles: [`
     .detail-hero {
-      padding: var(--sp-12) 0;
+      padding: calc(var(--header-height) + var(--sp-12)) 0 var(--sp-12);
       border-bottom: 1px solid var(--border);
 
       &__inner {
@@ -131,12 +136,24 @@ import { Course } from '../../../core/models';
         @media (max-width: 900px) { grid-template-columns: 1fr; }
       }
 
-      &__badges { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+      &__badges { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-4); margin-top: var(--sp-3); }
 
       &__content {
-        h1 { font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--sp-4); line-height: 1.2; }
-        p { color: var(--text-secondary); font-size: var(--text-lg); line-height: 1.6; }
+        h1 { font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--sp-4); line-height: 1.15; text-wrap: balance; }
+        p { color: var(--text-secondary); font-size: var(--text-lg); line-height: 1.6; max-width: 62ch; }
       }
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+
+      a { color: var(--text-muted); &:hover { color: var(--primary); } }
+      &__sep { color: var(--border-hover); }
+      &__current { color: var(--text-secondary); font-weight: var(--font-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40ch; }
     }
 
     .instructor-chip {
@@ -184,7 +201,7 @@ import { Course } from '../../../core/models';
     .progress-label { display: flex; justify-content: space-between; font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--sp-2); }
     .enroll-note { text-align: center; font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--sp-3); a { color: var(--primary); } }
 
-    .detail-body { padding: var(--sp-10) var(--sp-6); }
+    .detail-body { padding: var(--sp-12) 0; }
     .modules-section h2 { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--sp-6); }
 
     .module-card {

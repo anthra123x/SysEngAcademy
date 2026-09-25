@@ -11,12 +11,16 @@ import { LearningPath } from '../../core/models';
     <div class="paths-page">
       <div class="page-header">
         <div class="container">
+          <nav class="breadcrumb" aria-label="Migas de pan">
+            <a routerLink="/">Inicio</a><span class="breadcrumb__sep">/</span>
+            <span class="breadcrumb__current">Rutas</span>
+          </nav>
           <h1>Rutas de <span>Aprendizaje</span></h1>
           <p>Sigue un camino guiado de nivel en nivel. Cada ruta fue diseñada por expertos para llevarte de cero a dominar un área completa.</p>
         </div>
       </div>
 
-      <div class="container" style="padding: var(--sp-10) var(--sp-6);">
+      <div class="container" style="padding: var(--sp-12) 0;">
         @if (loading()) {
           <div class="grid-3">
             @for (i of [1,2,3,4,5,6]; track i) {
@@ -62,10 +66,22 @@ import { LearningPath } from '../../core/models';
     .page-header {
       background: var(--bg-surface);
       border-bottom: 1px solid var(--border);
-      padding: var(--sp-12) 0;
+      padding: calc(var(--header-height) + var(--sp-12)) 0 var(--sp-12);
       background: radial-gradient(ellipse at top, rgba(108,99,255,0.06), transparent 60%);
-      h1 { font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--text-primary); span { color: var(--primary); } }
-      p { color: var(--text-secondary); margin-top: var(--sp-3); max-width: 600px; }
+      h1 { font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--text-primary); span { color: var(--primary); } }
+      p { color: var(--text-secondary); margin-top: var(--sp-3); max-width: 62ch; }
+    }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      margin-bottom: var(--sp-3);
+
+      a { color: var(--text-muted); &:hover { color: var(--primary); } }
+      &__sep { color: var(--border-hover); }
+      &__current { color: var(--text-secondary); font-weight: var(--font-medium); }
     }
     .path-card {
       display: flex; flex-direction: column; background: var(--bg-surface); border: 1px solid var(--border);

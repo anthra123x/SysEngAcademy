@@ -14,6 +14,10 @@ import { Course, Category, CourseFilters } from '../../core/models';
       <!-- Header -->
       <div class="page-header">
         <div class="container">
+          <nav class="breadcrumb" aria-label="Migas de pan">
+            <a routerLink="/">Inicio</a><span class="breadcrumb__sep">/</span>
+            <span class="breadcrumb__current">Cursos</span>
+          </nav>
           <h1>Todos los <span>Cursos</span></h1>
           <p>Aprende a tu ritmo con cursos diseñados para ingenieros de sistemas</p>
         </div>
@@ -120,9 +124,21 @@ import { Course, Category, CourseFilters } from '../../core/models';
     .page-header {
       background: var(--bg-surface);
       border-bottom: 1px solid var(--border);
-      padding: var(--sp-10) 0;
-      h1 { font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--text-primary); span { color: var(--primary); } }
-      p { color: var(--text-secondary); margin-top: var(--sp-2); }
+      padding: calc(var(--header-height) + var(--sp-10)) 0 var(--sp-10);
+      h1 { font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--text-primary); span { color: var(--primary); } }
+      p { color: var(--text-secondary); margin-top: var(--sp-3); }
+    }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      margin-bottom: var(--sp-3);
+
+      a { color: var(--text-muted); &:hover { color: var(--primary); } }
+      &__sep { color: var(--border-hover); }
+      &__current { color: var(--text-secondary); font-weight: var(--font-medium); }
     }
     .courses-layout {
       display: grid;
