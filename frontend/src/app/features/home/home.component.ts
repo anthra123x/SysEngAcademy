@@ -1,12 +1,32 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ElementRef, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIf, SlicePipe } from '@angular/common';
 import { HomeService } from '../../core/services/home.service';
 import { LearningPath, Course, Category } from '../../core/models';
 
+interface SnakeStop {
+  path: LearningPath;
+  color: string;   // color de la categoría (identidad del nodo)
+  name: string;    // nombre de la categoría
+  emoji: string;
+  right: boolean;  // si el stop va del lado derecho del serpentín
+  num: number;     // posición en el recorrido (01..09)
+  delay: number;   // stagger de entrada (s)
+}
+
+interface SnakeRow { stops: SnakeStop[]; }
+
+interface SnakeSeg {
+  x1: number; y1: number;
+  x2: number; y2: number;
+  color: string;   // color de la categoría destino
+  len: number;     // longitud en px (para draw-in)
+  delay: number;   // retardo de dibujado (s)
+}
+
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, NgIf, SlicePipe],
+  imports: [RouterLink, SlicePipe],
   template: `
     <!-- HERO -->
     <section class="hero">
@@ -98,49 +118,78 @@ import { LearningPath, Course, Category } from '../../core/models';
       </div>
     </section>
 
-    <!-- LEARNING PATHS -->
+    <!-- LEARNING PATHS (serpentine por categoría) -->
     <section class="section paths-section">
       <div class="container">
         <div class="section-header">
           <div class="section-eyebrow">
-            <span>⚡</span> Aprendizaje Estructurado
+            <span>🗺️</span> Aprendizaje Estructurado
           </div>
           <h2 class="section-title">Rutas de <span>Aprendizaje</span></h2>
-          <p class="section-subtitle">Sigue un camino guiado por niveles. Cada ruta está diseñada para llevarte de cero a experto de forma progresiva.</p>
+          <p class="section-subtitle">Cada estación del recorrido es una ruta con el color de su categoría. Sigue el camino y elige por dónde empezar.</p>
         </div>
 
-        <div class="timeline">
-          @for (path of learningPaths(); track path.id; let i = $index) {
-            <div class="timeline__item" [class.timeline__item--right]="i % 2 === 1" [style.--i]="i">
-              <div class="timeline__node" [style.background]="getPathGradient(path)" [style.border-color]="path.category?.color ?? '#6C63FF'">
-                <span>{{ getPathEmoji(path) }}</span>
-              </div>
-              <a [routerLink]="['/rutas', path.slug]" class="timeline__card">
-                <div class="timeline__card-top">
-                  <span class="timeline__category" *ngIf="path.category">{{ path.category.name }}</span>
-                  <span [class]="'badge badge-' + path.difficulty">{{ difficultyLabel(path.difficulty) }}</span>
-                </div>
-                <h3 class="timeline__title">{{ path.title }}</h3>
-                <p class="timeline__desc">{{ path.description | slice:0:110 }}{{ path.description.length > 110 ? '…' : '' }}</p>
-                <div class="timeline__meta">
-                  <span>📚 {{ path.courses_count ?? 0 }} cursos</span>
-                  <span>⏱ {{ path.estimated_hours }}h estimadas</span>
-                  <span>{{ (path.levels?.length ?? 0) }} niveles</span>
-                </div>
-                <span class="timeline__cta">Ver Ruta →</span>
-              </a>
-            </div>
-          }
-
-          @if (learningPaths().length === 0) {
+        @if (learningPaths().length === 0) {
+          <div class="snake snake--loading" aria-hidden="true">
             @for (i of [0,1,2]; track i) {
-              <div class="timeline__item">
-                <div class="timeline__node skeleton"></div>
-                <div class="timeline__card skeleton" style="height:150px;"></div>
+              <div class="snake__row">
+                @for (j of [0,1]; track j) {
+                  <div class="snake__stop" [class.snake__stop--left]="j === 0" [class.snake__stop--right]="j === 1">
+                    <div class="snake__node skeleton"></div>
+                    <div class="snake__card skeleton" style="height:172px;"></div>
+                  </div>
+                }
               </div>
             }
-          }
-        </div>
+          </div>
+        } @else {
+          <div class="snake" #snakeWrap [class.snake--visible]="snakeVisible()">
+            <svg class="snake__svg" aria-hidden="true">
+              @for (seg of snakeSegments(); track $index) {
+                <line class="snake__seg"
+                  [attr.x1]="seg.x1" [attr.y1]="seg.y1"
+                  [attr.x2]="seg.x2" [attr.y2]="seg.y2"
+                  [attr.stroke]="seg.color"
+                  [style.--len]="seg.len + 'px'"
+                  [style.--d]="seg.delay + 's'" />
+              }
+              <circle class="snake__motion" r="4.5"></circle>
+            </svg>
+
+            @for (row of snakeRows(); track $index) {
+              <div class="snake__row">
+                @for (stop of row.stops; track stop.path.id) {
+                  <div class="snake__stop"
+                       [class.snake__stop--left]="!stop.right"
+                       [class.snake__stop--right]="stop.right"
+                       [style.--c]="stop.color"
+                       [style.--d]="stop.delay + 's'">
+                    <div class="snake__node"
+                         [style.background]="getPathGradient(stop.path)"
+                         [style.border-color]="stop.color">
+                      <span class="snake__emoji">{{ stop.emoji }}</span>
+                      <span class="snake__num">{{ ('0' + stop.num).slice(-2) }}</span>
+                    </div>
+                    <a [routerLink]="['/rutas', stop.path.slug]" class="snake__card">
+                      <div class="snake__card-top">
+                        <span class="snake__category">{{ stop.name }}</span>
+                        <span [class]="'badge badge-' + stop.path.difficulty">{{ difficultyLabel(stop.path.difficulty) }}</span>
+                      </div>
+                      <h3 class="snake__title">{{ stop.path.title }}</h3>
+                      <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
+                      <div class="snake__meta">
+                        <span>📚 {{ stop.path.courses_count ?? 0 }} cursos</span>
+                        <span>·</span>
+                        <span>⏱ {{ stop.path.estimated_hours }}h estimadas</span>
+                      </div>
+                      <span class="snake__cta">Ver Ruta →</span>
+                    </a>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
 
         <div class="section-cta">
           <a routerLink="/rutas" class="btn btn-outline">Ver todas las rutas →</a>
@@ -387,102 +436,171 @@ import { LearningPath, Course, Category } from '../../core/models';
       }
     }
 
-    /* TIMELINE (Rutas de Aprendizaje) */
-    .timeline {
+    /* SNAKE ROADMAP (Rutas de Aprendizaje) */
+    .snake {
       position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: var(--sp-10);
-      padding: var(--sp-6) 0;
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 2px;
-        background: linear-gradient(180deg,
-          transparent 0%,
-          var(--primary) 8%,
-          var(--accent) 92%,
-          transparent 100%);
-        opacity: 0.35;
-      }
+      padding: var(--sp-4) 0 var(--sp-2);
+      overflow: hidden;
     }
 
-    .timeline__item {
-      position: relative;
-      display: grid;
-      grid-template-columns: 1fr 72px 1fr;
-      align-items: start;
+    .snake__svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: visible;
+    }
+
+    .snake__seg {
+      stroke-width: 3;
+      stroke-linecap: round;
+      opacity: 0.5;
+      stroke-dasharray: var(--len, 0);
+      stroke-dashoffset: var(--len, 0);
+    }
+
+    .snake--visible .snake__seg {
+      animation: snake-draw 0.8s ease forwards;
+      animation-delay: var(--d, 0s);
+    }
+
+    @keyframes snake-draw {
+      to { stroke-dashoffset: 0; }
+    }
+
+    .snake__motion {
+      fill: var(--accent);
+      filter: drop-shadow(0 0 6px var(--accent));
       opacity: 0;
-      animation: timeline-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-      animation-delay: calc(var(--i, 0) * 0.09s);
-
-      &--right .timeline__card { grid-column: 3; }
     }
 
-    .timeline__node {
-      grid-column: 2;
-      grid-row: 1;
-      justify-self: center;
-      width: 48px;
-      height: 48px;
-      margin-top: 4px;
+    .snake--visible .snake__motion {
+      opacity: 1;
+      animation: snake-flow 6s linear infinite;
+      animation-delay: 1.4s;
+    }
+
+    @keyframes snake-flow {
+      from { offset-distance: 0%; }
+      to   { offset-distance: 100%; }
+    }
+
+    .snake__row {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 96px 1fr;
+      grid-auto-flow: dense;
+      align-items: center;
+      padding: var(--sp-6) 0;
+    }
+
+    .snake__stop {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-5);
+      opacity: 0;
+    }
+
+    .snake--visible .snake__stop {
+      animation: snake-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation-delay: var(--d, 0s);
+    }
+
+    @keyframes snake-rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .snake__stop--left {
+      grid-column: 1;
+      justify-self: end;
+      flex-direction: row-reverse;
+    }
+
+    .snake__stop--right {
+      grid-column: 3;
+      justify-self: start;
+      flex-direction: row;
+    }
+
+    .snake__node {
+      position: relative;
+      flex: 0 0 auto;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       border: 2px solid;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.25rem;
-      box-shadow: 0 0 0 4px var(--bg-base), 0 8px 20px rgba(0,0,0,0.18);
+      box-shadow: 0 0 0 4px var(--bg-base), 0 8px 20px rgba(0, 0, 0, 0.18);
       transition: transform var(--transition-base), box-shadow var(--transition-base);
-
-      .timeline__item:hover & {
-        transform: scale(1.12);
-        box-shadow: 0 0 0 4px var(--bg-base), 0 0 24px rgba(108,99,255,0.35);
-      }
+      cursor: default;
     }
 
-    .timeline__card {
-      grid-column: 1;
-      grid-row: 1;
+    .snake__emoji {
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    .snake__num {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .snake__stop:hover .snake__node {
+      transform: scale(1.1);
+      box-shadow: 0 0 0 4px var(--bg-base), 0 0 22px color-mix(in srgb, var(--c, var(--primary)) 55%, transparent);
+    }
+
+    .snake__card {
+      position: relative;
       display: flex;
       flex-direction: column;
       gap: var(--sp-2);
-      padding: var(--sp-5);
+      width: min(100%, 480px);
+      padding: var(--sp-5) var(--sp-5) var(--sp-4);
       background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       text-decoration: none;
+      overflow: hidden;
       transition: all var(--transition-base);
-      position: relative;
 
-      &::after {
+      &::before {
         content: '';
         position: absolute;
-        top: 18px;
-        width: 18px;
-        height: 2px;
-        background: var(--primary);
-        opacity: 0.4;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--c, var(--primary)), transparent 72%);
+        opacity: 0.95;
       }
 
-      .timeline__item:not(.timeline__item--right) &::after { right: -19px; }
-      .timeline__item--right &::after { left: -19px; }
-
       &:hover {
-        border-color: var(--primary);
+        border-color: color-mix(in srgb, var(--c, var(--primary)) 45%, var(--border));
         box-shadow: var(--shadow-primary);
-        transform: translateY(-3px);
+        transform: translateY(-4px);
 
-        .timeline__cta { color: var(--primary); gap: 8px; }
+        .snake__cta { color: var(--c, var(--primary)); gap: 8px; }
       }
     }
 
-    .timeline__card-top {
+    .snake__card-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -490,37 +608,54 @@ import { LearningPath, Course, Category } from '../../core/models';
       margin-bottom: var(--sp-1);
     }
 
-    .timeline__category {
+    .snake__category {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
       font-size: var(--text-xs);
       font-weight: var(--font-semibold);
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.08em;
+
+      &::before {
+        content: '';
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--c, var(--primary));
+        box-shadow: 0 0 8px var(--c, var(--primary));
+      }
     }
 
-    .timeline__title {
+    .snake__title {
       font-size: var(--text-lg);
       font-weight: var(--font-semibold);
       color: var(--text-primary);
       line-height: 1.25;
     }
 
-    .timeline__desc {
+    .snake__desc {
       font-size: var(--text-sm);
       color: var(--text-secondary);
       line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
-    .timeline__meta {
+    .snake__meta {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--sp-3);
+      align-items: center;
+      gap: var(--sp-2);
       font-size: var(--text-xs);
       color: var(--text-muted);
       margin-top: var(--sp-1);
     }
 
-    .timeline__cta {
+    .snake__cta {
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -531,38 +666,50 @@ import { LearningPath, Course, Category } from '../../core/models';
       margin-top: var(--sp-1);
     }
 
-    @keyframes timeline-rise {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .snake--loading .snake__row {
+      grid-template-columns: 1fr 96px 1fr;
     }
 
-    @media (max-width: 768px) {
-      .timeline {
-        gap: var(--sp-8);
-        &::before { left: 27px; }
-      }
+    .snake--loading .snake__stop {
+      opacity: 1;
+    }
 
-      .timeline__item {
-        grid-template-columns: 54px 1fr;
-      }
+    .snake--loading .snake__node {
+      border-color: transparent;
+    }
 
-      .timeline__node {
-        grid-column: 1;
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-      }
-
-      .timeline__card {
-        grid-column: 2;
-        &::after { display: none; }
-      }
-
-      .timeline__item--right .timeline__card { grid-column: 2; }
+    .snake--loading .snake__card::before {
+      display: none;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .timeline__item { animation: none; opacity: 1; }
+      .snake__seg { animation: none; stroke-dashoffset: 0; }
+      .snake__motion { display: none; }
+      .snake__stop { opacity: 1; animation: none; }
+    }
+
+    @media (max-width: 920px) {
+      .snake__row {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        padding: 20px 0;
+      }
+
+      .snake__stop,
+      .snake__stop--left,
+      .snake__stop--right {
+        width: 100%;
+        grid-column: auto;
+        justify-self: auto;
+        flex-direction: row;
+        gap: var(--sp-4);
+      }
+
+      .snake__node { width: 42px; height: 42px; }
+      .snake__emoji { font-size: 1.05rem; }
+      .snake__card { width: 100%; }
+      .snake__num { top: calc(100% + 8px); font-size: 9px; }
     }
 
     /* COURSE CARDS */
@@ -650,6 +797,14 @@ export class HomeComponent implements OnInit {
   featuredCourses = signal<Course[]>([]);
   categories     = signal<Category[]>([]);
 
+  snakeRows      = signal<SnakeRow[]>([]);
+  snakeSegments  = signal<SnakeSeg[]>([]);
+  snakeVisible   = signal(false);
+  @ViewChild('snakeWrap') snakeWrap?: ElementRef<HTMLElement>;
+
+  private resizeObs?: ResizeObserver;
+  private intersectObs?: IntersectionObserver;
+
   ngOnInit() {
     // Una sola llamada agregada (categorías + rutas + cursos) en vez de 3
     // requests que pagaban cada uno el arranque en frío de la BD.
@@ -657,7 +812,84 @@ export class HomeComponent implements OnInit {
       this.categories.set(home.categories);
       this.learningPaths.set(home.learning_paths.data);
       this.featuredCourses.set(home.courses.data);
+      this.snakeRows.set(this.buildSnake(home.learning_paths.data));
+      // Esperar a que Angular pinte los nodos antes de medir la ruta.
+      setTimeout(() => this.measureSnake(), 0);
     });
+  }
+
+  /** Agrupa las rutas en filas de 2 alternando el orden por fila: el patrón serpiente clásico
+   *  (fila impar L→R, fila par R→L) para que la línea baje en vertical por los laterales. */
+  private buildSnake(paths: LearningPath[]): SnakeRow[] {
+    const rows: SnakeRow[] = [];
+    for (let i = 0; i < paths.length; i += 2) {
+      const rowIdx = rows.length;
+      const stops: SnakeStop[] = paths.slice(i, i + 2).map((p, li) => {
+        const gi = i + li;
+        return {
+          path: p,
+          color: p.category?.color ?? '#6C63FF',
+          name: p.category?.name ?? 'Ruta',
+          emoji: this.getPathEmoji(p),
+          right: rowIdx % 2 === 0 ? li === 1 : li === 0,
+          num: gi + 1,
+          delay: Math.round(gi * 0.09 * 10) / 10,
+        };
+      });
+      rows.push({ stops });
+    }
+    return rows;
+  }
+
+  /**
+   * Mide el centro real de cada nodo (getBoundingClientRect) y genera:
+   *  - los segmentos SVG que unen las estaciones en orden (el "snake"),
+   *  - la polyline para la partícula animada (offset-path),
+   *  - los observers de intersección (dibuja la serpiente al hacer scroll)
+   *    y de resize (recalcula al cambiar el viewport).
+   */
+  private measureSnake() {
+    const wrap = this.snakeWrap?.nativeElement;
+    if (!wrap || this.snakeRows().length === 0) return;
+    const nodes = Array.from(wrap.querySelectorAll<HTMLElement>('.snake__node'));
+    if (nodes.length === 0) return;
+
+    const wrapRect = wrap.getBoundingClientRect();
+    const pts = nodes.map(n => {
+      const r = n.getBoundingClientRect();
+      return { x: r.left + r.width / 2 - wrapRect.left, y: r.top + r.height / 2 - wrapRect.top };
+    });
+
+    const segs: SnakeSeg[] = [];
+    const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+    for (let i = 1; i < pts.length; i++) {
+      const len = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+      segs.push({
+        x1: pts[i - 1].x, y1: pts[i - 1].y,
+        x2: pts[i].x,     y2: pts[i].y,
+        color: getComputedStyle(nodes[i]).getPropertyValue('--c').trim() || '#6C63FF',
+        len: Math.round(len * 10) / 10,
+        delay: Math.round(i * 0.12 * 10) / 10,
+      });
+    }
+    this.snakeSegments.set(segs);
+
+    const dot = wrap.querySelector<SVGCircleElement>('.snake__motion');
+    if (dot && d.length > 2) {
+      dot.style.setProperty('offset-path', `path('${d}')`);
+    }
+
+    if (!this.resizeObs) {
+      this.resizeObs = new ResizeObserver(() => this.measureSnake());
+      this.resizeObs.observe(wrap);
+      this.intersectObs = new IntersectionObserver(entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          this.snakeVisible.set(true);
+          this.intersectObs?.disconnect();
+        }
+      }, { threshold: 0.12 });
+      this.intersectObs.observe(wrap);
+    }
   }
 
   difficultyLabel(d: string): string {
