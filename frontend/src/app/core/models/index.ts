@@ -130,3 +130,94 @@ export interface CourseFilters {
   independent?: boolean;
   page?: number;
 }
+
+// === Lesson Player ===
+
+/** Bloque de contenido tipo ProseMirror doc (heading | paragraph | code | list | ...) */
+export interface LessonDocBlock {
+  type: string;
+  level?: number;
+  text?: string;
+  language?: string;
+  items?: string[];
+}
+
+export interface LessonContentDoc {
+  type: string;
+  blocks: LessonDocBlock[];
+}
+
+export interface LessonQuizAnswer {
+  id: number;
+  answer_text: string;
+}
+
+export interface LessonQuizQuestion {
+  id: number;
+  /** 'single' | 'multiple' | 'code' (el backend puede enviar 'code' además de single/multiple) */
+  type: string;
+  question: string;
+  answers: LessonQuizAnswer[];
+}
+
+export interface LessonQuiz {
+  id: number;
+  title: string;
+  questions: LessonQuizQuestion[];
+}
+
+export interface LessonModuleRef {
+  id: number;
+  title: string;
+  course_id?: number;
+  course?: Pick<Course, 'id' | 'slug' | 'title'>;
+}
+
+export interface LessonRef {
+  slug: string;
+  title?: string;
+}
+
+export interface LessonDetail extends Lesson {
+  module: LessonModuleRef;
+  quiz: LessonQuiz | null;
+  prev_lesson?: LessonRef | null;
+  next_lesson?: LessonRef | null;
+}
+
+export interface QuizAttemptQuestionResult {
+  question_id: number;
+  correct: boolean;
+  correct_answer_ids: number[];
+  selected_ids: number[];
+  explanation: string;
+}
+
+export interface QuizAttemptResult {
+  score: number;
+  correct: number;
+  total: number;
+  /** Backend: true si score >= 60 (aprobado). */
+  passed?: boolean;
+  results: QuizAttemptQuestionResult[];
+}
+
+// === AI Companion (Byte) ===
+
+export interface AiAskReply {
+  reply: string;
+}
+
+export interface AiPracticeQuestion {
+  question: string;
+  /** 'single' por ahora: el backend genera opciones con una única correcta. */
+  type: 'single' | string;
+  answers: string[];
+  correct_index: number;
+  explanation: string;
+}
+
+export interface AiPracticeQuiz {
+  title: string;
+  questions: AiPracticeQuestion[];
+}

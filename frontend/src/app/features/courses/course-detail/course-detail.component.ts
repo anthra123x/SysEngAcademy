@@ -94,7 +94,8 @@ import { Course } from '../../../core/models';
                 @if (openModules().has(mod.id)) {
                   <div class="module-lessons">
                     @for (lesson of mod.lessons ?? []; track lesson.id) {
-                      <div class="lesson-item">
+                      <a class="lesson-item"
+                         [routerLink]="['/cursos', course()!.slug, 'leccion', lesson.slug]">
                         <span class="lesson-icon">{{ lessonIcon(lesson.type) }}</span>
                         <span class="lesson-title">
                           {{ lesson.title }}
@@ -106,7 +107,7 @@ import { Course } from '../../../core/models';
                           <span class="completed-icon">✓</span>
                         }
                         <span class="lesson-duration">{{ lesson.duration_minutes }}min</span>
-                      </div>
+                      </a>
                     }
                   </div>
                 }
@@ -217,7 +218,12 @@ import { Course } from '../../../core/models';
       gap: var(--sp-3);
       padding: var(--sp-3) var(--sp-5);
       border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: background var(--transition-fast);
       &:last-child { border-bottom: none; }
+      &:hover { background: var(--bg-surface-2); }
+      &:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 
       .lesson-icon { font-size: var(--text-base); width: 24px; text-align: center; }
       .lesson-title { flex: 1; font-size: var(--text-sm); color: var(--text-primary); }

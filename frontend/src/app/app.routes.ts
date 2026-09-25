@@ -23,6 +23,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/courses/course-detail/course-detail.component').then(m => m.CourseDetailComponent)
   },
   {
+    path: 'cursos/:slug/leccion/:lessonSlug',
+    loadComponent: () => import('./features/courses/lesson-player/lesson-player.component').then(m => m.LessonPlayerComponent)
+  },
+  {
     path: 'asistente',
     loadComponent: () => import('./features/ai-chat/ai-chat.component').then(m => m.AiChatComponent),
     canActivate: [authGuard]

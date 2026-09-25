@@ -2,7 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
-import { AiConversation, AiMessage } from '../models';
+import { AiConversation, AiMessage, AiAskReply, AiPracticeQuiz } from '../models';
+
+export type AiAskKind = 'question' | 'code_review' | 'explain' | 'practice';
+
+export interface AiAskPayload {
+  question?: string;
+  code?: string;
+  lesson_id?: number;
+  kind: AiAskKind;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AiChatService {
@@ -23,6 +32,16 @@ export class AiChatService {
 
   sendMessage(conversationId: number, content: string): Observable<AiMessage> {
     return this.api.post<AiMessage>(`/ai/conversations/${conversationId}/message`, { content });
+  }
+
+  /** POST /ai/ask — respuesta puntual (explicación, code review, etc.). */
+  askAI(payload: AiAskPayload): Observable<AiAskReply> {
+    return this.api.post<AiAskReply>('/ai/ask', payload);
+  }
+
+  /** POST /ai/practice — genera un quiz interactivo al vuelo para una lección. */
+  practice(lessonId: number, count = 3): Observable<AiPracticeQuiz> {
+    return this.api.post<AiPracticeQuiz>('/ai/practice', { lesson_id: lessonId, count });
   }
 
   /**
