@@ -32,6 +32,10 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
     Route::post('/enrollments', [EnrollmentController::class, 'store']);
 
     Route::post('/lessons/{lesson}/complete', [LessonController::class, 'complete']);
+    Route::post('/lessons/{lesson}/quiz/attempt', [LessonController::class, 'attempt']);
+
+    Route::post('/ai/ask', [AiChatController::class, 'ask']);
+    Route::post('/ai/practice', [AiChatController::class, 'practice']);
 
     Route::get('/ai/conversations', [AiChatController::class, 'conversations']);
     Route::post('/ai/conversations', [AiChatController::class, 'store']);

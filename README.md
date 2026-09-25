@@ -15,7 +15,8 @@ ariscourse/
 - **Auth**: registro/login/logout con **JWT stateless** (HS256, `firebase/php-jwt`). El guard `jwt` se consulta primero en rutas protegidas (`auth:jwt,sanctum`): no toca la BD por token (ideal con bases frías como Neon) y resuelve el usuario con caché de perfiles; `sanctum` queda como fallback para tokens legados y tests. El logout revoca el JWT vía blacklist en caché.
 - **Rendimiento**: caché de respuestas en **archivo** (`CACHE_STORE=file`) para contenido público (categorías, rutas, cursos, home) con TTLs de 5 min a 24 h. El endpoint **`GET /api/home`** agrega categorías + rutas + cursos en **una sola llamada** cacheada. Los seeders hacen `Cache::flush()` al final para que el contenido nuevo invalide la caché.
 - **Dominio**: usuarios (student/instructor/admin), categorías, rutas de aprendizaje con niveles, cursos → módulos → lecciones, quizzes, inscripciones y progreso de lecciones.
-- **IA**: servicio multi-proveedor (`App\Services\AiService`) — OpenAI, Gemini o Anthropic (en producción: OpenRouter). El chat soporta **streaming SSE** (`POST /api/ai/conversations/{id}/stream`) para mostrar la respuesta token a token.
+- **IA**: servicio multi-proveedor (`App\Services\AiService`) — OpenAI, Gemini o Anthropic (en producción: OpenRouter). El chat soporta **streaming SSE** (`POST /api/ai/conversations/{id}/stream`) para mostrar la respuesta token a token. Además hay IA contextual bajo demanda: `POST /api/ai/ask` (preguntas con contexto de la lección, revisión de código) y `POST /api/ai/practice` (genera mini-quizzes personalizados en JSON).
+- **Interactividad**: el player de lección evalúa quizzes **server-side** (`POST /api/lessons/{id|slug}/quiz/attempt`) — las respuestas correctas nunca viajan al cliente; `GET /api/lessons/{slug}` devuelve `completed`, `prev_lesson`/`next_lesson` y el contenido estructurado en bloques. `POST .../complete` acepta id o slug.
 - **BD**: PostgreSQL (por defecto Neon en la nube). 15 migraciones + seeders de contenido real.
 
 | Endpoint público | Descripción |
@@ -31,7 +32,10 @@ ariscourse/
 |---|---|
 | `POST /api/auth/logout` · `GET /api/auth/me` | Sesión (logout revoca el JWT) |
 | `GET/POST /api/enrollments` · `POST /api/lessons/{id}/complete` | Inscripciones y progreso |
+| `POST /api/lessons/{id\|slug}/quiz/attempt` | **Evalúa un intento de quiz server-side** (feedback por pregunta + puntaje) |
 | `GET/POST /api/ai/conversations...` · `POST .../stream` | Chat con asistente IA (streaming SSE) |
+| `POST /api/ai/ask` | **Pregunta contextual** (con `lesson_id` y opcional `kind: explain/code_review`) |
+| `POST /api/ai/practice` | **Genera un mini-quiz de práctica** personalizado (JSON) |
 
 ### Frontend (Angular 22)
 
@@ -89,7 +93,7 @@ POST /api/ai/conversations/{id}/stream   →  text/event-stream (SSE)
 
 ```bash
 cd backend
-php artisan test          # 14 tests: smoke API, home agregado, JWT/login/logout, guard JWT
+php artisan test          # +20 tests: smoke API, JWT/logout, guard, interactividad (quiz server-side, IA contextual/SSE)
 vendor/bin/pint           # estilo de código (Laravel Pint)
 ```
 
