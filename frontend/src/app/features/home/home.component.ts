@@ -13,17 +13,13 @@ import { LearningPath, Course, Category } from '../../core/models';
       <div class="hero__bg-grid"></div>
       <div class="container hero__inner">
         <div class="hero__content">
-          <div class="hero__badge">
-            <span class="badge badge-accent">🚀 Plataforma de Programación</span>
-          </div>
           <h1 class="hero__title">
             Aprende <span>Programación.</span><br>
             Domina tu carrera.
           </h1>
           <p class="hero__subtitle">
             Rutas de aprendizaje estructuradas y cursos interactivos para
-            estudiantes de Ingeniería de Sistemas. Con un asistente de IA
-            disponible en todo momento.
+            estudiantes de Ingeniería de Sistemas.
           </p>
           <div class="hero__actions">
             <a routerLink="/rutas" class="btn btn-primary btn-lg">
@@ -113,33 +109,35 @@ import { LearningPath, Course, Category } from '../../core/models';
           <p class="section-subtitle">Sigue un camino guiado por niveles. Cada ruta está diseñada para llevarte de cero a experto de forma progresiva.</p>
         </div>
 
-        <div class="grid-3">
-          @for (path of learningPaths(); track path.id) {
-            <a [routerLink]="['/rutas', path.slug]" class="path-card">
-              <div class="path-card__header" [style.background]="getPathGradient(path)">
-                <div class="path-card__category" *ngIf="path.category">{{ path.category.name }}</div>
-                <div [class]="'badge badge-' + path.difficulty" style="align-self:flex-start;">
-                  {{ difficultyLabel(path.difficulty) }}
-                </div>
+        <div class="timeline">
+          @for (path of learningPaths(); track path.id; let i = $index) {
+            <div class="timeline__item" [class.timeline__item--right]="i % 2 === 1" [style.--i]="i">
+              <div class="timeline__node" [style.background]="getPathGradient(path)" [style.border-color]="path.category?.color ?? '#6C63FF'">
+                <span>{{ getPathEmoji(path) }}</span>
               </div>
-              <div class="path-card__body">
-                <h3>{{ path.title }}</h3>
-                <p>{{ path.description | slice:0:100 }}{{ path.description.length > 100 ? '...' : '' }}</p>
-                <div class="path-card__meta">
+              <a [routerLink]="['/rutas', path.slug]" class="timeline__card">
+                <div class="timeline__card-top">
+                  <span class="timeline__category" *ngIf="path.category">{{ path.category.name }}</span>
+                  <span [class]="'badge badge-' + path.difficulty">{{ difficultyLabel(path.difficulty) }}</span>
+                </div>
+                <h3 class="timeline__title">{{ path.title }}</h3>
+                <p class="timeline__desc">{{ path.description | slice:0:110 }}{{ path.description.length > 110 ? '…' : '' }}</p>
+                <div class="timeline__meta">
                   <span>📚 {{ path.courses_count ?? 0 }} cursos</span>
                   <span>⏱ {{ path.estimated_hours }}h estimadas</span>
                   <span>{{ (path.levels?.length ?? 0) }} niveles</span>
                 </div>
-              </div>
-              <div class="path-card__footer">
-                <span class="btn btn-outline btn-sm">Ver Ruta →</span>
-              </div>
-            </a>
+                <span class="timeline__cta">Ver Ruta →</span>
+              </a>
+            </div>
           }
 
           @if (learningPaths().length === 0) {
-            @for (i of [1,2,3]; track i) {
-              <div class="path-card skeleton" style="height: 280px;"></div>
+            @for (i of [0,1,2]; track i) {
+              <div class="timeline__item">
+                <div class="timeline__node skeleton"></div>
+                <div class="timeline__card skeleton" style="height:150px;"></div>
+              </div>
             }
           }
         </div>
@@ -197,24 +195,6 @@ import { LearningPath, Course, Category } from '../../core/models';
         </div>
       </div>
     </section>
-
-    <!-- AI BANNER -->
-    <section class="ai-banner">
-      <div class="container">
-        <div class="ai-banner__inner">
-          <div class="ai-banner__content">
-            <div class="ai-banner__icon">🤖</div>
-            <div>
-              <h2>Tu Asistente de IA personal</h2>
-              <p>Pregunta cualquier duda de programación, pide que te expliquen un concepto, pide ayuda para debuggear tu código, o simplemente conversa sobre tecnología.</p>
-            </div>
-          </div>
-          <a routerLink="/asistente" class="btn btn-accent btn-lg">
-            Hablar con el Asistente →
-          </a>
-        </div>
-      </div>
-    </section>
   `,
   styles: [`
     /* HERO */
@@ -248,8 +228,6 @@ import { LearningPath, Course, Category } from '../../core/models';
           .hero__code { display: none; }
         }
       }
-
-      &__badge { margin-bottom: var(--sp-5); }
 
       &__title {
         font-size: clamp(2.5rem, 5vw, 3.5rem);
@@ -409,70 +387,182 @@ import { LearningPath, Course, Category } from '../../core/models';
       }
     }
 
-    /* PATH CARDS */
-    .path-card {
+    /* TIMELINE (Rutas de Aprendizaje) */
+    .timeline {
+      position: relative;
       display: flex;
       flex-direction: column;
+      gap: var(--sp-10);
+      padding: var(--sp-6) 0;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        background: linear-gradient(180deg,
+          transparent 0%,
+          var(--primary) 8%,
+          var(--accent) 92%,
+          transparent 100%);
+        opacity: 0.35;
+      }
+    }
+
+    .timeline__item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 72px 1fr;
+      align-items: start;
+      opacity: 0;
+      animation: timeline-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation-delay: calc(var(--i, 0) * 0.09s);
+
+      &--right .timeline__card { grid-column: 3; }
+    }
+
+    .timeline__node {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: center;
+      width: 48px;
+      height: 48px;
+      margin-top: 4px;
+      border-radius: 50%;
+      border: 2px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: 0 0 0 4px var(--bg-base), 0 8px 20px rgba(0,0,0,0.18);
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+
+      .timeline__item:hover & {
+        transform: scale(1.12);
+        box-shadow: 0 0 0 4px var(--bg-base), 0 0 24px rgba(108,99,255,0.35);
+      }
+    }
+
+    .timeline__card {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+      padding: var(--sp-5);
       background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      overflow: hidden;
       text-decoration: none;
       transition: all var(--transition-base);
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 18px;
+        width: 18px;
+        height: 2px;
+        background: var(--primary);
+        opacity: 0.4;
+      }
+
+      .timeline__item:not(.timeline__item--right) &::after { right: -19px; }
+      .timeline__item--right &::after { left: -19px; }
 
       &:hover {
         border-color: var(--primary);
         box-shadow: var(--shadow-primary);
-        transform: translateY(-2px);
+        transform: translateY(-3px);
+
+        .timeline__cta { color: var(--primary); gap: 8px; }
+      }
+    }
+
+    .timeline__card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sp-2);
+      margin-bottom: var(--sp-1);
+    }
+
+    .timeline__category {
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .timeline__title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      color: var(--text-primary);
+      line-height: 1.25;
+    }
+
+    .timeline__desc {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .timeline__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-3);
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      margin-top: var(--sp-1);
+    }
+
+    .timeline__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--text-secondary);
+      transition: all var(--transition-fast);
+      margin-top: var(--sp-1);
+    }
+
+    @keyframes timeline-rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .timeline {
+        gap: var(--sp-8);
+        &::before { left: 27px; }
       }
 
-      &__header {
-        height: 80px;
-        padding: var(--sp-4);
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+      .timeline__item {
+        grid-template-columns: 54px 1fr;
       }
 
-      &__category {
-        font-size: var(--text-xs);
-        font-weight: var(--font-semibold);
-        color: rgba(255,255,255,0.7);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
+      .timeline__node {
+        grid-column: 1;
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
       }
 
-      &__body {
-        flex: 1;
-        padding: var(--sp-5);
-
-        h3 {
-          font-size: var(--text-lg);
-          font-weight: var(--font-semibold);
-          color: var(--text-primary);
-          margin-bottom: var(--sp-2);
-        }
-
-        p {
-          font-size: var(--text-sm);
-          color: var(--text-secondary);
-          line-height: 1.6;
-          margin-bottom: var(--sp-4);
-        }
+      .timeline__card {
+        grid-column: 2;
+        &::after { display: none; }
       }
 
-      &__meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--sp-3);
-        font-size: var(--text-xs);
-        color: var(--text-muted);
-      }
+      .timeline__item--right .timeline__card { grid-column: 2; }
+    }
 
-      &__footer {
-        padding: var(--sp-4) var(--sp-5);
-        border-top: 1px solid var(--border);
-      }
+    @media (prefers-reduced-motion: reduce) {
+      .timeline__item { animation: none; opacity: 1; }
     }
 
     /* COURSE CARDS */
@@ -551,54 +641,6 @@ import { LearningPath, Course, Category } from '../../core/models';
     .paths-section {
       background: linear-gradient(180deg, transparent, rgba(108,99,255,0.03), transparent);
     }
-
-    /* AI BANNER */
-    .ai-banner {
-      background: var(--bg-surface);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: var(--sp-12) 0;
-
-      &__inner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--sp-8);
-        padding: var(--sp-8);
-        background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(0,217,255,0.05));
-        border: 1px solid rgba(108,99,255,0.2);
-        border-radius: var(--radius-xl);
-
-        @media (max-width: 768px) {
-          flex-direction: column;
-          text-align: center;
-        }
-      }
-
-      &__content {
-        display: flex;
-        align-items: center;
-        gap: var(--sp-6);
-      }
-
-      &__icon {
-        font-size: 3rem;
-        flex-shrink: 0;
-      }
-
-      h2 {
-        font-size: var(--text-2xl);
-        font-weight: var(--font-bold);
-        color: var(--text-primary);
-        margin-bottom: var(--sp-2);
-      }
-
-      p {
-        color: var(--text-secondary);
-        max-width: 500px;
-        line-height: 1.6;
-      }
-    }
   `]
 })
 export class HomeComponent implements OnInit {
@@ -641,6 +683,10 @@ export class HomeComponent implements OnInit {
 
   getCourseEmoji(course: Course): string {
     return this.getCategoryEmoji(course.category?.slug ?? '');
+  }
+
+  getPathEmoji(path: LearningPath): string {
+    return this.getCategoryEmoji(path.category?.slug ?? '');
   }
 
   getPathGradient(path: LearningPath): string {

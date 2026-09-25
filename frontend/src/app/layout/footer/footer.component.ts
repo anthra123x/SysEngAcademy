@@ -20,7 +20,6 @@ import { RouterLink } from '@angular/router';
             <h4>Aprendizaje</h4>
             <a routerLink="/rutas">Rutas de Aprendizaje</a>
             <a routerLink="/cursos">Todos los Cursos</a>
-            <a routerLink="/asistente">Asistente IA</a>
           </div>
           <div class="footer__col">
             <h4>Cuenta</h4>
@@ -28,13 +27,6 @@ import { RouterLink } from '@angular/router';
             <a routerLink="/auth/registro">Registrarse</a>
             <a routerLink="/perfil">Mi Perfil</a>
           </div>
-        </div>
-      </div>
-
-      <div class="footer__bottom">
-        <div class="container">
-          <span>© 2024 SysEng Academy. Todos los derechos reservados.</span>
-          <span>Hecho con ❤️ para estudiantes de Ingeniería</span>
         </div>
       </div>
     </footer>
@@ -111,25 +103,6 @@ import { RouterLink } from '@angular/router';
           text-decoration: none;
           transition: color var(--transition-fast);
           &:hover { color: var(--text-primary); }
-        }
-      }
-
-      &__bottom {
-        border-top: 1px solid var(--border);
-        padding: var(--sp-4) 0;
-
-        .container {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: var(--text-xs);
-          color: var(--text-muted);
-
-          @media (max-width: 640px) {
-            flex-direction: column;
-            gap: var(--sp-2);
-            text-align: center;
-          }
         }
       }
     }

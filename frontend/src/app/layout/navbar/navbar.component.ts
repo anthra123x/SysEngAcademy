@@ -19,9 +19,6 @@ import { AuthService } from '../../core/services/auth.service';
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Inicio</a>
           <a routerLink="/rutas" routerLinkActive="active">Rutas</a>
           <a routerLink="/cursos" routerLinkActive="active">Cursos</a>
-          <a routerLink="/asistente" routerLinkActive="active" class="ai-link">
-            <span class="ai-dot"></span> Asistente IA
-          </a>
         </nav>
 
         <!-- Auth Actions -->
@@ -61,7 +58,6 @@ import { AuthService } from '../../core/services/auth.service';
           <a routerLink="/" (click)="mobileOpen.set(false)">Inicio</a>
           <a routerLink="/rutas" (click)="mobileOpen.set(false)">Rutas de Aprendizaje</a>
           <a routerLink="/cursos" (click)="mobileOpen.set(false)">Cursos</a>
-          <a routerLink="/asistente" (click)="mobileOpen.set(false)">Asistente IA</a>
           <div class="mobile-auth">
             @if (auth.isAuthenticated()) {
               <a routerLink="/perfil" (click)="mobileOpen.set(false)">Mi Perfil</a>
@@ -135,23 +131,6 @@ import { AuthService } from '../../core/services/auth.service';
           &:hover { color: var(--text-primary); background: var(--bg-surface-2); }
           &.active { color: var(--text-primary); }
         }
-
-        .ai-link {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: var(--accent) !important;
-          background: var(--accent-dim);
-          &:hover { background: rgba(0,217,255,0.2); }
-        }
-
-        .ai-dot {
-          width: 6px;
-          height: 6px;
-          background: var(--success);
-          border-radius: 50%;
-          animation: pulse-dot 2s ease-in-out infinite;
-        }
       }
 
       &__actions {
@@ -160,11 +139,6 @@ import { AuthService } from '../../core/services/auth.service';
         gap: var(--sp-3);
         margin-left: auto;
       }
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.8); }
     }
 
     .user-menu {
