@@ -24,9 +24,9 @@ SPA del frontend de **SysEng Academy**: plataforma de aprendizaje para estudiant
 | Ruta | Página |
 |---|---|
 | `/` | Home (categorías + rutas + cursos destacados desde `/api/home`) |
-| `/rutas` | Rutas de aprendizaje |
+| `/rutas` | Rutas de aprendizaje (línea de tiempo en el home) |
 | `/cursos` · `/cursos/:slug` | Catálogo y detalle de curso |
-| `/asistente` | Chat con asistente de IA (streaming SSE) |
+| `/asistente` | Chat con asistente de IA (streaming SSE) — ruta conservada, sin acceso visible en la navegación |
 | `/perfil` | Perfil e inscripciones del usuario |
 | `/auth/login` · `/auth/registro` | Autenticación (JWT) |
 
