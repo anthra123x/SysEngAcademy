@@ -9,12 +9,12 @@ interface SnakeStop {
   color: string;   // color de la categoría (identidad del nodo)
   name: string;    // nombre de la categoría
   emoji: string;
-  right: boolean;  // si el stop va del lado derecho del serpentín
+  isRight: boolean;  // si la tarjeta va del lado derecho (alternante)
   num: number;     // posición en el recorrido (01..09)
   delay: number;   // stagger de entrada (s)
+  levelBadge: string;
+  milestoneTitle: string;
 }
-
-interface SnakeRow { stops: SnakeStop[]; }
 
 interface SnakeSeg {
   x1: number; y1: number;
@@ -128,41 +128,96 @@ interface SnakeSeg {
                   [style.--len]="seg.len + 'px'"
                   [style.--d]="seg.delay + 's'" />
               }
-              <circle class="snake__motion" r="4.5"></circle>
+              <circle class="snake__motion" r="5"></circle>
             </svg>
 
-            @for (row of snakeRows(); track $index) {
-              <div class="snake__row">
-                @for (stop of row.stops; track stop.path.id) {
-                  <div class="snake__stop"
-                       [class.snake__stop--left]="!stop.right"
-                       [class.snake__stop--right]="stop.right"
-                       [style.--c]="stop.color"
-                       [style.--d]="stop.delay + 's'">
+            <div class="snake__track">
+              @for (stop of snakeStops(); track stop.path.id; let idx = $index) {
+                <div class="snake__station"
+                     [class.snake__station--left]="!stop.isRight"
+                     [class.snake__station--right]="stop.isRight"
+                     [style.--c]="stop.color"
+                     [style.--d]="stop.delay + 's'">
+
+                  <!-- Left Side -->
+                  <div class="station-side station-side--left">
+                    @if (!stop.isRight) {
+                      <a [routerLink]="['/rutas', stop.path.slug]" class="snake__card">
+                        <div class="snake__card-top">
+                          <span class="snake__category">{{ stop.name }}</span>
+                          <span [class]="'badge badge-' + stop.path.difficulty">{{ difficultyLabel(stop.path.difficulty) }}</span>
+                        </div>
+                        <h3 class="snake__title">{{ stop.path.title }}</h3>
+                        <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
+                        <div class="snake__meta">
+                          <span>📚 {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span>·</span>
+                          <span>⏱ {{ stop.path.estimated_hours }}h estimadas</span>
+                        </div>
+                        <span class="snake__cta">Explorar Ruta →</span>
+                      </a>
+                    } @else {
+                      <div class="snake__milestone-badge milestone-badge--right-align">
+                        <div class="milestone-badge__header">
+                          <span class="milestone-badge__dot" [style.background]="stop.color"></span>
+                          <span class="milestone-badge__label">{{ stop.levelBadge }}</span>
+                        </div>
+                        <span class="milestone-badge__desc">{{ stop.milestoneTitle }}</span>
+                        <div class="milestone-badge__stats">
+                          <span>📚 {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span>·</span>
+                          <span>⏱ {{ stop.path.estimated_hours }}h de formación</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Center Node (On central vertical spine) -->
+                  <div class="station-center">
                     <div class="snake__node"
                          [style.background]="getPathGradient(stop.path)"
                          [style.border-color]="stop.color">
                       <span class="snake__emoji">{{ stop.emoji }}</span>
                       <span class="snake__num">{{ ('0' + stop.num).slice(-2) }}</span>
                     </div>
-                    <a [routerLink]="['/rutas', stop.path.slug]" class="snake__card">
-                      <div class="snake__card-top">
-                        <span class="snake__category">{{ stop.name }}</span>
-                        <span [class]="'badge badge-' + stop.path.difficulty">{{ difficultyLabel(stop.path.difficulty) }}</span>
-                      </div>
-                      <h3 class="snake__title">{{ stop.path.title }}</h3>
-                      <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
-                      <div class="snake__meta">
-                        <span>📚 {{ stop.path.courses_count ?? 0 }} cursos</span>
-                        <span>·</span>
-                        <span>⏱ {{ stop.path.estimated_hours }}h estimadas</span>
-                      </div>
-                      <span class="snake__cta">Explorar Ruta →</span>
-                    </a>
                   </div>
-                }
-              </div>
-            }
+
+                  <!-- Right Side -->
+                  <div class="station-side station-side--right">
+                    @if (stop.isRight) {
+                      <a [routerLink]="['/rutas', stop.path.slug]" class="snake__card">
+                        <div class="snake__card-top">
+                          <span class="snake__category">{{ stop.name }}</span>
+                          <span [class]="'badge badge-' + stop.path.difficulty">{{ difficultyLabel(stop.path.difficulty) }}</span>
+                        </div>
+                        <h3 class="snake__title">{{ stop.path.title }}</h3>
+                        <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
+                        <div class="snake__meta">
+                          <span>📚 {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span>·</span>
+                          <span>⏱ {{ stop.path.estimated_hours }}h estimadas</span>
+                        </div>
+                        <span class="snake__cta">Explorar Ruta →</span>
+                      </a>
+                    } @else {
+                      <div class="snake__milestone-badge milestone-badge--left-align">
+                        <div class="milestone-badge__header">
+                          <span class="milestone-badge__dot" [style.background]="stop.color"></span>
+                          <span class="milestone-badge__label">{{ stop.levelBadge }}</span>
+                        </div>
+                        <span class="milestone-badge__desc">{{ stop.milestoneTitle }}</span>
+                        <div class="milestone-badge__stats">
+                          <span>📚 {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span>·</span>
+                          <span>⏱ {{ stop.path.estimated_hours }}h de formación</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                </div>
+              }
+            </div>
           </div>
         }
 
@@ -481,11 +536,12 @@ interface SnakeSeg {
       }
     }
 
-    /* SNAKE ROADMAP (Rutas de Aprendizaje) */
+    /* ALTERNATING TIMELINE ROADMAP (Rutas de Aprendizaje) */
     .snake {
       position: relative;
-      padding: var(--sp-4) 0 var(--sp-2);
-      overflow: hidden;
+      padding: var(--sp-6) 0 var(--sp-4);
+      max-width: 1080px;
+      margin: 0 auto;
     }
 
     .snake__svg {
@@ -501,9 +557,10 @@ interface SnakeSeg {
     .snake__seg {
       stroke-width: 3;
       stroke-linecap: round;
-      opacity: 0.5;
+      opacity: 0.8;
       stroke-dasharray: var(--len, 0);
       stroke-dashoffset: var(--len, 0);
+      filter: drop-shadow(0 0 6px var(--primary));
     }
 
     .snake--visible .snake__seg {
@@ -516,15 +573,15 @@ interface SnakeSeg {
     }
 
     .snake__motion {
-      fill: var(--accent);
-      filter: drop-shadow(0 0 6px var(--accent));
+      fill: var(--primary);
+      filter: drop-shadow(0 0 8px var(--primary));
       opacity: 0;
     }
 
     .snake--visible .snake__motion {
       opacity: 1;
-      animation: snake-flow 6s linear infinite;
-      animation-delay: 1.4s;
+      animation: snake-flow 5s linear infinite;
+      animation-delay: 0.8s;
     }
 
     @keyframes snake-flow {
@@ -532,24 +589,24 @@ interface SnakeSeg {
       to   { offset-distance: 100%; }
     }
 
-    .snake__row {
+    .snake__track {
       position: relative;
       z-index: 1;
-      display: grid;
-      grid-template-columns: 1fr 96px 1fr;
-      grid-auto-flow: dense;
-      align-items: center;
-      padding: var(--sp-6) 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-8);
     }
 
-    .snake__stop {
-      display: flex;
+    .snake__station {
+      display: grid;
+      grid-template-columns: 1fr 80px 1fr;
       align-items: center;
-      gap: var(--sp-5);
+      gap: var(--sp-4);
+      position: relative;
       opacity: 0;
     }
 
-    .snake--visible .snake__stop {
+    .snake--visible .snake__station {
       animation: snake-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
       animation-delay: var(--d, 0s);
     }
@@ -559,56 +616,154 @@ interface SnakeSeg {
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .snake__stop--left {
-      grid-column: 1;
-      justify-self: end;
-      flex-direction: row-reverse;
+    .station-side {
+      display: flex;
+      align-items: center;
+      width: 100%;
     }
 
-    .snake__stop--right {
-      grid-column: 3;
-      justify-self: start;
-      flex-direction: row;
+    .station-side--left {
+      justify-content: flex-end;
+    }
+
+    .station-side--right {
+      justify-content: flex-start;
+    }
+
+    .station-center {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      z-index: 2;
     }
 
     .snake__node {
       position: relative;
       flex: 0 0 auto;
-      width: 52px;
-      height: 52px;
+      width: 54px;
+      height: 54px;
       border-radius: 50%;
       border: 2px solid;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 0 4px var(--bg-base), 0 8px 20px rgba(0, 0, 0, 0.18);
+      background: var(--bg-surface);
+      box-shadow: 0 0 0 5px var(--bg-base), 0 0 20px rgba(10, 233, 138, 0.25);
       transition: transform var(--transition-base), box-shadow var(--transition-base);
       cursor: default;
     }
 
     .snake__emoji {
-      font-size: 1.35rem;
+      font-size: 1.4rem;
       line-height: 1;
     }
 
     .snake__num {
       position: absolute;
-      top: calc(100% + 10px);
+      top: calc(100% + 8px);
       left: 50%;
       transform: translateX(-50%);
-      padding: 1px 7px;
+      padding: 1px 8px;
       border-radius: 999px;
-      background: var(--bg-base);
+      background: var(--bg-surface-2);
       border: 1px solid var(--border);
       font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
       white-space: nowrap;
     }
 
-    .snake__stop:hover .snake__node {
-      transform: scale(1.1);
-      box-shadow: 0 0 0 4px var(--bg-base), 0 0 22px color-mix(in srgb, var(--c, var(--primary)) 55%, transparent);
+    .snake__station:hover .snake__node {
+      transform: scale(1.12);
+      box-shadow: 0 0 0 5px var(--bg-base), 0 0 26px color-mix(in srgb, var(--c, var(--primary)) 60%, transparent);
+    }
+
+    /* Milestone info badge on opposite side */
+    .snake__milestone-badge {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: var(--sp-3) var(--sp-4);
+      background: rgba(16, 18, 28, 0.7);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+      max-width: 320px;
+      backdrop-filter: blur(8px);
+    }
+
+    .milestone-badge--right-align {
+      text-align: right;
+      align-items: flex-end;
+      .milestone-badge__header { flex-direction: row-reverse; }
+      .milestone-badge__stats { justify-content: flex-end; }
+    }
+
+    .milestone-badge--left-align {
+      text-align: left;
+      align-items: flex-start;
+    }
+
+    .milestone-badge__header {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+
+    .milestone-badge__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .milestone-badge__label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+
+    .milestone-badge__desc {
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .milestone-badge__stats {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .snake__station {
+        grid-template-columns: 56px 1fr !important;
+        gap: var(--sp-3);
+      }
+      .station-center {
+        grid-column: 1;
+        grid-row: 1;
+      }
+      .station-side--left,
+      .station-side--right {
+        grid-column: 2;
+        grid-row: 1;
+        justify-content: flex-start !important;
+      }
+      .snake__milestone-badge {
+        display: none;
+      }
+      .snake__card {
+        width: 100% !important;
+      }
     }
 
     .snake__card {
@@ -975,7 +1130,7 @@ export class HomeComponent implements OnInit {
     this.selectedCategory.set(slug);
   }
 
-  snakeRows       = signal<SnakeRow[]>([]);
+  snakeStops       = signal<SnakeStop[]>([]);
   snakeSegments   = signal<SnakeSeg[]>([]);
   snakeVisible    = signal(false);
   @ViewChild('snakeWrap') snakeWrap?: ElementRef<HTMLElement>;
@@ -990,33 +1145,36 @@ export class HomeComponent implements OnInit {
       this.categories.set(home.categories);
       this.learningPaths.set(home.learning_paths.data);
       this.featuredCourses.set(home.courses.data);
-      this.snakeRows.set(this.buildSnake(home.learning_paths.data));
+      this.snakeStops.set(this.buildSnake(home.learning_paths.data));
       // Esperar a que Angular pinte los nodos antes de medir la ruta.
       setTimeout(() => this.measureSnake(), 0);
     });
   }
 
-  /** Agrupa las rutas en filas de 2 alternando el orden por fila: el patrón serpiente clásico
-   *  (fila impar L→R, fila par R→L) para que la línea baje en vertical por los laterales. */
-  private buildSnake(paths: LearningPath[]): SnakeRow[] {
-    const rows: SnakeRow[] = [];
-    for (let i = 0; i < paths.length; i += 2) {
-      const rowIdx = rows.length;
-      const stops: SnakeStop[] = paths.slice(i, i + 2).map((p, li) => {
-        const gi = i + li;
-        return {
-          path: p,
-          color: p.category?.color ?? '#6C63FF',
-          name: p.category?.name ?? 'Ruta',
-          emoji: this.getPathEmoji(p),
-          right: rowIdx % 2 === 0 ? li === 1 : li === 0,
-          num: gi + 1,
-          delay: Math.round(gi * 0.09 * 10) / 10,
-        };
-      });
-      rows.push({ stops });
-    }
-    return rows;
+  /** Crea las estaciones del roadmap en disposición alternante (L -> R -> L) con eje central */
+  private buildSnake(paths: LearningPath[]): SnakeStop[] {
+    const milestones = [
+      { badge: 'Hito 01 • Fundamentos Base', desc: 'Pensamiento lógico, variables, control de flujo y sintaxis esencial' },
+      { badge: 'Hito 02 • Especialización Backend', desc: 'Arquitectura de servidores, APIs RESTful, seguridad y bases de datos' },
+      { badge: 'Hito 03 • Dominio Fullstack', desc: 'Integración frontend moderna, TypeScript, Single Page Apps y cloud' },
+      { badge: 'Hito 04 • DevOps y Plataformas', desc: 'Contenedores Docker, CI/CD automatizado y orquestación' },
+      { badge: 'Hito 05 • Inteligencia Artificial', desc: 'Modelos de lenguaje, agentes autónomos y prompt engineering' },
+    ];
+
+    return paths.map((p, idx) => {
+      const ms = milestones[idx] || { badge: `Hito 0${idx + 1} • Especialización`, desc: p.description };
+      return {
+        path: p,
+        color: p.category?.color ?? '#0AE98A',
+        name: p.category?.name ?? 'Ruta',
+        emoji: this.getPathEmoji(p),
+        isRight: idx % 2 === 1,
+        num: idx + 1,
+        delay: Math.round(idx * 0.12 * 10) / 10,
+        levelBadge: ms.badge,
+        milestoneTitle: ms.desc,
+      };
+    });
   }
 
   /**
@@ -1028,7 +1186,7 @@ export class HomeComponent implements OnInit {
    */
   private measureSnake() {
     const wrap = this.snakeWrap?.nativeElement;
-    if (!wrap || this.snakeRows().length === 0) return;
+    if (!wrap || this.snakeStops().length === 0) return;
     const nodes = Array.from(wrap.querySelectorAll<HTMLElement>('.snake__node'));
     if (nodes.length === 0) return;
 
@@ -1045,7 +1203,7 @@ export class HomeComponent implements OnInit {
       segs.push({
         x1: pts[i - 1].x, y1: pts[i - 1].y,
         x2: pts[i].x,     y2: pts[i].y,
-        color: getComputedStyle(nodes[i]).getPropertyValue('--c').trim() || '#6C63FF',
+        color: this.snakeStops()[i]?.color || '#0AE98A',
         len: Math.round(len * 10) / 10,
         delay: Math.round(i * 0.12 * 10) / 10,
       });

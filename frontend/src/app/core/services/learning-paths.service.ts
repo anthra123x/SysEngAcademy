@@ -13,33 +13,51 @@ export class LearningPathsService {
 
   getAll(params?: Record<string, unknown>): Observable<PaginatedResponse<LearningPath>> {
     const cached = this.readCache();
+    const fallbackRes: PaginatedResponse<LearningPath> = cached || {
+      current_page: 1,
+      data: FALLBACK_LEARNING_PATHS,
+      total: FALLBACK_LEARNING_PATHS.length,
+      per_page: 10,
+      last_page: 1,
+    };
 
-    return this.api.get<PaginatedResponse<LearningPath>>('/learning-paths', params).pipe(
-      tap(res => {
-        if (!params || Object.keys(params).length === 0) {
-          this.writeCache(res);
-        }
-      }),
-      catchError(() => {
-        const fallbackRes: PaginatedResponse<LearningPath> = {
-          current_page: 1,
-          data: FALLBACK_LEARNING_PATHS,
-          total: FALLBACK_LEARNING_PATHS.length,
-          per_page: 10,
-          last_page: 1,
-        };
-        return of(cached || fallbackRes);
-      })
-    );
+    return new Observable<PaginatedResponse<LearningPath>>(subscriber => {
+      // 0ms instant emission
+      subscriber.next(fallbackRes);
+
+      // Revalidate in background without blocking UI
+      this.api.get<PaginatedResponse<LearningPath>>('/learning-paths', params).subscribe({
+        next: fresh => {
+          if (!params || Object.keys(params).length === 0) {
+            this.writeCache(fresh);
+          }
+          subscriber.next(fresh);
+          subscriber.complete();
+        },
+        error: () => subscriber.complete(),
+      });
+    });
   }
 
   getBySlug(slug: string): Observable<LearningPath> {
-    return this.api.get<LearningPath>(`/learning-paths/${slug}`).pipe(
-      catchError(() => {
-        const found = FALLBACK_LEARNING_PATHS.find(p => p.slug === slug) || FALLBACK_LEARNING_PATHS[0];
-        return of(found);
-      })
-    );
+    const cached = this.readCache()?.data.find(p => p.slug === slug);
+    const fallback = cached ||
+      FALLBACK_LEARNING_PATHS.find(p => p.slug === slug || slug.includes(p.slug) || p.slug.includes(slug)) ||
+      FALLBACK_LEARNING_PATHS[0];
+
+    return new Observable<LearningPath>(subscriber => {
+      // 0ms instant emission
+      subscriber.next(fallback);
+
+      // Revalidate in background
+      this.api.get<LearningPath>(`/learning-paths/${slug}`).subscribe({
+        next: fresh => {
+          subscriber.next(fresh);
+          subscriber.complete();
+        },
+        error: () => subscriber.complete(),
+      });
+    });
   }
 
   private readCache(): PaginatedResponse<LearningPath> | null {
