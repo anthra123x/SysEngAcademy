@@ -68,7 +68,7 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
       </div>
     }
 
-    <!-- ===== CONSOLA DE CHAT BYTE (Diseño Integrado SysEng Academy) ===== -->
+    <!-- ===== CONSOLA DE CHAT BYTE (Estilo Híbrido Windows Terminal + WSL Linux) ===== -->
     @if (open()) {
       <section
         class="byte-panel"
@@ -76,77 +76,68 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
         id="byte-panel"
         role="dialog"
         aria-modal="true"
-        aria-label="Byte IA Console"
+        aria-label="Terminal Byte"
         (keydown.escape)="closePanel()"
         tabindex="-1"
       >
-        <!-- Barra de Ventana Terminal (Estilo SysEng Code Window) -->
-        <header class="byte-window-bar">
-          <div class="window-controls" aria-hidden="true">
-            <span class="win-dot win-dot--close" (click)="closePanel()" title="Cerrar ventana"></span>
-            <span class="win-dot win-dot--min" (click)="closePanel()" title="Minimizar"></span>
-            <span class="win-dot win-dot--expand" (click)="resetConversation()" title="Reiniciar sesión"></span>
+        <!-- Windows Terminal Titlebar / Tab Strip -->
+        <header class="term-tab-strip">
+          <div class="term-tab term-tab--active" [class.term-tab--teacher]="isTeacherMode()">
+            <span class="tab-glyph" aria-hidden="true">{{ isTeacherMode() ? '⚡' : '🐧' }}</span>
+            <span class="tab-label">{{ isTeacherMode() ? 'PowerShell (Docente)' : 'Ubuntu-WSL: byte@syseng' }}</span>
+            <span class="tab-status-dot" [class.is-busy]="busy()" title="Conexión activa"></span>
           </div>
 
-          <div class="window-title">
-            <span class="prompt-sym">&gt;</span>
-            <span class="window-file">{{ isTeacherMode() ? 'byte-docente.sh' : 'byte-mentor.sh' }}</span>
-            @if (isTeacherMode()) {
-              <span class="portal-tag portal-tag--teacher">DOCENTE</span>
-            } @else {
-              <span class="portal-tag">MENTOR IA</span>
-            }
-          </div>
-
-          <div class="window-actions">
+          <div class="term-caption-bar">
             @if (isTeacher()) {
               <button
                 type="button"
-                class="mode-switch-btn"
+                class="term-mode-pill"
                 (click)="toggleMode()"
-                [title]="isTeacherMode() ? 'Ver perspectiva de Estudiante' : 'Ver perspectiva de Docente'"
+                [title]="isTeacherMode() ? 'Cambiar a sesión Estudiante' : 'Cambiar a sesión Docente'"
               >
-                {{ isTeacherMode() ? '👁️ Alumno' : '🎓 Profe' }}
+                {{ isTeacherMode() ? '⇄ Alumno' : '⇄ Docente' }}
               </button>
             }
 
             <button
-              class="win-btn-action"
+              class="term-cap-btn"
               type="button"
               (click)="resetConversation()"
-              title="Nueva conversación limpia"
-              aria-label="Reiniciar"
+              title="Limpiar sesión (clear)"
+              aria-label="Limpiar"
             >
-              ↺
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+              </svg>
             </button>
             <button
-              class="win-btn-action"
+              class="term-cap-btn"
               type="button"
               (click)="closePanel()"
+              title="Minimizar (—)"
+              aria-label="Minimizar"
+            >
+              <span>—</span>
+            </button>
+            <button
+              class="term-cap-btn term-cap-btn--close"
+              type="button"
+              (click)="closePanel()"
+              title="Cerrar (✕)"
               aria-label="Cerrar"
             >
-              ✕
+              <span>✕</span>
             </button>
           </div>
         </header>
 
-        <!-- Subcabecera de Estado & Agente -->
-        <div class="byte-subhead">
-          <div class="byte-badge-avatar">
-            <span class="avatar-dot"></span>
-            <strong>Byte {{ isTeacherMode() ? 'Académico' : 'IA' }}</strong>
-          </div>
-          <div class="byte-status-indicator" [class.writing]="busy()">
-            <span class="pulse-dot"></span>
-            <span>{{ busy() ? 'procesando consulta…' : (isTeacherMode() ? 'copiloto docente activo' : 'mentor activo') }}</span>
-          </div>
-        </div>
-
-        <!-- Banner sin conexión del proveedor -->
+        <!-- Banner sin conexión del proveedor (si aplica) -->
         @if (offline()) {
-          <div class="byte-banner" role="status">
-            <span>⚠️</span>
-            <p>Modo autónomo local activo (respuesta instantánea sin latencia).</p>
+          <div class="term-alert-line">
+            <span class="alert-tag">[WARN]</span>
+            <p>Modo autónomo offline activo (simulación local sin latencia).</p>
             <button type="button" (click)="offline.set(false)" aria-label="Descartar">✕</button>
           </div>
         }
@@ -159,106 +150,87 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
             <a class="btn btn-primary" routerLink="/auth/login" (click)="closePanel()">Iniciar Sesión</a>
           </div>
         } @else {
-          <!-- Acciones Rápidas Específicas: Docente vs Estudiante -->
-          @if (isTeacherMode()) {
-            <!-- MODO DOCENTE -->
-            <div class="byte-quick-bar byte-quick-bar--teacher">
-              <span class="quick-title">Herramientas Docentes:</span>
-              <div class="quick-btns">
-                <button type="button" (click)="askTeacherAnalytics()" [disabled]="busy()">
-                  📊 Rendimiento
-                </button>
-                <button type="button" (click)="askTeacherQuizGen()" [disabled]="busy()">
-                  📝 Generar Quiz
-                </button>
-                <button type="button" (click)="askTeacherAtRisk()" [disabled]="busy()">
-                  ⚠️ Alumnos en Riesgo
-                </button>
-                <button type="button" (click)="askTeacherPedagogy()" [disabled]="busy()">
-                  💡 Laboratorio Práctico
-                </button>
-              </div>
+          <!-- Barra de Comandos / Alias rápidos (Minimalista tipo flags de Linux) -->
+          <div class="cli-flags-bar" [class.cli-flags-bar--teacher]="isTeacherMode()">
+            <span class="cli-flags-prefix">{{ isTeacherMode() ? 'PS>' : '$' }}</span>
+            <div class="cli-flags-scroll">
+              @if (isTeacherMode()) {
+                <button type="button" class="cli-flag" (click)="askTeacherAnalytics()" [disabled]="busy()">--analitica</button>
+                <button type="button" class="cli-flag" (click)="askTeacherQuizGen()" [disabled]="busy()">--crear-quiz</button>
+                <button type="button" class="cli-flag" (click)="askTeacherAtRisk()" [disabled]="busy()">--alumnos-riesgo</button>
+                <button type="button" class="cli-flag" (click)="askTeacherPedagogy()" [disabled]="busy()">--ideas-lab</button>
+              } @else if (lessonContext(); as ctx) {
+                <button type="button" class="cli-flag" (click)="askHint()" [disabled]="busy()">--pista</button>
+                <button type="button" class="cli-flag" (click)="explainLesson()" [disabled]="busy()">--explicar</button>
+                <button type="button" class="cli-flag" (click)="practiceLesson()" [disabled]="busy()">--quiz</button>
+                <button type="button" class="cli-flag" (click)="askRoadmap()" [disabled]="busy()">--siguiente</button>
+              } @else {
+                <button type="button" class="cli-flag" (click)="askGeneralRoadmap()" [disabled]="busy()">--rutas</button>
+                <button type="button" class="cli-flag" (click)="askGeneralTips()" [disabled]="busy()">--tips</button>
+                <button type="button" class="cli-flag" (click)="askCodeHelp()" [disabled]="busy()">--debug</button>
+                <button type="button" class="cli-flag" (click)="askDailyChallenge()" [disabled]="busy()">--reto</button>
+              }
             </div>
-          } @else if (lessonContext(); as ctx) {
-            <!-- MODO ESTUDIANTE EN LECCIÓN -->
-            <div class="byte-quick-bar">
-              <span class="quick-title">🎯 Lección: {{ ctx.title }}</span>
-              <div class="quick-btns">
-                <button type="button" (click)="askHint()" [disabled]="busy()">
-                  💡 Pista socrática
-                </button>
-                <button type="button" (click)="explainLesson()" [disabled]="busy()">
-                  ✨ Explicar concepto
-                </button>
-                <button type="button" (click)="practiceLesson()" [disabled]="busy()">
-                  📝 Mini-Quiz
-                </button>
-                <button type="button" (click)="askRoadmap()" [disabled]="busy()">
-                  🧭 Siguiente paso
-                </button>
-              </div>
-            </div>
-          } @else {
-            <!-- MODO ESTUDIANTE GENERAL -->
-            <div class="byte-quick-bar">
-              <span class="quick-title">Comandos Rápidos:</span>
-              <div class="quick-btns">
-                <button type="button" (click)="askGeneralRoadmap()" [disabled]="busy()">
-                  🧭 Rutas recomendadas
-                </button>
-                <button type="button" (click)="askGeneralTips()" [disabled]="busy()">
-                  ⚡ Buenas prácticas
-                </button>
-                <button type="button" (click)="askCodeHelp()" [disabled]="busy()">
-                  🐛 Depuración de código
-                </button>
-                <button type="button" (click)="askDailyChallenge()" [disabled]="busy()">
-                  🎯 Desafío del día
-                </button>
-              </div>
-            </div>
-          }
+          </div>
 
-          <!-- Historial de mensajes -->
-          <div class="byte-msgs" #byteMessages (click)="onMessagesClick($event)">
+          <!-- Historial de mensajes (Terminal stdout/stdin stream) -->
+          <div class="term-body" #byteMessages (click)="onMessagesClick($event)">
+            <!-- Terminal MOTD line -->
+            <div class="term-motd">
+              <span class="motd-dim">SysEng Terminal v2.4 (WSL-x86_64) · </span>
+              <span class="motd-hl">{{ isTeacherMode() ? 'Sesión Docente Activa' : 'Byte AI Mentor Conectado' }}</span>
+            </div>
+
             @if (loading()) {
-              <div class="byte-skeleton">
-                <div class="skeleton-line" style="width: 80%"></div>
-                <div class="skeleton-line" style="width: 60%"></div>
+              <div class="term-loading">
+                <span class="term-spinner"></span>
+                <span>cargando sesión de terminal...</span>
               </div>
             }
 
             @for (msg of messages(); track msg.id) {
-              <div class="byte-msg" [class.byte-msg--user]="msg.role === 'user'" [class.byte-msg--assistant]="msg.role === 'assistant'">
-                <div
-                  class="byte-bubble"
-                  [class.byte-bubble--user]="msg.role === 'user'"
-                  [class.byte-bubble--assistant]="msg.role === 'assistant'"
-                  [class.byte-bubble--teacher]="isTeacherMode() && msg.role === 'assistant'"
-                  [class.byte-bubble--error]="msg.error"
-                >
-                  <div class="bubble-header-label">
-                    <span class="bubble-author">{{ msg.role === 'user' ? 'Tú' : (isTeacherMode() ? 'Byte Académico' : 'Byte IA') }}</span>
+              @if (msg.role === 'user') {
+                <!-- Línea de comando del usuario (stdin) -->
+                <div class="term-entry term-entry--user">
+                  <div class="term-prompt">
+                    <span class="prompt-user">{{ isTeacherMode() ? 'docente' : 'estudiante' }}</span><span class="prompt-at">@</span><span class="prompt-host">syseng</span>:<span class="prompt-path">~</span><span class="prompt-sym">{{ isTeacherMode() ? '>' : '$' }}</span>
                   </div>
-                  @if (msg.error) {
-                    <p>{{ msg.content }}</p>
-                  } @else if (msg.role === 'assistant') {
-                    <div class="byte-markdown" [innerHTML]="msg.html ?? ''"></div>
-                  } @else {
-                    <p class="user-text-content">{{ msg.content }}</p>
-                  }
+                  <div class="term-user-cmd">{{ msg.content }}</div>
                 </div>
-              </div>
+              } @else {
+                <!-- Salida del asistente (stdout) -->
+                <div class="term-entry term-entry--byte" [class.term-entry--teacher]="isTeacherMode()">
+                  <div class="term-byte-header">
+                    <span class="byte-prefix">{{ isTeacherMode() ? 'PS>' : '❯' }}</span>
+                    <span class="byte-name">{{ isTeacherMode() ? 'ByteDocente' : 'Byte' }}</span>
+                    <span class="byte-tag">{{ isTeacherMode() ? '[adm]' : '[ia]' }}</span>
+                  </div>
+                  <div class="term-byte-content">
+                    @if (msg.error) {
+                      <div class="term-err-box">
+                        <span class="err-tag">stderr:</span> {{ msg.content }}
+                      </div>
+                    } @else {
+                      <div class="byte-markdown" [innerHTML]="msg.html ?? ''"></div>
+                    }
+                  </div>
+                </div>
+              }
             }
 
             <!-- Pensando / streaming -->
             @if (busy() && !quiz()) {
-              <div class="byte-msg byte-msg--assistant">
-                <div class="byte-bubble byte-bubble--stream" [class.byte-bubble--teacher]="isTeacherMode()">
+              <div class="term-entry term-entry--byte term-entry--thinking" [class.term-entry--teacher]="isTeacherMode()">
+                <div class="term-byte-header">
+                  <span class="byte-prefix">{{ isTeacherMode() ? 'PS>' : '❯' }}</span>
+                  <span class="byte-name">{{ isTeacherMode() ? 'ByteDocente' : 'Byte' }}</span>
+                  <span class="term-thinking-text">{{ assistantStream() ? 'outputting...' : 'executing...' }}</span>
+                </div>
+                <div class="term-byte-content">
                   @if (assistantStream()) {
-                    <p class="byte-markdown">{{ assistantStream() }}<span class="stream-cursor">▍</span></p>
+                    <div class="byte-markdown">{{ assistantStream() }}<span class="term-cursor">▋</span></div>
                   } @else {
-                    <div class="typing-indicator" aria-label="Byte está pensando">
+                    <div class="term-blinking-dots">
                       <span></span><span></span><span></span>
                     </div>
                   }
@@ -268,8 +240,8 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
 
             <!-- Quiz interactivo inline -->
             @if (quiz(); as q) {
-              <div class="byte-quiz-card">
-                <div class="byte-quiz-card__head">
+              <div class="term-quiz-box">
+                <div class="term-quiz-head">
                   <span class="quiz-badge">TEST</span>
                   <strong>{{ q.title }}</strong>
                   @if (quizScore(); as score) {
@@ -281,7 +253,7 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
 
                 @for (question of q.questions; track $index; let qi = $index) {
                   <div
-                    class="byte-quiz-card__q"
+                    class="term-quiz-q"
                     [class.is-correct]="quizChecked() && isQCorrect(qi)"
                     [class.is-wrong]="quizChecked() && !isQCorrect(qi)"
                   >
@@ -316,18 +288,18 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
                   @if (!quizChecked()) {
                     <button
                       type="button"
-                      class="btn btn-primary btn-sm btn-block"
+                      class="btn-term-primary"
                       (click)="checkQuiz()"
                       [disabled]="!allAnswered()"
                     >
-                      Comprobar Respuestas
+                      [↵ Comprobar Respuestas]
                     </button>
                   } @else {
                     <div class="quiz-footer-actions">
-                      <button type="button" class="btn btn-outline btn-sm" (click)="practiceLesson()" [disabled]="busy()">
+                      <button type="button" class="btn-term-outline" (click)="practiceLesson()" [disabled]="busy()">
                         Repetir Práctica
                       </button>
-                      <button type="button" class="btn btn-ghost btn-sm" (click)="dismissQuiz()">
+                      <button type="button" class="btn-term-ghost" (click)="dismissQuiz()">
                         Continuar
                       </button>
                     </div>
@@ -337,34 +309,31 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
             }
           </div>
 
-          <!-- Barra de Entrada Terminal (Estilo Prompt SysEng) -->
-          <div class="byte-input-area" [class.byte-input-area--teacher]="isTeacherMode()">
-            <div class="input-terminal-box">
-              <span class="terminal-prefix">&gt;</span>
-              <textarea
-                #byteInput
-                class="byte-input"
-                [(ngModel)]="inputText"
-                [placeholder]="isTeacherMode() ? 'Consulta analítica de alumnos, crea un quiz o pide ideas pedagógicas…' : 'Pregúntale a Byte sobre código, errores o qué ruta seguir…'"
-                rows="1"
-                (keydown.enter)="onEnter($event)"
-                [disabled]="streaming()"
-                [attr.aria-label]="'Escribe tu consulta'"
-              ></textarea>
-              <button
-                class="btn-send"
-                type="button"
-                (click)="sendText()"
-                [disabled]="!inputText.trim() || busy()"
-                aria-label="Enviar"
-              >
-                ↵
-              </button>
+          <!-- Prompt de Entrada Terminal (stdin interactive prompt) -->
+          <div class="term-input-bar" [class.term-input-bar--teacher]="isTeacherMode()">
+            <div class="term-input-prompt">
+              <span class="term-user-sym">{{ isTeacherMode() ? 'PS C:\\SysEng>' : '❯' }}</span>
             </div>
-            <div class="input-info-row">
-              <span class="shortcut-tip">[Enter] para enviar · [Shift+Enter] salto</span>
-              <span class="version-tip">Byte v2.2 · SysEng AI</span>
-            </div>
+            <textarea
+              #byteInput
+              class="term-input-textarea"
+              [(ngModel)]="inputText"
+              [placeholder]="isTeacherMode() ? 'consulta o comando para docencia...' : 'pregunta o comando para Byte...'"
+              rows="1"
+              (keydown.enter)="onEnter($event)"
+              [disabled]="streaming()"
+              aria-label="Comando para Byte"
+            ></textarea>
+            <button
+              class="term-send-btn"
+              type="button"
+              (click)="sendText()"
+              [disabled]="!inputText.trim() || busy()"
+              title="Ejecutar [Enter]"
+              aria-label="Enviar"
+            >
+              ↵
+            </button>
           </div>
         }
       </section>
@@ -478,178 +447,162 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
       }
     }
 
-    /* ================= VENTANA CONSOLA BYTE ================= */
+    /* ================= VENTANA CONSOLA BYTE (Híbrido Windows Terminal + WSL Linux) ================= */
     .byte-panel {
       position: fixed;
       right: 24px;
       bottom: 145px;
       z-index: 1210;
-      width: 410px;
+      width: 440px;
       max-width: calc(100vw - 32px);
-      max-height: min(76vh, 600px);
+      max-height: min(78vh, 620px);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      background: var(--bg-surface, #10121C);
-      border: 1px solid var(--border, #202436);
-      border-radius: var(--radius-lg, 8px);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(10, 233, 138, 0.1);
+      background: rgba(12, 15, 22, 0.96);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.2);
       outline: none;
-      animation: byte-panel-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+      animation: byte-panel-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
       transform-origin: bottom right;
 
       &--teacher {
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 217, 255, 0.12);
+        border-color: rgba(0, 217, 255, 0.3);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 217, 255, 0.15);
       }
     }
 
     @keyframes byte-panel-in {
-      from { opacity: 0; transform: translateY(12px) scale(0.97); }
+      from { opacity: 0; transform: translateY(10px) scale(0.98); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* Barra Terminal (Idéntica a main.py del Hero) */
-    .byte-window-bar {
+    /* Windows Terminal Titlebar / Tab Strip */
+    .term-tab-strip {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      padding: 9px 14px;
-      background: var(--bg-surface-2, #161926);
-      border-bottom: 1px solid var(--border, #202436);
+      height: 38px;
+      background: rgba(8, 10, 15, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       user-select: none;
       flex-shrink: 0;
+      padding-left: 6px;
     }
 
-    .window-controls {
+    .term-tab {
       display: flex;
       align-items: center;
-      gap: 6px;
-      .win-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: opacity var(--transition-fast);
-        &:hover { opacity: 0.8; }
-        &--close { background: #FF5252; }
-        &--min { background: #FFD740; }
-        &--expand { background: #00E676; }
-      }
-    }
-
-    .window-title {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      gap: 7px;
+      height: 32px;
+      margin-top: 5px;
+      padding: 0 12px;
+      background: rgba(20, 24, 35, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: none;
+      border-top: 2px solid var(--primary, #0AE98A);
+      border-radius: 4px 4px 0 0;
       font-family: var(--font-mono, monospace);
-      font-size: 0.76rem;
-      color: var(--text-secondary, #94A3B8);
-      .prompt-sym { color: var(--primary, #0AE98A); font-weight: bold; }
-      .window-file { color: var(--text-primary, #F8FAFC); font-weight: 600; }
-    }
-
-    .portal-tag {
-      font-size: 0.6rem;
-      font-weight: 800;
-      padding: 1px 6px;
-      border-radius: var(--radius-sm, 4px);
-      background: rgba(10, 233, 138, 0.12);
-      color: var(--primary, #0AE98A);
-      border: 1px solid rgba(10, 233, 138, 0.3);
-      letter-spacing: 0.04em;
+      font-size: 0.74rem;
+      color: #F1F5F9;
 
       &--teacher {
-        background: rgba(0, 217, 255, 0.12);
-        color: var(--accent, #00D9FF);
-        border-color: rgba(0, 217, 255, 0.35);
+        border-top-color: var(--accent, #00D9FF);
       }
-    }
 
-    .window-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .mode-switch-btn {
-      font-size: 0.68rem;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: var(--radius-sm, 4px);
-      border: 1px solid var(--border, #202436);
-      background: var(--bg-surface-3, #1E2235);
-      color: var(--text-secondary, #94A3B8);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      &:hover {
-        border-color: var(--primary, #0AE98A);
-        color: var(--primary, #0AE98A);
+      .tab-glyph {
+        font-size: 0.82rem;
+        line-height: 1;
       }
-    }
-
-    .win-btn-action {
-      background: transparent;
-      border: none;
-      color: var(--text-muted, #64748B);
-      font-size: 0.85rem;
-      cursor: pointer;
-      padding: 2px 4px;
-      line-height: 1;
-      transition: color var(--transition-fast);
-      &:hover { color: var(--text-primary, #F8FAFC); }
-    }
-
-    /* Subcabecera */
-    .byte-subhead {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 14px;
-      background: var(--bg-surface, #10121C);
-      border-bottom: 1px solid var(--border, #202436);
-      font-size: 0.74rem;
-      flex-shrink: 0;
-    }
-    .byte-badge-avatar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      strong { color: var(--text-primary, #F8FAFC); font-size: 0.82rem; }
-      .avatar-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--primary, #0AE98A);
-        box-shadow: 0 0 8px var(--primary, #0AE98A);
+      .tab-label {
+        font-weight: 500;
+        white-space: nowrap;
       }
-    }
-    .byte-status-indicator {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text-muted, #64748B);
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      .pulse-dot {
+      .tab-status-dot {
         width: 6px;
         height: 6px;
         border-radius: 50%;
         background: var(--primary, #0AE98A);
+        box-shadow: 0 0 6px var(--primary, #0AE98A);
+        &.is-busy {
+          background: #FFD740;
+          box-shadow: 0 0 6px #FFD740;
+          animation: dot-pulse 1s infinite;
+        }
       }
-      &.writing { color: var(--primary, #0AE98A); }
+    }
+    .term-tab--teacher .tab-status-dot {
+      background: var(--accent, #00D9FF);
+      box-shadow: 0 0 6px var(--accent, #00D9FF);
+    }
+    @keyframes dot-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Windows Caption Controls */
+    .term-caption-bar {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+
+    .term-mode-pill {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      margin-right: 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-secondary, #94A3B8);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      &:hover {
+        color: #FFFFFF;
+        border-color: var(--primary, #0AE98A);
+        background: rgba(10, 233, 138, 0.12);
+      }
+    }
+
+    .term-cap-btn {
+      width: 38px;
+      height: 100%;
+      background: transparent;
+      border: none;
+      color: #94A3B8;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      transition: all var(--transition-fast);
+      line-height: 1;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #FFFFFF;
+      }
+      &--close:hover {
+        background: #E81123 !important;
+        color: #FFFFFF !important;
+      }
     }
 
     /* Banner offline */
-    .byte-banner {
+    .term-alert-line {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 12px;
-      font-size: 0.72rem;
-      color: var(--warning, #F59E0B);
-      background: var(--warning-dim, rgba(245, 158, 11, 0.12));
-      border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+      padding: 4px 10px;
+      background: rgba(245, 158, 11, 0.12);
+      border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: #FBBF24;
       p { margin: 0; flex: 1; }
       button { background: none; border: none; color: inherit; cursor: pointer; }
     }
@@ -671,150 +624,298 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
       &__text { color: var(--text-secondary); font-size: 0.85rem; }
     }
 
-    /* Barra de Acciones Rápidas (Alineada con botones SysEng) */
-    .byte-quick-bar {
+    /* Command Flags Bar */
+    .cli-flags-bar {
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: 6px;
-      padding: 8px 12px;
-      background: var(--bg-surface-2, #161926);
-      border-bottom: 1px solid var(--border, #202436);
+      padding: 6px 12px;
+      background: rgba(16, 20, 30, 0.6);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       flex-shrink: 0;
 
-      .quick-title {
+      .cli-flags-prefix {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--primary, #0AE98A);
+      }
+      &--teacher .cli-flags-prefix {
+        color: var(--accent, #00D9FF);
+      }
+
+      .cli-flags-scroll {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        &::-webkit-scrollbar { height: 2px; }
+        &::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+      }
+
+      .cli-flag {
         font-family: var(--font-mono);
         font-size: 0.68rem;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .quick-btns {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        button {
-          flex: 1 1 calc(50% - 6px);
-          min-width: 125px;
-          padding: 6px 10px;
-          font-size: 0.74rem;
-          font-weight: 500;
-          font-family: var(--font-sans);
-          color: var(--text-primary);
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-sm, 4px);
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          transition: all var(--transition-fast);
-          &:hover:not(:disabled) {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: var(--primary-dim);
-          }
-          &:disabled { opacity: 0.45; cursor: not-allowed; }
-        }
-      }
+        color: #94A3B8;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 3px;
+        padding: 2px 7px;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all var(--transition-fast);
 
-      &--teacher .quick-btns button:hover:not(:disabled) {
-        border-color: var(--accent);
-        color: var(--accent);
-        background: var(--accent-dim);
+        &:hover:not(:disabled) {
+          color: var(--primary, #0AE98A);
+          border-color: var(--primary, #0AE98A);
+          background: rgba(10, 233, 138, 0.08);
+        }
+        &:disabled { opacity: 0.4; cursor: not-allowed; }
       }
     }
+    .cli-flags-bar--teacher .cli-flag:hover:not(:disabled) {
+      color: var(--accent, #00D9FF);
+      border-color: var(--accent, #00D9FF);
+      background: rgba(0, 217, 255, 0.08);
+    }
 
-    /* Mensajes */
-    .byte-msgs {
+    /* ================= TERMINAL STDOUT / STDIN STREAM ================= */
+    .term-body {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
       padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       overscroll-behavior: contain;
+      background: rgba(8, 10, 16, 0.75);
 
-      &::-webkit-scrollbar { width: 4px; }
+      &::-webkit-scrollbar { width: 5px; }
       &::-webkit-scrollbar-thumb {
-        background: var(--border-hover, #2E344E);
-        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 3px;
+        &:hover { background: rgba(255, 255, 255, 0.22); }
       }
     }
 
-    .byte-msg {
+    /* Terminal MOTD banner */
+    .term-motd {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+      margin-bottom: 4px;
+      user-select: none;
+      .motd-dim { color: #64748B; }
+      .motd-hl { color: var(--primary, #0AE98A); font-weight: 600; }
+    }
+    .cli-flags-bar--teacher ~ .term-body .term-motd .motd-hl {
+      color: var(--accent, #00D9FF);
+    }
+
+    /* Terminal Loading */
+    .term-loading {
       display: flex;
-      &--user { justify-content: flex-end; }
-      &--assistant { justify-content: flex-start; }
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      padding: 6px 0;
     }
+    .term-spinner {
+      width: 10px;
+      height: 10px;
+      border: 2px solid rgba(10, 233, 138, 0.2);
+      border-top-color: var(--primary, #0AE98A);
+      border-radius: 50%;
+      animation: term-spin 0.8s linear infinite;
+    }
+    @keyframes term-spin { to { transform: rotate(360deg); } }
 
-    /* Burbujas alineadas con las tarjetas SysEng */
-    .byte-bubble {
-      max-width: 90%;
-      padding: 10px 14px;
-      font-size: 0.84rem;
-      line-height: 1.55;
-      border-radius: var(--radius-md, 6px);
-      color: var(--text-primary);
-      word-break: break-word;
+    /* Entradas del Stream: User (stdin) y Byte (stdout) */
+    .term-entry {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      animation: term-fade-in 0.15s ease-out;
 
-      .bubble-header-label {
-        font-family: var(--font-mono);
-        font-size: 0.65rem;
-        color: var(--text-muted);
-        margin-bottom: 4px;
-        text-transform: uppercase;
-      }
-
-      &--assistant {
-        background: var(--bg-surface-2, #161926);
-        border: 1px solid var(--border, #202436);
-        border-left: 3px solid var(--primary, #0AE98A);
-      }
-      &--teacher {
-        border-left-color: var(--accent, #00D9FF);
-      }
       &--user {
-        background: var(--bg-surface-3, #1E2235);
-        border: 1px solid var(--border-hover, #2E344E);
-        border-right: 3px solid var(--primary, #0AE98A);
-        .bubble-header-label { text-align: right; }
+        padding-bottom: 2px;
       }
-      &--error {
-        background: var(--danger-dim);
-        border: 1px solid var(--danger);
-        border-left: 3px solid var(--danger);
+
+      &--byte {
+        border-left: 2px solid rgba(10, 233, 138, 0.45);
+        background: rgba(16, 20, 31, 0.35);
+        border-radius: 0 4px 4px 0;
+        padding: 8px 10px;
+        margin: 2px 0 4px;
       }
-      &--stream { min-width: 80px; }
-      p { margin: 0; }
+
+      &--teacher {
+        border-left-color: rgba(0, 217, 255, 0.45);
+        background: rgba(15, 23, 42, 0.35);
+      }
+    }
+    @keyframes term-fade-in {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Bash / PowerShell Prompt (stdin) */
+    .term-prompt {
+      display: flex;
+      align-items: center;
+      gap: 1px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      user-select: none;
+
+      .prompt-user { color: var(--primary, #0AE98A); font-weight: 700; }
+      .prompt-at { color: #64748B; }
+      .prompt-host { color: #818CF8; font-weight: 600; }
+      .prompt-path { color: #38BDF8; font-weight: 600; }
+      .prompt-sym { color: #F1F5F9; font-weight: 700; margin-left: 3px; }
+    }
+    .cli-flags-bar--teacher ~ .term-body .term-prompt .prompt-user {
+      color: var(--accent, #00D9FF);
+    }
+
+    .term-user-cmd {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #F8FAFC;
+      line-height: 1.5;
+      padding-left: 2px;
+      word-break: break-word;
+    }
+
+    /* Byte Salida (stdout) */
+    .term-byte-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      margin-bottom: 4px;
+      user-select: none;
+
+      .byte-prefix {
+        color: var(--primary, #0AE98A);
+        font-weight: 700;
+      }
+      .byte-name {
+        color: #E2E8F0;
+        font-weight: 600;
+      }
+      .byte-tag {
+        font-size: 0.65rem;
+        color: #64748B;
+      }
+      .term-thinking-text {
+        color: #64748B;
+        font-size: 0.68rem;
+        font-style: italic;
+        margin-left: 4px;
+      }
+    }
+    .term-entry--teacher .term-byte-header .byte-prefix {
+      color: var(--accent, #00D9FF);
+    }
+
+    .term-byte-content {
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: #CBD5E1;
+      word-break: break-word;
+    }
+
+    .term-err-box {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 4px;
+      padding: 6px 10px;
+      color: #FCA5A5;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      .err-tag {
+        color: #EF4444;
+        font-weight: 700;
+        margin-right: 4px;
+      }
+    }
+
+    /* Cursors & Pulsos */
+    .term-cursor {
+      display: inline-block;
+      color: var(--primary, #0AE98A);
+      font-family: var(--font-mono);
+      animation: term-blink 0.9s step-end infinite;
+      margin-left: 2px;
+    }
+    .term-entry--teacher .term-cursor {
+      color: var(--accent, #00D9FF);
+    }
+    @keyframes term-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .term-blinking-dots {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 18px;
+      span {
+        width: 4px;
+        height: 4px;
+        background: var(--primary, #0AE98A);
+        border-radius: 50%;
+        animation: term-pulse 1.2s infinite ease-in-out;
+        &:nth-child(2) { animation-delay: 0.2s; }
+        &:nth-child(3) { animation-delay: 0.4s; }
+      }
+    }
+    .term-entry--teacher .term-blinking-dots span {
+      background: var(--accent, #00D9FF);
+    }
+    @keyframes term-pulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    /* Markdown Formatter */
     .byte-markdown {
       white-space: pre-wrap;
+      p { margin: 0 0 6px 0; &:last-child { margin-bottom: 0; } }
     }
     .byte-markdown :deep(code),
     .byte-markdown :deep(.byte-inline-code) {
       font-family: var(--font-mono);
       font-size: 0.82em;
-      background: var(--bg-base, #08090D);
-      border: 1px solid var(--border, #202436);
-      border-radius: var(--radius-sm, 4px);
-      padding: 1px 6px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      padding: 1px 5px;
       color: var(--primary, #0AE98A);
+    }
+    .term-entry--teacher .byte-markdown :deep(code) {
+      color: var(--accent, #00D9FF);
     }
     .byte-markdown :deep(strong) {
       color: #FFFFFF;
       font-weight: 600;
     }
     .byte-markdown :deep(ul), .byte-markdown :deep(ol) {
-      margin: 6px 0;
+      margin: 4px 0 6px;
       padding-left: 18px;
     }
     .byte-markdown :deep(li) {
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
-    /* Acciones de Navegación */
+    /* Action Card */
     .byte-markdown :deep(.byte-action-card) {
       margin: 8px 0 4px;
     }
@@ -822,14 +923,14 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 14px;
-      border-radius: var(--radius-sm, 4px);
+      padding: 5px 12px;
+      border-radius: 3px;
       background: var(--primary, #0AE98A);
       border: none;
       color: #08090D;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      font-family: var(--font-sans);
+      font-family: var(--font-mono);
       cursor: pointer;
       transition: all var(--transition-fast);
       &:hover {
@@ -840,45 +941,46 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
       &:hover .arrow { transform: translateX(3px); }
     }
 
-    /* Bloques de Código: Idéntico a .code-window */
+    /* Code Window Minimalista */
     .byte-markdown :deep(.byte-code-card) {
       margin: 8px 0;
-      border-radius: var(--radius-md, 6px);
-      border: 1px solid var(--border, #202436);
-      background: var(--bg-base, #08090D);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #08090D;
       overflow: hidden;
     }
     .byte-markdown :deep(.byte-code-bar) {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 5px 10px;
-      background: var(--bg-surface, #10121C);
-      border-bottom: 1px solid var(--border, #202436);
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
     .byte-markdown :deep(.byte-code-lang) {
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 700;
       color: var(--primary, #0AE98A);
     }
     .byte-markdown :deep(.byte-code-copy) {
       border: none;
       background: transparent;
-      color: var(--text-muted);
-      font-size: 0.7rem;
+      color: #64748B;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
       cursor: pointer;
       padding: 2px 6px;
-      border-radius: 4px;
-      &:hover { color: var(--text-primary); }
+      border-radius: 3px;
+      &:hover { color: #F1F5F9; background: rgba(255, 255, 255, 0.08); }
     }
     .byte-markdown :deep(.byte-code-pre) {
       margin: 0;
-      padding: 10px 12px;
+      padding: 8px 12px;
       overflow-x: auto;
       font-family: var(--font-mono);
-      font-size: 0.78rem;
-      line-height: 1.5;
+      font-size: 0.76rem;
+      line-height: 1.45;
       color: #E2E8F0;
       code {
         background: transparent !important;
@@ -888,214 +990,218 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
       }
     }
 
-    /* Skeleton */
-    .byte-skeleton {
+    /* Terminal Quiz */
+    .term-quiz-box {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      .skeleton-line {
-        height: 28px;
-        background: var(--bg-surface-2);
-        border-radius: var(--radius-sm);
-      }
-    }
+      padding: 10px;
+      background: rgba(16, 20, 31, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 3px solid var(--primary, #0AE98A);
+      border-radius: 4px;
+      margin-top: 4px;
 
-    /* Typing indicator */
-    .typing-indicator {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      height: 18px;
-      span {
-        width: 5px; height: 5px;
-        background: var(--primary, #0AE98A);
-        border-radius: 50%;
-        animation: typing-bounce 1.2s infinite;
-        &:nth-child(2) { animation-delay: 0.2s; }
-        &:nth-child(3) { animation-delay: 0.4s; }
-      }
-    }
-    @keyframes typing-bounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30% { transform: translateY(-4px); }
-    }
-    .stream-cursor {
-      color: var(--primary, #0AE98A);
-      animation: cursor-blink 1s step-end infinite;
-    }
-    @keyframes cursor-blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    /* Quiz Card */
-    .byte-quiz-card {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding: 12px;
-      background: var(--bg-surface, #10121C);
-      border: 1px solid var(--border, #202436);
-      border-radius: var(--radius-md, 6px);
-      &__head {
+      .term-quiz-head {
         display: flex;
         align-items: center;
         gap: 8px;
         .quiz-badge {
           font-family: var(--font-mono);
-          font-size: 0.65rem;
-          padding: 1px 6px;
+          font-size: 0.62rem;
+          font-weight: 700;
+          padding: 1px 5px;
           background: rgba(10, 233, 138, 0.15);
           color: var(--primary, #0AE98A);
-          border-radius: 4px;
+          border-radius: 3px;
         }
-        strong { font-size: 0.85rem; color: var(--text-primary); flex: 1; }
+        strong { font-size: 0.8rem; color: #F1F5F9; flex: 1; }
         .quiz-score-pill {
-          font-size: 0.72rem;
+          font-family: var(--font-mono);
+          font-size: 0.7rem;
           font-weight: 700;
-          padding: 2px 8px;
-          border-radius: 4px;
-          background: var(--warning-dim);
-          color: var(--warning);
-          &.passed { background: var(--success-dim); color: var(--success); }
+          padding: 1px 6px;
+          border-radius: 3px;
+          background: rgba(245, 158, 11, 0.15);
+          color: #F59E0B;
+          &.passed { background: rgba(10, 233, 138, 0.15); color: #0AE98A; }
         }
       }
-      &__q {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding: 10px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        background: var(--bg-surface-2);
-        &.is-correct { border-color: var(--success); }
-        &.is-wrong { border-color: var(--danger); }
-        .q-title { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
-      }
-      .q-options {
+
+      .term-quiz-q {
         display: flex;
         flex-direction: column;
         gap: 6px;
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 3px;
+        background: rgba(8, 9, 13, 0.5);
+        &.is-correct { border-color: rgba(10, 233, 138, 0.5); }
+        &.is-wrong { border-color: rgba(239, 68, 68, 0.5); }
+        .q-title { font-size: 0.76rem; font-weight: 600; color: #E2E8F0; margin: 0; }
       }
+
+      .q-options {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
       .q-option-label {
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 6px 10px;
-        font-size: 0.76rem;
-        color: var(--text-secondary);
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        cursor: pointer;
-        &:hover { border-color: var(--primary); color: var(--text-primary); }
-        &.selected { border-color: var(--primary); background: var(--primary-dim); color: var(--text-primary); }
-      }
-      .q-feedback {
+        padding: 4px 8px;
         font-size: 0.74rem;
-        color: var(--text-secondary);
+        color: #94A3B8;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        input[type="radio"] { accent-color: var(--primary, #0AE98A); }
+        &:hover { border-color: rgba(255, 255, 255, 0.15); color: #F1F5F9; }
+        &.selected {
+          border-color: rgba(10, 233, 138, 0.4);
+          background: rgba(10, 233, 138, 0.08);
+          color: #F1F5F9;
+        }
+      }
+
+      .q-feedback {
+        font-size: 0.72rem;
+        color: #94A3B8;
+        padding-top: 2px;
+        p { margin: 2px 0 0; }
         .feedback-tag {
           font-weight: 700;
-          color: var(--danger);
-          &.ok { color: var(--success); }
+          color: #EF4444;
+          &.ok { color: #0AE98A; }
         }
+      }
+
+      .quiz-footer {
+        padding-top: 4px;
+      }
+      .btn-term-primary {
+        width: 100%;
+        padding: 6px 12px;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 3px;
+        background: var(--primary, #0AE98A);
+        color: #08090D;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        &:hover:not(:disabled) { background: var(--primary-hover, #1FFFB0); }
+        &:disabled { opacity: 0.35; cursor: not-allowed; }
       }
       .quiz-footer-actions {
         display: flex;
         gap: 8px;
-        button { flex: 1; }
+        button {
+          flex: 1;
+          padding: 5px 10px;
+          font-family: var(--font-mono);
+          font-size: 0.72rem;
+          border-radius: 3px;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+        .btn-term-outline {
+          background: transparent;
+          border: 1px solid var(--border-hover, #2E344E);
+          color: #E2E8F0;
+          &:hover { border-color: var(--primary); color: var(--primary); }
+        }
+        .btn-term-ghost {
+          background: transparent;
+          border: none;
+          color: #64748B;
+          &:hover { color: #F1F5F9; }
+        }
       }
     }
 
-    /* Barra de Entrada Terminal */
-    .byte-input-area {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 10px 12px;
-      background: var(--bg-base, #08090D);
-      border-top: 1px solid var(--border, #202436);
-      flex-shrink: 0;
-    }
-    .input-terminal-box {
+    /* CLI Prompt Input Bar (stdin) */
+    .term-input-bar {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: var(--bg-surface, #10121C);
-      border: 1px solid var(--border, #202436);
-      border-radius: var(--radius-md, 6px);
-      padding: 2px 4px 2px 10px;
-      transition: all var(--transition-fast);
+      padding: 8px 12px;
+      background: #08090D;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
 
-      &:focus-within {
-        border-color: var(--primary, #0AE98A);
-        box-shadow: 0 0 0 2px var(--primary-dim, rgba(10, 233, 138, 0.15));
+      .term-input-prompt {
+        display: flex;
+        align-items: center;
+        user-select: none;
       }
-    }
-    .byte-input-area--teacher .input-terminal-box:focus-within {
-      border-color: var(--accent, #00D9FF);
-      box-shadow: 0 0 0 2px var(--accent-dim, rgba(0, 217, 255, 0.15));
-    }
-
-    .terminal-prefix {
-      font-family: var(--font-mono);
-      font-weight: bold;
-      color: var(--primary, #0AE98A);
-      font-size: 0.9rem;
-    }
-    .byte-input-area--teacher .terminal-prefix {
-      color: var(--accent, #00D9FF);
-    }
-
-    .byte-input {
-      flex: 1;
-      resize: none;
-      max-height: 90px;
-      background: transparent;
-      border: none;
-      padding: 8px 0;
-      color: var(--text-primary);
-      font-size: 0.82rem;
-      font-family: var(--font-sans);
-      line-height: 1.45;
-      outline: none;
-      &::placeholder { color: var(--text-muted); }
-      &:disabled { opacity: 0.6; }
-    }
-
-    /* Botón idéntico a .btn-primary */
-    .btn-send {
-      width: 32px;
-      height: 32px;
-      display: grid;
-      place-items: center;
-      border: none;
-      border-radius: var(--radius-sm, 4px);
-      background: var(--primary, #0AE98A);
-      color: #08090D;
-      font-weight: bold;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-
-      &:hover:not(:disabled) {
-        background: var(--primary-hover, #1FFFB0);
+      .term-user-sym {
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--primary, #0AE98A);
       }
-      &:disabled { opacity: 0.35; cursor: not-allowed; }
-    }
-    .byte-input-area--teacher .btn-send {
-      background: var(--accent, #00D9FF);
-      &:hover:not(:disabled) { background: var(--accent-hover, #33E4FF); }
-    }
+      &--teacher .term-user-sym {
+        color: var(--accent, #00D9FF);
+        font-size: 0.74rem;
+      }
 
-    .input-info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      color: var(--text-muted);
-      padding: 0 2px;
+      .term-input-textarea {
+        flex: 1;
+        resize: none;
+        max-height: 80px;
+        background: transparent;
+        border: none;
+        outline: none;
+        padding: 3px 0;
+        color: #F8FAFC;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        line-height: 1.45;
+        &::placeholder {
+          color: #475569;
+          font-family: var(--font-mono);
+          font-size: 0.74rem;
+        }
+        &:disabled { opacity: 0.5; }
+      }
+
+      .term-send-btn {
+        width: 26px;
+        height: 26px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(10, 233, 138, 0.3);
+        border-radius: 3px;
+        background: rgba(10, 233, 138, 0.1);
+        color: var(--primary, #0AE98A);
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+
+        &:hover:not(:disabled) {
+          background: var(--primary, #0AE98A);
+          color: #08090D;
+        }
+        &:disabled { opacity: 0.3; cursor: not-allowed; }
+      }
+
+      &--teacher .term-send-btn {
+        border-color: rgba(0, 217, 255, 0.3);
+        background: rgba(0, 217, 255, 0.1);
+        color: var(--accent, #00D9FF);
+        &:hover:not(:disabled) {
+          background: var(--accent, #00D9FF);
+          color: #08090D;
+        }
+      }
     }
 
     /* Mobile */
