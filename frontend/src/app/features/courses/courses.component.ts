@@ -272,9 +272,20 @@ export class CoursesComponent implements OnInit {
 
   emoji(course: Course): string {
     const map: Record<string, string> = {
-      'programacion-basica': '💡', 'algoritmos': '⚡', 'poo': '🧩',
-      'bases-de-datos': '🗄️', 'redes': '🌐', 'sistemas-operativos': '🖥️',
-      'estructuras-de-datos': '🌳', 'desarrollo-web': '🕸️',
+      'programacion-basica': '💡',
+      'algoritmos': '⚡',
+      'poo': '🧩',
+      'bases-de-datos': '🗄️',
+      'redes': '🌐',
+      'sistemas-operativos': '🖥️',
+      'estructuras-de-datos': '🌳',
+      'desarrollo-web': '🕸️',
+      'desarrollo-backend': '⚙️',
+      'desarrollo-frontend': '🎨',
+      'devops': '🚀',
+      'git': '🐙',
+      'ingenieria-software': '📐',
+      'ia-desarrollo': '🤖',
     };
     return map[course.category?.slug ?? ''] ?? '📚';
   }

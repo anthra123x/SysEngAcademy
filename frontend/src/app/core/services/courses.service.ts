@@ -28,14 +28,43 @@ export class CoursesService {
         }
       }),
       catchError(() => {
+        let filtered = [...FALLBACK_COURSES];
+        if (filters?.search) {
+          const q = filters.search.toLowerCase().trim();
+          filtered = filtered.filter(c =>
+            c.title.toLowerCase().includes(q) ||
+            (c.description && c.description.toLowerCase().includes(q))
+          );
+        }
+        if (filters?.category) {
+          filtered = filtered.filter(c => c.category?.slug === filters.category);
+        }
+        if (filters?.difficulty) {
+          filtered = filtered.filter(c => c.difficulty === filters.difficulty);
+        }
+        if (filters?.is_free !== undefined && filters?.is_free !== null && (filters?.is_free as any) !== '') {
+          const isFreeBool = String(filters.is_free) === 'true' || filters.is_free === true;
+          filtered = filtered.filter(c => c.is_free === isFreeBool);
+        }
+        if (filters?.learning_path_id) {
+          filtered = filtered.filter(c => (c as any).learning_path_id === Number(filters.learning_path_id));
+        }
+
+        const page = Number(filters?.page) || 1;
+        const perPage = 16;
+        const total = filtered.length;
+        const lastPage = Math.max(1, Math.ceil(total / perPage));
+        const start = (page - 1) * perPage;
+        const paginatedData = filtered.slice(start, start + perPage);
+
         const fallbackRes: PaginatedResponse<Course> = {
-          current_page: 1,
-          data: FALLBACK_COURSES,
-          total: FALLBACK_COURSES.length,
-          per_page: 12,
-          last_page: 1,
+          current_page: page,
+          data: paginatedData,
+          total: total,
+          per_page: perPage,
+          last_page: lastPage,
         };
-        return of(cached || fallbackRes);
+        return of(cached && (!filters || Object.keys(filters).length === 0) ? cached : fallbackRes);
       })
     );
   }
@@ -43,7 +72,7 @@ export class CoursesService {
   getBySlug(slug: string): Observable<Course> {
     return this.api.get<Course>(`/courses/${slug}`).pipe(
       catchError(() => {
-        const found = FALLBACK_COURSES.find(c => c.slug === slug) || FALLBACK_COURSES[0];
+        const found = FALLBACK_COURSES.find(c => c.slug === slug || c.slug.includes(slug) || slug.includes(c.slug)) || FALLBACK_COURSES[0];
         return of(found);
       })
     );
@@ -135,7 +164,12 @@ export class CoursesService {
   private readCache(): PaginatedResponse<Course> | null {
     try {
       const raw = localStorage.getItem(COURSES_CACHE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.data?.length >= FALLBACK_COURSES.length) {
+          return parsed;
+        }
+      }
     } catch {}
     return null;
   }

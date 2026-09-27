@@ -13,6 +13,7 @@ export interface Category {
   description?: string;
   icon?: string;
   color: string;
+  courses_count?: number;
 }
 
 export interface LearningPath {
@@ -51,7 +52,9 @@ export interface Course {
   is_free: boolean;
   duration_hours: number;
   difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  learning_path_id?: number | null;
   learning_path?: LearningPath;
+  order?: number;
   modules?: CourseModule[];
   lessons_count?: number;
   enrolled?: boolean;

@@ -36,7 +36,15 @@ export class HomeService {
   private readCache(): HomeData | null {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (
+          parsed?.learning_paths?.data?.length >= FALLBACK_HOME_DATA.learning_paths.data.length &&
+          parsed?.courses?.data?.length >= 16
+        ) {
+          return parsed;
+        }
+      }
     } catch {}
     return null;
   }

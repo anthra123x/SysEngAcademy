@@ -13,17 +13,26 @@ export class LearningPathsService {
 
   getAll(params?: Record<string, unknown>): Observable<PaginatedResponse<LearningPath>> {
     const cached = this.readCache();
-    const fallbackRes: PaginatedResponse<LearningPath> = cached || {
+
+    let filtered = [...FALLBACK_LEARNING_PATHS];
+    if (params && params['category']) {
+      filtered = filtered.filter(p => p.category?.slug === params['category']);
+    }
+    if (params && params['difficulty']) {
+      filtered = filtered.filter(p => p.difficulty === params['difficulty']);
+    }
+
+    const fallbackRes: PaginatedResponse<LearningPath> = {
       current_page: 1,
-      data: FALLBACK_LEARNING_PATHS,
-      total: FALLBACK_LEARNING_PATHS.length,
-      per_page: 10,
+      data: filtered,
+      total: filtered.length,
+      per_page: 12,
       last_page: 1,
     };
 
     return new Observable<PaginatedResponse<LearningPath>>(subscriber => {
       // 0ms instant emission
-      subscriber.next(fallbackRes);
+      subscriber.next((!params || Object.keys(params).length === 0) && cached ? cached : fallbackRes);
 
       // Revalidate in background without blocking UI
       this.api.get<PaginatedResponse<LearningPath>>('/learning-paths', params).subscribe({
@@ -63,7 +72,12 @@ export class LearningPathsService {
   private readCache(): PaginatedResponse<LearningPath> | null {
     try {
       const raw = localStorage.getItem(PATHS_CACHE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.data?.length >= FALLBACK_LEARNING_PATHS.length) {
+          return parsed;
+        }
+      }
     } catch {}
     return null;
   }
