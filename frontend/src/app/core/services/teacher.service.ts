@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
+import { FALLBACK_TEACHER_OVERVIEW } from './fallback-data';
 
 export interface TeacherStats {
   total_students: number;
@@ -99,7 +101,9 @@ export class TeacherService {
   private readonly api = inject(ApiService);
 
   getOverview(): Observable<TeacherOverviewResponse> {
-    return this.api.get<TeacherOverviewResponse>('/teacher/overview');
+    return this.api.get<TeacherOverviewResponse>('/teacher/overview').pipe(
+      catchError(() => of(FALLBACK_TEACHER_OVERVIEW))
+    );
   }
 
   getStudents(search?: string): Observable<TeacherStudent[]> {
@@ -107,7 +111,9 @@ export class TeacherService {
     if (search && search.trim()) {
       params['search'] = search.trim();
     }
-    return this.api.get<TeacherStudent[]>('/teacher/students', params);
+    return this.api.get<TeacherStudent[]>('/teacher/students', params).pipe(
+      catchError(() => of([]))
+    );
   }
 
   getStudentDetail(id: number): Observable<TeacherStudentDetail> {
