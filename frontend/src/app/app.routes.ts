@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/guards/auth.guard';
+import { authGuard, guestGuard, teacherGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -35,6 +35,16 @@ export const routes: Routes = [
     path: 'perfil',
     loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [authGuard]
+  },
+  {
+    path: 'docente',
+    loadComponent: () => import('./features/teacher/teacher-dashboard.component').then(m => m.TeacherDashboardComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'admin',
+    redirectTo: 'docente',
+    pathMatch: 'full'
   },
   {
     path: 'auth/login',

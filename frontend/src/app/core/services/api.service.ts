@@ -4,8 +4,16 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  readonly baseUrl = 'http://localhost:8000/api';
+  readonly baseUrl = this.resolveBaseUrl();
   private http = inject(HttpClient);
+
+  private resolveBaseUrl(): string {
+    if (typeof window !== 'undefined') {
+      const custom = (window as any).__API_URL__ || localStorage.getItem('syseng_api_url');
+      if (custom) return custom;
+    }
+    return 'http://localhost:8000/api';
+  }
 
   get<T>(path: string, params?: Record<string, unknown>): Observable<T> {
     let httpParams = new HttpParams();
@@ -25,6 +33,10 @@ export class ApiService {
 
   put<T>(path: string, body?: unknown): Observable<T> {
     return this.http.put<T>(`${this.baseUrl}${path}`, body);
+  }
+
+  patch<T>(path: string, body?: unknown): Observable<T> {
+    return this.http.patch<T>(`${this.baseUrl}${path}`, body);
   }
 
   delete<T>(path: string): Observable<T> {

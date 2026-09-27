@@ -18,7 +18,7 @@ class LessonController extends Controller
         // El contenido base (y el quiz sin respuestas correctas) es común a
         // todos los usuarios: se cachea. Los datos por usuario (completed,
         // prev/next) se calculan fuera del caché.
-        $lesson = Cache::remember("api.lesson.v3.{$slug}", now()->addMinutes(10), function () use ($slug) {
+        $lesson = Cache::remember("api.lesson.v4.{$slug}", now()->addMinutes(10), function () use ($slug) {
             $lesson = Lesson::with(['module.course', 'quiz.questions.answers'])
                 ->where('slug', $slug)
                 ->firstOrFail()
@@ -39,15 +39,22 @@ class LessonController extends Controller
             unset($question);
             $lesson['quiz']['questions'] = $questions;
 
+            // Nunca exponer la solución de referencia de un ejercicio: el
+            // alumno debe resolverlo. Se conserva solo en el seeder.
+            unset($lesson['solution']);
+
             return $lesson;
         });
 
-        // Acceso libre si es preview, de lo contrario requiere inscripción
-        if (! $lesson['is_preview']) {
+        // Acceso libre si es preview o si el curso es gratuito, de lo contrario requiere inscripción
+        $course = $lesson['module']['course'] ?? null;
+        $isFreeCourse = $course && !empty($course['is_free']);
+
+        if (! $lesson['is_preview'] && ! $isFreeCourse) {
             $user = $request->user('jwt') ?: $request->user('sanctum');
 
             if (! $user) {
-                throw new AuthenticationException('Debes iniciar sesión para acceder a esta lección.');
+                return response()->json(['message' => 'Debes iniciar sesión para acceder a esta lección.'], 403);
             }
 
             $courseId = $lesson['module']['course_id'];

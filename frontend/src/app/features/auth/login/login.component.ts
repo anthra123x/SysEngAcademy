@@ -43,7 +43,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
         <p class="auth-link">
           ¿No tienes cuenta?
-          <a routerLink="/auth/registro">Regístrate gratis</a>
+          <a routerLink="/auth/registro">Regístrate</a>
         </p>
       </div>
     </div>
@@ -139,7 +139,18 @@ export class LoginComponent {
     this.error.set('');
 
     this.auth.login({ email: this.email, password: this.password }).subscribe({
-      next: () => this.router.navigate(['/']),
+      next: (res) => {
+        const user = res?.user || this.auth.user();
+        if (
+          user?.email === 'andrescamilomartinez330@gmail.com' ||
+          user?.role === 'admin' ||
+          user?.role === 'instructor'
+        ) {
+          this.router.navigate(['/docente']);
+        } else {
+          this.router.navigate(['/']);
+        }
+      },
       error: (err) => {
         this.error.set(err.error?.message ?? 'Las credenciales no son correctas.');
         this.loading.set(false);

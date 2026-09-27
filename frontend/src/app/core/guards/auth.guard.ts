@@ -17,3 +17,21 @@ export const guestGuard: CanActivateFn = () => {
   router.navigate(['/']);
   return false;
 };
+
+export const teacherGuard: CanActivateFn = () => {
+  const auth   = inject(AuthService);
+  const router = inject(Router);
+  const user   = auth.user();
+
+  if (
+    auth.isAuthenticated() &&
+    (user?.role === 'admin' ||
+      user?.role === 'instructor' ||
+      user?.email === 'andrescamilomartinez330@gmail.com')
+  ) {
+    return true;
+  }
+
+  router.navigate(['/']);
+  return false;
+};

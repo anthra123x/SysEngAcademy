@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIf, SlicePipe } from '@angular/common';
 import { HomeService } from '../../core/services/home.service';
@@ -93,40 +93,15 @@ interface SnakeSeg {
       </div>
     </section>
 
-    <!-- CATEGORIES -->
-    <section class="section categories-section">
-      <div class="container">
-        <div class="section-header">
-          <div class="section-eyebrow">Áreas de Estudio</div>
-          <h2 class="section-title">¿Qué quieres <span>aprender hoy?</span></h2>
-        </div>
-        <div class="categories-grid">
-          @for (cat of categories(); track cat.id) {
-            <a [routerLink]="['/cursos']" [queryParams]="{category: cat.slug}" class="category-card">
-              <div class="category-card__icon" [style.background]="cat.color + '22'" [style.border-color]="cat.color + '44'">
-                <span [style.color]="cat.color">{{ getCategoryEmoji(cat.slug) }}</span>
-              </div>
-              <span class="category-card__name">{{ cat.name }}</span>
-            </a>
-          }
-          @if (categories().length === 0) {
-            @for (i of [1,2,3,4,5,6,7,8]; track i) {
-              <div class="category-card skeleton" style="height:90px;"></div>
-            }
-          }
-        </div>
-      </div>
-    </section>
-
     <!-- LEARNING PATHS (serpentine por categoría) -->
     <section class="section paths-section">
       <div class="container">
         <div class="section-header">
           <div class="section-eyebrow">
-            <span>🗺️</span> Aprendizaje Estructurado
+            <span>🗺️</span> Línea de Tiempo Profesional
           </div>
-          <h2 class="section-title">Rutas de <span>Aprendizaje</span></h2>
-          <p class="section-subtitle">Cada estación del recorrido es una ruta con el color de su categoría. Sigue el camino y elige por dónde empezar.</p>
+          <h2 class="section-title">Rutas de <span>Aprendizaje Interactivas</span></h2>
+          <p class="section-subtitle">Sigue la trayectoria paso a paso desde los fundamentos hasta especializaciones avanzadas con retroalimentación en tiempo real.</p>
         </div>
 
         @if (learningPaths().length === 0) {
@@ -182,7 +157,7 @@ interface SnakeSeg {
                         <span>·</span>
                         <span>⏱ {{ stop.path.estimated_hours }}h estimadas</span>
                       </div>
-                      <span class="snake__cta">Ver Ruta →</span>
+                      <span class="snake__cta">Explorar Ruta →</span>
                     </a>
                   </div>
                 }
@@ -192,55 +167,125 @@ interface SnakeSeg {
         }
 
         <div class="section-cta">
-          <a routerLink="/rutas" class="btn btn-outline">Ver todas las rutas →</a>
+          <a routerLink="/rutas" class="btn btn-outline">Ver todas las rutas de ingeniería →</a>
         </div>
       </div>
     </section>
 
-    <!-- FEATURED COURSES -->
+    <!-- FEATURED COURSES (Platzi / Udemy Style) -->
     <section class="section courses-section">
       <div class="container">
         <div class="section-header">
           <div class="section-eyebrow">
-            <span>📖</span> Aprende a tu ritmo
+            <span>⚡</span> Formación Práctica y Flexible
           </div>
-          <h2 class="section-title">Cursos <span>Independientes</span></h2>
-          <p class="section-subtitle">Elige el tema que quieres estudiar y comienza cuando quieras. Sin orden ni requisitos previos.</p>
+          <h2 class="section-title">Catálogo de <span>Cursos Destacados</span></h2>
+          <p class="section-subtitle">Aprende tecnologías demandadas con proyectos paso a paso, retos interactivos evaluados por IA y debates comunitarios.</p>
         </div>
 
-        <div class="grid-4">
-          @for (course of featuredCourses(); track course.id) {
-            <a [routerLink]="['/cursos', course.slug]" class="course-card">
-              <div class="course-card__thumb" [style.background]="course.category ? course.category.color + '33' : 'var(--bg-surface-3)'">
-                <div class="course-card__emoji">{{ getCourseEmoji(course) }}</div>
+        <!-- Filter category pills -->
+        <div class="course-filter-strip">
+          <button
+            type="button"
+            class="filter-pill"
+            [class.is-active]="selectedCategory() === 'all'"
+            (click)="setCategoryFilter('all')"
+          >
+            ⚡ Todos los Cursos
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.is-active]="selectedCategory() === 'programacion-basica'"
+            (click)="setCategoryFilter('programacion-basica')"
+          >
+            💡 Fundamentos
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.is-active]="selectedCategory() === 'poo'"
+            (click)="setCategoryFilter('poo')"
+          >
+            🧩 POO & Python
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.is-active]="selectedCategory() === 'desarrollo-web' || selectedCategory() === 'desarrollo-frontend'"
+            (click)="setCategoryFilter('desarrollo-frontend')"
+          >
+            🌐 Web & Frontend
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.is-active]="selectedCategory() === 'desarrollo-backend'"
+            (click)="setCategoryFilter('desarrollo-backend')"
+          >
+            ⚙️ Backend & APIs
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.is-active]="selectedCategory() === 'bases-de-datos'"
+            (click)="setCategoryFilter('bases-de-datos')"
+          >
+            🗄️ SQL & Datos
+          </button>
+        </div>
+
+        <!-- Course Cards Grid -->
+        <div class="courses-grid-cards">
+          @for (course of displayedCourses(); track course.id) {
+            <a [routerLink]="['/cursos', course.slug]" class="udemy-course-card">
+              <div class="card-thumb">
+                <span class="card-thumb__emoji">{{ getCourseEmoji(course) }}</span>
                 @if (course.is_free) {
-                  <span class="course-card__free">GRATIS</span>
+                  <span class="card-thumb__free">GRATIS</span>
                 }
-              </div>
-              <div class="course-card__body">
-                <div [class]="'badge badge-' + course.difficulty" style="margin-bottom: var(--sp-2);">
-                  {{ difficultyLabel(course.difficulty) }}
+                <div class="card-thumb__category">
+                  {{ course.category?.name ?? 'Curso' }}
                 </div>
-                <h3>{{ course.title }}</h3>
-                <p>{{ course.description | slice:0:80 }}...</p>
-                <div class="course-card__meta">
-                  <span>{{ course.duration_hours }}h</span>
-                  <span>·</span>
-                  <span>{{ course.lessons_count ?? 0 }} lecciones</span>
+              </div>
+
+              <div class="card-body">
+                <div class="card-tags-row">
+                  <span [class]="'badge badge-' + course.difficulty">{{ difficultyLabel(course.difficulty) }}</span>
+                  <span class="rating-badge">★ 4.9 <small>(1.4k+)</small></span>
+                </div>
+
+                <h3 class="card-title">{{ course.title }}</h3>
+                <p class="card-desc">{{ course.description | slice:0:110 }}...</p>
+
+                <!-- Value features checklist -->
+                <div class="card-features">
+                  <span>💻 Retos con IA</span>
+                  <span>❓ Quizzes</span>
+                  <span>💬 Foro activo</span>
+                </div>
+
+                <div class="card-footer">
+                  <div class="meta-stats">
+                    <span>⏱ {{ course.duration_hours }}h</span>
+                    <span>·</span>
+                    <span>📚 {{ course.modules?.length ?? 3 }} módulos</span>
+                  </div>
+                  <span class="card-cta">Explorar →</span>
                 </div>
               </div>
             </a>
           }
 
           @if (featuredCourses().length === 0) {
-            @for (i of [1,2,3,4]; track i) {
-              <div class="course-card skeleton" style="height: 260px;"></div>
+            @for (i of [1,2,3,4,5,6]; track i) {
+              <div class="udemy-course-card skeleton" style="height: 340px;"></div>
             }
           }
         </div>
 
         <div class="section-cta">
-          <a routerLink="/cursos" class="btn btn-outline">Ver todos los cursos →</a>
+          <a routerLink="/cursos" class="btn btn-primary btn-lg">Explorar catálogo completo de cursos →</a>
         </div>
       </div>
     </section>
@@ -251,7 +296,7 @@ interface SnakeSeg {
       position: relative;
       padding: var(--sp-20) 0 var(--sp-16);
       overflow: hidden;
-      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(108,99,255,0.08) 0%, transparent 70%);
+      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(10,233,138,0.06) 0%, transparent 70%);
 
       &__bg-grid {
         position: absolute;
@@ -712,70 +757,185 @@ interface SnakeSeg {
       .snake__num { top: calc(100% + 8px); font-size: 9px; }
     }
 
-    /* COURSE CARDS */
-    .course-card {
+    /* FILTER PILLS STRIP (Udemy / Platzi Style) */
+    .course-filter-strip {
+      display: flex;
+      gap: var(--sp-2);
+      flex-wrap: wrap;
+      margin-bottom: var(--sp-8);
+      justify-content: center;
+    }
+
+    .filter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      color: var(--text-secondary);
+      font-size: var(--text-xs);
+      font-weight: var(--font-medium);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      user-select: none;
+
+      &:hover {
+        color: var(--text-primary);
+        border-color: var(--primary);
+        background: var(--bg-surface-2);
+      }
+
+      &.is-active {
+        color: #08090D;
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 4px 16px rgba(10, 233, 138, 0.35);
+      }
+    }
+
+    /* UDEMY / PLATZI COURSE CARDS GRID */
+    .courses-grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--sp-6);
+    }
+
+    .udemy-course-card {
       display: flex;
       flex-direction: column;
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius-xl);
       overflow: hidden;
       text-decoration: none;
       transition: all var(--transition-base);
+      position: relative;
 
       &:hover {
+        transform: translateY(-4px);
         border-color: var(--primary);
-        box-shadow: var(--shadow-primary);
-        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(10, 233, 138, 0.15);
+
+        .card-cta {
+          color: var(--primary);
+          transform: translateX(4px);
+        }
       }
 
-      &__thumb {
+      .card-thumb {
         position: relative;
-        height: 100px;
+        height: 120px;
         display: flex;
         align-items: center;
         justify-content: center;
+        background: linear-gradient(180deg, var(--bg-surface-2) 0%, var(--bg-surface) 100%);
+        border-bottom: 1px solid var(--border);
+
+        &__emoji { font-size: 2.75rem; }
+
+        &__free {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: var(--primary);
+          color: #08090D;
+          font-size: 10px;
+          font-weight: var(--font-bold);
+          padding: 2px 8px;
+          border-radius: var(--radius-sm);
+          letter-spacing: 0.04em;
+        }
+
+        &__category {
+          position: absolute;
+          bottom: 8px;
+          left: 12px;
+          font-size: 10px;
+          font-weight: var(--font-semibold);
+          color: var(--text-secondary);
+          background: rgba(10, 10, 15, 0.7);
+          padding: 2px 8px;
+          border-radius: var(--radius-sm);
+          backdrop-filter: blur(4px);
+        }
       }
 
-      &__emoji { font-size: 2.5rem; }
-
-      &__free {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: var(--success);
-        color: #000;
-        font-size: 10px;
-        font-weight: var(--font-bold);
-        padding: 2px 8px;
-        border-radius: var(--radius-sm);
-      }
-
-      &__body {
-        flex: 1;
+      .card-body {
         padding: var(--sp-4);
+        display: flex;
+        flex-direction: column;
+        flex: 1;
 
-        h3 {
+        .card-tags-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: var(--sp-2);
+
+          .rating-badge {
+            font-size: var(--text-xs);
+            color: #ffb703;
+            font-weight: var(--font-bold);
+            small { color: var(--text-muted); font-weight: normal; }
+          }
+        }
+
+        .card-title {
           font-size: var(--text-base);
           font-weight: var(--font-semibold);
           color: var(--text-primary);
           margin-bottom: var(--sp-2);
-          line-height: 1.3;
+          line-height: 1.35;
         }
 
-        p {
-          font-size: var(--text-sm);
+        .card-desc {
+          font-size: var(--text-xs);
           color: var(--text-secondary);
           line-height: 1.5;
           margin-bottom: var(--sp-4);
+          flex: 1;
         }
-      }
 
-      &__meta {
-        display: flex;
-        gap: var(--sp-2);
-        font-size: var(--text-xs);
-        color: var(--text-muted);
+        .card-features {
+          display: flex;
+          gap: var(--sp-2);
+          flex-wrap: wrap;
+          padding: var(--sp-2) 0;
+          border-top: 1px solid rgba(42, 42, 62, 0.4);
+          margin-bottom: var(--sp-3);
+
+          span {
+            font-size: 10px;
+            color: var(--text-muted);
+            background: var(--bg-surface-2);
+            padding: 2px 6px;
+            border-radius: 4px;
+          }
+        }
+
+        .card-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: var(--sp-2);
+          border-top: 1px solid rgba(42, 42, 62, 0.4);
+
+          .meta-stats {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 4px;
+          }
+
+          .card-cta {
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+          }
+        }
       }
     }
 
@@ -786,20 +946,38 @@ interface SnakeSeg {
     }
 
     .paths-section {
-      background: linear-gradient(180deg, transparent, rgba(108,99,255,0.03), transparent);
+      background: linear-gradient(180deg, transparent, rgba(10,233,138,0.02), transparent);
     }
   `]
 })
 export class HomeComponent implements OnInit {
   private homeSvc = inject(HomeService);
 
-  learningPaths  = signal<LearningPath[]>([]);
+  learningPaths   = signal<LearningPath[]>([]);
   featuredCourses = signal<Course[]>([]);
-  categories     = signal<Category[]>([]);
+  categories      = signal<Category[]>([]);
+  selectedCategory = signal<string>('all');
 
-  snakeRows      = signal<SnakeRow[]>([]);
-  snakeSegments  = signal<SnakeSeg[]>([]);
-  snakeVisible   = signal(false);
+  displayedCourses = computed(() => {
+    const cat = this.selectedCategory();
+    const courses = this.featuredCourses();
+    if (cat === 'all') return courses;
+    return courses.filter(c => {
+      const cSlug = c.category?.slug ?? '';
+      if (cat === 'desarrollo-frontend') {
+        return cSlug === 'desarrollo-frontend' || cSlug === 'desarrollo-web';
+      }
+      return cSlug === cat;
+    });
+  });
+
+  setCategoryFilter(slug: string) {
+    this.selectedCategory.set(slug);
+  }
+
+  snakeRows       = signal<SnakeRow[]>([]);
+  snakeSegments   = signal<SnakeSeg[]>([]);
+  snakeVisible    = signal(false);
   @ViewChild('snakeWrap') snakeWrap?: ElementRef<HTMLElement>;
 
   private resizeObs?: ResizeObserver;

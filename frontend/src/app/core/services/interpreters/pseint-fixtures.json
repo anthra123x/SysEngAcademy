@@ -1,0 +1,132 @@
+{
+    "funciones-y-parametros": {
+        "solution": "Algoritmo funciones_y_parametros\n    Procedimiento Saludar(nombre)\n        Escribir \"Hola, \", nombre, \"!\"\n    FinProcedimiento\n\n    Definir nombre Cadena\n    Leer nombre\n    Saludar(nombre)\nFinAlgoritmo",
+        "tests": [
+            [
+                "Ana",
+                "Hola, Ana!"
+            ],
+            [
+                "Carlos",
+                "Hola, Carlos!"
+            ]
+        ]
+    },
+    "bubble-sort": {
+        "solution": "Algoritmo bubble_sort\n    Dimension 5\n    Real a[5], aux\n    Enter i, j\n\n    Para i <- 0 Hasta 4\n        Leer a[i]\n    FinPara\n\n    Para i <- 0 Hasta 3\n        Para j <- 0 Hasta 3 - i\n            Si a[j] > a[j + 1]\n                aux <- a[j]\n                a[j] <- a[j + 1]\n                a[j + 1] <- aux\n            FinSi\n        FinPara\n    FinPara\n\n    Para i <- 0 Hasta 4\n        Escribir a[i], \" \"\n    FinPara",
+        "tests": [
+            [
+                "5 3 8 1 9",
+                "1\n3\n5\n8\n9"
+            ],
+            [
+                "9 7 6 5 4",
+                "4\n5\n6\n7\n9"
+            ]
+        ]
+    },
+    "selection-sort": {
+        "solution": "Algoritmo selection_sort\n    Dimension 5\n    Real a[5], aux\n    Enter i, j, min\n\n    Para i <- 0 Hasta 4\n        Leer a[i]\n    FinPara\n\n    Para i <- 0 Hasta 3\n        min <- i\n        Para j <- i + 1 Hasta 4\n            Si a[j] < a[min]\n                min <- j\n            FinSi\n        FinPara\n        Si min <> i\n            aux <- a[i]\n            a[i] <- a[min]\n            a[min] <- aux\n        FinSi\n    FinPara\n\n    Para i <- 0 Hasta 4\n        Escribir a[i], \" \"\n    FinPara",
+        "tests": [
+            [
+                "5 3 8 1 9",
+                "1\n3\n5\n8\n9"
+            ],
+            [
+                "2 2 7 0 4",
+                "0\n2\n2\n4\n7"
+            ]
+        ]
+    },
+    "insertion-sort": {
+        "solution": "Algoritmo insertion_sort\n    Dimension 5\n    Real a[5], aux\n    Enter i, j\n\n    Para i <- 0 Hasta 4\n        Leer a[i]\n    FinPara\n\n    Para i <- 1 Hasta 4\n        aux <- a[i]\n        j <- i - 1\n        Mientras j >= 0 Y a[j] > aux\n            a[j + 1] <- a[j]\n            j <- j - 1\n        FinMientras\n        a[j + 1] <- aux\n    FinPara\n\n    Para i <- 0 Hasta 4\n        Escribir a[i], \" \"\n    FinPara",
+        "tests": [
+            [
+                "5 3 8 1 9",
+                "1\n3\n5\n8\n9"
+            ],
+            [
+                "10 4 6 2 8",
+                "2\n4\n6\n8\n10"
+            ]
+        ]
+    },
+    "merge-sort": {
+        "solution": "SubProceso Fusionar(izq, mid, der, a, aux)\n    Enter i, j, k\n    i <- izq\n    j <- mid + 1\n    k <- izq\n    Mientras i <= mid Y j <= der\n        Si a[i] <= a[j]\n            aux[k] <- a[i]\n            i <- i + 1\n        Sino\n            aux[k] <- a[j]\n            j <- j + 1\n        FinSi\n        k <- k + 1\n    FinMientras\n    Mientras i <= mid\n        aux[k] <- a[i]\n        i <- i + 1\n        k <- k + 1\n    FinMientras\n    Mientras j <= der\n        aux[k] <- a[j]\n        j <- j + 1\n        k <- k + 1\n    FinMientras\n    Para i <- izq Hasta der\n        a[i] <- aux[i]\n    FinPara\nFinSubProceso\n\nAlgoritmo merge_sort\n    Dimension 5\n    Real a[5], aux[5]\n    Enter izq, der, mid\n\n    Para i <- 0 Hasta 4\n        Leer a[i]\n    FinPara\n\n    Fusionar(0, 2, 4, a, aux)\n    Fusionar(0, 0, 2, a, aux)\n    Fusionar(3, 3, 4, a, aux)\n    Fusionar(0, 1, 3, a, aux)\n    Fusionar(2, 2, 4, a, aux)\n    Fusionar(0, 0, 4, a, aux)\n\n    Para i <- 0 Hasta 4\n        Escribir a[i], \" \"\n    FinPara\nFinAlgoritmo",
+        "tests": [
+            [
+                "5 3 8 1 9",
+                "1\n3\n5\n8\n9"
+            ],
+            [
+                "4 4 1 1 0",
+                "0\n1\n1\n4\n4"
+            ]
+        ]
+    },
+    "quick-sort": {
+        "solution": "SubProceso Particionar(izq, der, a, pivote)\n    Enter i, j, aux\n    pivote <- a[der]\n    i <- izq - 1\n    Para j <- izq Hasta der - 1\n        Si a[j] <= pivote\n            i <- i + 1\n            aux <- a[i]\n            a[i] <- a[j]\n            a[j] <- aux\n        FinSi\n    FinPara\n    aux <- a[i + 1]\n    a[i + 1] <- a[der]\n    a[der] <- aux\n    Devolver i + 1\nFinSubProceso\n\nSubProceso Quicksort(izq, der, a)\n    Enter p\n    Si izq < der\n        p <- Particionar(izq, der, a, 0)\n        Quicksort(izq, p - 1, a)\n        Quicksort(p + 1, der, a)\n    FinSi\nFinSubProceso\n\nAlgoritmo quick_sort\n    Dimension 5\n    Real a[5]\n    Enter i\n\n    Para i <- 0 Hasta 4\n        Leer a[i]\n    FinPara\n\n    Quicksort(0, 4, a)\n\n    Para i <- 0 Hasta 4\n        Escribir a[i], \" \"\n    FinPara\nFinAlgoritmo",
+        "tests": [
+            [
+                "5 3 8 1 9",
+                "1\n3\n5\n8\n9"
+            ],
+            [
+                "7 1 6 2 8",
+                "1\n2\n6\n7\n8"
+            ]
+        ]
+    },
+    "busqueda-binaria": {
+        "solution": "Algoritmo busqueda_binaria\n    Dimension 100\n    Enter a[100]\n    Enter i, objetivo, izq, der, medio, pos\n\n    Para i <- 0 Hasta 99\n        a[i] <- i + 1\n    FinPara\n\n    Leer objetivo\n    izq <- 0\n    der <- 99\n    pos <- -1\n    Mientras izq <= der\n        medio <- (izq + der) / 2\n        Si a[medio] = objetivo\n            pos <- medio + 1\n            izq <- der + 1\n        Sino\n            Si a[medio] < objetivo\n                izq <- medio + 1\n            Sino\n                der <- medio - 1\n            FinSi\n        FinSi\n    FinMientras\n\n    Si pos > 0\n        Escribir \"Encontrado en posicion \", pos\n    Sino\n        Escribir \"No existe\"\n    FinSi\nFinAlgoritmo",
+        "tests": [
+            [
+                "50",
+                "Encontrado en posicion 50"
+            ],
+            [
+                "101",
+                "No existe"
+            ]
+        ]
+    },
+    "pseint-ejercicio-hola-mundo": {
+        "solution": "Algoritmo hola_mundo\n    Definir nombre Cadena\n    Leer nombre\n    Escribir \"Hola, \", nombre, \"!\"\nFinAlgoritmo",
+        "tests": [
+            [
+                "Ana",
+                "Hola, Ana!"
+            ],
+            [
+                "Carlos",
+                "Hola, Carlos!"
+            ]
+        ]
+    },
+    "pseint-ejercicio-promedio-edad": {
+        "solution": "Algoritmo promedio_edad\n    Definir e1, e2, e3 Enter\n    Definir promedio Real\n    Leer e1, e2, e3\n    promedio <- (e1 + e2 + e3) / 3.0\n    Escribir promedio, \" años\"\nFinAlgoritmo",
+        "tests": [
+            [
+                "20 30 40",
+                "30 años"
+            ],
+            [
+                "18 24 30",
+                "24 años"
+            ]
+        ]
+    },
+    "pseint-ejercicio-par-impar": {
+        "solution": "Algoritmo pares_hasta\n    Definir limite Enter\n    Definir i Enter\n    Leer limite\n    Para i <- 0 Hasta limite - 1\n        Si i mod 2 = 0\n            Escribir i\n        FinSi\n    FinPara\nFinAlgoritmo",
+        "tests": [
+            [
+                "6",
+                "0\n2\n4"
+            ],
+            [
+                "3",
+                "0\n2"
+            ]
+        ]
+    }
+}

@@ -146,7 +146,7 @@ class AiChatController extends Controller
             'question' => 'required_without:code|string|max:4000',
             'code' => 'nullable|string|max:20000',
             'lesson_id' => 'nullable|integer|exists:lessons,id',
-            'kind' => 'nullable|in:question,code_review,explain,practice',
+            'kind' => 'nullable|in:question,code_review,explain,practice,hint,roadmap',
         ]);
 
         $context = [];

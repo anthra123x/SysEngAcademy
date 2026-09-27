@@ -30,9 +30,9 @@ class HomeController extends Controller
             $courses = Course::with(['category', 'instructor'])
                 ->withCount('lessons')
                 ->where('is_published', true)
-                ->whereNull('learning_path_id')
+                ->orderBy('order')
                 ->orderBy('id')
-                ->limit(4)
+                ->limit(16)
                 ->get()
                 ->toArray();
 

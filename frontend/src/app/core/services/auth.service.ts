@@ -32,10 +32,30 @@ export class AuthService {
     );
   }
 
+  verifyEmail(code: string, email?: string) {
+    return this.api
+      .post<{ message: string; user?: User }>('/auth/verify-email', { code, email })
+      .pipe(
+        tap(res => {
+          if (res.user) {
+            localStorage.setItem('syseng_user', JSON.stringify(res.user));
+            this._user.set(res.user);
+          }
+        })
+      );
+  }
+
+  resendVerification(email?: string) {
+    return this.api.post<{ message: string; verification_code?: string }>(
+      '/auth/resend-verification',
+      { email }
+    );
+  }
+
   logout() {
     this.api.post('/auth/logout').subscribe({
-      complete: () => this.clearSession(),
-      error:    () => this.clearSession(),
+      complete: () => this.clearSession(true),
+      error: () => this.clearSession(true),
     });
   }
 
@@ -54,11 +74,13 @@ export class AuthService {
     this._user.set(res.user);
   }
 
-  private clearSession() {
+  clearSession(redirect = false) {
     localStorage.removeItem('syseng_token');
     localStorage.removeItem('syseng_user');
     this._user.set(null);
-    this.router.navigate(['/']);
+    if (redirect) {
+      this.router.navigate(['/']);
+    }
   }
 
   getToken(): string | null {

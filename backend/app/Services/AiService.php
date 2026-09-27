@@ -38,9 +38,13 @@ class AiService
         }
 
         if ($kind === 'code_review') {
-            $messages[] = ['role' => 'system', 'content' => 'El estudiante te envía código para revisar. Señala errores y aciertos, sugiere mejoras concretas y termina con un consejo breve. Sé alentador y responde en español.'];
+            $messages[] = ['role' => 'system', 'content' => 'MODO AGENTE: Revisión de código profesional. Evalúa sintaxis, corrección algorítmica, complejidad Big-O y clean code. Si hay errores, diagnostica la causa raíz y muestra la corrección comentada con brevedad didáctica. Responde en español.'];
         } elseif ($kind === 'explain') {
-            $messages[] = ['role' => 'system', 'content' => 'Explica el concepto de forma clara, con un ejemplo breve de código si aplica, y termina con una pregunta corta para comprobar que se entendió. Responde en español.'];
+            $messages[] = ['role' => 'system', 'content' => 'MODO AGENTE: Explicación pedagógica y conceptual. Explica con claridad, proporciona un ejemplo mínimo de código ejecutable y finaliza con una pregunta corta para comprobar que se comprendió. Responde en español.'];
+        } elseif ($kind === 'hint') {
+            $messages[] = ['role' => 'system', 'content' => 'MODO AGENTE: Pista socrática. NO des la solución completa ni el código final. Orienta al estudiante señalando el concepto clave o la condición que debe verificar para que él mismo lo resuelva. Responde en español.'];
+        } elseif ($kind === 'roadmap') {
+            $messages[] = ['role' => 'system', 'content' => 'MODO AGENTE: Orientación de carrera y rutas en SysEngAcademy. Recomienda el siguiente paso o curso más adecuado y finaliza con una acción interactiva con el formato [ACTION:NAVIGATE:/cursos/slug:Ver Curso] o [ACTION:NAVIGATE:/rutas:Explorar Rutas]. Responde en español.'];
         }
 
         $messages[] = ['role' => 'user', 'content' => $userMessage];

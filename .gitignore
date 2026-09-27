@@ -1,0 +1,27 @@
+# Dependencies & build
+node_modules/
+dist/
+vendor/
+.angular/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Agent & IDE scratch
+.agents/
+.claude/
+.mcp.json
+boost.json
+opencode.json
+.system_generated/
+*.log
+.phpunit.result.cache
+
+# Temporary DB validation scripts
+backend/database/content_report.php
+backend/database/validate_data.php
+backend/database/verify_seed.php
+backend/database/seeders/populate_learning_path_courses.php
+frontend/package-lock.json

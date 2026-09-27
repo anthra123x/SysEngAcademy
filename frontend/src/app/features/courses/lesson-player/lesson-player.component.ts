@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { CoursesService } from '../../../core/services/courses.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { LessonContentComponent } from './lesson-content.component';
+import { CourseCurriculumComponent } from './course-curriculum.component';
+import { InteractiveIdeComponent } from './interactive-ide.component';
 import {
   CourseModule,
   LessonDetail,
@@ -16,7 +20,7 @@ import {
 
 @Component({
   selector: 'app-lesson-player',
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, LessonContentComponent, CourseCurriculumComponent, InteractiveIdeComponent],
   template: `
     @if (loading()) {
       <div class="container player">
@@ -30,8 +34,11 @@ import {
         <div class="status-card">
           <div class="status-card__icon">🔒</div>
           <h2>Esta lección requiere inscripción</h2>
-          <p>Debes inscribirte en el curso para poder acceder a esta lección.</p>
-          <a class="btn btn-primary" [routerLink]="['/cursos', paramSlug()]">Ver curso e inscribirme</a>
+          <p>Debes inscribirte en el curso o iniciar sesión para poder acceder al contenido completo de esta lección.</p>
+          <div style="display: flex; gap: var(--sp-3); justify-content: center; margin-top: var(--sp-4); flex-wrap: wrap;">
+            <a class="btn btn-primary" [routerLink]="['/cursos', paramSlug()]">Ver curso e inscribirme</a>
+            <a class="btn btn-outline" routerLink="/auth/login">Iniciar sesión</a>
+          </div>
         </div>
       </div>
     } @else if (error()) {
@@ -45,125 +52,247 @@ import {
       </div>
     } @else if (lesson()) {
       @let l = lesson()!;
-      <div class="container player">
-        <!-- Cabecera -->
-        <header class="player-header">
-          <nav class="breadcrumb" aria-label="Migas de pan">
-            <a [routerLink]="['/cursos']">Cursos</a>
+      <!-- ========================================================
+           UNIFIED CLASSROOM HEADER (Navbar + Header merged)
+           ======================================================== -->
+      <header class="classroom-unified-header">
+        <div class="header-left">
+          <!-- Slide Bar Drawer Toggle Button -->
+          <button
+            type="button"
+            class="btn-slidebar-toggle"
+            (click)="navDrawerOpen.set(true)"
+            title="Abrir menú de navegación"
+            aria-label="Abrir menú de navegación"
+          >
+            <span class="ham-icon">☰</span>
+            <span class="ham-label">Menú</span>
+          </button>
+
+          <!-- Brand Logo -->
+          <a routerLink="/" class="unified-logo" aria-label="SysEng Academy - Inicio">
+            <div class="logo-icon-wrap">
+              <span class="logo-icon">&lt;/&gt;</span>
+            </div>
+            <span class="logo-title">SysEng<strong>Academy</strong></span>
+          </a>
+
+          <div class="unified-divider" aria-hidden="true"></div>
+
+          <!-- Breadcrumbs -->
+          <nav class="unified-breadcrumbs" aria-label="Navegación de la lección">
+            <a routerLink="/cursos" class="crumb-link">Cursos</a>
             <span class="crumb-sep">/</span>
-            <a [routerLink]="['/cursos', courseSlug()]">{{ courseTitle() }}</a>
+            <a [routerLink]="['/cursos', courseSlug()]" class="crumb-link crumb-course" [title]="courseTitle()">{{ courseTitle() }}</a>
             <span class="crumb-sep">/</span>
-            <span class="crumb-current">{{ l.module.title }}</span>
+            <span class="crumb-module">Módulo {{ l.module.order ?? 1 }}</span>
+            <span class="crumb-sep">/</span>
+            <span class="crumb-current" [title]="l.title">{{ l.title }}</span>
           </nav>
+        </div>
 
-          <h1 class="player-title">{{ l.title }}</h1>
-
-          <div class="player-meta">
-            <span class="badge badge-primary">{{ typeLabel(l.type) }}</span>
-            <span class="meta-item">⏱ {{ l.duration_minutes }} min</span>
-            @if (l.is_preview) {
-              <span class="badge badge-accent">Vista previa</span>
-            }
-            @if (completed()) {
-              <span class="badge badge-success">✓ Completada</span>
-            }
+        <div class="header-right">
+          <!-- Progress Capsule -->
+          <div class="progress-capsule" title="Progreso del curso">
+            <div class="progress-mini-track">
+              <div class="progress-mini-fill" [style.width.%]="courseProgressPercent()"></div>
+            </div>
+            <span class="progress-mini-text">{{ completedLessonsCount() }}/{{ totalLessonsCount() }} ({{ courseProgressPercent() }}%)</span>
           </div>
-        </header>
 
-        <div class="player-layout">
-          <!-- Contenido -->
-          <main class="player-main">
-            <button
-              class="side-toggle"
-              (click)="sidebarOpen.set(!sidebarOpen())"
-              [attr.aria-expanded]="sidebarOpen()"
-              aria-controls="player-side"
-            >
-              {{ sidebarOpen() ? 'Ocultar índice ✕' : '☰ Índice del curso' }}
-            </button>
+          <!-- Temario Drawer Toggle -->
+          <button
+            type="button"
+            class="btn-curriculum-pill"
+            (click)="sidebarOpen.set(!sidebarOpen())"
+            [class.is-active]="sidebarOpen()"
+            [attr.aria-expanded]="sidebarOpen()"
+            title="Mostrar u ocultar temario"
+          >
+            <span class="icon">📚</span>
+            <span>{{ sidebarOpen() ? 'Ocultar Temario' : 'Temario' }}</span>
+          </button>
 
-            @if (contentBlocks().length > 0) {
-              <div class="lesson-content">
-                @for (block of contentBlocks(); track $index) {
-                  @switch (block.type) {
-                    @case ('heading') {
-                      @switch (block.level ?? 2) {
-                        @case (1) { <h2 class="content-h content-h--1">{{ block.text }}</h2> }
-                        @case (2) { <h2 class="content-h content-h--2">{{ block.text }}</h2> }
-                        @case (3) { <h3 class="content-h content-h--3">{{ block.text }}</h3> }
-                        @default  { <h4 class="content-h content-h--4">{{ block.text }}</h4> }
-                      }
-                    }
-                    @case ('paragraph') {
-                      <p class="content-p">{{ block.text }}</p>
-                    }
-                    @case ('list') {
-                      <ul class="content-list">
-                        @for (item of block.items ?? []; track $index) {
-                          <li>{{ item }}</li>
-                        }
-                      </ul>
-                    }
-                    @case ('code') {
-                      <div class="code-block">
-                        <div class="code-block__bar">
-                          <span class="code-block__lang">{{ block.language ?? 'code' }}</span>
-                          <button
-                            class="code-block__copy"
-                            (click)="copyCode(block.text ?? '', $index)"
-                            [attr.aria-label]="'Copiar código'"
-                          >
-                            {{ copiedIndex() === $index ? '✓ Copiado' : 'Copiar' }}
-                          </button>
-                        </div>
-                        <pre><code>{{ block.text }}</code></pre>
-                      </div>
-                    }
-                    @default {
-                      @if (block.text) {
-                        <p class="content-p">{{ block.text }}</p>
-                      }
-                    }
-                  }
-                }
+          <!-- User Avatar or Login -->
+          @if (auth.isAuthenticated()) {
+            <a routerLink="/perfil" class="unified-avatar" [title]="auth.user()?.name ?? 'Mi Perfil'">
+              {{ initials() }}
+            </a>
+          } @else {
+            <a routerLink="/auth/login" class="btn-login-unified">Iniciar Sesión</a>
+          }
+        </div>
+      </header>
+
+      <!-- ========================================================
+           NAVIGATION SLIDE BAR (Drawer)
+           ======================================================== -->
+      @if (navDrawerOpen()) {
+        <div class="nav-slidebar-overlay" (click)="navDrawerOpen.set(false)" role="dialog" aria-modal="true" aria-label="Menú de Navegación">
+          <aside class="nav-slidebar-panel" (click)="$event.stopPropagation()">
+            <div class="slidebar-header">
+              <a routerLink="/" (click)="navDrawerOpen.set(false)" class="slidebar-logo">
+                <div class="logo-icon-wrap">
+                  <span class="logo-icon">&lt;/&gt;</span>
+                </div>
+                <span class="logo-title">SysEng<strong>Academy</strong></span>
+              </a>
+              <button type="button" class="slidebar-close-btn" (click)="navDrawerOpen.set(false)" aria-label="Cerrar menú">✕</button>
+            </div>
+
+            <!-- Current Course Context -->
+            <div class="slidebar-course-card">
+              <span class="scc-tag">Estás aprendiendo</span>
+              <h4 class="scc-title">{{ courseTitle() }}</h4>
+              <div class="scc-progress">
+                <div class="scc-progress-bar">
+                  <div class="scc-progress-fill" [style.width.%]="courseProgressPercent()"></div>
+                </div>
+                <span class="scc-percent">{{ courseProgressPercent() }}% completado</span>
               </div>
+              <a [routerLink]="['/cursos', courseSlug()]" (click)="navDrawerOpen.set(false)" class="scc-link">
+                ← Volver a la portada del curso
+              </a>
+            </div>
+
+            <!-- Main Platform Links -->
+            <nav class="slidebar-nav">
+              <span class="slidebar-section-title">Plataforma</span>
+              <a routerLink="/" (click)="navDrawerOpen.set(false)" class="slidebar-link">
+                <span class="link-icon">🏠</span>
+                <span class="link-text">Inicio</span>
+              </a>
+              <a routerLink="/rutas" (click)="navDrawerOpen.set(false)" class="slidebar-link">
+                <span class="link-icon">🗺️</span>
+                <span class="link-text">Rutas de Aprendizaje</span>
+              </a>
+              <a routerLink="/cursos" (click)="navDrawerOpen.set(false)" class="slidebar-link">
+                <span class="link-icon">📚</span>
+                <span class="link-text">Catálogo de Cursos</span>
+              </a>
+            </nav>
+
+            <div class="slidebar-divider"></div>
+
+            <!-- User Profile / Auth Area -->
+            <div class="slidebar-footer">
+              @if (auth.isAuthenticated()) {
+                <div class="slidebar-user-info">
+                  <div class="avatar-circle">{{ initials() }}</div>
+                  <div class="user-meta">
+                    <strong class="user-name">{{ auth.user()?.name }}</strong>
+                    <span class="user-email">{{ auth.user()?.email }}</span>
+                  </div>
+                </div>
+                <a routerLink="/perfil" (click)="navDrawerOpen.set(false)" class="slidebar-link">
+                  <span class="link-icon">👤</span>
+                  <span class="link-text">Mi Perfil y Progreso</span>
+                </a>
+                <button type="button" (click)="logout()" class="slidebar-link slidebar-link--danger">
+                  <span class="link-icon">🚪</span>
+                  <span class="link-text">Cerrar Sesión</span>
+                </button>
+              } @else {
+                <div class="slidebar-auth-cta">
+                  <p>Inicia sesión para guardar tu progreso en la plataforma.</p>
+                  <a routerLink="/auth/login" (click)="navDrawerOpen.set(false)" class="btn btn-outline btn-block">Iniciar Sesión</a>
+                  <a routerLink="/auth/registro" (click)="navDrawerOpen.set(false)" class="btn btn-primary btn-block">Registrarse</a>
+                </div>
+              }
+            </div>
+          </aside>
+        </div>
+      }
+
+      <div class="lesson-player-page">
+        <div class="container player-body-wrap">
+          <div class="player-layout">
+            <!-- Main Content -->
+            <main class="player-main">
+              <!-- Lesson Header inside content -->
+              <div class="lesson-header-card">
+                <div class="lesson-meta-row">
+                  <span class="badge badge-primary">{{ typeLabel(l.type) }}</span>
+                  <span class="meta-item">⏱ {{ l.duration_minutes }} min</span>
+                  @if (l.is_preview) {
+                    <span class="badge badge-accent">Vista previa libre</span>
+                  }
+                  @if (completed()) {
+                    <span class="badge badge-success">✓ Completada</span>
+                  }
+                </div>
+                <h1 class="lesson-headline">{{ l.title }}</h1>
+              </div>
+
+              @if (contentBlocks().length > 0) {
+                <app-lesson-content class="lesson-content" [blocks]="contentBlocks()" />
+              }
+
+            <!-- CODE CHALLENGE (Full Interactive Simulated IDE) -->
+            @if (isCodeChallenge()) {
+              <section class="challenge-ide-section" aria-label="Desafío de código interactivo">
+                <div class="challenge-ide-banner">
+                  <div class="cib-badge">💻 Reto Práctico Interactivo</div>
+                  <h2 class="cib-title">{{ l.title }}</h2>
+                  <p class="cib-desc">Escribe tu solución, ejecútala en el sandbox con compilación local y valida los casos de prueba.</p>
+                  @if (l.hint) {
+                    <div class="cib-hint">
+                      <span class="hint-icon">💡</span>
+                      <span class="hint-text"><strong>Pista:</strong> {{ l.hint }}</span>
+                    </div>
+                  }
+                </div>
+
+                <app-interactive-ide
+                  [initialCode]="l.starter_code || code()"
+                  [language]="l.language || 'python'"
+                  [testCases]="l.test_cases || []"
+                  [hint]="l.hint"
+                  [lessonTitle]="l.title"
+                  [lessonId]="l.id"
+                  [isChallenge]="true"
+                />
+              </section>
             }
 
-            <!-- CODE CHALLENGE -->
-            @if (isCodeChallenge()) {
-              <section class="challenge" aria-label="Desafío de código">
-                <div class="challenge__head">
-                  <h2>💻 Tu solución</h2>
-                  <p>Pega tu código aquí y recibe una revisión de la IA.</p>
-                </div>
-                <textarea
-                  class="challenge__editor"
-                  [ngModel]="code()"
-                  (ngModelChange)="code.set($event)"
-                  rows="12"
-                  spellcheck="false"
-                  placeholder="// Escribe tu código aquí..."
-                  [attr.aria-label]="'Editor de código de tu solución'"
-                ></textarea>
-                <div class="challenge__actions">
-                  <button
-                    class="btn btn-accent"
-                    (click)="evaluateCode()"
-                    [disabled]="aiReviewing() || !code().trim()"
-                  >
-                    {{ aiReviewing() ? 'Evaluando…' : '🤖 Evaluar con IA' }}
-                  </button>
-                  @if (aiReviewing()) {
-                    <span class="challenge__hint">La IA está revisando tu solución, un momento…</span>
-                  }
-                </div>
-                @if (aiReply()) {
-                  <div class="ai-reply" role="status">
-                    <div class="ai-reply__bar">🤖 Feedback de Byte</div>
-                    <div class="ai-reply__body" [innerHTML]="renderAiReply(aiReply()!)"></div>
+            <!-- GLOBAL SIMULATED SANDBOX TOGGLE (A programar se aprende programando) -->
+            @if (!isCodeChallenge()) {
+              <div class="sandbox-quickbar">
+                <button
+                  type="button"
+                  class="btn-sandbox-toggle"
+                  (click)="sandboxExpanded.set(!sandboxExpanded())"
+                  [class.is-expanded]="sandboxExpanded()"
+                  title="Abrir entorno de programación interactivo para probar el código de esta lección"
+                >
+                  <span class="sbox-icon">⚡</span>
+                  <div class="sbox-text">
+                    <strong>{{ sandboxExpanded() ? 'Ocultar Entorno Simulado de Programación' : 'Abrir Entorno Simulado de Programación (Sandbox)' }}</strong>
+                    <small>Experimenta en vivo con Python, JavaScript, TypeScript, PHP, C++ o PSeInt</small>
                   </div>
-                }
-              </section>
+                  <span class="sbox-pill">{{ sandboxExpanded() ? 'Cerrar ✕' : 'Probar Código 💻' }}</span>
+                </button>
+              </div>
+
+              @if (sandboxExpanded()) {
+                <div class="sandbox-drawer-container">
+                  <div class="sandbox-drawer-header">
+                    <div class="sdh-left">
+                      <span class="sdh-badge">Sandbox Interactivo</span>
+                      <h4>Zona de Práctica: {{ l.title }}</h4>
+                    </div>
+                    <button type="button" class="sdh-close-btn" (click)="sandboxExpanded.set(false)" title="Cerrar sandbox">✕</button>
+                  </div>
+
+                  <app-interactive-ide
+                    [initialCode]="code()"
+                    [language]="l.language || 'python'"
+                    [lessonTitle]="l.title"
+                    [lessonId]="l.id"
+                    [isChallenge]="false"
+                  />
+                </div>
+              }
             }
 
             <!-- QUIZ -->
@@ -307,35 +436,37 @@ import {
                 <span class="lesson-nav__spacer"></span>
               }
             </nav>
+
+            @if (officialResources().length > 0) {
+              <section class="lesson-docs-refs" aria-label="Documentación Oficial de Referencia">
+                <div class="lesson-docs-refs__head">
+                  <span class="refs-icon">📚</span>
+                  <div>
+                    <h3 class="refs-title">Documentación Oficial & Referencias</h3>
+                    <p class="refs-subtitle">Fuentes técnicas canónicas para profundizar en los conceptos de esta lección.</p>
+                  </div>
+                </div>
+                <div class="resources-grid-list">
+                  @for (res of officialResources(); track res.title) {
+                    <a [href]="res.url" target="_blank" rel="noopener noreferrer" class="doc-resource-card">
+                      <div class="drc-icon">{{ res.icon }}</div>
+                      <div class="drc-body">
+                        <span class="drc-source">{{ res.source }}</span>
+                        <h4 class="drc-title">{{ res.title }}</h4>
+                        <p class="drc-desc">{{ res.description }}</p>
+                      </div>
+                      <span class="drc-arrow">↗</span>
+                    </a>
+                  }
+                </div>
+              </section>
+            }
           </main>
 
           <!-- Sidebar: lecciones del curso -->
-          <aside id="player-side" class="player-side" [class.open]="sidebarOpen()" aria-label="Lecciones del curso">
+          <aside id="player-side" class="player-side" [class.open]="sidebarOpen()" aria-label="Contenido del curso">
             @if (course()) {
-              <div class="side-head">
-                <h2>{{ course()!.title }}</h2>
-                <span>{{ totalLessons() }} lecciones</span>
-              </div>
-              <nav class="side-modules">
-                @for (mod of course()!.modules ?? []; track mod.id) {
-                  <div class="side-module">
-                    <p class="side-module__title">Módulo {{ $index + 1 }} · {{ mod.title }}</p>
-                    @for (lesson of mod.lessons ?? []; track lesson.id) {
-                      <a
-                        class="side-lesson"
-                        [class.active]="lesson.id === l.id"
-                        [routerLink]="['/cursos', courseSlug(), 'leccion', lesson.slug]"
-                      >
-                        <span class="side-lesson__icon">{{ lessonIcon(lesson.type) }}</span>
-                        <span class="side-lesson__title">{{ lesson.title }}</span>
-                        @if (lesson.completed) {
-                          <span class="side-lesson__done">✓</span>
-                        }
-                      </a>
-                    }
-                  </div>
-                }
-              </nav>
+              <app-course-curriculum [course]="course()" [currentLessonId]="l.id" />
             } @else {
               <div class="skeleton side-sk"></div>
               <div class="skeleton side-sk"></div>
@@ -344,11 +475,12 @@ import {
           </aside>
         </div>
       </div>
-    }
+    </div>
+  }
   `,
   styles: [`
     .player {
-      padding: var(--sp-8) 0 var(--sp-16);
+      padding: calc(var(--header-height) + var(--sp-6)) 0 var(--sp-16);
 
       .breadcrumb-sk { height: 20px; width: 38%; }
       .title-sk      { height: 40px; width: 62%; margin-top: var(--sp-5); }
@@ -356,40 +488,694 @@ import {
       .body-sk       { height: 320px; margin-top: var(--sp-8); }
     }
 
-    // === Cabecera ===
-    .player-header {
-      animation: fade-up 0.4s ease both;
+    /* ========================================================
+       UNIFIED CLASSROOM HEADER (Navbar + Header merged)
+       ======================================================== */
+    .classroom-unified-header {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      height: 60px;
+      background: rgba(14, 16, 26, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 var(--sp-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sp-4);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
 
-      .breadcrumb {
+      @media (min-width: 1400px) {
+        padding: 0 var(--sp-8);
+      }
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      min-width: 0;
+      flex: 1;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      flex-shrink: 0;
+    }
+
+    /* Slide Bar Toggle Button */
+    .btn-slidebar-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: var(--text-xs);
+      font-weight: var(--font-medium);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+
+      &:hover {
+        background: var(--bg-surface-2);
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+
+      .ham-icon {
+        font-size: 1rem;
+      }
+    }
+
+    /* Logo inside Unified Header */
+    .unified-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--text-primary);
+      flex-shrink: 0;
+
+      .logo-icon-wrap {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: rgba(10, 233, 138, 0.12);
+        border: 1px solid rgba(10, 233, 138, 0.3);
+        display: grid;
+        place-items: center;
+
+        .logo-icon {
+          font-family: var(--font-mono);
+          font-size: 0.72rem;
+          font-weight: var(--font-bold);
+          color: var(--primary);
+        }
+      }
+
+      .logo-title {
+        font-size: var(--text-sm);
+        font-weight: var(--font-medium);
+        letter-spacing: -0.01em;
+
+        strong {
+          color: var(--primary);
+          font-weight: var(--font-bold);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .logo-title { display: none; }
+      }
+    }
+
+    .unified-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      flex-shrink: 0;
+      @media (max-width: 768px) { display: none; }
+    }
+
+    /* Breadcrumbs */
+    .unified-breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+
+      .crumb-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+        &:hover { color: var(--primary); }
+      }
+
+      .crumb-course {
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .crumb-sep {
+        color: var(--border-hover);
+        user-select: none;
+      }
+
+      .crumb-module {
+        color: var(--text-secondary);
+        font-weight: var(--font-medium);
+        background: rgba(108, 99, 255, 0.12);
+        border: 1px solid rgba(108, 99, 255, 0.25);
+        padding: 1px 8px;
+        border-radius: var(--radius-full);
+        font-size: 0.7rem;
+        flex-shrink: 0;
+      }
+
+      .crumb-current {
+        color: var(--text-primary);
+        font-weight: var(--font-medium);
+        max-width: 280px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 900px) {
+        .crumb-course, .crumb-sep:nth-of-type(2) { display: none; }
+      }
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+
+    /* Progress Capsule */
+    .progress-capsule {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 4px 12px;
+      font-size: var(--text-xs);
+
+      .progress-mini-track {
+        width: 50px;
+        height: 5px;
+        background: var(--bg-surface-3);
+        border-radius: 99px;
+        overflow: hidden;
+      }
+
+      .progress-mini-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        transition: width var(--transition-base);
+      }
+
+      .progress-mini-text {
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+      }
+
+      @media (max-width: 768px) { display: none; }
+    }
+
+    .btn-curriculum-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-size: var(--text-xs);
+      font-weight: var(--font-medium);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      &:hover, &.is-active {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--bg-surface-2);
+      }
+    }
+
+    /* Unified Header Avatar & Auth */
+    .unified-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #08090D;
+      font-size: var(--text-xs);
+      font-weight: var(--font-bold);
+      display: grid;
+      place-items: center;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+
+      &:hover {
+        transform: scale(1.06);
+        box-shadow: 0 0 12px rgba(10, 233, 138, 0.4);
+      }
+    }
+
+    .btn-login-unified {
+      display: inline-flex;
+      align-items: center;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: var(--radius-full);
+      background: var(--primary);
+      color: #08090D;
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+      text-decoration: none;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+
+      &:hover {
+        background: var(--primary-hover);
+        box-shadow: var(--shadow-primary);
+      }
+    }
+
+    /* ========================================================
+       NAVIGATION SLIDE BAR (Drawer)
+       ======================================================== */
+    .nav-slidebar-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      animation: fade-overlay 0.22s ease both;
+    }
+
+    @keyframes fade-overlay {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .nav-slidebar-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 340px;
+      max-width: 88vw;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: var(--sp-6);
+      box-shadow: 16px 0 40px rgba(0, 0, 0, 0.65);
+      animation: slide-panel 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+      overflow-y: auto;
+    }
+
+    @keyframes slide-panel {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(0); }
+    }
+
+    .slidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--sp-6);
+
+      .slidebar-logo {
         display: flex;
         align-items: center;
-        gap: var(--sp-2);
-        flex-wrap: wrap;
-        font-size: var(--text-xs);
-        color: var(--text-muted);
-        margin-bottom: var(--sp-4);
+        gap: 10px;
+        text-decoration: none;
+        color: var(--text-primary);
 
-        a { color: var(--text-secondary); &:hover { color: var(--primary); } }
-        .crumb-sep { color: var(--text-muted); opacity: 0.7; }
-        .crumb-current { color: var(--text-muted); }
+        .logo-icon-wrap {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: rgba(10, 233, 138, 0.12);
+          border: 1px solid rgba(10, 233, 138, 0.3);
+          display: grid;
+          place-items: center;
+          .logo-icon {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: var(--font-bold);
+            color: var(--primary);
+          }
+        }
+
+        .logo-title {
+          font-size: var(--text-base);
+          font-weight: var(--font-medium);
+          strong { color: var(--primary); font-weight: var(--font-bold); }
+        }
       }
 
-      .player-title {
-        font-size: var(--text-3xl);
+      .slidebar-close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-md);
+        background: var(--bg-surface-2);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-size: 1rem;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition: all var(--transition-fast);
+
+        &:hover {
+          color: var(--text-primary);
+          border-color: var(--danger);
+          background: var(--danger-dim);
+        }
+      }
+    }
+
+    .slidebar-course-card {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-4);
+      margin-bottom: var(--sp-5);
+
+      .scc-tag {
+        font-size: 0.68rem;
+        font-weight: var(--font-bold);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--accent);
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .scc-title {
+        font-size: var(--text-sm);
         font-weight: var(--font-bold);
         color: var(--text-primary);
-        line-height: 1.2;
         margin-bottom: var(--sp-3);
+        line-height: 1.35;
       }
 
-      .player-meta {
+      .scc-progress {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: var(--sp-3);
+
+        .scc-progress-bar {
+          flex: 1;
+          height: 6px;
+          background: var(--bg-surface-3);
+          border-radius: 99px;
+          overflow: hidden;
+
+          .scc-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+          }
+        }
+
+        .scc-percent {
+          font-size: 0.72rem;
+          color: var(--text-muted);
+          font-family: var(--font-mono);
+        }
+      }
+
+      .scc-link {
+        display: inline-block;
+        font-size: var(--text-xs);
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: var(--font-medium);
+        transition: color var(--transition-fast);
+        &:hover { text-decoration: underline; color: var(--primary-hover); }
+      }
+    }
+
+    .slidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-1);
+      flex: 1;
+
+      .slidebar-section-title {
+        font-size: 0.7rem;
+        font-weight: var(--font-bold);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        padding: var(--sp-2) var(--sp-3);
+      }
+
+      .slidebar-link {
         display: flex;
         align-items: center;
         gap: var(--sp-3);
-        flex-wrap: wrap;
-        margin-bottom: var(--sp-8);
+        padding: 10px 14px;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-size: var(--text-sm);
+        font-weight: var(--font-medium);
+        transition: all var(--transition-fast);
+        background: transparent;
+        border: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
 
-        .meta-item { font-size: var(--text-sm); color: var(--text-secondary); }
+        &:hover {
+          background: var(--bg-surface-2);
+          color: var(--text-primary);
+        }
+
+        .link-icon {
+          font-size: 1.1rem;
+        }
+
+        &--danger:hover {
+          color: var(--danger);
+          background: var(--danger-dim);
+        }
+      }
+    }
+
+    .slidebar-divider {
+      height: 1px;
+      background: var(--border);
+      margin: var(--sp-4) 0;
+    }
+
+    .slidebar-footer {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+
+      .slidebar-user-info {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-3);
+        padding: var(--sp-2) var(--sp-3);
+        margin-bottom: var(--sp-2);
+
+        .avatar-circle {
+          width: 36px;
+          height: 36px;
+          border-radius: var(--radius-full);
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          color: #08090D;
+          font-size: var(--text-xs);
+          font-weight: var(--font-bold);
+          display: grid;
+          place-items: center;
+          flex-shrink: 0;
+        }
+
+        .user-meta {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+
+          .user-name {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .user-email {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      }
+
+      .slidebar-auth-cta {
+        p {
+          font-size: var(--text-xs);
+          color: var(--text-muted);
+          line-height: 1.5;
+          margin-bottom: var(--sp-3);
+        }
+
+        .btn {
+          margin-bottom: var(--sp-2);
+          width: 100%;
+        }
+      }
+    }
+
+    .lesson-player-page {
+      padding-top: var(--sp-6);
+      padding-bottom: var(--sp-20);
+    }
+
+    .player-body-wrap {
+      padding-bottom: var(--sp-16);
+    }
+
+    /* Lesson Title Card inside Content */
+    .lesson-header-card {
+      margin-bottom: var(--sp-6);
+      animation: fade-up 0.35s ease both;
+    }
+
+    .lesson-meta-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      flex-wrap: wrap;
+      margin-bottom: var(--sp-3);
+      .meta-item { font-size: var(--text-xs); color: var(--text-muted); }
+    }
+
+    .lesson-headline {
+      font-size: clamp(1.6rem, 2.5vw, 2.25rem);
+      font-weight: var(--font-bold);
+      color: var(--text-primary);
+      line-height: 1.25;
+      letter-spacing: -0.015em;
+    }
+
+    /* Official Documentation & Reference Section */
+    .lesson-docs-refs {
+      margin-top: var(--sp-10);
+      padding-top: var(--sp-8);
+      border-top: 1px solid var(--border);
+
+      &__head {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-3);
+        margin-bottom: var(--sp-6);
+
+        .refs-icon {
+          font-size: 1.75rem;
+        }
+
+        .refs-title {
+          font-size: var(--text-base);
+          font-weight: var(--font-bold);
+          color: var(--text-primary);
+          margin-bottom: 2px;
+        }
+
+        .refs-subtitle {
+          font-size: var(--text-xs);
+          color: var(--text-muted);
+          margin: 0;
+        }
+      }
+    }
+
+    /* Official Documentation Cards Grid */
+    .resources-grid-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--sp-4);
+    }
+
+    .doc-resource-card {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--sp-4);
+      padding: var(--sp-5);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        border-color: var(--primary);
+        background: var(--bg-surface-2);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+
+        .drc-arrow {
+          color: var(--accent);
+          transform: translate(2px, -2px);
+        }
+      }
+
+      .drc-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-md);
+        background: rgba(108, 99, 255, 0.12);
+        border: 1px solid rgba(108, 99, 255, 0.25);
+        display: grid;
+        place-items: center;
+        font-size: 1.35rem;
+        flex-shrink: 0;
+      }
+
+      .drc-body {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .drc-source {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: var(--font-semibold);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--accent);
+        margin-bottom: 2px;
+      }
+
+      .drc-title {
+        font-size: var(--text-base);
+        font-weight: var(--font-semibold);
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        line-height: 1.3;
+      }
+
+      .drc-desc {
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        line-height: 1.55;
+        margin: 0;
+      }
+
+      .drc-arrow {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        transition: transform var(--transition-fast), color var(--transition-fast);
+        flex-shrink: 0;
       }
     }
 
@@ -508,50 +1294,179 @@ import {
       }
     }
 
-    // === Code challenge ===
-    .challenge {
+    // === Interactive Simulated IDE & Sandbox ===
+    .challenge-ide-section {
       margin-top: var(--sp-10);
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
+      margin-bottom: var(--sp-8);
+    }
+
+    .challenge-ide-banner {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(99, 102, 241, 0.08));
+      border: 1px solid rgba(6, 182, 212, 0.25);
       border-radius: var(--radius-lg);
-      padding: var(--sp-6);
+      padding: var(--sp-5) var(--sp-6);
+      margin-bottom: var(--sp-4);
 
-      &__head {
-        margin-bottom: var(--sp-4);
-        h2 { font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--text-primary); }
-        p { font-size: var(--text-sm); color: var(--text-secondary); margin-top: 4px; }
+      .cib-badge {
+        display: inline-block;
+        font-size: var(--text-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #06b6d4;
+        background: rgba(6, 182, 212, 0.15);
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        margin-bottom: var(--sp-2);
       }
 
-      &__editor {
-        width: 100%;
-        background: #0D0D16;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: var(--sp-4);
-        color: #D8D8EC;
-        font-family: var(--font-mono);
+      .cib-title {
+        font-size: var(--text-xl);
+        font-weight: var(--font-bold);
+        color: var(--text-primary);
+        margin: 0 0 var(--sp-2) 0;
+      }
+
+      .cib-desc {
         font-size: var(--text-sm);
-        line-height: 1.7;
-        resize: vertical;
-        outline: none;
-        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-        &:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
-        &::placeholder { color: var(--text-muted); }
+        color: var(--text-secondary);
+        margin: 0;
+        line-height: 1.6;
       }
 
-      &__actions {
+      .cib-hint {
         display: flex;
         align-items: center;
-        gap: var(--sp-4);
-        margin-top: var(--sp-4);
-        flex-wrap: wrap;
+        gap: var(--sp-2);
+        margin-top: var(--sp-3);
+        padding: var(--sp-2) var(--sp-3);
+        border-radius: var(--radius-md);
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.25);
+        font-size: var(--text-xs);
+        color: #fcd34d;
+      }
+    }
+
+    // === Global Sandbox Quick Bar ===
+    .sandbox-quickbar {
+      margin-top: var(--sp-8);
+      margin-bottom: var(--sp-4);
+    }
+
+    .btn-sandbox-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: var(--sp-4);
+      padding: var(--sp-4) var(--sp-5);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(6, 182, 212, 0.08));
+      border: 1px dashed rgba(6, 182, 212, 0.35);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      text-align: left;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(6, 182, 212, 0.14));
+        border-color: #06b6d4;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(6, 182, 212, 0.15);
       }
 
-      &__hint { font-size: var(--text-xs); color: var(--text-muted); }
+      &.is-expanded {
+        background: rgba(6, 182, 212, 0.12);
+        border-style: solid;
+        border-color: #06b6d4;
+      }
+
+      .sbox-icon {
+        font-size: 1.5rem;
+      }
+
+      .sbox-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        strong {
+          color: var(--text-primary);
+          font-size: var(--text-sm);
+        }
+
+        small {
+          color: var(--text-muted);
+          font-size: var(--text-xs);
+        }
+      }
+
+      .sbox-pill {
+        font-size: var(--text-xs);
+        font-weight: 700;
+        padding: 0.3rem 0.75rem;
+        border-radius: 9999px;
+        background: #06b6d4;
+        color: #030712;
+      }
+    }
+
+    .sandbox-drawer-container {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-xl);
+      padding: var(--sp-4);
+      margin-bottom: var(--sp-8);
+      animation: fadeIn 0.2s ease-out;
+
+      .sandbox-drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--sp-3);
+        padding-bottom: var(--sp-3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+        .sdh-left {
+          display: flex;
+          align-items: center;
+          gap: var(--sp-3);
+
+          .sdh-badge {
+            font-size: var(--text-xs);
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+          }
+
+          h4 {
+            margin: 0;
+            font-size: var(--text-base);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+          }
+        }
+
+        .sdh-close-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-muted);
+          font-size: var(--text-sm);
+          cursor: pointer;
+          padding: 0.2rem 0.5rem;
+          border-radius: 4px;
+
+          &:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+          }
+        }
+      }
     }
 
     .ai-reply {
-      margin-top: var(--sp-5);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       overflow: hidden;
@@ -936,6 +1851,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   private coursesSvc = inject(CoursesService);
   private route      = inject(ActivatedRoute);
   private router     = inject(Router);
+  readonly auth      = inject(AuthService);
 
   // --- Estado de carga ---
   lesson    = signal<LessonDetail | null>(null);
@@ -960,18 +1876,181 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   quizSubmitting = signal(false);
   quizResult     = signal<QuizAttemptResult | null>(null);
 
-  // --- Code challenge ---
-  code        = signal('');
-  aiReviewing = signal(false);
-  aiReply     = signal<string | null>(null);
+  // --- Code challenge & Interactive Sandbox ---
+  code            = signal('');
+  sandboxExpanded = signal(false);
+  aiReviewing     = signal(false);
+  aiReply         = signal<string | null>(null);
 
-  // --- UI misc ---
-  sidebarOpen  = signal(false);
-  copiedIndex  = signal<number | null>(null);
+  // --- UI misc & Navigation Slide Bar ---
+  sidebarOpen   = signal(false);
+  navDrawerOpen = signal(false);
+  copiedIndex   = signal<number | null>(null);
+
+  readonly initials = computed(() => {
+    const name = this.auth.user()?.name ?? '';
+    return name.slice(0, 2).toUpperCase() || 'SA';
+  });
+
+  logout(): void {
+    this.navDrawerOpen.set(false);
+    this.auth.logout();
+  }
 
   private paramSub?: Subscription;
 
   // ===== Computados =====
+
+  readonly totalLessonsCount = computed(() =>
+    (this.course()?.modules ?? []).reduce((acc, m) => acc + (m.lessons?.length ?? 0), 0)
+  );
+
+  readonly completedLessonsCount = computed(() =>
+    (this.course()?.modules ?? []).reduce(
+      (acc, m) => acc + (m.lessons ?? []).filter(l => l.completed).length,
+      0
+    )
+  );
+
+  readonly courseProgressPercent = computed(() => {
+    const total = this.totalLessonsCount();
+    return total > 0 ? Math.round((this.completedLessonsCount() / total) * 100) : 0;
+  });
+
+  readonly officialResources = computed(() => {
+    const slug = (this.courseSlug() || '').toLowerCase();
+    const lang = (this.lesson()?.language || '').toLowerCase();
+
+    if (slug.includes('html') || slug.includes('css') || slug.includes('web') || lang === 'javascript' || lang === 'html' || lang === 'css') {
+      return [
+        {
+          icon: '🌐',
+          source: 'MDN Web Docs (Mozilla)',
+          title: 'JavaScript Reference & Guía de APIs Web',
+          description: 'Documentación canónica sobre sintaxis, Promesas, async/await, Fetch API y manipulación del DOM con el estándar ECMAScript.',
+          url: 'https://developer.mozilla.org/es/docs/Web/JavaScript'
+        },
+        {
+          icon: '🎨',
+          source: 'MDN Web Docs',
+          title: 'Guía de CSS Moderno, Flexbox y Grid',
+          description: 'Aprende los modelos de maquetación estándar, selectores avanzados, variables CSS y diseño responsive accesible.',
+          url: 'https://developer.mozilla.org/es/docs/Learn/CSS'
+        },
+        {
+          icon: '⚡',
+          source: 'JavaScript.info',
+          title: 'El Tutorial Moderno de JavaScript',
+          description: 'Explicaciones profundas desde lo básico hasta el Event Loop, microtasks vs macrotasks, closures y prototipos.',
+          url: 'https://es.javascript.info/'
+        },
+        {
+          icon: '🛡️',
+          source: 'W3C / Web Accessibility Initiative',
+          title: 'Estándares Web y Accesibilidad WCAG',
+          description: 'Pautas oficiales para construir interfaces semánticas, accesibles con teclado y lectores de pantalla.',
+          url: 'https://www.w3.org/WAI/standards-guidelines/'
+        }
+      ];
+    }
+
+    if (slug.includes('poo') || slug.includes('python') || lang === 'python') {
+      return [
+        {
+          icon: '🐍',
+          source: 'Python Software Foundation',
+          title: 'Documentación Oficial de Python 3',
+          description: 'Manual de referencia oficial del lenguaje Python, biblioteca estándar, estructuras de datos y buenas prácticas.',
+          url: 'https://docs.python.org/es/3/'
+        },
+        {
+          icon: '🧩',
+          source: 'Python Docs',
+          title: 'Tutorial de Clases, Herencia y Métodos',
+          description: 'Capítulo oficial dedicado a clases, encapsulamiento, polimorfismo, decoradores e iteradores en Python.',
+          url: 'https://docs.python.org/es/3/tutorial/classes.html'
+        },
+        {
+          icon: '📐',
+          source: 'Refactoring Guru',
+          title: 'Catálogo de Patrones de Diseño',
+          description: 'Guía visual completa con diagramas y código en Python de patrones creacionales, estructurales y comportamentales.',
+          url: 'https://refactoring.guru/es/design-patterns'
+        },
+        {
+          icon: '✨',
+          source: 'Python PEPs',
+          title: 'PEP 8 — Guía de Estilo Oficial para Python',
+          description: 'El estándar de convenciones adoptado universalmente en la industria de desarrollo de software con Python.',
+          url: 'https://peps.python.org/pep-0008/'
+        }
+      ];
+    }
+
+    if (slug.includes('backend') || slug.includes('laravel') || lang === 'php') {
+      return [
+        {
+          icon: '⚙️',
+          source: 'Laravel Documentation',
+          title: 'Documentación Oficial de Laravel',
+          description: 'Manual oficial del framework backend líder: Enrutamiento, Middleware, Controladores, Eloquent ORM y APIs REST.',
+          url: 'https://laravel.com/docs'
+        },
+        {
+          icon: '🐘',
+          source: 'PHP The Right Way',
+          title: 'PHP The Right Way (Estándares PSR)',
+          description: 'Guía comunitaria de referencia sobre buenas prácticas, inyección de dependencias y arquitectura moderna en PHP.',
+          url: 'https://phptherightway.com/'
+        },
+        {
+          icon: '📡',
+          source: 'IETF / RFC 7231',
+          title: 'Especificación HTTP/1.1 y Códigos de Estado',
+          description: 'Definición formal de los verbos HTTP (GET, POST, PUT, DELETE), headers y códigos de respuesta en APIs.',
+          url: 'https://httpwg.org/specs/rfc7231.html'
+        },
+        {
+          icon: '🔒',
+          source: 'OWASP Foundation',
+          title: 'OWASP Top 10 API Security Risks',
+          description: 'Estándar global sobre las vulnerabilidades de seguridad más críticas en APIs REST y cómo prevenirlas.',
+          url: 'https://owasp.org/API-Security/'
+        }
+      ];
+    }
+
+    return [
+      {
+        icon: '💡',
+        source: 'Harvard OpenCourseWare / CS50',
+        title: 'Fundamentos de Ciencias de la Computación',
+        description: 'Material de referencia gratuito sobre algoritmos, memoria, tipos de datos y resolución analítica de problemas.',
+        url: 'https://cs50.harvard.edu/x/'
+      },
+      {
+        icon: '🗄️',
+        source: 'PostgreSQL Global Development Group',
+        title: 'Manual Oficial de PostgreSQL',
+        description: 'Documentación técnica completa sobre el motor de base de datos relacional estándar en la industria.',
+        url: 'https://www.postgresql.org/docs/'
+      },
+      {
+        icon: '⚡',
+        source: 'SQLBolt',
+        title: 'Tutoriales Interactivos de SQL',
+        description: 'Ejercicios paso a paso en el navegador para dominar consultas relacionales, JOINs, agrupaciones y filtrado.',
+        url: 'https://sqlbolt.com/'
+      },
+      {
+        icon: '🤖',
+        source: 'Roadmap.sh',
+        title: 'Developer Roadmaps & Computer Science Guides',
+        description: 'Árboles de habilidades y mapas de aprendizaje visuales recomendados por ingenieros de software senior.',
+        url: 'https://roadmap.sh/'
+      }
+    ];
+  });
 
   readonly courseSlug = computed(() =>
     this.lesson()?.module?.course?.slug || this.course()?.slug || this.paramSlug()
@@ -1121,6 +2200,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     this.quizSubmitting.set(false);
     this.completing.set(false);
     this.code.set('');
+    this.sandboxExpanded.set(false);
     this.aiReply.set(null);
     this.aiReviewing.set(false);
     this.copiedIndex.set(null);
@@ -1135,7 +2215,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
         this.completed.set(!!detail.completed);
         this.loading.set(false);
         const firstCode = this.contentBlocks().find(b => b.type === 'code')?.text ?? '';
-        this.code.set(firstCode);
+        this.code.set(detail.starter_code || firstCode);
       },
       error: (err: HttpErrorResponse) => this.handleApiError(err),
     });
@@ -1155,12 +2235,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   }
 
   private handleApiError(err: HttpErrorResponse) {
-    if (err.status === 401) {
-      // La sesión expiró / no autenticado: el interceptor limpia la sesión.
-      this.router.navigate(['/auth/login']);
-      return;
-    }
-    if (err.status === 403) {
+    if (err.status === 401 || err.status === 403) {
       this.forbidden.set(true);
       this.loading.set(false);
       return;

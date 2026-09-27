@@ -78,6 +78,11 @@ export interface Lesson {
   is_preview: boolean;
   content?: unknown;
   completed?: boolean;
+  language?: string | null;
+  starter_code?: string | null;
+  solution?: string | null;
+  hint?: string | null;
+  test_cases?: Array<{ input?: string; expected: string }> | Array<[string | null, string]> | any;
 }
 
 export interface Enrollment {
@@ -111,14 +116,18 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+/**
+ * Respuesta paginada de Laravel: los metadatos vienen en la raíz, no anidados
+ * en `meta` (a diferencia del resource collection de Laravel 11+).
+ */
 export interface PaginatedResponse<T> {
   data: T[];
-  meta: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-  };
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  from?: number | null;
+  to?: number | null;
 }
 
 export interface CourseFilters {
@@ -140,6 +149,12 @@ export interface LessonDocBlock {
   text?: string;
   language?: string;
   items?: string[];
+  /** Título opcional de callout / quote / keypoints. */
+  title?: string;
+  /** Lista ordenada. */
+  ordered?: boolean;
+  /** Tono del callout: info | tip | warning | danger. */
+  tone?: string;
 }
 
 export interface LessonContentDoc {
@@ -169,6 +184,7 @@ export interface LessonQuiz {
 export interface LessonModuleRef {
   id: number;
   title: string;
+  order?: number;
   course_id?: number;
   course?: Pick<Course, 'id' | 'slug' | 'title'>;
 }
@@ -221,3 +237,6 @@ export interface AiPracticeQuiz {
   title: string;
   questions: AiPracticeQuestion[];
 }
+
+export * from './forum';
+

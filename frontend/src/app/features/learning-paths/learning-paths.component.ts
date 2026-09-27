@@ -11,12 +11,8 @@ import { LearningPath } from '../../core/models';
     <div class="paths-page">
       <div class="page-header">
         <div class="container">
-          <nav class="breadcrumb" aria-label="Migas de pan">
-            <a routerLink="/">Inicio</a><span class="breadcrumb__sep">/</span>
-            <span class="breadcrumb__current">Rutas</span>
-          </nav>
           <h1>Rutas de <span>Aprendizaje</span></h1>
-          <p>Sigue un camino guiado de nivel en nivel. Cada ruta fue diseñada por expertos para llevarte de cero a dominar un área completa.</p>
+          <p>Sigue un camino estructurado de estación en estación. Diseñado para llevarte desde fundamentos hasta el dominio completo de cada área técnica.</p>
         </div>
       </div>
 
@@ -24,7 +20,7 @@ import { LearningPath } from '../../core/models';
         @if (loading()) {
           <div class="grid-3">
             @for (i of [1,2,3,4,5,6]; track i) {
-              <div class="path-card skeleton" style="height: 300px;"></div>
+              <div class="path-card skeleton" style="height: 320px;"></div>
             }
           </div>
         } @else if (paths().length === 0) {
@@ -37,23 +33,28 @@ import { LearningPath } from '../../core/models';
           <div class="grid-3">
             @for (path of paths(); track path.id) {
               <a [routerLink]="['/rutas', path.slug]" class="path-card">
-                <div class="path-card__header" [style.background]="gradient(path)">
-                  <div [class]="'badge badge-' + path.difficulty">{{ diffLabel(path.difficulty) }}</div>
+                <div class="path-card__header">
+                  <div class="header-top">
+                    <span class="path-emoji">{{ getEmoji(path.category?.slug) }}</span>
+                    <div [class]="'badge badge-' + path.difficulty">{{ diffLabel(path.difficulty) }}</div>
+                  </div>
                   @if (path.category) {
                     <span class="cat-tag">{{ path.category.name }}</span>
                   }
                 </div>
                 <div class="path-card__body">
                   <h3>{{ path.title }}</h3>
-                  <p>{{ path.description | slice:0:120 }}{{ path.description.length > 120 ? '...' : '' }}</p>
+                  <p>{{ path.description | slice:0:110 }}{{ path.description.length > 110 ? '...' : '' }}</p>
                   <div class="path-meta">
-                    <span>📚 {{ path.courses_count ?? 0 }} cursos</span>
-                    <span>⏱ {{ path.estimated_hours }}h</span>
-                    <span>🏆 {{ path.levels?.length ?? 0 }} niveles</span>
+                    <span class="meta-item">📚 {{ path.courses_count ?? (path.levels ? countCourses(path) : 0) }} cursos</span>
+                    <span class="meta-item">⏱ {{ path.estimated_hours }}h</span>
+                    <span class="meta-item">🏆 {{ path.levels?.length ?? 0 }} niveles</span>
                   </div>
                 </div>
                 <div class="path-card__footer">
-                  <span class="btn btn-outline btn-sm">Explorar Ruta →</span>
+                  <span class="explore-btn">
+                    Explorar Ruta Completa <span class="arrow">→</span>
+                  </span>
                 </div>
               </a>
             }
@@ -64,12 +65,10 @@ import { LearningPath } from '../../core/models';
   `,
   styles: [`
     .page-header {
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--border);
-      padding: calc(var(--header-height) + var(--sp-12)) 0 var(--sp-12);
-      background: radial-gradient(ellipse at top, rgba(108,99,255,0.06), transparent 60%);
-      h1 { font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--text-primary); span { color: var(--primary); } }
-      p { color: var(--text-secondary); margin-top: var(--sp-3); max-width: 62ch; }
+      padding: var(--sp-8) 0 var(--sp-6);
+      background: radial-gradient(ellipse at top, rgba(108,99,255,0.08), transparent 65%);
+      h1 { font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--text-primary); letter-spacing: -0.02em; span { color: var(--primary); } }
+      p { color: var(--text-secondary); margin-top: var(--sp-2); max-width: 62ch; line-height: 1.6; }
     }
     .breadcrumb {
       display: flex;
@@ -79,23 +78,120 @@ import { LearningPath } from '../../core/models';
       color: var(--text-muted);
       margin-bottom: var(--sp-3);
 
-      a { color: var(--text-muted); &:hover { color: var(--primary); } }
+      a { color: var(--text-muted); transition: color var(--transition-fast); &:hover { color: var(--primary); } }
       &__sep { color: var(--border-hover); }
       &__current { color: var(--text-secondary); font-weight: var(--font-medium); }
     }
     .path-card {
-      display: flex; flex-direction: column; background: var(--bg-surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); overflow: hidden; text-decoration: none; transition: all var(--transition-base);
-      &:hover { border-color: var(--primary); box-shadow: var(--shadow-primary); transform: translateY(-2px); }
-      &__header { height: 90px; padding: var(--sp-4); display: flex; justify-content: space-between; align-items: flex-start; }
-      &__body { flex: 1; padding: var(--sp-5);
-        h3 { font-size: var(--text-xl); font-weight: var(--font-semibold); color: var(--text-primary); margin-bottom: var(--sp-2); }
-        p { font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.6; margin-bottom: var(--sp-4); }
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      text-decoration: none;
+      transition: all var(--transition-base);
+      position: relative;
+
+      &:hover {
+        border-color: var(--primary);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(10, 233, 138, 0.15);
+        transform: translateY(-3px);
+
+        .arrow {
+          transform: translateX(4px);
+        }
       }
-      &__footer { padding: var(--sp-4) var(--sp-5); border-top: 1px solid var(--border); }
+
+      &__header {
+        height: 100px;
+        padding: var(--sp-4) var(--sp-5);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        background: linear-gradient(135deg, var(--bg-surface-2) 0%, var(--bg-surface) 100%);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .path-emoji {
+        font-size: 1.6rem;
+      }
+
+      &__body {
+        flex: 1;
+        padding: var(--sp-5);
+        display: flex;
+        flex-direction: column;
+
+        h3 {
+          font-size: var(--text-lg);
+          font-weight: var(--font-bold);
+          color: var(--text-primary);
+          margin-bottom: var(--sp-2);
+          line-height: 1.3;
+        }
+
+        p {
+          font-size: var(--text-xs);
+          color: var(--text-secondary);
+          line-height: 1.55;
+          margin-bottom: var(--sp-4);
+          flex: 1;
+        }
+      }
+
+      &__footer {
+        padding: var(--sp-3) var(--sp-5);
+        border-top: 1px solid var(--border);
+        background: rgba(10, 10, 15, 0.3);
+      }
     }
-    .cat-tag { font-size: var(--text-xs); font-weight: var(--font-semibold); color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.06em; }
-    .path-meta { display: flex; flex-wrap: wrap; gap: var(--sp-4); font-size: var(--text-xs); color: var(--text-muted); }
+
+    .cat-tag {
+      font-size: 0.7rem;
+      font-weight: var(--font-bold);
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .path-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-3);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+
+      .meta-item {
+        background: var(--bg-surface-2);
+        padding: 2px 7px;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(42, 42, 62, 0.6);
+      }
+    }
+
+    .explore-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+      color: var(--text-primary);
+
+      .arrow {
+        color: var(--primary);
+        font-size: 1rem;
+        transition: transform var(--transition-fast);
+      }
+    }
   `]
 })
 export class LearningPathsComponent implements OnInit {
@@ -115,8 +211,23 @@ export class LearningPathsComponent implements OnInit {
     return { beginner: 'Principiante', intermediate: 'Intermedio', advanced: 'Avanzado', expert: 'Experto' }[d] ?? d;
   }
 
-  gradient(path: LearningPath): string {
-    const c = path.category?.color ?? '#6C63FF';
-    return `linear-gradient(135deg, ${c}55, ${c}22)`;
+  getEmoji(slug?: string): string {
+    const map: Record<string, string> = {
+      'programacion-basica': '💡', 'algoritmos': '⚡', 'poo': '🧩',
+      'bases-de-datos': '🗄️', 'redes': '🌐', 'sistemas-operativos': '🖥️',
+      'estructuras-de-datos': '🌳', 'desarrollo-web': '🕸️',
+      'desarrollo-backend': '⚙️', 'desarrollo-frontend': '🎨',
+      'devops': '🚀', 'git': '🌿', 'ingenieria-software': '📐',
+      'ia-desarrollo': '🤖'
+    };
+    return map[slug ?? ''] ?? '🗺️';
+  }
+
+  countCourses(path: LearningPath): number {
+    let count = 0;
+    for (const lvl of path.levels ?? []) {
+      count += lvl.courses?.length ?? 0;
+    }
+    return count;
   }
 }

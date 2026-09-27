@@ -4,7 +4,7 @@ import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { AiConversation, AiMessage, AiAskReply, AiPracticeQuiz } from '../models';
 
-export type AiAskKind = 'question' | 'code_review' | 'explain' | 'practice';
+export type AiAskKind = 'question' | 'code_review' | 'explain' | 'practice' | 'hint' | 'roadmap';
 
 export interface AiAskPayload {
   question?: string;
