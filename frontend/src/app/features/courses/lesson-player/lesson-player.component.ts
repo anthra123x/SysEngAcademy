@@ -228,19 +228,19 @@ import {
                 <app-lesson-content class="lesson-content" [blocks]="contentBlocks()" />
               }
 
-            <!-- CODE CHALLENGE (Full Interactive Simulated IDE) -->
-            @if (isCodeChallenge()) {
-              <section class="challenge-ide-section" aria-label="Desafío de código interactivo">
-                <div class="challenge-ide-banner">
-                  <div class="cib-badge">💻 Reto Práctico Interactivo</div>
-                  <h2 class="cib-title">{{ l.title }}</h2>
-                  <p class="cib-desc">Escribe tu solución, ejecútala en el sandbox con compilación local y valida los casos de prueba.</p>
-                  @if (l.hint) {
-                    <div class="cib-hint">
-                      <span class="hint-icon">💡</span>
-                      <span class="hint-text"><strong>Pista:</strong> {{ l.hint }}</span>
-                    </div>
-                  }
+            <!-- INTERACTIVE CODE PRACTICE (Only shown in lessons/modules where practice is required) -->
+            @if (hasPractice()) {
+              <section class="practice-section" aria-label="Zona de práctica de programación">
+                <div class="practice-header">
+                  <div class="practice-header__info">
+                    <span class="practice-tag">💻 Práctica Guiada</span>
+                    @if (l.hint) {
+                      <div class="practice-hint">
+                        <span class="hint-icon">💡</span>
+                        <span class="hint-text"><strong>Pista:</strong> {{ l.hint }}</span>
+                      </div>
+                    }
+                  </div>
                 </div>
 
                 <app-interactive-ide
@@ -250,49 +250,9 @@ import {
                   [hint]="l.hint"
                   [lessonTitle]="l.title"
                   [lessonId]="l.id"
-                  [isChallenge]="true"
+                  [isChallenge]="isCodeChallenge()"
                 />
               </section>
-            }
-
-            <!-- GLOBAL SIMULATED SANDBOX TOGGLE (A programar se aprende programando) -->
-            @if (!isCodeChallenge()) {
-              <div class="sandbox-quickbar">
-                <button
-                  type="button"
-                  class="btn-sandbox-toggle"
-                  (click)="sandboxExpanded.set(!sandboxExpanded())"
-                  [class.is-expanded]="sandboxExpanded()"
-                  title="Abrir entorno de programación interactivo para probar el código de esta lección"
-                >
-                  <span class="sbox-icon">⚡</span>
-                  <div class="sbox-text">
-                    <strong>{{ sandboxExpanded() ? 'Ocultar Entorno Simulado de Programación' : 'Abrir Entorno Simulado de Programación (Sandbox)' }}</strong>
-                    <small>Experimenta en vivo con Python, JavaScript, TypeScript, PHP, C++ o PSeInt</small>
-                  </div>
-                  <span class="sbox-pill">{{ sandboxExpanded() ? 'Cerrar ✕' : 'Probar Código 💻' }}</span>
-                </button>
-              </div>
-
-              @if (sandboxExpanded()) {
-                <div class="sandbox-drawer-container">
-                  <div class="sandbox-drawer-header">
-                    <div class="sdh-left">
-                      <span class="sdh-badge">Sandbox Interactivo</span>
-                      <h4>Zona de Práctica: {{ l.title }}</h4>
-                    </div>
-                    <button type="button" class="sdh-close-btn" (click)="sandboxExpanded.set(false)" title="Cerrar sandbox">✕</button>
-                  </div>
-
-                  <app-interactive-ide
-                    [initialCode]="code()"
-                    [language]="l.language || 'python'"
-                    [lessonTitle]="l.title"
-                    [lessonId]="l.id"
-                    [isChallenge]="false"
-                  />
-                </div>
-              }
             }
 
             <!-- QUIZ -->
@@ -1295,175 +1255,48 @@ import {
     }
 
     // === Interactive Simulated IDE & Sandbox ===
-    .challenge-ide-section {
-      margin-top: var(--sp-10);
-      margin-bottom: var(--sp-8);
+    // === Interactive Code Practice (Only shown when lesson requires practice) ===
+    .practice-section {
+      margin-top: var(--sp-6);
+      margin-bottom: var(--sp-6);
     }
 
-    .challenge-ide-banner {
-      background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(99, 102, 241, 0.08));
-      border: 1px solid rgba(6, 182, 212, 0.25);
-      border-radius: var(--radius-lg);
-      padding: var(--sp-5) var(--sp-6);
-      margin-bottom: var(--sp-4);
-
-      .cib-badge {
-        display: inline-block;
-        font-size: var(--text-xs);
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #06b6d4;
-        background: rgba(6, 182, 212, 0.15);
-        padding: 0.2rem 0.6rem;
-        border-radius: 9999px;
-        margin-bottom: var(--sp-2);
-      }
-
-      .cib-title {
-        font-size: var(--text-xl);
-        font-weight: var(--font-bold);
-        color: var(--text-primary);
-        margin: 0 0 var(--sp-2) 0;
-      }
-
-      .cib-desc {
-        font-size: var(--text-sm);
-        color: var(--text-secondary);
-        margin: 0;
-        line-height: 1.6;
-      }
-
-      .cib-hint {
-        display: flex;
-        align-items: center;
-        gap: var(--sp-2);
-        margin-top: var(--sp-3);
-        padding: var(--sp-2) var(--sp-3);
-        border-radius: var(--radius-md);
-        background: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.25);
-        font-size: var(--text-xs);
-        color: #fcd34d;
-      }
-    }
-
-    // === Global Sandbox Quick Bar ===
-    .sandbox-quickbar {
-      margin-top: var(--sp-8);
-      margin-bottom: var(--sp-4);
-    }
-
-    .btn-sandbox-toggle {
-      width: 100%;
+    .practice-header {
       display: flex;
       align-items: center;
-      gap: var(--sp-4);
-      padding: var(--sp-4) var(--sp-5);
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(6, 182, 212, 0.08));
-      border: 1px dashed rgba(6, 182, 212, 0.35);
-      border-radius: var(--radius-lg);
-      cursor: pointer;
-      text-align: left;
-      transition: all var(--transition-fast);
+      justify-content: space-between;
+      margin-bottom: var(--sp-2);
 
-      &:hover {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(6, 182, 212, 0.14));
-        border-color: #06b6d4;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(6, 182, 212, 0.15);
-      }
-
-      &.is-expanded {
-        background: rgba(6, 182, 212, 0.12);
-        border-style: solid;
-        border-color: #06b6d4;
-      }
-
-      .sbox-icon {
-        font-size: 1.5rem;
-      }
-
-      .sbox-text {
-        flex: 1;
+      &__info {
         display: flex;
-        flex-direction: column;
-        gap: 2px;
-
-        strong {
-          color: var(--text-primary);
-          font-size: var(--text-sm);
-        }
-
-        small {
-          color: var(--text-muted);
-          font-size: var(--text-xs);
-        }
-      }
-
-      .sbox-pill {
-        font-size: var(--text-xs);
-        font-weight: 700;
-        padding: 0.3rem 0.75rem;
-        border-radius: 9999px;
-        background: #06b6d4;
-        color: #030712;
+        align-items: center;
+        gap: var(--sp-3);
+        flex-wrap: wrap;
       }
     }
 
-    .sandbox-drawer-container {
-      background: rgba(15, 23, 42, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: var(--radius-xl);
-      padding: var(--sp-4);
-      margin-bottom: var(--sp-8);
-      animation: fadeIn 0.2s ease-out;
+    .practice-tag {
+      display: inline-flex;
+      align-items: center;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+    }
 
-      .sandbox-drawer-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: var(--sp-3);
-        padding-bottom: var(--sp-3);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-
-        .sdh-left {
-          display: flex;
-          align-items: center;
-          gap: var(--sp-3);
-
-          .sdh-badge {
-            font-size: var(--text-xs);
-            font-weight: 700;
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
-            background: rgba(16, 185, 129, 0.15);
-            color: #34d399;
-          }
-
-          h4 {
-            margin: 0;
-            font-size: var(--text-base);
-            font-weight: var(--font-bold);
-            color: var(--text-primary);
-          }
-        }
-
-        .sdh-close-btn {
-          background: transparent;
-          border: none;
-          color: var(--text-muted);
-          font-size: var(--text-sm);
-          cursor: pointer;
-          padding: 0.2rem 0.5rem;
-          border-radius: 4px;
-
-          &:hover {
-            color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.08);
-          }
-        }
-      }
+    .practice-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: var(--text-xs);
+      color: #fcd34d;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-md);
     }
 
     .ai-reply {
@@ -1876,9 +1709,8 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   quizSubmitting = signal(false);
   quizResult     = signal<QuizAttemptResult | null>(null);
 
-  // --- Code challenge & Interactive Sandbox ---
+  // --- Code challenge & Interactive Practice ---
   code            = signal('');
-  sandboxExpanded = signal(false);
   aiReviewing     = signal(false);
   aiReply         = signal<string | null>(null);
 
@@ -2138,6 +1970,16 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
 
   readonly isCodeChallenge = computed(() => this.lesson()?.type === 'code_challenge');
 
+  readonly hasPractice = computed(() => {
+    const l = this.lesson();
+    if (!l) return false;
+    return (
+      l.type === 'code_challenge' ||
+      (typeof l.starter_code === 'string' && l.starter_code.trim().length > 0) ||
+      (Array.isArray(l.test_cases) && l.test_cases.length > 0)
+    );
+  });
+
   readonly canComplete = computed(() => this.course()?.enrolled !== false);
 
   readonly totalLessons = computed(() =>
@@ -2200,7 +2042,6 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     this.quizSubmitting.set(false);
     this.completing.set(false);
     this.code.set('');
-    this.sandboxExpanded.set(false);
     this.aiReply.set(null);
     this.aiReviewing.set(false);
     this.copiedIndex.set(null);

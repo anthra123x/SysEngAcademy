@@ -25,20 +25,19 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="simulated-ide" [class.is-fullscreen]="isFullscreen()">
-      <!-- IDE HEADER TOOLBAR -->
-      <div class="ide-toolbar">
-        <div class="ide-toolbar__left">
-          <!-- File Tab -->
-          <div class="file-tab">
-            <span class="file-tab__icon">{{ currentLangInfo().icon }}</span>
-            <span class="file-tab__name">main{{ currentLangInfo().extension }}</span>
-            <span class="file-tab__status-dot" [class.is-dirty]="isModified()"></span>
+    <div class="mini-ide" [class.is-fullscreen]="isFullscreen()">
+      <!-- COMPACT HEADER BAR -->
+      <div class="ide-bar">
+        <div class="ide-bar__left">
+          <!-- File Indicator -->
+          <div class="file-pill">
+            <span class="file-dot" [class.is-dirty]="isModified()"></span>
+            <span class="file-name">solution{{ currentLangInfo().extension }}</span>
           </div>
 
           <!-- Language Selector -->
-          <div class="lang-selector-wrap">
-            <label for="lang-select" class="sr-only">Seleccionar Lenguaje</label>
+          <div class="lang-picker">
+            <label for="lang-select" class="sr-only">Lenguaje</label>
             <select
               id="lang-select"
               class="lang-select"
@@ -48,192 +47,164 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
             >
               @for (lang of languages; track lang.id) {
                 <option [value]="lang.id">
-                  {{ lang.icon }} {{ lang.name }} ({{ lang.version }})
+                  {{ lang.name }}
                 </option>
               }
             </select>
           </div>
         </div>
 
-        <div class="ide-toolbar__right">
-          <!-- Stdin Input Toggle -->
-          <button
-            type="button"
-            class="ide-btn ide-btn--ghost"
-            (click)="showStdin.set(!showStdin())"
-            [class.is-active]="showStdin()"
-            title="Ingresar datos de entrada estándar (stdin)"
-          >
-            <span class="btn-icon">📥</span>
-            <span class="btn-text">stdin</span>
-          </button>
-
+        <div class="ide-bar__right">
           <!-- Reset Code -->
           <button
             type="button"
-            class="ide-btn ide-btn--ghost"
+            class="tool-btn"
             (click)="resetCode()"
-            title="Reiniciar código inicial"
+            title="Reiniciar al código base"
             [disabled]="running() || testing()"
+            aria-label="Reiniciar código"
           >
-            <span class="btn-icon">↺</span>
-            <span class="btn-text">Reiniciar</span>
+            <span>↺</span>
           </button>
 
-          <!-- Run Tests (if available) -->
-          @if (activeTestCases().length > 0) {
-            <button
-              type="button"
-              class="ide-btn ide-btn--test"
-              (click)="runTests()"
-              [disabled]="running() || testing() || !code().trim()"
-              title="Ejecutar y validar todos los casos de prueba"
-            >
-              <span class="btn-icon">{{ testing() ? '⏳' : '🧪' }}</span>
-              <span class="btn-text">{{ testing() ? 'Validando…' : 'Validar Reto' }}</span>
-            </button>
-          }
+          <!-- Stdin Input Toggle -->
+          <button
+            type="button"
+            class="tool-btn tool-btn--text"
+            [class.is-active]="showStdin()"
+            (click)="showStdin.set(!showStdin())"
+            title="Entrada estándar por teclado (stdin)"
+          >
+            <span>stdin</span>
+          </button>
 
           <!-- Ask AI Socratic Help -->
           <button
             type="button"
-            class="ide-btn ide-btn--ai"
+            class="tool-btn tool-btn--ai"
             (click)="diagnoseWithAi()"
             [disabled]="aiLoading() || !code().trim()"
-            title="Pedir diagnóstico y orientación socrática a Byte IA"
+            title="Pedir orientación conceptual a Byte IA"
           >
-            <span class="btn-icon">{{ aiLoading() ? '⚙️' : '🤖' }}</span>
-            <span class="btn-text">{{ aiLoading() ? 'Analizando…' : 'Diagnosticar con Byte' }}</span>
+            <span class="ai-icon">{{ aiLoading() ? '⚙️' : '🤖' }}</span>
+            <span class="ai-label">{{ aiLoading() ? 'Byte…' : 'Byte IA' }}</span>
           </button>
+
+          <!-- Run Tests (if challenge has test cases) -->
+          @if (activeTestCases().length > 0) {
+            <button
+              type="button"
+              class="action-btn action-btn--test"
+              (click)="runTests()"
+              [disabled]="running() || testing() || !code().trim()"
+              title="Validar casos de prueba del reto"
+            >
+              <span class="btn-icon">{{ testing() ? '⏳' : '✓' }}</span>
+              <span>{{ testing() ? 'Validando…' : 'Validar Reto' }}</span>
+            </button>
+          }
 
           <!-- Execute Code Primary Button -->
           <button
             type="button"
-            class="ide-btn ide-btn--run"
+            class="action-btn action-btn--run"
             (click)="executeCode()"
             [disabled]="running() || testing() || !code().trim()"
-            title="Ejecutar código en el sandbox local (Ctrl + Enter)"
+            title="Ejecutar código (Ctrl + Enter)"
           >
             <span class="btn-icon">{{ running() ? '⏳' : '▶' }}</span>
-            <span class="btn-text">{{ running() ? 'Ejecutando…' : 'Ejecutar' }}</span>
+            <span>{{ running() ? 'Ejecutando…' : 'Ejecutar' }}</span>
+            <kbd class="key-hint">Ctrl ↵</kbd>
           </button>
 
           <!-- Fullscreen Toggle -->
           <button
             type="button"
-            class="ide-btn ide-btn--icon"
+            class="tool-btn"
             (click)="isFullscreen.set(!isFullscreen())"
             [title]="isFullscreen() ? 'Salir de pantalla completa' : 'Pantalla completa'"
+            aria-label="Pantalla completa"
           >
-            {{ isFullscreen() ? '🗗' : '🗖' }}
+            <span>{{ isFullscreen() ? '✕' : '⛶' }}</span>
           </button>
         </div>
       </div>
 
-      <!-- STDIN DRAWER -->
+      <!-- INLINE STDIN ROW (when toggled) -->
       @if (showStdin()) {
-        <div class="stdin-drawer">
-          <div class="stdin-drawer__label">
-            <span>📥 Entrada estándar (stdin)</span>
-            <small>Los datos que leerá tu código con input(), readline, etc.</small>
-          </div>
-          <textarea
-            class="stdin-drawer__input"
-            rows="2"
+        <div class="stdin-bar">
+          <label for="stdin-input" class="stdin-label">&gt; stdin:</label>
+          <input
+            id="stdin-input"
+            type="text"
+            class="stdin-input"
             [ngModel]="stdin()"
             (ngModelChange)="stdin.set($event)"
-            placeholder="Escribe aquí los datos de entrada por línea..."
-          ></textarea>
+            placeholder="Valores de entrada separados por espacio o salto de línea..."
+          />
         </div>
       }
 
-      <!-- EDITOR WORKSPACE -->
+      <!-- WORKSPACE: CODE EDITOR + CONSOLE -->
       <div class="ide-workspace">
         <!-- CODE EDITOR PANEL -->
         <div class="editor-pane">
-          <div class="editor-container">
-            <!-- Line numbers gutter -->
-            <div class="editor-gutter" aria-hidden="true">
-              @for (line of lineNumbers(); track $index) {
-                <div class="gutter-number">{{ line }}</div>
-              }
-            </div>
-
-            <!-- Code input area -->
-            <div class="editor-area">
-              <textarea
-                #codeTextarea
-                class="editor-textarea"
-                [ngModel]="code()"
-                (ngModelChange)="code.set($event)"
-                (keydown)="handleEditorKeyDown($event)"
-                spellcheck="false"
-                autocomplete="off"
-                autocapitalize="off"
-                placeholder="// Escribe o pega tu código aquí para experimentar..."
-                aria-label="Editor de código de programación"
-              ></textarea>
-            </div>
+          <div class="editor-gutter" aria-hidden="true">
+            @for (line of lineNumbers(); track $index) {
+              <div class="gutter-num">{{ line }}</div>
+            }
           </div>
 
-          <!-- Editor Footer Status Bar -->
-          <div class="editor-statusbar">
-            <div class="statusbar-left">
-              <span class="status-item">
-                <span class="status-indicator" [class.is-ok]="executionResult()?.exit_code === 0" [class.is-err]="executionResult() && executionResult()!.exit_code !== 0"></span>
-                {{ currentLangInfo().name }} ({{ currentLangInfo().version }})
-              </span>
-              <span class="status-item">Líneas: {{ lineNumbers().length }}</span>
-              <span class="status-item">Caracteres: {{ code().length }}</span>
-            </div>
-            <div class="statusbar-right">
-              <span class="status-item">UTF-8</span>
-              <span class="status-item">Espacios: 2</span>
-              <span class="status-badge" [class.badge--local]="isLocalEngine()">
-                {{ isLocalEngine() ? '⚡ Sandbox Local' : '🌐 Browser Native' }}
-              </span>
-            </div>
+          <div class="editor-body">
+            <textarea
+              #codeTextarea
+              class="editor-input"
+              [ngModel]="code()"
+              (ngModelChange)="code.set($event)"
+              (keydown)="handleEditorKeyDown($event)"
+              spellcheck="false"
+              autocomplete="off"
+              autocapitalize="off"
+              placeholder="// Escribe aquí tu solución..."
+              aria-label="Editor de código"
+            ></textarea>
           </div>
         </div>
 
-        <!-- TERMINAL & RESULTS PANEL -->
-        <div class="terminal-pane">
-          <!-- Terminal Tabs Bar -->
-          <div class="terminal-nav">
-            <div class="terminal-tabs">
+        <!-- CONSOLE / OUTPUT PANEL -->
+        <div class="console-pane">
+          <!-- Console Tabs Header -->
+          <div class="console-nav">
+            <div class="console-tabs">
               <button
                 type="button"
-                class="term-tab"
+                class="tab-item"
                 [class.is-active]="activeTerminalTab() === 'terminal'"
                 (click)="activeTerminalTab.set('terminal')"
               >
-                <span class="tab-icon">🖥️</span>
-                <span>Terminal</span>
+                <span>Consola</span>
                 @if (executionResult()) {
                   <span
-                    class="tab-pill"
-                    [class.pill-success]="executionResult()!.exit_code === 0"
-                    [class.pill-danger]="executionResult()!.exit_code !== 0"
-                  >
-                    exit {{ executionResult()!.exit_code }}
-                  </span>
+                    class="status-dot"
+                    [class.is-ok]="executionResult()!.exit_code === 0"
+                    [class.is-err]="executionResult()!.exit_code !== 0"
+                  ></span>
                 }
               </button>
 
               @if (activeTestCases().length > 0 || (executionResult()?.tests && executionResult()!.tests!.length > 0)) {
                 <button
                   type="button"
-                  class="term-tab"
+                  class="tab-item"
                   [class.is-active]="activeTerminalTab() === 'tests'"
                   (click)="activeTerminalTab.set('tests')"
                 >
-                  <span class="tab-icon">🧪</span>
-                  <span>Casos de Prueba</span>
+                  <span>Tests</span>
                   @if (testStats(); as stats) {
                     <span
-                      class="tab-pill"
-                      [class.pill-success]="stats.passed === stats.total"
-                      [class.pill-danger]="stats.passed < stats.total"
+                      class="score-pill"
+                      [class.is-passed]="stats.passed === stats.total"
+                      [class.is-failed]="stats.passed < stats.total"
                     >
                       {{ stats.passed }}/{{ stats.total }}
                     </span>
@@ -244,155 +215,133 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
               @if (aiReply() || aiLoading()) {
                 <button
                   type="button"
-                  class="term-tab"
+                  class="tab-item"
                   [class.is-active]="activeTerminalTab() === 'ai'"
                   (click)="activeTerminalTab.set('ai')"
                 >
-                  <span class="tab-icon">🤖</span>
-                  <span>Byte Mentor</span>
+                  <span>Byte IA</span>
                   @if (aiLoading()) {
-                    <span class="tab-spinner">●</span>
+                    <span class="tab-pulse">●</span>
                   }
                 </button>
               }
             </div>
 
-            <div class="terminal-actions">
+            <div class="console-actions">
               @if (executionResult()?.execution_time_ms !== undefined) {
-                <span class="exec-time" title="Tiempo de ejecución del proceso">
-                  ⚡ {{ executionResult()!.execution_time_ms }} ms
-                </span>
+                <span class="time-tag">{{ executionResult()!.execution_time_ms }}ms</span>
               }
-              <button
-                type="button"
-                class="term-action-btn"
-                (click)="clearTerminal()"
-                title="Limpiar la salida de la terminal"
-              >
-                🗑 Limpiar
-              </button>
+              @if (executionResult()) {
+                <button
+                  type="button"
+                  class="btn-clear"
+                  (click)="clearTerminal()"
+                  title="Limpiar consola"
+                >
+                  Limpiar
+                </button>
+              }
             </div>
           </div>
 
-          <!-- Terminal Content Area -->
-          <div class="terminal-viewport">
-            <!-- TAB 1: TERMINAL (STDOUT / STDERR) -->
+          <!-- Console Viewport -->
+          <div class="console-viewport font-mono">
+            <!-- TAB: TERMINAL / STDOUT -->
             @if (activeTerminalTab() === 'terminal') {
-              <div class="terminal-body font-mono">
-                <div class="term-line term-prompt">
-                  <span class="prompt-user">syseng&#64;sandbox</span>:<span class="prompt-path">~/workspace</span>$
-                  <span class="prompt-cmd">syseng-runner exec {{ currentLangInfo().extension }}</span>
-                </div>
-
+              <div class="output-flow">
                 @if (running()) {
-                  <div class="term-loading">
-                    <span class="term-spinner"></span>
-                    <span>Compilando y ejecutando en entorno aislado...</span>
+                  <div class="output-state output-state--running">
+                    <span class="spinner"></span>
+                    <span>Ejecutando en entorno aislado...</span>
                   </div>
                 } @else if (executionResult()) {
                   @let res = executionResult()!;
                   @if (res.stdout) {
-                    <pre class="term-stdout">{{ res.stdout }}</pre>
+                    <pre class="stdout-block">{{ res.stdout }}</pre>
                   }
                   @if (res.stderr) {
-                    <pre class="term-stderr">{{ res.stderr }}</pre>
+                    <pre class="stderr-block">{{ res.stderr }}</pre>
                   }
                   @if (!res.stdout && !res.stderr) {
-                    <div class="term-empty">
-                      El programa se ejecutó sin generar salida en stdout o stderr. (Código de salida: {{ res.exit_code }})
+                    <div class="output-quiet">
+                      <span>Proceso finalizado sin generar salida (stdout/stderr).</span>
                     </div>
                   }
-                  <div class="term-line term-exit" [class.term-exit--ok]="res.exit_code === 0" [class.term-exit--err]="res.exit_code !== 0">
-                    <span>[Proceso finalizado con código {{ res.exit_code }} en {{ res.execution_time_ms }}ms]</span>
+                  <div
+                    class="exit-line"
+                    [class.is-ok]="res.exit_code === 0"
+                    [class.is-err]="res.exit_code !== 0"
+                  >
+                    <span>[Finalizado con código {{ res.exit_code }} · {{ res.execution_time_ms }}ms]</span>
                   </div>
                 } @else {
-                  <div class="term-intro">
-                    <p class="intro-title">💡 Entorno de Simulación Interactivo SysEngAcademy</p>
-                    <p class="intro-desc">
-                      Escribe tu código en el editor y presiona <strong class="key-combo">▶ Ejecutar</strong> o <strong class="key-combo">Ctrl + Enter</strong> para ver los resultados en esta consola en tiempo real.
-                    </p>
-                    <ul class="intro-tips">
-                      <li>• Ejecución local nativa con Python 3.12, Node.js, Bun (TypeScript), PHP 8.3 y GCC C++.</li>
-                      <li>• Si necesitas pasar valores a <code>input()</code>, haz clic en el botón <strong>📥 stdin</strong>.</li>
-                      <li>• Si te surge una duda o bug, presiona <strong>🤖 Diagnosticar con Byte</strong> para orientación paso a paso.</li>
-                    </ul>
+                  <div class="output-placeholder">
+                    <p class="placeholder-main">// Salida de la consola...</p>
+                    <p class="placeholder-sub">Presiona <strong>Ejecutar</strong> o <strong>Ctrl + Enter</strong> para ver los resultados.</p>
                   </div>
                 }
               </div>
             }
 
-            <!-- TAB 2: TEST CASES -->
+            <!-- TAB: TESTS -->
             @if (activeTerminalTab() === 'tests') {
-              <div class="tests-body">
+              <div class="tests-flow">
                 @if (testing()) {
-                  <div class="term-loading">
-                    <span class="term-spinner"></span>
-                    <span>Evaluando todos los casos de prueba...</span>
+                  <div class="output-state output-state--running">
+                    <span class="spinner"></span>
+                    <span>Validando casos de prueba...</span>
                   </div>
                 } @else if (executionResult()?.tests && executionResult()!.tests!.length > 0) {
-                  <div class="tests-header">
-                    <h4>Resultados de Validación de Casos</h4>
-                    @let stats = testStats()!;
-                    <div class="tests-summary" [class.is-all-passed]="stats.passed === stats.total">
-                      {{ stats.passed }} de {{ stats.total }} pruebas superadas
-                    </div>
-                  </div>
-
                   <div class="tests-list">
                     @for (test of executionResult()!.tests; track $index) {
-                      <div class="test-item" [class.test-passed]="test.passed" [class.test-failed]="!test.passed">
+                      <div class="test-item" [class.is-ok]="test.passed" [class.is-fail]="!test.passed">
                         <div class="test-item__head">
-                          <span class="test-badge">{{ test.passed ? '✓ PASÓ' : '✗ FALLÓ' }}</span>
+                          <span class="test-icon">{{ test.passed ? '✓' : '✗' }}</span>
                           <span class="test-title">Prueba #{{ $index + 1 }}</span>
+                          <span class="test-state">{{ test.passed ? 'Aprobada' : 'Fallida' }}</span>
                         </div>
-                        <div class="test-item__details font-mono">
-                          @if (test.input) {
-                            <div class="test-row">
-                              <span class="test-label">Entrada (stdin):</span>
-                              <pre class="test-val">{{ test.input }}</pre>
+                        @if (!test.passed) {
+                          <div class="test-item__diff">
+                            @if (test.input) {
+                              <div class="diff-row">
+                                <span class="diff-lbl">Entrada:</span>
+                                <code>{{ test.input }}</code>
+                              </div>
+                            }
+                            <div class="diff-row">
+                              <span class="diff-lbl">Esperado:</span>
+                              <code class="diff-exp">{{ test.expected }}</code>
                             </div>
-                          }
-                          <div class="test-row">
-                            <span class="test-label">Esperado:</span>
-                            <pre class="test-val test-val--expected">{{ test.expected }}</pre>
+                            <div class="diff-row">
+                              <span class="diff-lbl">Obtenido:</span>
+                              <code class="diff-act">{{ test.actual || '(vacío)' }}</code>
+                            </div>
                           </div>
-                          <div class="test-row">
-                            <span class="test-label">Obtenido:</span>
-                            <pre class="test-val" [class.test-val--error]="!test.passed">{{ test.actual || '(vacío)' }}</pre>
-                          </div>
-                        </div>
+                        }
                       </div>
                     }
                   </div>
                 } @else {
-                  <div class="tests-empty">
-                    <p>No se han ejecutado los casos de prueba todavía.</p>
-                    <button type="button" class="ide-btn ide-btn--test" (click)="runTests()">
-                      🧪 Validar Casos de Prueba Ahora
+                  <div class="output-placeholder">
+                    <p class="placeholder-main">// Casos de prueba sin ejecutar</p>
+                    <button type="button" class="btn-run-tests" (click)="runTests()">
+                      Validar Casos de Prueba
                     </button>
                   </div>
                 }
               </div>
             }
 
-            <!-- TAB 3: BYTE IA DIAGNOSIS -->
+            <!-- TAB: BYTE IA -->
             @if (activeTerminalTab() === 'ai') {
-              <div class="ai-body">
-                <div class="ai-chat-header">
-                  <div class="ai-avatar">🤖</div>
-                  <div>
-                    <h4>Byte IA - Asistente y Mentor Socrático</h4>
-                    <small>Analizo tu código sin revelarte la solución directa para que aprendas programando.</small>
-                  </div>
-                </div>
-
+              <div class="ai-flow">
                 @if (aiLoading()) {
-                  <div class="ai-loading-box">
-                    <div class="ai-pulse-robot">🤖</div>
-                    <p>Byte está analizando la estructura, sintaxis y complejidad de tu código…</p>
+                  <div class="output-state output-state--running">
+                    <span class="spinner"></span>
+                    <span>Byte IA está analizando tu código…</span>
                   </div>
                 } @else if (aiReply()) {
-                  <div class="ai-response-content" [innerHTML]="renderMarkdown(aiReply()!)"></div>
+                  <div class="ai-bubble" [innerHTML]="renderMarkdown(aiReply()!)"></div>
                 }
               </div>
             }
@@ -403,20 +352,20 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
   `,
   styles: [
     `
-      .simulated-ide {
+      .mini-ide {
         display: flex;
         flex-direction: column;
         background: #090d16;
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
+        border-radius: 10px;
         overflow: hidden;
-        margin: var(--sp-4, 1.25rem) 0;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+        margin: 1.25rem 0;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
         font-family: inherit;
-        transition: all 0.25s ease;
+        transition: all 0.2s ease;
       }
 
-      .simulated-ide.is-fullscreen {
+      .mini-ide.is-fullscreen {
         position: fixed;
         inset: 0;
         z-index: 99999;
@@ -426,236 +375,251 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
         height: 100vh;
       }
 
-      /* TOOLBAR */
-      .ide-toolbar {
+      /* HEADER TOOLBAR */
+      .ide-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: #0f172a;
-        padding: 0.5rem 0.75rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        flex-wrap: wrap;
+        background: #0d131f;
+        padding: 0.4rem 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
         gap: 0.5rem;
+        flex-wrap: wrap;
       }
 
-      .ide-toolbar__left,
-      .ide-toolbar__right {
+      .ide-bar__left,
+      .ide-bar__right {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
+        gap: 0.4rem;
       }
 
-      .file-tab {
-        display: flex;
+      .file-pill {
+        display: inline-flex;
         align-items: center;
         gap: 0.35rem;
-        background: #1e293b;
-        color: #f1f5f9;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        padding: 0.35rem 0.65rem;
-        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.04);
         border: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 0.25rem 0.55rem;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        color: #e2e8f0;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
       }
 
-      .file-tab__status-dot {
+      .file-dot {
         width: 6px;
         height: 6px;
         border-radius: 50%;
         background: #10b981;
       }
 
-      .file-tab__status-dot.is-dirty {
+      .file-dot.is-dirty {
         background: #f59e0b;
       }
 
       .lang-select {
-        background: #1e293b;
-        color: #e2e8f0;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        padding: 0.35rem 0.65rem;
+        background: transparent;
+        color: #94a3b8;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0.25rem 0.45rem;
         border-radius: 6px;
-        font-size: 0.8125rem;
-        font-weight: 500;
+        font-size: 0.76rem;
         cursor: pointer;
         outline: none;
-        transition: border-color 0.15s;
-      }
+        transition: color 0.15s, border-color 0.15s;
 
-      .lang-select:focus {
-        border-color: #06b6d4;
+        &:hover,
+        &:focus {
+          color: #f1f5f9;
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        option {
+          background: #0d131f;
+          color: #f1f5f9;
+        }
       }
 
       /* BUTTONS */
-      .ide-btn {
+      .tool-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: #94a3b8;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        &:hover:not(:disabled) {
+          color: #f1f5f9;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        &.is-active {
+          color: #38bdf8;
+          background: rgba(56, 189, 248, 0.1);
+          border-color: rgba(56, 189, 248, 0.25);
+        }
+      }
+
+      .tool-btn--text {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.55rem;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .tool-btn--ai {
+        gap: 0.3rem;
+        background: rgba(99, 102, 241, 0.12);
+        color: #a5b4fc;
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        font-size: 0.76rem;
+        font-weight: 600;
+        padding: 0.25rem 0.6rem;
+
+        &:hover:not(:disabled) {
+          background: rgba(99, 102, 241, 0.22);
+          color: #ffffff;
+        }
+      }
+
+      .action-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
-        font-size: 0.8125rem;
+        font-size: 0.78rem;
         font-weight: 600;
-        padding: 0.4rem 0.75rem;
+        padding: 0.3rem 0.7rem;
         border-radius: 6px;
-        border: 1px solid transparent;
+        border: none;
         cursor: pointer;
         transition: all 0.15s ease;
-        line-height: 1;
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
       }
 
-      .ide-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      .ide-btn--ghost {
-        background: rgba(255, 255, 255, 0.05);
-        color: #cbd5e1;
-        border-color: rgba(255, 255, 255, 0.08);
-      }
-
-      .ide-btn--ghost:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-      }
-
-      .ide-btn--ghost.is-active {
-        background: rgba(6, 182, 212, 0.2);
-        border-color: #06b6d4;
-        color: #06b6d4;
-      }
-
-      .ide-btn--run {
-        background: linear-gradient(135deg, #10b981, #059669);
+      .action-btn--run {
+        background: #10b981;
         color: #ffffff;
-        font-weight: 700;
-        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+
+        &:hover:not(:disabled) {
+          background: #059669;
+        }
+
+        .key-hint {
+          background: rgba(0, 0, 0, 0.25);
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 0.68rem;
+          padding: 0.1rem 0.3rem;
+          border-radius: 3px;
+          margin-left: 0.25rem;
+          font-family: inherit;
+        }
       }
 
-      .ide-btn--run:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-      }
-
-      .ide-btn--test {
-        background: #0ea5e9;
-        color: #ffffff;
-      }
-
-      .ide-btn--test:hover:not(:disabled) {
+      .action-btn--test {
         background: #0284c7;
+        color: #ffffff;
+
+        &:hover:not(:disabled) {
+          background: #0369a1;
+        }
       }
 
-      .ide-btn--ai {
-        background: rgba(99, 102, 241, 0.15);
-        color: #a5b4fc;
-        border-color: rgba(99, 102, 241, 0.4);
-      }
-
-      .ide-btn--ai:hover:not(:disabled) {
-        background: rgba(99, 102, 241, 0.25);
-        color: #fff;
-        border-color: #818cf8;
-      }
-
-      .ide-btn--icon {
-        background: transparent;
-        color: #94a3b8;
-        padding: 0.4rem 0.5rem;
-      }
-
-      .ide-btn--icon:hover {
-        color: #fff;
-      }
-
-      /* STDIN DRAWER */
-      .stdin-drawer {
-        background: #111827;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 0.65rem 0.85rem;
-      }
-
-      .stdin-drawer__label {
+      /* STDIN BAR */
+      .stdin-bar {
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        background: #0a0e17;
+        padding: 0.35rem 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .stdin-label {
         font-size: 0.75rem;
-        color: #94a3b8;
-        margin-bottom: 0.35rem;
+        color: #64748b;
+        font-family: monospace;
       }
 
-      .stdin-drawer__input {
-        width: 100%;
-        background: #030712;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
+      .stdin-input {
+        flex: 1;
+        background: #03060c;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
         color: #f1f5f9;
-        padding: 0.45rem 0.65rem;
-        font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
-        font-size: 0.8125rem;
-        resize: vertical;
+        font-size: 0.78rem;
+        padding: 0.2rem 0.5rem;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
         outline: none;
+
+        &:focus {
+          border-color: #38bdf8;
+        }
       }
 
-      .stdin-drawer__input:focus {
-        border-color: #06b6d4;
-      }
-
-      /* WORKSPACE LAYOUT (EDITOR + TERMINAL) */
+      /* WORKSPACE LAYOUT */
       .ide-workspace {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        min-height: 440px;
-        max-height: 700px;
-        background: #030712;
+        grid-template-columns: 1.15fr 0.85fr;
+        min-height: 380px;
+        max-height: 520px;
+        background: #050811;
       }
 
-      @media (max-width: 900px) {
+      @media (max-width: 860px) {
         .ide-workspace {
           grid-template-columns: 1fr;
           max-height: none;
         }
       }
 
-      /* EDITOR PANE */
+      /* EDITOR COLUMN */
       .editor-pane {
         display: flex;
-        flex-direction: column;
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
-        background: #050914;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .editor-container {
-        display: flex;
-        flex: 1;
+        border-right: 1px solid rgba(255, 255, 255, 0.07);
+        background: #060913;
         overflow: hidden;
       }
 
       .editor-gutter {
-        width: 44px;
+        width: 38px;
         padding: 0.75rem 0;
-        background: #070c1a;
+        background: #080d1a;
         color: #475569;
         font-family: 'JetBrains Mono', 'Fira Code', monospace;
-        font-size: 0.8125rem;
-        line-height: 1.5;
+        font-size: 0.78rem;
+        line-height: 1.55;
         text-align: right;
         user-select: none;
         border-right: 1px solid rgba(255, 255, 255, 0.04);
       }
 
-      .gutter-number {
-        padding-right: 0.65rem;
+      .gutter-num {
+        padding-right: 0.5rem;
       }
 
-      .editor-area {
+      .editor-body {
         flex: 1;
         position: relative;
         overflow: hidden;
       }
 
-      .editor-textarea {
+      .editor-input {
         width: 100%;
         height: 100%;
         padding: 0.75rem;
@@ -665,86 +629,38 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
         outline: none;
         resize: none;
         font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-        font-size: 0.84rem;
-        line-height: 1.5;
+        font-size: 0.83rem;
+        line-height: 1.55;
         white-space: pre;
-        overflow-wrap: normal;
         overflow-x: auto;
         tab-size: 2;
+        caret-color: #38bdf8;
       }
 
-      .editor-statusbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #070c1a;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-        padding: 0.25rem 0.75rem;
-        font-size: 0.72rem;
-        color: #64748b;
-        user-select: none;
-      }
-
-      .statusbar-left,
-      .statusbar-right {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
-
-      .status-indicator {
-        display: inline-block;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #64748b;
-        margin-right: 0.25rem;
-      }
-
-      .status-indicator.is-ok {
-        background: #10b981;
-      }
-
-      .status-indicator.is-err {
-        background: #ef4444;
-      }
-
-      .status-badge {
-        padding: 0.1rem 0.4rem;
-        border-radius: 4px;
-        font-weight: 600;
-        background: rgba(255, 255, 255, 0.06);
-        color: #94a3b8;
-      }
-
-      .status-badge.badge--local {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34d399;
-      }
-
-      /* TERMINAL PANE */
-      .terminal-pane {
+      /* CONSOLE COLUMN */
+      .console-pane {
         display: flex;
         flex-direction: column;
-        background: #020617;
+        background: #03060c;
         overflow: hidden;
       }
 
-      .terminal-nav {
+      .console-nav {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: #0b1120;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: #0a0f1c;
         padding: 0 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        min-height: 32px;
       }
 
-      .terminal-tabs {
+      .console-tabs {
         display: flex;
         gap: 0.25rem;
       }
 
-      .term-tab {
+      .tab-item {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
@@ -752,419 +668,305 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
         color: #94a3b8;
         border: none;
         border-bottom: 2px solid transparent;
-        padding: 0.5rem 0.65rem;
-        font-size: 0.78rem;
+        padding: 0.35rem 0.55rem;
+        font-size: 0.75rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.15s;
+
+        &:hover {
+          color: #f1f5f9;
+        }
+
+        &.is-active {
+          color: #38bdf8;
+          border-bottom-color: #38bdf8;
+        }
       }
 
-      .term-tab:hover {
-        color: #f1f5f9;
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #64748b;
+
+        &.is-ok {
+          background: #10b981;
+        }
+
+        &.is-err {
+          background: #ef4444;
+        }
       }
 
-      .term-tab.is-active {
-        color: #38bdf8;
-        border-bottom-color: #38bdf8;
-        background: rgba(56, 189, 248, 0.05);
-      }
-
-      .tab-pill {
+      .score-pill {
         font-size: 0.68rem;
-        padding: 0.08rem 0.35rem;
+        padding: 0.05rem 0.35rem;
         border-radius: 4px;
         background: #1e293b;
+        color: #94a3b8;
+
+        &.is-passed {
+          background: rgba(16, 185, 129, 0.2);
+          color: #34d399;
+        }
+
+        &.is-failed {
+          background: rgba(239, 68, 68, 0.2);
+          color: #f87171;
+        }
       }
 
-      .tab-pill.pill-success {
-        background: rgba(16, 185, 129, 0.2);
-        color: #34d399;
-      }
-
-      .tab-pill.pill-danger {
-        background: rgba(239, 68, 68, 0.2);
-        color: #f87171;
-      }
-
-      .tab-spinner {
+      .tab-pulse {
         display: inline-block;
-        animation: blink 1s infinite alternate;
         color: #818cf8;
+        font-size: 0.6rem;
+        animation: blink 1s infinite alternate;
       }
 
-      .terminal-actions {
+      .console-actions {
         display: flex;
         align-items: center;
         gap: 0.5rem;
       }
 
-      .exec-time {
-        font-size: 0.72rem;
-        color: #10b981;
-        font-weight: 600;
+      .time-tag {
+        font-size: 0.7rem;
+        color: #64748b;
+        font-family: monospace;
       }
 
-      .term-action-btn {
+      .btn-clear {
         background: transparent;
         border: none;
         color: #64748b;
         font-size: 0.72rem;
         cursor: pointer;
-        padding: 0.25rem 0.4rem;
+        padding: 0.2rem 0.4rem;
         border-radius: 4px;
+
+        &:hover {
+          color: #e2e8f0;
+          background: rgba(255, 255, 255, 0.05);
+        }
       }
 
-      .term-action-btn:hover {
-        color: #f1f5f9;
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .terminal-viewport {
+      /* CONSOLE VIEWPORT */
+      .console-viewport {
         flex: 1;
         overflow-y: auto;
         padding: 0.75rem;
-        min-height: 280px;
-      }
-
-      /* TERMINAL VIEWPORT DETAILS */
-      .font-mono {
-        font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-      }
-
-      .terminal-body {
-        font-size: 0.8125rem;
+        font-size: 0.8rem;
         line-height: 1.5;
-        color: #e2e8f0;
+        background: #03060c;
       }
 
-      .term-line {
-        margin-bottom: 0.5rem;
+      .output-placeholder {
+        padding: 1.5rem 0.5rem;
+        color: #475569;
+
+        .placeholder-main {
+          margin: 0 0 0.35rem 0;
+          font-family: 'JetBrains Mono', 'Fira Code', monospace;
+          color: #64748b;
+        }
+
+        .placeholder-sub {
+          margin: 0;
+          font-size: 0.75rem;
+          color: #475569;
+          font-family: inherit;
+
+          strong {
+            color: #94a3b8;
+          }
+        }
       }
 
-      .prompt-user {
-        color: #34d399;
-      }
-
-      .prompt-path {
-        color: #38bdf8;
-      }
-
-      .prompt-cmd {
-        color: #f1f5f9;
-        font-weight: 600;
-      }
-
-      .term-loading {
+      .output-state--running {
         display: flex;
         align-items: center;
         gap: 0.5rem;
         padding: 1rem 0;
         color: #38bdf8;
-        font-size: 0.8125rem;
       }
 
-      .term-spinner {
+      .spinner {
         width: 14px;
         height: 14px;
-        border: 2px solid rgba(56, 189, 248, 0.3);
+        border: 2px solid rgba(56, 189, 248, 0.2);
         border-top-color: #38bdf8;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
       }
 
-      .term-stdout {
-        margin: 0;
-        color: #f8fafc;
+      .stdout-block {
+        margin: 0 0 0.5rem 0;
+        color: #f1f5f9;
         white-space: pre-wrap;
-        word-break: break-word;
+        word-break: break-all;
       }
 
-      .term-stderr {
-        margin: 0.5rem 0;
-        padding: 0.5rem 0.75rem;
-        background: rgba(239, 68, 68, 0.1);
-        border-left: 3px solid #ef4444;
-        color: #fca5a5;
+      .stderr-block {
+        margin: 0 0 0.5rem 0;
+        color: #f87171;
+        background: rgba(239, 68, 68, 0.08);
+        padding: 0.5rem;
+        border-radius: 4px;
         white-space: pre-wrap;
-        word-break: break-word;
-        border-radius: 0 4px 4px 0;
+        word-break: break-all;
       }
 
-      .term-empty {
+      .output-quiet {
         color: #64748b;
         font-style: italic;
         padding: 0.5rem 0;
       }
 
-      .term-exit {
-        margin-top: 0.75rem;
-        font-size: 0.75rem;
+      .exit-line {
+        font-size: 0.72rem;
         color: #64748b;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px dashed rgba(255, 255, 255, 0.06);
+
+        &.is-err {
+          color: #f87171;
+        }
       }
 
-      .term-exit--ok {
-        color: #10b981;
-      }
-
-      .term-exit--err {
-        color: #ef4444;
-      }
-
-      .term-intro {
-        color: #94a3b8;
-        font-size: 0.8125rem;
-      }
-
-      .intro-title {
-        color: #f1f5f9;
-        font-weight: 700;
-        font-size: 0.9rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .intro-desc {
-        line-height: 1.5;
-        margin-bottom: 0.75rem;
-      }
-
-      .key-combo {
-        color: #38bdf8;
-        background: rgba(56, 189, 248, 0.1);
-        padding: 0.1rem 0.3rem;
-        border-radius: 4px;
-      }
-
-      .intro-tips {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.4rem;
-        font-size: 0.75rem;
-        color: #64748b;
-      }
-
-      /* TESTS VIEW */
-      .tests-body {
-        padding: 0.25rem 0;
-      }
-
-      .tests-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 0.75rem;
-      }
-
-      .tests-header h4 {
-        margin: 0;
-        font-size: 0.875rem;
-        color: #f1f5f9;
-      }
-
-      .tests-summary {
-        font-size: 0.78rem;
-        font-weight: 700;
-        padding: 0.2rem 0.5rem;
-        border-radius: 6px;
-        background: rgba(239, 68, 68, 0.15);
-        color: #f87171;
-      }
-
-      .tests-summary.is-all-passed {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34d399;
-      }
-
+      /* TESTS TAB */
       .tests-list {
         display: flex;
         flex-direction: column;
-        gap: 0.65rem;
+        gap: 0.45rem;
       }
 
       .test-item {
-        background: #0f172a;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        overflow: hidden;
-      }
+        background: #080d19;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        padding: 0.4rem 0.6rem;
 
-      .test-item.test-passed {
-        border-left: 3px solid #10b981;
-      }
+        &.is-ok {
+          border-left: 3px solid #10b981;
+        }
 
-      .test-item.test-failed {
-        border-left: 3px solid #ef4444;
+        &.is-fail {
+          border-left: 3px solid #ef4444;
+        }
       }
 
       .test-item__head {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.45rem 0.65rem;
-        background: rgba(255, 255, 255, 0.03);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        gap: 0.4rem;
+        font-size: 0.75rem;
       }
 
-      .test-badge {
-        font-size: 0.68rem;
-        font-weight: 800;
-        padding: 0.1rem 0.35rem;
-        border-radius: 4px;
+      .test-icon {
+        font-weight: bold;
       }
 
-      .test-passed .test-badge {
-        background: rgba(16, 185, 129, 0.2);
-        color: #34d399;
+      .test-item.is-ok .test-icon {
+        color: #10b981;
       }
 
-      .test-failed .test-badge {
-        background: rgba(239, 68, 68, 0.2);
-        color: #f87171;
+      .test-item.is-fail .test-icon {
+        color: #ef4444;
       }
 
       .test-title {
-        font-size: 0.78rem;
         font-weight: 600;
         color: #e2e8f0;
+        flex: 1;
       }
 
-      .test-item__details {
-        padding: 0.5rem 0.65rem;
-        font-size: 0.75rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-      }
-
-      .test-row {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-      }
-
-      .test-label {
-        color: #64748b;
-        font-size: 0.68rem;
-      }
-
-      .test-val {
-        margin: 0;
-        padding: 0.25rem 0.45rem;
-        border-radius: 4px;
-        background: #030712;
-        color: #f1f5f9;
-        white-space: pre-wrap;
-      }
-
-      .test-val--expected {
-        color: #38bdf8;
-      }
-
-      .test-val--error {
-        color: #f87171;
-        background: rgba(239, 68, 68, 0.1);
-      }
-
-      .tests-empty {
-        text-align: center;
-        padding: 2rem 1rem;
+      .test-state {
+        font-size: 0.7rem;
         color: #94a3b8;
       }
 
-      /* AI CHAT VIEW */
-      .ai-body {
-        padding: 0.25rem 0;
-      }
-
-      .ai-chat-header {
+      .test-item__diff {
+        margin-top: 0.35rem;
+        padding-top: 0.35rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
         display: flex;
-        align-items: center;
-        gap: 0.65rem;
-        padding-bottom: 0.65rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        margin-bottom: 0.75rem;
-      }
-
-      .ai-avatar {
-        font-size: 1.5rem;
-      }
-
-      .ai-chat-header h4 {
-        margin: 0;
-        font-size: 0.875rem;
-        color: #f1f5f9;
-      }
-
-      .ai-chat-header small {
-        color: #94a3b8;
+        flex-direction: column;
+        gap: 0.2rem;
         font-size: 0.72rem;
       }
 
-      .ai-loading-box {
+      .diff-row {
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.65rem;
-        padding: 2rem 1rem;
-        text-align: center;
-        color: #a5b4fc;
-        font-size: 0.8125rem;
+        gap: 0.35rem;
+        align-items: baseline;
       }
 
-      .ai-pulse-robot {
-        font-size: 2rem;
-        animation: pulse 1.5s infinite;
+      .diff-lbl {
+        color: #64748b;
+        min-width: 55px;
       }
 
-      .ai-response-content {
-        background: #0f172a;
-        border: 1px solid rgba(99, 102, 241, 0.25);
-        border-radius: 8px;
-        padding: 0.85rem;
-        color: #e2e8f0;
-        font-size: 0.84rem;
-        line-height: 1.6;
-      }
-
-      .ai-response-content pre {
-        background: #020617;
-        padding: 0.65rem;
-        border-radius: 6px;
-        overflow-x: auto;
+      .diff-exp {
         color: #38bdf8;
       }
 
-      .ai-response-content code {
-        background: rgba(255, 255, 255, 0.08);
-        padding: 0.15rem 0.35rem;
-        border-radius: 4px;
-        font-size: 0.78rem;
+      .diff-act {
+        color: #f87171;
       }
 
-      /* ANIMATIONS */
+      .btn-run-tests {
+        margin-top: 0.75rem;
+        background: #0284c7;
+        color: #fff;
+        border: none;
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+
+        &:hover {
+          background: #0369a1;
+        }
+      }
+
+      /* AI TAB */
+      .ai-bubble {
+        background: #090e1c;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 6px;
+        padding: 0.75rem;
+        color: #cbd5e1;
+        font-size: 0.8rem;
+        line-height: 1.55;
+        font-family: inherit;
+
+        pre {
+          background: #02050b;
+          padding: 0.5rem;
+          border-radius: 4px;
+          color: #38bdf8;
+          overflow-x: auto;
+          margin: 0.5rem 0;
+        }
+
+        code {
+          background: rgba(255, 255, 255, 0.08);
+          padding: 0.1rem 0.3rem;
+          border-radius: 3px;
+        }
+      }
+
       @keyframes spin {
         to {
           transform: rotate(360deg);
         }
       }
 
-      @keyframes pulse {
-        0%,
-        100% {
-          transform: scale(1);
-          opacity: 1;
-        }
-        50% {
-          transform: scale(1.15);
-          opacity: 0.7;
-        }
-      }
-
       @keyframes blink {
         from {
-          opacity: 0.3;
+          opacity: 0.2;
         }
         to {
           opacity: 1;
@@ -1253,7 +1055,7 @@ export class InteractiveIdeComponent {
 
   readonly lineNumbers = computed(() => {
     const lines = this.code().split('\n').length;
-    return Array.from({ length: Math.max(lines, 12) }, (_, i) => i + 1);
+    return Array.from({ length: Math.max(lines, 10) }, (_, i) => i + 1);
   });
 
   readonly testStats = computed(() => {
@@ -1265,7 +1067,6 @@ export class InteractiveIdeComponent {
 
   onLanguageChange(newLang: string) {
     this.currentLanguage.set(newLang);
-    // If code is empty or untouched, switch template
     if (!this.isModified() || this.code().trim().length === 0) {
       this.code.set(this.getDefaultTemplate(newLang));
       this.isModified.set(false);
@@ -1297,7 +1098,7 @@ export class InteractiveIdeComponent {
       return;
     }
 
-    // Tab key handling: indent with 2 spaces instead of changing focus
+    // Tab key: indent with 2 spaces
     if (e.key === 'Tab') {
       e.preventDefault();
       const textarea = e.target as HTMLTextAreaElement;
@@ -1308,7 +1109,6 @@ export class InteractiveIdeComponent {
       const tabSpaces = '  ';
       this.code.set(val.substring(0, start) + tabSpaces + val.substring(end));
 
-      // Restore cursor position after Angular re-renders
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + tabSpaces.length;
       }, 0);
