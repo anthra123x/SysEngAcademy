@@ -6420,10 +6420,10 @@ export const FALLBACK_HOME_DATA: HomeData = {
     },
     courses: {
         current_page: 1,
-        data: FALLBACK_COURSES,
-        total: 43,
-        per_page: 16,
-        last_page: 3
+        data: FALLBACK_COURSES.slice(0, 6),
+        total: 6,
+        per_page: 6,
+        last_page: 1
     }
 };
 

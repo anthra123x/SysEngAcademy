@@ -11,7 +11,7 @@ export interface HomeData {
   courses: PaginatedResponse<Course>;
 }
 
-const CACHE_KEY = 'syseng_cache_home_v3';
+const CACHE_KEY = 'syseng_cache_home_v4';
 
 @Injectable({ providedIn: 'root' })
 export class HomeService {
@@ -42,7 +42,7 @@ export class HomeService {
         if (
           hasLevels &&
           parsed?.learning_paths?.data?.length >= FALLBACK_HOME_DATA.learning_paths.data.length &&
-          parsed?.courses?.data?.length >= 16
+          parsed?.courses?.data?.length >= 6
         ) {
           return parsed;
         }

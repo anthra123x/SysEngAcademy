@@ -227,70 +227,18 @@ interface SnakeSeg {
       </div>
     </section>
 
-    <!-- FEATURED COURSES (Platzi / Udemy Style) -->
+    <!-- FEATURED COURSES -->
     <section class="section courses-section">
       <div class="container">
         <div class="section-header">
           <div class="section-eyebrow">
-            <span>⚡</span> Formación Práctica y Flexible
+            <span>⚡</span> Selección de la Academia
           </div>
-          <h2 class="section-title">Catálogo de <span>Cursos Destacados</span></h2>
-          <p class="section-subtitle">Aprende tecnologías demandadas con proyectos paso a paso, retos interactivos evaluados por IA y debates comunitarios.</p>
+          <h2 class="section-title">Cursos <span>Destacados</span></h2>
+          <p class="section-subtitle">Una selección de cursos esenciales con proyectos paso a paso y retos interactivos evaluados por IA para impulsar tu carrera técnica.</p>
         </div>
 
-        <!-- Filter category pills -->
-        <div class="course-filter-strip">
-          <button
-            type="button"
-            class="filter-pill"
-            [class.is-active]="selectedCategory() === 'all'"
-            (click)="setCategoryFilter('all')"
-          >
-            ⚡ Todos los Cursos
-          </button>
-          <button
-            type="button"
-            class="filter-pill"
-            [class.is-active]="selectedCategory() === 'programacion-basica'"
-            (click)="setCategoryFilter('programacion-basica')"
-          >
-            💡 Fundamentos
-          </button>
-          <button
-            type="button"
-            class="filter-pill"
-            [class.is-active]="selectedCategory() === 'poo'"
-            (click)="setCategoryFilter('poo')"
-          >
-            🧩 POO & Python
-          </button>
-          <button
-            type="button"
-            class="filter-pill"
-            [class.is-active]="selectedCategory() === 'desarrollo-web' || selectedCategory() === 'desarrollo-frontend'"
-            (click)="setCategoryFilter('desarrollo-frontend')"
-          >
-            🌐 Web & Frontend
-          </button>
-          <button
-            type="button"
-            class="filter-pill"
-            [class.is-active]="selectedCategory() === 'desarrollo-backend'"
-            (click)="setCategoryFilter('desarrollo-backend')"
-          >
-            ⚙️ Backend & APIs
-          </button>
-          <button
-            type="button"
-            class="filter-pill"
-            [class.is-active]="selectedCategory() === 'bases-de-datos'"
-            (click)="setCategoryFilter('bases-de-datos')"
-          >
-            🗄️ SQL & Datos
-          </button>
-        </div>
-
-        <!-- Course Cards Grid -->
+        <!-- Course Cards Grid (Featured Only) -->
         <div class="courses-grid-cards">
           @for (course of displayedCourses(); track course.id) {
             <a [routerLink]="['/cursos', course.slug]" class="udemy-course-card">
@@ -340,7 +288,17 @@ interface SnakeSeg {
         </div>
 
         <div class="section-cta">
-          <a routerLink="/cursos" class="btn btn-primary btn-lg">Explorar catálogo completo de cursos →</a>
+          <div class="featured-catalog-cta">
+            <div class="cta-info">
+              <span class="cta-pill">Catálogo Completo</span>
+              <h3>Explora los 43 cursos disponibles</h3>
+              <p>Filtra por tecnologías, nivel de dificultad y categorías para encontrar tu próxima especialización técnica.</p>
+            </div>
+            <a routerLink="/cursos" class="btn btn-primary btn-lg">
+              <span>📚</span>
+              <span>Ir al Catálogo de Cursos (43) →</span>
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -912,41 +870,66 @@ interface SnakeSeg {
       .snake__num { top: calc(100% + 8px); font-size: 9px; }
     }
 
-    /* FILTER PILLS STRIP (Udemy / Platzi Style) */
-    .course-filter-strip {
+    /* FEATURED CATALOG CTA BANNER */
+    .featured-catalog-cta {
       display: flex;
-      gap: var(--sp-2);
-      flex-wrap: wrap;
-      margin-bottom: var(--sp-8);
-      justify-content: center;
-    }
-
-    .filter-pill {
-      display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 18px;
-      background: var(--bg-surface);
+      justify-content: space-between;
+      gap: var(--sp-6);
+      padding: var(--sp-8);
+      background: linear-gradient(135deg, rgba(16, 18, 28, 0.95), rgba(22, 25, 38, 0.95));
       border: 1px solid var(--border);
-      border-radius: 9999px;
-      color: var(--text-secondary);
-      font-size: var(--text-xs);
-      font-weight: var(--font-medium);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      user-select: none;
+      border-radius: var(--radius-xl);
+      text-align: left;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 
-      &:hover {
-        color: var(--text-primary);
-        border-color: var(--primary);
-        background: var(--bg-surface-2);
+      .cta-info {
+        max-width: 600px;
+
+        .cta-pill {
+          display: inline-block;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--primary);
+          background: rgba(10, 233, 138, 0.12);
+          border: 1px solid rgba(10, 233, 138, 0.3);
+          padding: 3px 10px;
+          border-radius: 9999px;
+          margin-bottom: var(--sp-2);
+        }
+
+        h3 {
+          font-size: var(--text-xl);
+          font-weight: var(--font-bold);
+          color: var(--text-primary);
+          margin-bottom: var(--sp-2);
+        }
+
+        p {
+          font-size: var(--text-sm);
+          color: var(--text-secondary);
+          margin: 0;
+          line-height: 1.5;
+        }
       }
 
-      &.is-active {
-        color: #08090D;
-        background: var(--primary);
-        border-color: var(--primary);
-        box-shadow: 0 4px 16px rgba(10, 233, 138, 0.35);
+      @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        padding: var(--sp-6) var(--sp-4);
+
+        .cta-info {
+          text-align: center;
+          margin-bottom: var(--sp-4);
+        }
+
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
       }
     }
 
@@ -1114,21 +1097,9 @@ export class HomeComponent implements OnInit {
   selectedCategory = signal<string>('all');
 
   displayedCourses = computed(() => {
-    const cat = this.selectedCategory();
-    const courses = this.featuredCourses();
-    if (cat === 'all') return courses;
-    return courses.filter(c => {
-      const cSlug = c.category?.slug ?? '';
-      if (cat === 'desarrollo-frontend') {
-        return cSlug === 'desarrollo-frontend' || cSlug === 'desarrollo-web';
-      }
-      return cSlug === cat;
-    });
+    // En la página de inicio se muestran exclusivamente los 6 cursos destacados principales
+    return this.featuredCourses().slice(0, 6);
   });
-
-  setCategoryFilter(slug: string) {
-    this.selectedCategory.set(slug);
-  }
 
   snakeStops       = signal<SnakeStop[]>([]);
   snakeSegments   = signal<SnakeSeg[]>([]);

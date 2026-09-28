@@ -17,7 +17,7 @@ class HomeController extends Controller
 {
     public function show()
     {
-        $payload = Cache::remember('api.home.v1', now()->addMinutes(5), function () {
+        $payload = Cache::remember('api.home.v2', now()->addMinutes(5), function () {
             $categories = Category::withCount('courses')->orderBy('name')->get()->toArray();
 
             $paths = LearningPath::with(['category'])
@@ -32,7 +32,7 @@ class HomeController extends Controller
                 ->where('is_published', true)
                 ->orderBy('order')
                 ->orderBy('id')
-                ->limit(16)
+                ->limit(6)
                 ->get()
                 ->toArray();
 

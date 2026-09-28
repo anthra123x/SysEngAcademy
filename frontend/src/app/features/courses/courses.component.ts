@@ -264,7 +264,13 @@ export class CoursesComponent implements OnInit {
     this.onFilter();
   }
 
-  goToPage(page: number) { this.currentPage.set(page); this.load(); }
+  goToPage(page: number) {
+    this.currentPage.set(page);
+    this.load();
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
 
   diffLabel(d: string): string {
     return { beginner: 'Principiante', intermediate: 'Intermedio', advanced: 'Avanzado', expert: 'Experto' }[d] ?? d;
