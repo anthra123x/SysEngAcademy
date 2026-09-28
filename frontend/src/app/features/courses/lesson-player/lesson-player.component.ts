@@ -57,18 +57,6 @@ import {
            ======================================================== -->
       <header class="classroom-unified-header">
         <div class="header-left">
-          <!-- Slide Bar Drawer Toggle Button -->
-          <button
-            type="button"
-            class="btn-slidebar-toggle"
-            (click)="navDrawerOpen.set(true)"
-            title="Abrir menú de navegación"
-            aria-label="Abrir menú de navegación"
-          >
-            <span class="ham-icon">☰</span>
-            <span class="ham-label">Menú</span>
-          </button>
-
           <!-- Brand Logo -->
           <a routerLink="/" class="unified-logo" aria-label="SysEng Academy - Inicio">
             <div class="logo-icon-wrap">
@@ -115,94 +103,17 @@ import {
 
           <!-- User Avatar or Login -->
           @if (auth.isAuthenticated()) {
-            <a routerLink="/perfil" class="unified-avatar" [title]="auth.user()?.name ?? 'Mi Perfil'">
+            <a routerLink="/perfil" class="unified-avatar" [title]="(auth.user()?.name ?? 'Mi Perfil') + ' — Ver Insignias y Logros'">
               {{ initials() }}
             </a>
           } @else {
-            <a routerLink="/auth/login" class="btn-login-unified">Iniciar Sesión</a>
+            <a routerLink="/auth/login" class="btn-login-unified" title="Iniciar sesión para acceder a tu perfil y guardar insignias">
+              <span class="login-user-icon">👤</span>
+              <span>Iniciar Sesión</span>
+            </a>
           }
         </div>
       </header>
-
-      <!-- ========================================================
-           NAVIGATION SLIDE BAR (Drawer)
-           ======================================================== -->
-      @if (navDrawerOpen()) {
-        <div class="nav-slidebar-overlay" (click)="navDrawerOpen.set(false)" role="dialog" aria-modal="true" aria-label="Menú de Navegación">
-          <aside class="nav-slidebar-panel" (click)="$event.stopPropagation()">
-            <div class="slidebar-header">
-              <a routerLink="/" (click)="navDrawerOpen.set(false)" class="slidebar-logo">
-                <div class="logo-icon-wrap">
-                  <span class="logo-icon">&lt;/&gt;</span>
-                </div>
-                <span class="logo-title">SysEng<strong>Academy</strong></span>
-              </a>
-              <button type="button" class="slidebar-close-btn" (click)="navDrawerOpen.set(false)" aria-label="Cerrar menú">✕</button>
-            </div>
-
-            <!-- Current Course Context -->
-            <div class="slidebar-course-card">
-              <span class="scc-tag">Estás aprendiendo</span>
-              <h4 class="scc-title">{{ courseTitle() }}</h4>
-              <div class="scc-progress">
-                <div class="scc-progress-bar">
-                  <div class="scc-progress-fill" [style.width.%]="courseProgressPercent()"></div>
-                </div>
-                <span class="scc-percent">{{ courseProgressPercent() }}% completado</span>
-              </div>
-              <a [routerLink]="['/cursos', courseSlug()]" (click)="navDrawerOpen.set(false)" class="scc-link">
-                ← Volver a la portada del curso
-              </a>
-            </div>
-
-            <!-- Main Platform Links -->
-            <nav class="slidebar-nav">
-              <span class="slidebar-section-title">Plataforma</span>
-              <a routerLink="/" (click)="navDrawerOpen.set(false)" class="slidebar-link">
-                <span class="link-icon">🏠</span>
-                <span class="link-text">Inicio</span>
-              </a>
-              <a routerLink="/rutas" (click)="navDrawerOpen.set(false)" class="slidebar-link">
-                <span class="link-icon">🗺️</span>
-                <span class="link-text">Rutas de Aprendizaje</span>
-              </a>
-              <a routerLink="/cursos" (click)="navDrawerOpen.set(false)" class="slidebar-link">
-                <span class="link-icon">📚</span>
-                <span class="link-text">Catálogo de Cursos</span>
-              </a>
-            </nav>
-
-            <div class="slidebar-divider"></div>
-
-            <!-- User Profile / Auth Area -->
-            <div class="slidebar-footer">
-              @if (auth.isAuthenticated()) {
-                <div class="slidebar-user-info">
-                  <div class="avatar-circle">{{ initials() }}</div>
-                  <div class="user-meta">
-                    <strong class="user-name">{{ auth.user()?.name }}</strong>
-                    <span class="user-email">{{ auth.user()?.email }}</span>
-                  </div>
-                </div>
-                <a routerLink="/perfil" (click)="navDrawerOpen.set(false)" class="slidebar-link">
-                  <span class="link-icon">👤</span>
-                  <span class="link-text">Mi Perfil y Progreso</span>
-                </a>
-                <button type="button" (click)="logout()" class="slidebar-link slidebar-link--danger">
-                  <span class="link-icon">🚪</span>
-                  <span class="link-text">Cerrar Sesión</span>
-                </button>
-              } @else {
-                <div class="slidebar-auth-cta">
-                  <p>Inicia sesión para guardar tu progreso en la plataforma.</p>
-                  <a routerLink="/auth/login" (click)="navDrawerOpen.set(false)" class="btn btn-outline btn-block">Iniciar Sesión</a>
-                  <a routerLink="/auth/registro" (click)="navDrawerOpen.set(false)" class="btn btn-primary btn-block">Registrarse</a>
-                </div>
-              }
-            </div>
-          </aside>
-        </div>
-      }
 
       <div class="lesson-player-page">
         <div class="container player-body-wrap">

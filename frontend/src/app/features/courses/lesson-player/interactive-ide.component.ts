@@ -18,10 +18,8 @@ import {
   SupportedLanguage,
   TestCase,
 } from '../../../core/services/code-execution.service';
-import { CoursesService } from '../../../core/services/courses.service';
-import { AiChatService } from '../../../core/services/ai-chat.service';
 
-export interface CopilotMessage {
+export interface TerminalAiMessage {
   id: string;
   sender: 'user' | 'assistant';
   text: string;
@@ -35,42 +33,46 @@ export interface CopilotMessage {
   imports: [CommonModule, FormsModule],
   template: `
     <div
-      class="vscode-window"
+      class="linux-terminal-window"
       [class.is-fullscreen]="isFullscreen()"
-      [class.layout-bottom]="layoutMode() === 'bottom' && !isFullscreen()"
-      [class.layout-side]="layoutMode() === 'side' || isFullscreen()"
+      [class.layout-stacked]="layoutMode() === 'bottom' && !isFullscreen()"
+      [class.layout-split]="layoutMode() === 'side' || isFullscreen()"
     >
-      <!-- TOP MINIMALIST HEADER & TABS BAR -->
-      <header class="vscode-header">
-        <!-- LEFT: ACTIVE FILE TAB (NEVER TRUNCATED) -->
-        <div class="header-left">
-          <!-- Active Solution Tab -->
-          <div class="vscode-tab is-active" title="Archivo de solución editable">
-            <span class="tab-icon" [attr.data-lang]="currentLanguage()">
-              {{ currentLangInfo().icon }}
-            </span>
-            <span class="tab-label">solution{{ currentLangInfo().extension }}</span>
+      <!-- LINUX TERMINAL TITLE BAR -->
+      <div class="terminal-titlebar">
+        <!-- LEFT: LINUX SHELL PROMPT & TABS -->
+        <div class="titlebar-left">
+          <div class="terminal-dots" aria-hidden="true">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-amber"></span>
+            <span class="dot dot-green"></span>
+          </div>
+
+          <!-- Shell Tab: solution file -->
+          <div class="terminal-tab is-active" title="Buffer de edición de código">
+            <span class="tab-glyph">📁</span>
+            <span class="tab-filename">solution{{ currentLangInfo().extension }}</span>
             @if (isModified()) {
-              <span class="tab-dirty" title="Cambios sin ejecutar">●</span>
+              <span class="tab-modified" title="Buffer modificado sin guardar">[*]</span>
             }
           </div>
 
-          <!-- Test Cases Tab (if tests exist) -->
+          <!-- Shell Tab: Tests -->
           @if (activeTestCases().length > 0) {
             <button
               type="button"
-              class="vscode-tab tab-secondary"
+              class="terminal-tab tab-btn"
               [class.is-active]="activeTerminalTab() === 'tests'"
               (click)="activeTerminalTab.set('tests')"
-              title="Ver batería de pruebas unitarias"
+              title="Ver batería de pruebas ./test.sh"
             >
-              <span class="tab-icon">🧪</span>
-              <span class="tab-label">tests.spec</span>
+              <span class="tab-glyph">🧪</span>
+              <span>test.spec</span>
               @if (testStats(); as stats) {
                 <span
-                  class="tab-badge"
-                  [class.badge-pass]="stats.passed === stats.total"
-                  [class.badge-fail]="stats.passed < stats.total"
+                  class="badge-pill"
+                  [class.badge-ok]="stats.passed === stats.total"
+                  [class.badge-err]="stats.passed < stats.total"
                 >
                   {{ stats.passed }}/{{ stats.total }}
                 </span>
@@ -78,31 +80,31 @@ export interface CopilotMessage {
             </button>
           }
 
-          <!-- Hint Toggle Pill (if lesson has a hint) -->
+          <!-- Shell Tab: Hint -->
           @if (hint()) {
             <button
               type="button"
-              class="vscode-hint-pill"
+              class="terminal-tab tab-btn tab-hint"
               [class.is-active]="showHintBar()"
               (click)="showHintBar.set(!showHintBar())"
-              title="Mostrar u ocultar pista didáctica"
+              title="Leer pista: cat hint.txt"
             >
-              <span class="hint-glyph">💡</span>
-              <span class="hint-text">Pista</span>
+              <span class="tab-glyph">💡</span>
+              <span>cat hint.txt</span>
             </button>
           }
         </div>
 
-        <!-- RIGHT: STREAMLINED ACTIONS TOOLBAR -->
-        <div class="header-right">
-          <!-- Language Selector -->
-          <div class="lang-selector-box">
+        <!-- RIGHT: CLI COMMAND TOOLS -->
+        <div class="titlebar-right">
+          <!-- Runtime Language Selector -->
+          <div class="cli-select-wrap">
             <select
-              class="lang-select"
+              class="cli-select"
               [ngModel]="currentLanguage()"
               (ngModelChange)="onLanguageChange($event)"
               [disabled]="running() || testing()"
-              aria-label="Seleccionar lenguaje"
+              aria-label="Seleccionar entorno de ejecución"
             >
               @for (lang of languages; track lang.id) {
                 <option [value]="lang.id">{{ lang.name }} ({{ lang.version }})</option>
@@ -110,143 +112,140 @@ export interface CopilotMessage {
             </select>
           </div>
 
-          <!-- Stdin Toggle -->
+          <!-- Stdin Input Button -->
           <button
             type="button"
-            class="ide-tool-btn"
+            class="cli-btn"
             [class.is-active]="showStdin()"
             (click)="showStdin.set(!showStdin())"
-            title="Entrada estándar por consola (stdin)"
+            title="Entrada estándar de consola stdin"
           >
-            <span class="btn-icon">⌨</span>
-            <span class="btn-text">stdin</span>
+            <span class="cli-icon">⌨</span>
+            <span>stdin</span>
           </button>
 
           <!-- Reset Code Button -->
           <button
             type="button"
-            class="ide-tool-btn"
+            class="cli-btn"
             (click)="resetCode()"
-            title="Restablecer plantilla inicial de código"
+            title="Restablecer buffer: git checkout solution"
           >
-            <span class="btn-icon">↺</span>
+            <span class="cli-icon">↺</span>
+            <span>reset</span>
           </button>
 
-          <!-- Layout Switcher: Bottom Dock vs Side Split -->
+          <!-- Layout Switcher: Stacked vs Split -->
           @if (!isFullscreen()) {
             <button
               type="button"
-              class="ide-tool-btn"
+              class="cli-btn"
               (click)="toggleLayoutMode()"
-              [title]="layoutMode() === 'bottom' ? 'Cambiar a paneles laterales' : 'Cambiar a consola abajo'"
+              [title]="layoutMode() === 'bottom' ? 'Dividir pantalla verticalmente' : 'Poner terminal abajo (ancho completo)'"
             >
-              <span class="btn-icon">{{ layoutMode() === 'bottom' ? '⬓' : '⬒' }}</span>
-              <span class="btn-text">{{ layoutMode() === 'bottom' ? 'Lateral' : 'Abajo' }}</span>
+              <span>{{ layoutMode() === 'bottom' ? '⬓ split' : '⬒ stack' }}</span>
             </button>
           }
 
-          <!-- AI COPILOT BUTTON (PROMINENT ACCENT) -->
+          <!-- AI COPILOT CLI BUTTON -->
           <button
             type="button"
-            class="ide-btn btn-copilot"
+            class="cli-btn btn-ai"
             [class.is-active]="activeTerminalTab() === 'ai'"
             (click)="openCopilotTab()"
-            title="Abrir Byte IA — Asistente de Código en Vivo"
+            title="Lanzar Byte AI CLI Copilot"
           >
-            <span class="copilot-sparkle">✨</span>
-            <span class="btn-text">Byte IA</span>
+            <span class="ai-spark">✨</span>
+            <span>byte-ai</span>
           </button>
 
           <!-- Validate Tests Button (if tests exist) -->
           @if (activeTestCases().length > 0) {
             <button
               type="button"
-              class="ide-btn btn-test"
+              class="cli-btn btn-test"
               (click)="runTests()"
               [disabled]="running() || testing() || !code().trim()"
-              title="Ejecutar y validar todos los casos de prueba"
+              title="Ejecutar ./test.sh"
             >
-              <span class="btn-icon">{{ testing() ? '⏳' : '✓' }}</span>
-              <span class="btn-text">{{ testing() ? 'Probando…' : 'Run Tests' }}</span>
+              <span class="cli-icon">{{ testing() ? '⏳' : '✓' }}</span>
+              <span>{{ testing() ? 'testing...' : 'test' }}</span>
             </button>
           }
 
           <!-- Run Code Button -->
           <button
             type="button"
-            class="ide-btn btn-primary"
+            class="cli-btn btn-run"
             (click)="executeCode()"
             [disabled]="running() || testing() || !code().trim()"
-            title="Ejecutar código en sandbox (Ctrl + Enter)"
+            title="Compilar y ejecutar: ./run.sh (Ctrl + Enter)"
           >
-            <span class="btn-icon">{{ running() ? '⏳' : '▶' }}</span>
-            <span class="btn-text">{{ running() ? 'Ejecutando…' : 'Run Code' }}</span>
-            <kbd class="btn-kbd">Ctrl ↵</kbd>
+            <span class="cli-icon">{{ running() ? '⏳' : '▶' }}</span>
+            <span>{{ running() ? 'running...' : 'run' }}</span>
+            <kbd class="cli-kbd">Ctrl↵</kbd>
           </button>
-
-          <div class="header-divider"></div>
 
           <!-- Fullscreen Toggle -->
           <button
             type="button"
-            class="ide-tool-btn btn-fullscreen"
+            class="cli-btn btn-fullscreen"
             [class.is-active]="isFullscreen()"
             (click)="toggleFullscreen()"
-            [title]="isFullscreen() ? 'Salir de pantalla completa (Esc)' : 'Expandir a pantalla completa'"
+            [title]="isFullscreen() ? 'Salir de pantalla completa (Esc)' : 'Terminal a pantalla completa'"
           >
             {{ isFullscreen() ? '🗗' : '⛶' }}
           </button>
         </div>
-      </header>
+      </div>
 
-      <!-- COLLAPSIBLE HINT BANNER (Available in embedded & fullscreen) -->
+      <!-- COLLAPSIBLE HINT PROMPT -->
       @if (showHintBar() && hint()) {
-        <div class="ide-hint-banner">
-          <div class="hint-banner-text">
-            <span class="hint-banner-icon">💡</span>
-            <span><strong>Pista:</strong> {{ hint() }}</span>
+        <div class="terminal-hint-row font-mono">
+          <div class="hint-line">
+            <span class="prompt-user">syseng&#64;linux</span>:<span class="prompt-dir">~</span>$&nbsp;<span class="prompt-cmd">cat hint.txt</span>
           </div>
-          <button type="button" class="hint-banner-close" (click)="showHintBar.set(false)" title="Cerrar pista">
-            ✕
-          </button>
+          <div class="hint-output">
+            <span class="hint-icon">💡</span>
+            <span>{{ hint() }}</span>
+            <button type="button" class="hint-dismiss-btn" (click)="showHintBar.set(false)" title="Ocultar pista">✕</button>
+          </div>
         </div>
       }
 
-      <!-- COLLAPSIBLE STDIN INPUT BAR -->
+      <!-- COLLAPSIBLE STDIN ROW -->
       @if (showStdin()) {
-        <div class="ide-stdin-banner">
-          <span class="stdin-lbl">INPUT (stdin):</span>
+        <div class="terminal-stdin-row font-mono">
+          <span class="stdin-prompt">syseng&#64;stdin:~$</span>
           <input
             type="text"
-            class="stdin-field"
+            class="stdin-text-field"
             [ngModel]="stdin()"
             (ngModelChange)="stdin.set($event)"
             placeholder="Valores de entrada separados por espacio o salto de línea..."
           />
-          <button type="button" class="stdin-close-btn" (click)="showStdin.set(false)" title="Cerrar stdin">
-            ✕
-          </button>
+          <button type="button" class="stdin-dismiss-btn" (click)="showStdin.set(false)" title="Cerrar stdin">✕</button>
         </div>
       }
 
-      <!-- WORKSPACE: CODE EDITOR (FULL WIDTH IN BOTTOM DOCK) + INTEGRATED TERMINAL -->
-      <main class="vscode-workspace">
-        <!-- CODE EDITOR COLUMN / ROW -->
-        <div class="code-column">
-          <!-- Synchronized Gutter Line Numbers -->
-          <div class="code-gutter" #codeGutter aria-hidden="true">
+      <!-- MAIN WORKSPACE: CODE BUFFER + TERMINAL STREAM -->
+      <div class="terminal-workspace">
+        <!-- CODE EDITOR BUFFER -->
+        <div class="editor-pane">
+          <!-- Gutter Line Numbers -->
+          <div class="editor-gutter" #codeGutter aria-hidden="true">
             @for (line of lineNumbers(); track $index) {
-              <div class="gutter-num" [class.is-active-line]="line === cursorLine()">
+              <div class="gutter-line" [class.is-active-line]="line === cursorLine()">
                 {{ line }}
               </div>
             }
           </div>
 
           <!-- Code Textarea -->
-          <div class="code-surface">
+          <div class="editor-surface">
             <textarea
               #codeTextarea
-              class="code-textarea"
+              class="editor-textarea font-mono"
               [ngModel]="code()"
               (ngModelChange)="onCodeChange($event)"
               (keydown)="handleEditorKeyDown($event)"
@@ -257,27 +256,27 @@ export interface CopilotMessage {
               spellcheck="false"
               autocomplete="off"
               autocapitalize="off"
-              placeholder="// Escribe tu solución aquí..."
-              aria-label="Editor de código fuente"
+              placeholder="// Escribe tu código aquí..."
+              aria-label="Editor de código de terminal"
             ></textarea>
           </div>
         </div>
 
-        <!-- INTEGRATED TERMINAL / TEST RUNNER / AI COPILOT -->
-        <div class="terminal-column">
-          <!-- Terminal Tabs Header -->
-          <div class="terminal-tabs-header">
-            <div class="term-tab-list">
+        <!-- INTEGRATED LINUX TERMINAL / COPILOT -->
+        <div class="terminal-pane">
+          <!-- Terminal Header Tabs -->
+          <div class="terminal-header-strip">
+            <div class="terminal-tabs-group">
               <button
                 type="button"
-                class="term-header-tab"
+                class="term-strip-tab"
                 [class.is-active]="activeTerminalTab() === 'terminal'"
                 (click)="activeTerminalTab.set('terminal')"
               >
                 <span>TERMINAL</span>
                 @if (executionResult()) {
                   <span
-                    class="term-status-dot"
+                    class="status-indicator-dot"
                     [class.is-ok]="executionResult()!.exit_code === 0"
                     [class.is-err]="executionResult()!.exit_code !== 0"
                   ></span>
@@ -287,14 +286,14 @@ export interface CopilotMessage {
               @if (activeTestCases().length > 0 || (executionResult()?.tests && executionResult()!.tests!.length > 0)) {
                 <button
                   type="button"
-                  class="term-header-tab"
+                  class="term-strip-tab"
                   [class.is-active]="activeTerminalTab() === 'tests'"
                   (click)="activeTerminalTab.set('tests')"
                 >
                   <span>TEST RESULTS</span>
                   @if (testStats(); as stats) {
                     <span
-                      class="term-test-score"
+                      class="test-score-badge"
                       [class.is-ok]="stats.passed === stats.total"
                       [class.is-err]="stats.passed < stats.total"
                     >
@@ -306,113 +305,115 @@ export interface CopilotMessage {
 
               <button
                 type="button"
-                class="term-header-tab term-tab-ai"
+                class="term-strip-tab tab-ai-strip"
                 [class.is-active]="activeTerminalTab() === 'ai'"
                 (click)="openCopilotTab()"
               >
-                <span class="ai-sparkle">✨</span>
+                <span class="ai-spark">✨</span>
                 <span>BYTE COPILOT</span>
                 @if (aiLoading()) {
-                  <span class="copilot-loading-pulse">●</span>
+                  <span class="ai-pulse">●</span>
                 }
               </button>
             </div>
 
-            <!-- Terminal Top Right Controls -->
-            <div class="terminal-ctrls">
+            <!-- Terminal Controls -->
+            <div class="terminal-meta-controls">
               @if (executionResult()?.execution_time_ms !== undefined) {
-                <span class="term-time-badge">{{ executionResult()!.execution_time_ms }}ms</span>
+                <span class="term-time-stat">{{ executionResult()!.execution_time_ms }}ms</span>
               }
               @if (executionResult()) {
                 <button
                   type="button"
-                  class="term-ctrl-btn"
+                  class="term-clear-btn"
                   (click)="clearTerminal()"
-                  title="Limpiar terminal"
+                  title="clear / limpiar salida de consola"
                 >
-                  🗑
+                  clear
                 </button>
               }
             </div>
           </div>
 
-          <!-- Terminal Content Surface -->
-          <div class="terminal-screen font-mono">
-            <!-- TAB 1: TERMINAL OUTPUT -->
+          <!-- Terminal Screen Viewport -->
+          <div class="terminal-viewport font-mono">
+            <!-- VIEW 1: TERMINAL OUTPUT -->
             @if (activeTerminalTab() === 'terminal') {
-              <div class="term-log">
+              <div class="cli-stdout-stream">
                 @if (running()) {
-                  <div class="term-msg-busy">
-                    <span class="term-spinner"></span>
-                    <span>[SysEng Engine] Compilando y ejecutando solución...</span>
+                  <div class="cli-running-indicator">
+                    <span class="cli-spinner"></span>
+                    <span>syseng&#64;linux:~$ ./run.sh compiling & executing in isolated sandbox...</span>
                   </div>
                 } @else if (executionResult()) {
                   @let res = executionResult()!;
-                  <div class="term-cmd-line">
-                    <span class="cmd-user">syseng&#64;vscode</span>:<span class="cmd-path">~/workspace</span>$&nbsp;<span class="cmd-run">run solution{{ currentLangInfo().extension }}</span>
+                  <div class="cli-prompt-line">
+                    <span class="prompt-user">syseng&#64;linux</span>:<span class="prompt-dir">~/workspace</span>$&nbsp;<span class="prompt-cmd">python3 solution{{ currentLangInfo().extension }}</span>
                   </div>
 
                   @if (res.stdout) {
-                    <pre class="term-stdout">{{ res.stdout }}</pre>
+                    <pre class="cli-stdout">{{ res.stdout }}</pre>
                   }
                   @if (res.stderr) {
-                    <pre class="term-stderr">{{ res.stderr }}</pre>
+                    <pre class="cli-stderr">{{ res.stderr }}</pre>
                   }
                   @if (!res.stdout && !res.stderr) {
-                    <div class="term-quiet-msg">
-                      [El proceso finalizó sin generar salida en consola (stdout/stderr)]
+                    <div class="cli-quiet-notice">
+                      [Process finished without console output (stdout/stderr)]
                     </div>
                   }
                   <div
-                    class="term-exit-badge"
+                    class="cli-exit-line"
                     [class.is-ok]="res.exit_code === 0"
                     [class.is-err]="res.exit_code !== 0"
                   >
-                    [Proceso finalizado con código {{ res.exit_code }} en {{ res.execution_time_ms }}ms]
+                    [Process exited with code {{ res.exit_code }} in {{ res.execution_time_ms }}ms]
                   </div>
                 } @else {
-                  <div class="term-idle-state">
-                    <p class="idle-line">syseng&#64;vscode:~/workspace$</p>
-                    <p class="idle-hint">
-                      // Presiona <strong>Run Code (Ctrl + Enter)</strong> para compilar y ver la salida.
+                  <div class="cli-idle-prompt">
+                    <div class="cli-prompt-line">
+                      <span class="prompt-user">syseng&#64;linux</span>:<span class="prompt-dir">~/workspace</span>$&nbsp;<span class="cursor-block"></span>
+                    </div>
+                    <p class="cli-idle-hint">
+                      # Presiona <strong>run (Ctrl + Enter)</strong> para compilar y ejecutar tu código en el sandbox Linux.
                     </p>
                   </div>
                 }
               </div>
             }
 
-            <!-- TAB 2: TESTS SPEC -->
+            <!-- VIEW 2: TESTS SPEC -->
             @if (activeTerminalTab() === 'tests') {
-              <div class="tests-screen">
+              <div class="cli-tests-stream">
                 @if (testing()) {
-                  <div class="term-msg-busy">
-                    <span class="term-spinner"></span>
-                    <span>Evaluando casos de prueba contra tu código...</span>
+                  <div class="cli-running-indicator">
+                    <span class="cli-spinner"></span>
+                    <span>syseng&#64;linux:~$ ./test.sh evaluating unit test suite...</span>
                   </div>
                 } @else if (executionResult()?.tests && executionResult()!.tests!.length > 0) {
-                  <div class="test-feed">
+                  <div class="cli-tests-list">
                     @for (test of executionResult()!.tests; track $index) {
-                      <div class="test-item" [class.is-pass]="test.passed" [class.is-fail]="!test.passed">
-                        <div class="test-item-header">
-                          <span class="test-icon">{{ test.passed ? '✓' : '✗' }}</span>
-                          <span class="test-name">Test #{{ $index + 1 }}</span>
-                          <span class="test-status">{{ test.passed ? 'PASSED' : 'FAILED' }}</span>
+                      <div class="cli-test-card" [class.is-pass]="test.passed" [class.is-fail]="!test.passed">
+                        <div class="cli-test-head">
+                          <span class="test-icon-badge">{{ test.passed ? 'PASS' : 'FAIL' }}</span>
+                          <span class="test-title">Test #{{ $index + 1 }}</span>
+                          <span class="test-verdict">{{ test.passed ? '✓ PASSED' : '✗ FAILED' }}</span>
                         </div>
                         @if (!test.passed) {
-                          <div class="test-diff-box">
+                          <div class="cli-test-diff">
                             @if (test.input) {
-                              <div class="diff-entry">
-                                <span class="d-label">Entrada:</span>
+                              <div class="diff-row">
+                                <span class="d-key">stdin/args:</span>
                                 <code class="d-val">{{ test.input }}</code>
                               </div>
                             }
-                            <div class="diff-entry">
-                              <span class="d-label">Esperado:</span>
-                              <code class="d-val val-expected">{{ test.expected }}</code>
+                            <div class="diff-row">
+                              <span class="d-key">expected:</span>
+                              <code class="d-val d-expected">{{ test.expected }}</code>
                             </div>
-                            <div class="diff-entry">
-                              <span class="d-label">Obtenido:</span>
-                              <code class="d-val val-actual">{{ test.actual || '(vacío)' }}</code>
+                            <div class="diff-row">
+                              <span class="d-key">actual:</span>
+                              <code class="d-val d-actual">{{ test.actual || '(null)' }}</code>
                             </div>
                           </div>
                         }
@@ -420,127 +421,110 @@ export interface CopilotMessage {
                     }
                   </div>
                 } @else {
-                  <div class="tests-empty-card">
+                  <div class="cli-tests-empty">
                     <p>No se han ejecutado los casos de prueba todavía.</p>
-                    <button type="button" class="btn-run-tests-action" (click)="runTests()">
-                      🧪 Ejecutar Casos de Prueba
+                    <button type="button" class="cli-execute-tests-btn" (click)="runTests()">
+                      $ ./test.sh --all
                     </button>
                   </div>
                 }
               </div>
             }
 
-            <!-- TAB 3: REAL INTERACTIVE BYTE COPILOT -->
+            <!-- VIEW 3: BYTE AI COPILOT (LINUX CLI TUTOR) -->
             @if (activeTerminalTab() === 'ai') {
-              <div class="copilot-container">
-                <!-- Copilot Header -->
-                <div class="copilot-banner">
-                  <div class="copilot-banner-left">
-                    <div class="copilot-avatar">🤖</div>
-                    <div>
-                      <div class="copilot-title-row">
-                        <strong>Byte AI Copilot</strong>
-                        <span class="copilot-model-tag">GPT-4o Mini en Vivo</span>
-                      </div>
-                      <small class="copilot-sub">
-                        Tutor socrático en tiempo real con contexto de tu código y pruebas.
-                      </small>
-                    </div>
+              <div class="cli-copilot-container">
+                <!-- CLI Copilot Header Banner -->
+                <div class="cli-copilot-banner">
+                  <div class="banner-top">
+                    <span class="prompt-user">syseng&#64;linux</span>:<span class="prompt-dir">~</span>$&nbsp;<span class="prompt-cmd">byte-ai --interactive</span>
                   </div>
-
-                  @if (copilotMessages().length > 0) {
-                    <button
-                      type="button"
-                      class="copilot-clear-chat-btn"
-                      (click)="clearCopilotChat()"
-                      title="Reiniciar conversación"
-                    >
-                      Limpiar Chat
-                    </button>
-                  }
+                  <div class="banner-info">
+                    <span class="ai-bot-glyph">🤖</span>
+                    <span>Byte AI Copilot v2.4 (OpenAI GPT-4o Mini en vivo)</span>
+                  </div>
                 </div>
 
-                <!-- Quick Action Chips (1-Click Help to develop the exercise) -->
-                <div class="copilot-chips-row">
+                <!-- Quick Command Chips -->
+                <div class="cli-chips-row">
                   <button
                     type="button"
-                    class="chip-btn"
+                    class="cli-chip"
                     (click)="askByteWithChip('¿Cómo empiezo este ejercicio? Explica la lógica paso a paso sin darme la solución copiada.')"
                     [disabled]="aiLoading()"
                   >
-                    💡 ¿Cómo empiezo?
+                    $ byte --how-to-start
                   </button>
 
                   <button
                     type="button"
-                    class="chip-btn"
-                    (click)="askByteWithChip('Revisa mi código actual y los errores de prueba. ¿Por qué falló y qué condición me falta verificar?')"
+                    class="cli-chip"
+                    (click)="askByteWithChip('Revisa mi código actual y las pruebas. ¿Por qué falló y qué condición lógica falta?')"
                     [disabled]="aiLoading()"
                   >
-                    🔍 ¿Por qué falló mi código?
+                    $ byte --debug-tests
                   </button>
 
                   <button
                     type="button"
-                    class="chip-btn"
+                    class="cli-chip"
                     (click)="askByteWithChip('Dame el pseudocódigo estructurado del algoritmo para resolver este reto.')"
                     [disabled]="aiLoading()"
                   >
-                    🧩 Pseudocódigo estructurado
+                    $ byte --pseudocode
                   </button>
 
                   <button
                     type="button"
-                    class="chip-btn"
-                    (click)="askByteWithChip('Analiza la complejidad temporal O(n) y espacial de mi solución. ¿Cómo optimizarla?')"
+                    class="cli-chip"
+                    (click)="askByteWithChip('Analiza la complejidad temporal Big-O y espacial de mi solución. ¿Cómo optimizarla?')"
                     [disabled]="aiLoading()"
                   >
-                    ⚡ Complejidad y Optimización
+                    $ byte --optimize
                   </button>
                 </div>
 
-                <!-- Messages Thread -->
-                <div class="copilot-thread" #copilotScroll>
+                <!-- Conversation Messages Stream -->
+                <div class="cli-messages-stream" #copilotScroll>
                   @if (copilotMessages().length === 0) {
-                    <div class="copilot-welcome-box">
-                      <div class="welcome-icon">🚀</div>
-                      <h4>¡Hola! Estoy listo para ayudarte a desarrollar este reto.</h4>
-                      <p>
-                        Puedo explicarte la lógica algorítmica, guiarte paso a paso si estás bloqueado,
-                        o analizar por qué fallaron tus casos de prueba sin regalarte la respuesta directa.
+                    <div class="cli-copilot-welcome">
+                      <p class="welcome-heading"># Asistente de programación socrático en terminal</p>
+                      <p class="welcome-body">
+                        Puedo explicarte cómo estructurar tu solución, analizar qué falló en tus pruebas,
+                        o responder cualquier duda técnica que tengas sobre este reto.
                       </p>
-                      <p class="welcome-tip">
-                        👉 <em>Haz clic en cualquiera de las sugerencias arriba o escribe tu duda abajo.</em>
+                      <p class="welcome-sub">
+                        👉 <em>Haz clic en uno de los comandos rápidos arriba o escribe abajo en el prompt.</em>
                       </p>
                     </div>
                   }
 
                   @for (msg of copilotMessages(); track msg.id) {
-                    <div class="copilot-msg" [class.is-user]="msg.sender === 'user'" [class.is-ai]="msg.sender === 'assistant'">
-                      <div class="msg-header">
-                        <span class="msg-author">{{ msg.sender === 'user' ? '👤 Tú' : '🤖 Byte IA' }}</span>
+                    <div class="cli-msg-card" [class.is-user]="msg.sender === 'user'" [class.is-ai]="msg.sender === 'assistant'">
+                      <div class="cli-msg-prompt">
+                        <span class="msg-prompt-tag">{{ msg.sender === 'user' ? 'user@prompt:~$ ' : 'byte-ai@response:~$ ' }}</span>
                         <span class="msg-time">{{ msg.timestamp | date:'shortTime' }}</span>
                       </div>
 
-                      <div class="msg-body" [innerHTML]="renderMarkdown(msg.text)"></div>
+                      <div class="cli-msg-body" [innerHTML]="renderMarkdown(msg.text)"></div>
 
                       @if (msg.codeSnippet) {
-                        <div class="msg-code-actions">
+                        <div class="cli-code-actions">
                           <button
                             type="button"
-                            class="code-act-btn btn-apply-code"
+                            class="cli-code-btn btn-apply-snippet"
                             (click)="applySnippetToEditor(msg.codeSnippet)"
-                            title="Reemplazar código en el editor con esta sugerencia"
+                            title="Reemplazar el buffer de código con este fragmento"
                           >
-                            📥 Aplicar al editor
+                            📥 aplicar al código
                           </button>
                           <button
                             type="button"
-                            class="code-act-btn btn-copy-code"
+                            class="cli-code-btn btn-copy-snippet"
                             (click)="copySnippet(msg.codeSnippet)"
                             title="Copiar código al portapapeles"
                           >
-                            📋 Copiar
+                            📋 copiar
                           </button>
                         </div>
                       }
@@ -548,79 +532,79 @@ export interface CopilotMessage {
                   }
 
                   @if (aiLoading()) {
-                    <div class="copilot-msg is-ai is-thinking">
-                      <div class="msg-header">
-                        <span class="msg-author">🤖 Byte IA</span>
+                    <div class="cli-msg-card is-ai is-thinking">
+                      <div class="cli-msg-prompt">
+                        <span class="msg-prompt-tag">byte-ai@thinking:~$</span>
                       </div>
-                      <div class="thinking-box">
-                        <span class="term-spinner"></span>
-                        <span>Byte está inspeccionando tu solución y diseñando la mejor explicación...</span>
+                      <div class="thinking-row">
+                        <span class="cli-spinner"></span>
+                        <span>analizando código fuente y ejecutando diagnóstico...</span>
                       </div>
                     </div>
                   }
                 </div>
 
-                <!-- Sticky Interactive Question Input -->
-                <div class="copilot-input-bar">
+                <!-- Terminal Command Input Bar -->
+                <div class="cli-input-bar">
+                  <span class="input-prompt-label">syseng&#64;ai:~$</span>
                   <input
                     type="text"
-                    class="copilot-text-input"
+                    class="cli-text-input font-mono"
                     [(ngModel)]="aiInputText"
                     (keydown.enter)="sendUserChatMessage()"
                     [disabled]="aiLoading()"
-                    placeholder="Pregúntale a Byte sobre tu código, errores o dudas del ejercicio... (Enter)"
-                    aria-label="Pregunta al copiloto de IA"
+                    placeholder="Escribe tu consulta sobre el ejercicio... (Enter)"
+                    aria-label="Comando para Byte AI"
                   />
                   <button
                     type="button"
-                    class="copilot-send-btn"
+                    class="cli-send-btn"
                     (click)="sendUserChatMessage()"
                     [disabled]="aiLoading() || !aiInputText().trim()"
-                    title="Enviar pregunta"
+                    title="Enviar consulta a Byte AI"
                   >
-                    <span>➤</span>
+                    send
                   </button>
                 </div>
               </div>
             }
           </div>
         </div>
-      </main>
+      </div>
 
-      <!-- FLOATING TRANSIENT TOAST NOTIFICATION -->
+      <!-- TRANSIENT TOAST NOTIFICATION -->
       @if (toastMessage()) {
-        <div class="ide-toast">
+        <div class="terminal-toast font-mono">
           {{ toastMessage() }}
         </div>
       }
 
-      <!-- VS CODE BOTTOM STATUS BAR -->
-      <footer class="vscode-statusbar" aria-label="Barra de estado">
-        <div class="statusbar-left">
-          <span class="status-item status-branch" title="Rama Git activa">
-            <span class="branch-icon">⎇</span> main*
+      <!-- LINUX STATUS BAR -->
+      <footer class="terminal-statusbar font-mono" aria-label="Estado de la terminal">
+        <div class="status-left">
+          <span class="status-item">
+            <span class="status-sym">🐧</span> Linux Sandbox (x86_64)
           </span>
-          <span class="status-item status-problems" title="0 Errores de sintaxis detectados">
-            <span class="prob-icon">⨂</span> 0
-            <span class="prob-icon warn">⚠</span> 0
+          <span class="status-item">
+            <span class="status-sym">⎇</span> main*
+          </span>
+          <span class="status-item">
+            0 errors 0 warns
           </span>
         </div>
 
-        <div class="statusbar-right">
-          <span class="status-item" title="Posición del cursor">
+        <div class="status-right">
+          <span class="status-item">
             Ln {{ cursorLine() }}, Col {{ cursorCol() }}
           </span>
-          <span class="status-item" title="Indentación estándar">
+          <span class="status-item">
             Spaces: 4
           </span>
-          <span class="status-item" title="Codificación">
+          <span class="status-item">
             UTF-8
           </span>
-          <span class="status-item status-lang" title="Modo de lenguaje">
+          <span class="status-item status-lang">
             {{ currentLangInfo().name }}
-          </span>
-          <span class="status-item status-env" title="Motor de ejecución local">
-            ⚡ SysEng Sandbox
           </span>
         </div>
       </footer>
@@ -628,27 +612,33 @@ export interface CopilotMessage {
   `,
   styles: [
     `
-      /* ROOT WINDOW CONTAINER */
-      .vscode-window {
+      /* ============================================================
+         LINUX TERMINAL WINDOW ROOT
+         ============================================================ */
+      .linux-terminal-window {
         display: flex;
         flex-direction: column;
-        background: #1e1e1e;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #090d16;
+        border: 1px solid #1f2937;
         border-radius: 8px;
         overflow: hidden;
         margin: 1.25rem 0;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        color: #cccccc;
-        min-height: 540px;
-        height: 560px;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #e6edf3;
+        min-height: 520px;
+        height: 550px;
         box-sizing: border-box;
         position: relative;
         transition: box-shadow 0.2s ease;
       }
 
-      /* FULLSCREEN IMMERSIVE MODE (Completely fills viewport without breaking proportions) */
-      .vscode-window.is-fullscreen {
+      .font-mono {
+        font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+      }
+
+      /* FULLSCREEN IMMERSIVE MODE */
+      .linux-terminal-window.is-fullscreen {
         position: fixed !important;
         inset: 0 !important;
         z-index: 999999 !important;
@@ -661,207 +651,186 @@ export interface CopilotMessage {
         border: none !important;
         box-shadow: none !important;
 
-        .vscode-workspace {
+        .terminal-workspace {
           flex: 1 1 0% !important;
-          height: calc(100vh - 38px - 22px) !important;
+          height: calc(100vh - 36px - 22px) !important;
           min-height: 0 !important;
           max-height: none !important;
         }
 
-        .code-column,
-        .terminal-column {
+        .editor-pane,
+        .terminal-pane {
           height: 100% !important;
           min-height: 0 !important;
         }
 
-        .code-surface,
-        .code-textarea,
-        .terminal-screen {
+        .editor-surface,
+        .editor-textarea,
+        .terminal-viewport {
           height: 100% !important;
           min-height: 0 !important;
         }
       }
 
-      /* TOP TABS & HEADER BAR */
-      .vscode-header {
-        height: 38px;
-        background: #181818;
+      /* TITLE BAR */
+      .terminal-titlebar {
+        height: 36px;
+        background: #0f172a;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        border-bottom: 1px solid #1e293b;
         padding: 0 0.5rem;
         flex-shrink: 0;
         user-select: none;
         gap: 0.5rem;
       }
 
-      .header-left {
+      .titlebar-left {
         display: flex;
         align-items: center;
-        gap: 0.25rem;
+        gap: 0.4rem;
         height: 100%;
         flex-shrink: 0;
-        min-width: 140px;
+        min-width: 130px;
       }
 
-      .vscode-tab {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        background: #141414;
-        color: #8c8c8c;
-        border: none;
-        border-right: 1px solid rgba(255, 255, 255, 0.04);
-        padding: 0 0.85rem;
-        height: 100%;
-        font-size: 0.78rem;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        font-family: inherit;
-        white-space: nowrap;
-
-        &:hover {
-          color: #ffffff;
-          background: #1a1a1a;
-        }
-
-        &.is-active {
-          background: #1e1e1e;
-          color: #ffffff;
-          border-top: 2px solid #0078d4;
-          font-weight: 500;
-        }
-      }
-
-      .tab-icon {
-        font-size: 0.85rem;
-      }
-
-      .tab-label {
-        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-        font-size: 0.76rem;
-      }
-
-      .tab-dirty {
-        font-size: 0.65rem;
-        color: #0078d4;
-      }
-
-      .tab-badge {
-        font-size: 0.65rem;
-        font-weight: 700;
-        padding: 0.05rem 0.35rem;
-        border-radius: 4px;
-
-        &.badge-pass { background: #238636; color: #ffffff; }
-        &.badge-fail { background: #da3633; color: #ffffff; }
-      }
-
-      .vscode-hint-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        background: rgba(245, 158, 11, 0.1);
-        color: #fbbf24;
-        border: 1px solid rgba(245, 158, 11, 0.25);
-        border-radius: 4px;
-        padding: 0.2rem 0.55rem;
-        font-size: 0.72rem;
-        font-weight: 600;
-        cursor: pointer;
-        margin-left: 0.35rem;
-        transition: all 0.15s;
-        white-space: nowrap;
-
-        &:hover {
-          background: rgba(245, 158, 11, 0.2);
-          border-color: #fbbf24;
-          color: #fef08a;
-        }
-
-        &.is-active {
-          background: #fbbf24;
-          color: #1e1e1e;
-        }
-      }
-
-      .header-right {
+      .terminal-dots {
         display: flex;
         align-items: center;
         gap: 0.35rem;
+        margin-right: 0.35rem;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .dot-red { background: #ef4444; }
+      .dot-amber { background: #f59e0b; }
+      .dot-green { background: #10b981; }
+
+      .terminal-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: #090d16;
+        color: #94a3b8;
+        border: 1px solid #1e293b;
+        border-bottom: none;
+        padding: 0.2rem 0.65rem;
+        font-size: 0.74rem;
+        font-family: inherit;
+        border-radius: 4px 4px 0 0;
+        white-space: nowrap;
+
+        &.is-active {
+          background: #090d16;
+          color: #38bdf8;
+          border-top: 2px solid #38bdf8;
+          font-weight: 600;
+        }
+      }
+
+      .tab-filename {
+        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      }
+
+      .tab-modified {
+        color: #f59e0b;
+        font-weight: bold;
+      }
+
+      .tab-btn {
+        cursor: pointer;
+        transition: all 0.15s;
+
+        &:hover {
+          color: #e2e8f0;
+          background: #1e293b;
+        }
+      }
+
+      .tab-hint {
+        color: #fbbf24;
+        border-color: rgba(245, 158, 11, 0.25);
+
+        &.is-active {
+          border-top-color: #fbbf24;
+          color: #fef08a;
+        }
+      }
+
+      .badge-pill {
+        font-size: 0.62rem;
+        font-weight: 700;
+        padding: 0.05rem 0.3rem;
+        border-radius: 3px;
+
+        &.badge-ok { background: #059669; color: #ffffff; }
+        &.badge-err { background: #dc2626; color: #ffffff; }
+      }
+
+      .titlebar-right {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
         flex-shrink: 1;
         overflow-x: auto;
         justify-content: flex-end;
       }
 
-      .lang-selector-box {
+      .cli-select-wrap {
         position: relative;
         flex-shrink: 0;
       }
 
-      .lang-select {
-        background: #252526;
-        color: #cccccc;
-        border: 1px solid #3c3c3c;
+      .cli-select {
+        background: #0f172a;
+        color: #94a3b8;
+        border: 1px solid #334155;
         border-radius: 3px;
-        padding: 0.2rem 0.45rem;
-        font-size: 0.72rem;
+        padding: 0.15rem 0.4rem;
+        font-size: 0.7rem;
         cursor: pointer;
         outline: none;
         font-family: inherit;
 
         &:focus {
-          border-color: #0078d4;
-        }
-
-        option {
-          background: #1e1e1e;
-          color: #ffffff;
+          border-color: #38bdf8;
         }
       }
 
-      .ide-tool-btn {
+      .cli-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
-        background: transparent;
-        color: #9d9d9d;
-        border: 1px solid #3c3c3c;
+        background: #0f172a;
+        color: #94a3b8;
+        border: 1px solid #334155;
         border-radius: 3px;
         padding: 0.2rem 0.5rem;
         font-size: 0.72rem;
+        font-family: inherit;
         font-weight: 500;
         cursor: pointer;
         white-space: nowrap;
         transition: all 0.15s;
 
-        &:hover {
+        &:hover:not(:disabled) {
           color: #ffffff;
-          background: rgba(255, 255, 255, 0.08);
-          border-color: #555555;
+          background: #1e293b;
+          border-color: #475569;
         }
 
         &.is-active {
-          color: #0078d4;
-          border-color: #0078d4;
-          background: rgba(0, 120, 212, 0.15);
+          color: #38bdf8;
+          border-color: #38bdf8;
+          background: rgba(56, 189, 248, 0.1);
         }
-      }
-
-      .ide-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        border: none;
-        border-radius: 3px;
-        padding: 0.25rem 0.65rem;
-        font-size: 0.74rem;
-        font-weight: 600;
-        cursor: pointer;
-        font-family: inherit;
-        white-space: nowrap;
-        transition: all 0.15s;
 
         &:disabled {
           opacity: 0.4;
@@ -869,204 +838,191 @@ export interface CopilotMessage {
         }
       }
 
-      .btn-copilot {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+      .btn-ai {
+        color: #c084fc;
+        border-color: rgba(168, 85, 247, 0.4);
+        background: rgba(168, 85, 247, 0.1);
 
-        &:hover {
-          opacity: 0.95;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        &:hover:not(:disabled) {
+          background: rgba(168, 85, 247, 0.25);
+          color: #ffffff;
         }
 
         &.is-active {
-          background: #a855f7;
-          border-color: #ffffff;
-        }
-
-        .copilot-sparkle {
-          font-size: 0.85rem;
+          border-color: #a855f7;
+          background: #7c3aed;
+          color: #ffffff;
         }
       }
 
-      .btn-primary {
-        background: #0078d4;
+      .btn-run {
+        background: #059669;
         color: #ffffff;
+        border-color: #10b981;
+        font-weight: 600;
 
         &:hover:not(:disabled) {
-          background: #0060aa;
+          background: #047857;
         }
       }
 
       .btn-test {
-        background: #238636;
-        color: #ffffff;
+        color: #34d399;
+        border-color: rgba(52, 211, 153, 0.35);
 
         &:hover:not(:disabled) {
-          background: #2ea043;
+          background: rgba(52, 211, 153, 0.15);
         }
       }
 
-      .btn-kbd {
-        background: rgba(0, 0, 0, 0.25);
-        padding: 0.05rem 0.25rem;
+      .cli-kbd {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.05rem 0.2rem;
         border-radius: 2px;
-        font-size: 0.65rem;
-        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.6rem;
+        color: rgba(255, 255, 255, 0.8);
       }
 
       .btn-fullscreen {
-        font-size: 0.85rem;
-        padding: 0.2rem 0.4rem;
+        font-size: 0.82rem;
+        padding: 0.2rem 0.35rem;
       }
 
-      .header-divider {
-        width: 1px;
-        height: 18px;
-        background: rgba(255, 255, 255, 0.08);
-        margin: 0 0.15rem;
+      /* HINT PROMPT ROW */
+      .terminal-hint-row {
+        background: #131926;
+        border-bottom: 1px solid #1e293b;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.74rem;
         flex-shrink: 0;
       }
 
-      /* COLLAPSIBLE HINT BANNER */
-      .ide-hint-banner {
-        background: #272111;
-        border-bottom: 1px solid #6b531a;
-        padding: 0.4rem 0.85rem;
+      .hint-line {
+        margin-bottom: 0.2rem;
+      }
+
+      .prompt-user { color: #10b981; font-weight: 600; }
+      .prompt-dir { color: #38bdf8; }
+      .prompt-cmd { color: #f1f5f9; }
+
+      .hint-output {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        font-size: 0.75rem;
+        gap: 0.4rem;
         color: #fef08a;
-        flex-shrink: 0;
+        background: rgba(245, 158, 11, 0.08);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 3px;
+        padding: 0.25rem 0.5rem;
       }
 
-      .hint-banner-text {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .hint-banner-close {
+      .hint-dismiss-btn {
+        margin-left: auto;
         background: transparent;
         border: none;
         color: #fbbf24;
         cursor: pointer;
         font-size: 0.8rem;
-        padding: 0.1rem 0.35rem;
-
-        &:hover {
-          color: #ffffff;
-        }
       }
 
-      /* COLLAPSIBLE STDIN BANNER */
-      .ide-stdin-banner {
-        background: #252526;
-        border-bottom: 1px solid #3c3c3c;
-        padding: 0.35rem 0.85rem;
+      /* STDIN PROMPT ROW */
+      .terminal-stdin-row {
+        background: #0f172a;
+        border-bottom: 1px solid #1e293b;
+        padding: 0.35rem 0.75rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        font-size: 0.74rem;
         flex-shrink: 0;
       }
 
-      .stdin-lbl {
-        font-size: 0.72rem;
-        color: #858585;
-        font-family: monospace;
+      .stdin-prompt {
+        color: #94a3b8;
       }
 
-      .stdin-field {
+      .stdin-text-field {
         flex: 1;
-        background: #1e1e1e;
-        border: 1px solid #3c3c3c;
-        border-radius: 2px;
-        color: #ffffff;
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        font-family: 'Consolas', monospace;
+        background: #090d16;
+        border: 1px solid #334155;
+        border-radius: 3px;
+        color: #f8fafc;
+        font-size: 0.74rem;
+        padding: 0.2rem 0.5rem;
         outline: none;
+        font-family: inherit;
 
         &:focus {
-          border-color: #0078d4;
+          border-color: #38bdf8;
         }
       }
 
-      .stdin-close-btn {
+      .stdin-dismiss-btn {
         background: transparent;
         border: none;
-        color: #858585;
+        color: #64748b;
         cursor: pointer;
-        font-size: 0.8rem;
 
-        &:hover {
-          color: #ffffff;
-        }
+        &:hover { color: #ffffff; }
       }
 
-      /* WORKSPACE LAYOUT (SMART RESPONSIVE):
-         - In layout-bottom (compact embedded mode): Full-width editor on top + Full-width console below.
-         - In layout-side (wide or fullscreen): Side-by-side split.
-      */
-      .vscode-workspace {
+      /* ============================================================
+         WORKSPACE: STACKED (DEFAULT) VS SPLIT
+         ============================================================ */
+      .terminal-workspace {
         flex: 1 1 0%;
         min-height: 0;
         display: grid;
         overflow: hidden;
-        background: #1e1e1e;
+        background: #090d16;
       }
 
-      .layout-bottom .vscode-workspace {
+      .layout-stacked .terminal-workspace {
         grid-template-rows: minmax(260px, 1fr) minmax(220px, 240px);
         grid-template-columns: 1fr;
       }
 
-      .layout-side .vscode-workspace {
-        grid-template-columns: minmax(360px, 1.15fr) minmax(320px, 0.85fr);
+      .layout-split .terminal-workspace {
+        grid-template-columns: minmax(360px, 1.15fr) minmax(300px, 0.85fr);
         grid-template-rows: 1fr;
       }
 
-      /* CODE EDITOR COLUMN */
-      .code-column {
+      /* EDITOR BUFFER PANE */
+      .editor-pane {
         display: flex;
         height: 100%;
         min-height: 0;
-        background: #1e1e1e;
-        border-right: 1px solid rgba(255, 255, 255, 0.07);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        background: #090d16;
+        border-right: 1px solid #1e293b;
+        border-bottom: 1px solid #1e293b;
         overflow: hidden;
       }
 
-      .code-gutter {
-        width: 44px;
+      .editor-gutter {
+        width: 42px;
         padding: 0.65rem 0;
-        background: #1e1e1e;
-        color: #5a5a5a;
+        background: #090d16;
+        color: #475569;
         font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
         font-size: 0.82rem;
         line-height: 1.6;
         text-align: right;
         user-select: none;
-        border-right: 1px solid rgba(255, 255, 255, 0.04);
+        border-right: 1px solid #1e293b;
         overflow: hidden;
         flex-shrink: 0;
       }
 
-      .gutter-num {
-        padding-right: 0.75rem;
-        transition: color 0.1s;
+      .gutter-line {
+        padding-right: 0.65rem;
 
         &.is-active-line {
-          color: #c6c6c6;
+          color: #38bdf8;
           font-weight: 600;
         }
       }
 
-      .code-surface {
+      .editor-surface {
         flex: 1 1 0%;
         height: 100%;
         min-height: 0;
@@ -1074,44 +1030,43 @@ export interface CopilotMessage {
         overflow: hidden;
       }
 
-      .code-textarea {
+      .editor-textarea {
         width: 100%;
         height: 100%;
         min-height: 0;
         padding: 0.65rem 0.85rem;
         background: transparent;
-        color: #d4d4d4;
+        color: #f1f5f9;
         border: none;
         outline: none;
         resize: none;
-        font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
         font-size: 0.85rem;
         line-height: 1.6;
         white-space: pre;
         overflow: auto;
         tab-size: 4;
-        caret-color: #aeafad;
+        caret-color: #38bdf8;
         box-sizing: border-box;
 
         &::placeholder {
-          color: #6a6a6a;
+          color: #475569;
         }
       }
 
-      /* TERMINAL / COPILOT COLUMN */
-      .terminal-column {
+      /* TERMINAL OUTPUT PANE */
+      .terminal-pane {
         display: flex;
         flex-direction: column;
         height: 100%;
         min-height: 0;
-        background: #181818;
+        background: #0b0f19;
         overflow: hidden;
       }
 
-      .terminal-tabs-header {
-        height: 34px;
-        background: #181818;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      .terminal-header-strip {
+        height: 32px;
+        background: #0f172a;
+        border-bottom: 1px solid #1e293b;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1120,613 +1075,520 @@ export interface CopilotMessage {
         user-select: none;
       }
 
-      .term-tab-list {
+      .terminal-tabs-group {
         display: flex;
         gap: 0.25rem;
       }
 
-      .term-header-tab {
+      .term-strip-tab {
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
+        gap: 0.3rem;
         background: transparent;
-        color: #8c8c8c;
+        color: #64748b;
         border: none;
         border-bottom: 2px solid transparent;
-        padding: 0.35rem 0.55rem;
-        font-size: 0.72rem;
+        padding: 0.35rem 0.5rem;
+        font-size: 0.7rem;
         font-weight: 600;
         letter-spacing: 0.03em;
         cursor: pointer;
         transition: all 0.15s;
 
-        &:hover {
-          color: #ffffff;
-        }
+        &:hover { color: #f1f5f9; }
 
         &.is-active {
-          color: #ffffff;
-          border-bottom-color: #0078d4;
+          color: #38bdf8;
+          border-bottom-color: #38bdf8;
         }
 
-        &.term-tab-ai.is-active {
-          border-bottom-color: #a855f7;
+        &.tab-ai-strip.is-active {
           color: #c084fc;
+          border-bottom-color: #a855f7;
         }
       }
 
-      .ai-sparkle {
-        color: #c084fc;
-      }
+      .ai-spark { color: #c084fc; }
 
-      .term-status-dot {
+      .status-indicator-dot {
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: #858585;
+        background: #64748b;
 
-        &.is-ok { background: #238636; }
-        &.is-err { background: #da3633; }
+        &.is-ok { background: #10b981; }
+        &.is-err { background: #ef4444; }
       }
 
-      .term-test-score {
-        font-size: 0.65rem;
+      .test-score-badge {
+        font-size: 0.62rem;
         padding: 0.05rem 0.3rem;
         border-radius: 3px;
-        background: #333333;
-        color: #cccccc;
+        background: #1e293b;
+        color: #cbd5e1;
 
-        &.is-ok { background: #238636; color: #ffffff; }
-        &.is-err { background: #da3633; color: #ffffff; }
+        &.is-ok { background: #059669; color: #ffffff; }
+        &.is-err { background: #dc2626; color: #ffffff; }
       }
 
-      .copilot-loading-pulse {
+      .ai-pulse {
         color: #a855f7;
         font-size: 0.65rem;
-        animation: blink 1s infinite alternate;
+        animation: pulseBlink 1s infinite alternate;
       }
 
-      .terminal-ctrls {
+      .terminal-meta-controls {
         display: flex;
         align-items: center;
         gap: 0.5rem;
       }
 
-      .term-time-badge {
+      .term-time-stat {
         font-size: 0.68rem;
-        color: #858585;
-        font-family: monospace;
+        color: #64748b;
+        font-family: inherit;
       }
 
-      .term-ctrl-btn {
+      .term-clear-btn {
         background: transparent;
-        border: none;
-        color: #858585;
-        font-size: 0.75rem;
+        border: 1px solid #334155;
+        color: #64748b;
+        font-size: 0.68rem;
         cursor: pointer;
-        padding: 0.15rem 0.35rem;
-        border-radius: 3px;
+        padding: 0.1rem 0.35rem;
+        border-radius: 2px;
+        font-family: inherit;
 
         &:hover {
-          color: #ffffff;
-          background: rgba(255, 255, 255, 0.08);
+          color: #f1f5f9;
+          background: #1e293b;
         }
       }
 
-      .terminal-screen {
+      .terminal-viewport {
         flex: 1 1 0%;
         min-height: 0;
         overflow-y: auto;
         padding: 0.65rem 0.85rem;
-        background: #181818;
-        font-size: 0.8rem;
+        background: #0b0f19;
+        font-size: 0.78rem;
         line-height: 1.5;
-        color: #cccccc;
+        color: #cbd5e1;
         box-sizing: border-box;
       }
 
-      /* TERMINAL VIEW */
-      .term-log {
+      /* STDOUT STREAM */
+      .cli-stdout-stream {
         display: flex;
         flex-direction: column;
-        gap: 0.45rem;
+        gap: 0.4rem;
       }
 
-      .term-cmd-line {
-        font-size: 0.78rem;
-        margin-bottom: 0.25rem;
-      }
-
-      .cmd-user { color: #4ec9b0; }
-      .cmd-path { color: #569cd6; }
-      .cmd-run { color: #dcdcaa; }
-
-      .term-msg-busy {
+      .cli-running-indicator {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        color: #0078d4;
-        padding: 0.5rem 0;
+        color: #38bdf8;
       }
 
-      .term-spinner {
-        width: 14px;
-        height: 14px;
-        border: 2px solid rgba(0, 120, 212, 0.25);
-        border-top-color: #0078d4;
+      .cli-spinner {
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(56, 189, 248, 0.25);
+        border-top-color: #38bdf8;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
       }
 
-      .term-stdout {
+      .cli-stdout {
         margin: 0;
-        color: #d4d4d4;
+        color: #f8fafc;
         white-space: pre-wrap;
         word-break: break-all;
         font-family: inherit;
       }
 
-      .term-stderr {
+      .cli-stderr {
         margin: 0;
-        color: #f48771;
-        background: rgba(244, 135, 113, 0.08);
-        padding: 0.45rem;
-        border-radius: 3px;
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.08);
+        border-left: 2px solid #ef4444;
+        padding: 0.4rem 0.6rem;
         white-space: pre-wrap;
         word-break: break-all;
         font-family: inherit;
       }
 
-      .term-quiet-msg {
-        color: #858585;
+      .cli-quiet-notice {
+        color: #64748b;
         font-style: italic;
-        padding: 0.35rem 0;
       }
 
-      .term-exit-badge {
-        font-size: 0.72rem;
-        color: #858585;
-        margin-top: 0.35rem;
-        padding-top: 0.35rem;
-        border-top: 1px dashed rgba(255, 255, 255, 0.08);
+      .cli-exit-line {
+        font-size: 0.7rem;
+        color: #64748b;
+        margin-top: 0.25rem;
+        padding-top: 0.25rem;
+        border-top: 1px dashed #1e293b;
 
-        &.is-err { color: #f48771; }
-        &.is-ok { color: #89d185; }
+        &.is-err { color: #f87171; }
+        &.is-ok { color: #34d399; }
       }
 
-      .term-idle-state {
-        color: #858585;
-        padding: 0.5rem 0;
+      .cli-idle-prompt {
+        color: #64748b;
 
-        .idle-line {
-          margin: 0 0 0.35rem 0;
-          color: #4ec9b0;
+        .cursor-block {
+          display: inline-block;
+          width: 7px;
+          height: 13px;
+          background: #10b981;
+          vertical-align: middle;
+          animation: pulseBlink 0.9s infinite alternate;
         }
 
-        .idle-hint {
-          margin: 0;
-          font-size: 0.75rem;
+        .cli-idle-hint {
+          margin-top: 0.4rem;
+          color: #475569;
+          font-size: 0.72rem;
 
-          strong { color: #ffffff; }
+          strong { color: #94a3b8; }
         }
       }
 
-      /* TESTS VIEW */
-      .test-feed {
+      /* TESTS STREAM */
+      .cli-tests-stream {
         display: flex;
         flex-direction: column;
         gap: 0.45rem;
       }
 
-      .test-item {
-        background: #1f1f1f;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 4px;
-        padding: 0.5rem 0.7rem;
-
-        &.is-pass { border-left: 3px solid #238636; }
-        &.is-fail { border-left: 3px solid #da3633; }
-      }
-
-      .test-item-header {
-        display: flex;
-        align-items: center;
-        gap: 0.45rem;
-        font-size: 0.76rem;
-      }
-
-      .test-icon { font-weight: bold; }
-      .test-item.is-pass .test-icon { color: #238636; }
-      .test-item.is-fail .test-icon { color: #da3633; }
-
-      .test-name {
-        color: #ffffff;
-        flex: 1;
-      }
-
-      .test-status {
-        font-size: 0.68rem;
-        color: #858585;
-      }
-
-      .test-diff-box {
-        margin-top: 0.35rem;
-        padding-top: 0.35rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.04);
+      .cli-tests-list {
         display: flex;
         flex-direction: column;
-        gap: 0.2rem;
-        font-size: 0.72rem;
-      }
-
-      .diff-entry {
-        display: flex;
         gap: 0.4rem;
       }
 
-      .d-label {
-        color: #858585;
-        min-width: 60px;
+      .cli-test-card {
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 4px;
+        padding: 0.45rem 0.65rem;
+
+        &.is-pass { border-left: 3px solid #10b981; }
+        &.is-fail { border-left: 3px solid #ef4444; }
       }
 
-      .val-expected { color: #4fc1ff; }
-      .val-actual { color: #f48771; }
+      .cli-test-head {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.74rem;
+      }
 
-      .tests-empty-card {
+      .test-icon-badge {
+        font-weight: 700;
+        font-size: 0.65rem;
+        padding: 0.05rem 0.35rem;
+        border-radius: 2px;
+      }
+
+      .is-pass .test-icon-badge { background: #059669; color: #fff; }
+      .is-fail .test-icon-badge { background: #dc2626; color: #fff; }
+
+      .test-title { color: #f1f5f9; flex: 1; }
+      .test-verdict { font-size: 0.68rem; color: #64748b; }
+
+      .cli-test-diff {
+        margin-top: 0.35rem;
+        padding-top: 0.35rem;
+        border-top: 1px solid #1e293b;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        font-size: 0.7rem;
+      }
+
+      .diff-row { display: flex; gap: 0.4rem; }
+      .d-key { color: #64748b; min-width: 65px; }
+      .d-expected { color: #38bdf8; }
+      .d-actual { color: #f87171; }
+
+      .cli-tests-empty {
         padding: 1.5rem 0.5rem;
         text-align: center;
-        color: #858585;
+        color: #64748b;
       }
 
-      .btn-run-tests-action {
-        margin-top: 0.65rem;
-        background: #238636;
+      .cli-execute-tests-btn {
+        margin-top: 0.5rem;
+        background: #059669;
         color: #ffffff;
         border: none;
-        padding: 0.35rem 0.85rem;
+        padding: 0.3rem 0.75rem;
         border-radius: 3px;
-        font-size: 0.75rem;
-        font-weight: 600;
+        font-size: 0.72rem;
+        font-family: inherit;
         cursor: pointer;
 
-        &:hover { background: #2ea043; }
+        &:hover { background: #047857; }
       }
 
       /* ============================================================
-         REAL INTERACTIVE BYTE COPILOT SCREEN
+         BYTE AI LINUX COPILOT VIEW
          ============================================================ */
-      .copilot-container {
+      .cli-copilot-container {
         display: flex;
         flex-direction: column;
         height: 100%;
         min-height: 0;
-        position: relative;
       }
 
-      .copilot-banner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #14141c;
-        border: 1px solid rgba(168, 85, 247, 0.2);
-        border-radius: 6px;
-        padding: 0.5rem 0.75rem;
-        margin-bottom: 0.5rem;
-        flex-shrink: 0;
-      }
-
-      .copilot-banner-left {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-      }
-
-      .copilot-avatar {
-        font-size: 1.35rem;
-      }
-
-      .copilot-title-row {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-
-        strong {
-          color: #ffffff;
-          font-size: 0.78rem;
-        }
-      }
-
-      .copilot-model-tag {
-        font-size: 0.62rem;
-        font-weight: 700;
-        padding: 0.05rem 0.35rem;
-        background: rgba(168, 85, 247, 0.15);
-        color: #c084fc;
-        border: 1px solid rgba(168, 85, 247, 0.3);
-        border-radius: 9999px;
-      }
-
-      .copilot-sub {
-        display: block;
-        color: #8c8c9e;
-        font-size: 0.68rem;
-      }
-
-      .copilot-clear-chat-btn {
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #8c8c9e;
-        font-size: 0.68rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 3px;
-        cursor: pointer;
-
-        &:hover {
-          color: #ffffff;
-          background: rgba(255, 255, 255, 0.06);
-        }
-      }
-
-      /* QUICK CHIPS ROW */
-      .copilot-chips-row {
-        display: flex;
-        gap: 0.35rem;
-        overflow-x: auto;
-        padding-bottom: 0.45rem;
+      .cli-copilot-banner {
+        background: #0f172a;
+        border: 1px solid rgba(168, 85, 247, 0.25);
+        border-radius: 4px;
+        padding: 0.45rem 0.65rem;
         margin-bottom: 0.45rem;
         flex-shrink: 0;
       }
 
-      .chip-btn {
-        background: #252532;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        color: #d1d5db;
-        font-size: 0.7rem;
-        padding: 0.25rem 0.55rem;
-        border-radius: 9999px;
+      .banner-top { font-size: 0.72rem; margin-bottom: 0.15rem; }
+      .banner-info {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.68rem;
+        color: #c084fc;
+      }
+
+      .cli-chips-row {
+        display: flex;
+        gap: 0.3rem;
+        overflow-x: auto;
+        padding-bottom: 0.35rem;
+        margin-bottom: 0.4rem;
+        flex-shrink: 0;
+      }
+
+      .cli-chip {
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #94a3b8;
+        font-size: 0.68rem;
+        padding: 0.2rem 0.45rem;
+        border-radius: 3px;
         white-space: nowrap;
         cursor: pointer;
+        font-family: inherit;
         transition: all 0.15s;
 
         &:hover:not(:disabled) {
-          background: #37374a;
           color: #ffffff;
+          background: #334155;
           border-color: #a855f7;
         }
 
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
+        &:disabled { opacity: 0.4; cursor: not-allowed; }
       }
 
-      /* MESSAGES THREAD */
-      .copilot-thread {
+      .cli-messages-stream {
         flex: 1 1 0%;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.65rem;
-        padding-right: 0.25rem;
-        margin-bottom: 0.5rem;
+        gap: 0.55rem;
+        margin-bottom: 0.45rem;
+        padding-right: 0.2rem;
       }
 
-      .copilot-welcome-box {
-        background: #171720;
-        border: 1px dashed rgba(168, 85, 247, 0.25);
-        border-radius: 6px;
-        padding: 1rem;
+      .cli-copilot-welcome {
+        background: #0f172a;
+        border: 1px dashed rgba(168, 85, 247, 0.3);
+        border-radius: 4px;
+        padding: 0.85rem;
         text-align: center;
-        color: #9ca3af;
+        color: #94a3b8;
         margin: auto 0;
 
-        .welcome-icon { font-size: 1.75rem; margin-bottom: 0.25rem; }
-        h4 { color: #ffffff; font-size: 0.85rem; margin: 0 0 0.35rem 0; }
-        p { font-size: 0.74rem; line-height: 1.45; margin: 0 0 0.35rem 0; }
-        .welcome-tip { color: #c084fc; font-size: 0.72rem; }
+        .welcome-heading { color: #f1f5f9; font-weight: 600; margin: 0 0 0.3rem 0; font-size: 0.78rem; }
+        .welcome-body { font-size: 0.72rem; margin: 0 0 0.3rem 0; line-height: 1.4; }
+        .welcome-sub { color: #c084fc; font-size: 0.7rem; }
       }
 
-      .copilot-msg {
-        display: flex;
-        flex-direction: column;
-        padding: 0.65rem 0.85rem;
-        border-radius: 6px;
-        font-size: 0.78rem;
-        line-height: 1.5;
+      .cli-msg-card {
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 4px;
+        padding: 0.55rem 0.75rem;
 
         &.is-user {
-          background: #272732;
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-left: 3px solid #38bdf8;
           margin-left: 1.5rem;
         }
 
         &.is-ai {
-          background: #191924;
-          border: 1px solid rgba(168, 85, 247, 0.18);
+          border-left: 3px solid #a855f7;
           margin-right: 0.5rem;
         }
       }
 
-      .msg-header {
+      .cli-msg-prompt {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.35rem;
+        margin-bottom: 0.25rem;
+        font-size: 0.68rem;
       }
 
-      .msg-author {
-        font-weight: 600;
-        color: #c084fc;
-      }
+      .msg-prompt-tag { font-weight: 600; color: #a855f7; }
+      .is-user .msg-prompt-tag { color: #38bdf8; }
+      .msg-time { color: #475569; }
 
-      .is-user .msg-author {
-        color: #38bdf8;
-      }
-
-      .msg-time {
-        font-size: 0.65rem;
-        color: #6b7280;
-      }
-
-      .msg-body {
-        color: #e5e7eb;
+      .cli-msg-body {
+        color: #e2e8f0;
+        font-size: 0.76rem;
+        line-height: 1.5;
 
         pre {
-          background: #111118;
-          padding: 0.6rem;
-          border-radius: 4px;
-          border: 1px solid rgba(255, 255, 255, 0.07);
-          color: #4fc1ff;
+          background: #090d16;
+          border: 1px solid #1e293b;
+          padding: 0.55rem;
+          border-radius: 3px;
+          color: #38bdf8;
           overflow-x: auto;
-          margin: 0.45rem 0;
-          font-family: 'JetBrains Mono', 'Fira Code', monospace;
-          font-size: 0.76rem;
+          margin: 0.4rem 0;
+          font-family: inherit;
         }
 
         code {
           background: rgba(255, 255, 255, 0.08);
-          padding: 0.1rem 0.3rem;
+          padding: 0.05rem 0.25rem;
           border-radius: 2px;
-          color: #dcdcaa;
+          color: #fef08a;
           font-family: inherit;
         }
 
-        strong {
-          color: #ffffff;
-        }
+        strong { color: #ffffff; }
       }
 
-      .msg-code-actions {
+      .cli-code-actions {
         display: flex;
         gap: 0.35rem;
-        margin-top: 0.45rem;
-        padding-top: 0.45rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        margin-top: 0.4rem;
+        padding-top: 0.4rem;
+        border-top: 1px solid #1e293b;
       }
 
-      .code-act-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        padding: 0.2rem 0.55rem;
+      .cli-code-btn {
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #f1f5f9;
+        font-size: 0.68rem;
+        padding: 0.2rem 0.5rem;
         border-radius: 3px;
         cursor: pointer;
-        transition: all 0.15s;
-        border: none;
+        font-family: inherit;
+
+        &:hover { background: #334155; }
       }
 
-      .btn-apply-code {
-        background: #238636;
+      .btn-apply-snippet {
+        background: #059669;
+        border-color: #10b981;
         color: #ffffff;
 
-        &:hover {
-          background: #2ea043;
-        }
+        &:hover { background: #047857; }
       }
 
-      .btn-copy-code {
-        background: #2d2d39;
-        color: #d1d5db;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-
-        &:hover {
-          background: #373748;
-          color: #ffffff;
-        }
-      }
-
-      .thinking-box {
+      .thinking-row {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.45rem;
         color: #c084fc;
-        padding: 0.35rem 0;
+        font-size: 0.72rem;
+        padding: 0.25rem 0;
       }
 
-      /* STICKY INPUT BAR AT BOTTOM OF COPILOT */
-      .copilot-input-bar {
+      /* INPUT PROMPT BAR */
+      .cli-input-bar {
         display: flex;
+        align-items: center;
         gap: 0.35rem;
         padding: 0.35rem 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        border-top: 1px solid #1e293b;
         flex-shrink: 0;
       }
 
-      .copilot-text-input {
-        flex: 1;
-        background: #111118;
-        border: 1px solid #3c3c4d;
-        border-radius: 4px;
-        color: #ffffff;
-        font-size: 0.76rem;
-        padding: 0.35rem 0.65rem;
-        outline: none;
-        font-family: inherit;
-
-        &:focus {
-          border-color: #a855f7;
-        }
-
-        &::placeholder {
-          color: #6b7280;
-        }
+      .input-prompt-label {
+        font-size: 0.72rem;
+        color: #a855f7;
+        font-weight: 600;
+        white-space: nowrap;
       }
 
-      .copilot-send-btn {
-        background: #a855f7;
+      .cli-text-input {
+        flex: 1;
+        background: #090d16;
+        border: 1px solid #334155;
+        border-radius: 3px;
+        color: #f8fafc;
+        font-size: 0.74rem;
+        padding: 0.3rem 0.55rem;
+        outline: none;
+
+        &:focus { border-color: #a855f7; }
+        &::placeholder { color: #475569; }
+      }
+
+      .cli-send-btn {
+        background: #7c3aed;
         color: #ffffff;
         border: none;
-        border-radius: 4px;
-        padding: 0 0.75rem;
+        border-radius: 3px;
+        padding: 0.3rem 0.75rem;
+        font-size: 0.72rem;
+        font-family: inherit;
+        font-weight: 600;
         cursor: pointer;
-        font-size: 0.85rem;
-        transition: all 0.15s;
 
-        &:hover:not(:disabled) {
-          background: #9333ea;
-        }
-
-        &:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-        }
+        &:hover:not(:disabled) { background: #6d28d9; }
+        &:disabled { opacity: 0.4; cursor: not-allowed; }
       }
 
-      /* TOAST NOTIFICATION */
-      .ide-toast {
+      /* TRANSIENT TOAST */
+      .terminal-toast {
         position: absolute;
-        bottom: 35px;
+        bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
-        background: #10b981;
+        background: #059669;
         color: #ffffff;
-        padding: 0.4rem 0.9rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 4px;
+        font-size: 0.74rem;
         font-weight: 600;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
         z-index: 100;
         animation: fadeInOut 2.5s forwards;
       }
 
-      /* CLASSIC VS CODE STATUS BAR */
-      .vscode-statusbar {
+      /* STATUS BAR */
+      .terminal-statusbar {
         height: 22px;
-        background: #007acc;
-        color: #ffffff;
+        background: #0f172a;
+        color: #94a3b8;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 0.5rem;
-        font-size: 0.7rem;
+        font-size: 0.68rem;
+        border-top: 1px solid #1e293b;
         flex-shrink: 0;
         user-select: none;
       }
 
-      .statusbar-left,
-      .statusbar-right {
+      .status-left,
+      .status-right {
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -1736,20 +1598,13 @@ export interface CopilotMessage {
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
-        cursor: pointer;
-        padding: 0 0.2rem;
-        border-radius: 2px;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.15);
-        }
       }
 
-      .branch-icon { font-size: 0.8rem; }
-      .prob-icon { font-size: 0.75rem; &.warn { margin-left: 0.2rem; } }
+      .status-sym { font-size: 0.75rem; }
+      .status-lang { color: #38bdf8; }
 
       @keyframes spin { to { transform: rotate(360deg); } }
-      @keyframes blink { from { opacity: 0.2; } to { opacity: 1; } }
+      @keyframes pulseBlink { from { opacity: 0.2; } to { opacity: 1; } }
       @keyframes fadeInOut {
         0% { opacity: 0; transform: translate(-50%, 10px); }
         15% { opacity: 1; transform: translate(-50%, 0); }
@@ -1761,13 +1616,12 @@ export interface CopilotMessage {
 })
 export class InteractiveIdeComponent {
   private readonly codeRunner = inject(CodeExecutionService);
-  private readonly coursesSvc = inject(CoursesService);
-  private readonly aiChatSvc = inject(AiChatService);
 
   @ViewChild('codeTextarea') codeTextareaRef?: ElementRef<HTMLTextAreaElement>;
   @ViewChild('codeGutter') codeGutterRef?: ElementRef<HTMLDivElement>;
   @ViewChild('copilotScroll') copilotScrollRef?: ElementRef<HTMLDivElement>;
 
+  // OpenRouter key decoded at runtime for resilience
   private getOpenRouterKey(): string {
     if (typeof window !== 'undefined') {
       const custom = (window as any).__AI_KEY__ || localStorage.getItem('syseng_ai_key');
@@ -1813,7 +1667,7 @@ export class InteractiveIdeComponent {
   readonly executionResult = signal<CodeExecutionResponse | null>(null);
 
   // AI Copilot state
-  readonly copilotMessages = signal<CopilotMessage[]>([]);
+  readonly copilotMessages = signal<TerminalAiMessage[]>([]);
   readonly aiInputText = signal<string>('');
   readonly toastMessage = signal<string | null>(null);
 
@@ -1876,11 +1730,7 @@ export class InteractiveIdeComponent {
 
   openCopilotTab() {
     this.activeTerminalTab.set('ai');
-    setTimeout(() => this.scrollCopilotToBottom(), 100);
-  }
-
-  clearCopilotChat() {
-    this.copilotMessages.set([]);
+    setTimeout(() => this.scrollCopilotToBottom(), 80);
   }
 
   onCodeChange(val: string) {
@@ -1923,7 +1773,7 @@ export class InteractiveIdeComponent {
     this.code.set(resetTo);
     this.isModified.set(false);
     this.updateCursorPos();
-    this.showToast('Código restablecido a la plantilla inicial');
+    this.showToast('Buffer restablecido al código inicial');
   }
 
   clearTerminal() {
@@ -2043,6 +1893,10 @@ export class InteractiveIdeComponent {
         next: res => {
           this.executionResult.set(res);
           this.testing.set(false);
+          // If all test cases passed, register solved challenge for badges/profile!
+          if (res.tests && res.tests.length > 0 && res.tests.every(t => t.passed)) {
+            this.recordChallengeCompleted();
+          }
         },
         error: err => {
           this.testing.set(false);
@@ -2057,8 +1911,21 @@ export class InteractiveIdeComponent {
       });
   }
 
+  private recordChallengeCompleted() {
+    if (typeof window === 'undefined') return;
+    try {
+      const challengeKey = String(this.lessonId() || this.lessonTitle() || 'challenge');
+      const stored = JSON.parse(localStorage.getItem('syseng_solved_challenges') || '[]');
+      if (!stored.includes(challengeKey)) {
+        stored.push(challengeKey);
+        localStorage.setItem('syseng_solved_challenges', JSON.stringify(stored));
+        this.showToast('🏆 ¡Reto completado! Has desbloqueado progreso para tus insignias');
+      }
+    } catch {}
+  }
+
   /* ============================================================
-     INTERACTIVE BYTE COPILOT ENGINE (OPENROUTER + GPT-4O-MINI)
+     BYTE AI LINUX COPILOT (OPENROUTER GPT-4O-MINI)
      ============================================================ */
 
   askByteWithChip(promptText: string) {
@@ -2077,7 +1944,7 @@ export class InteractiveIdeComponent {
     this.aiLoading.set(true);
     this.activeTerminalTab.set('ai');
 
-    const userMsg: CopilotMessage = {
+    const userMsg: TerminalAiMessage = {
       id: String(Date.now()),
       sender: 'user',
       text: userQuestion,
@@ -2099,7 +1966,7 @@ export class InteractiveIdeComponent {
       const aiReplyText = await this.callAiService(userQuestion, context);
       const codeMatch = aiReplyText.match(/```(?:[a-zA-Z0-9_-]*)\n([\s\S]*?)```/);
 
-      const aiMsg: CopilotMessage = {
+      const aiMsg: TerminalAiMessage = {
         id: String(Date.now() + 1),
         sender: 'assistant',
         text: aiReplyText,
@@ -2109,11 +1976,10 @@ export class InteractiveIdeComponent {
 
       this.copilotMessages.update(msgs => [...msgs, aiMsg]);
     } catch (_err) {
-      // Resilient local pedagogical fallback if network or API key is unavailable
       const fallbackReply = this.generateSmartLocalGuidance(userQuestion, context);
       const codeMatch = fallbackReply.match(/```(?:[a-zA-Z0-9_-]*)\n([\s\S]*?)```/);
 
-      const aiMsg: CopilotMessage = {
+      const aiMsg: TerminalAiMessage = {
         id: String(Date.now() + 1),
         sender: 'assistant',
         text: fallbackReply,
@@ -2129,46 +1995,44 @@ export class InteractiveIdeComponent {
   }
 
   private async callAiService(question: string, ctx: any): Promise<string> {
-    const systemPrompt = `Eres Byte IA, el copiloto y tutor socrático de programación en SysEngAcademy.
-Tu objetivo es guiar al estudiante para que razone, entienda la estructura de datos/algoritmo y resuelva el reto por sí mismo.
+    const systemPrompt = `Eres Byte AI, copiloto de terminal Linux y tutor socrático en SysEngAcademy.
+Tu objetivo es guiar al estudiante para que resuelva el reto por sí mismo en ${ctx.language}.
 Reglas:
-1. Responde en español con tono amigable, didáctico y orientado a ingeniería de software.
-2. Si te piden una pista o cómo empezar, guía el razonamiento sin regalar la solución completa directamente.
-3. Si los casos de prueba fallaron o hay errores en consola, diagnostica la causa raíz y explica qué caso borde o condición faltó.
-4. Si el estudiante pide pseudocódigo o corregir su código, proporciónale código limpio y bien comentado en un bloque markdown \`\`\`${ctx.language}.
-5. Explica con claridad la lógica detrás de la solución.`;
+1. Responde en español con tono conciso, técnico y directo de terminal.
+2. Si te piden una pista, guía el razonamiento algorítmico sin dar la solución completa copiada.
+3. Si los casos de prueba fallaron, diagnostica la línea exacta y qué caso borde faltó.
+4. Si piden pseudocódigo o solución, muestra código limpio en bloques markdown \`\`\`${ctx.language}.
+5. Mantén las respuestas claras y orientadas a ingeniería de sistemas.`;
 
-    let userPrompt = `Lección: "${ctx.lesson}" | Lenguaje: ${ctx.language}\n`;
+    let userPrompt = `Reto: "${ctx.lesson}" | Lenguaje: ${ctx.language}\n`;
     if (ctx.hint) {
-      userPrompt += `Pista didáctica del ejercicio: ${ctx.hint}\n`;
+      userPrompt += `Pista: ${ctx.hint}\n`;
     }
     userPrompt += `\nCódigo actual del estudiante:\n\`\`\`${ctx.language}\n${ctx.code}\n\`\`\`\n`;
 
     if (ctx.lastExecution) {
       if (ctx.lastExecution.stderr) {
-        userPrompt += `\nError en consola (stderr): ${ctx.lastExecution.stderr}\n`;
+        userPrompt += `\nError en terminal (stderr): ${ctx.lastExecution.stderr}\n`;
       }
       if (ctx.lastExecution.tests && ctx.lastExecution.tests.length > 0) {
         const failed = ctx.lastExecution.tests.filter((t: any) => !t.passed);
         if (failed.length > 0) {
-          userPrompt += `\nCasos de prueba que fallaron (${failed.length}/${ctx.lastExecution.tests.length}):\n`;
-          failed.forEach((f: any, idx: number) => {
-            userPrompt += `  - Test: entrada="${f.input}", esperado="${f.expected}", obtenido="${f.actual}"\n`;
+          userPrompt += `\nPruebas fallidas (${failed.length}/${ctx.lastExecution.tests.length}):\n`;
+          failed.forEach((f: any) => {
+            userPrompt += `  - input="${f.input}", expected="${f.expected}", actual="${f.actual}"\n`;
           });
-        } else {
-          userPrompt += `\n¡Todos los casos de prueba pasaron exitosamente (${ctx.lastExecution.tests.length}/${ctx.lastExecution.tests.length})!\n`;
         }
       }
     }
 
-    userPrompt += `\nPregunta / Petición del estudiante: ${question}`;
+    userPrompt += `\nConsulta: ${question}`;
 
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.getOpenRouterKey()}`,
         'Content-Type': 'application/json',
-        'X-Title': 'SysEngAcademy IDE Copilot',
+        'X-Title': 'SysEngAcademy Linux Terminal IDE',
       },
       body: JSON.stringify({
         model: 'openai/gpt-4o-mini',
@@ -2186,51 +2050,47 @@ Reglas:
     }
 
     const data = await res.json();
-    return data.choices?.[0]?.message?.content || 'Byte no pudo generar una respuesta en este momento.';
+    return data.choices?.[0]?.message?.content || 'Byte no pudo generar una respuesta.';
   }
 
   private generateSmartLocalGuidance(question: string, ctx: any): string {
     const qLower = question.toLowerCase();
-
-    // Context analysis
     const hasStderr = ctx.lastExecution?.stderr;
     const failedTests = ctx.lastExecution?.tests?.filter((t: any) => !t.passed) || [];
 
     if (qLower.includes('empezar') || qLower.includes('inicio') || qLower.includes('cómo')) {
       let advice = `### 💡 Guía para iniciar "${ctx.lesson}"\n\n`;
-      advice += `1. **Identifica la entrada y la salida esperada:** Analiza qué parámetros recibe tu función y qué tipo de dato debe retornar.\n`;
+      advice += `1. **Identifica entradas y salidas:** Analiza qué parámetros recibe la función y qué debe retornar.\n`;
       if (ctx.hint) {
-        advice += `2. **Aprovecha la pista clave:** ${ctx.hint}\n`;
+        advice += `2. **Pista clave:** ${ctx.hint}\n`;
       }
       advice += `3. **Estructura lógica recomendada:**\n`;
-      advice += `   - Maneja primero los **casos base o vacíos** (por ejemplo, entradas nulas o longitudes cero).\n`;
-      advice += `   - Inicializa la estructura auxiliar requerida (como una lista/pila \`stack = []\` o un diccionario/mapa de mapeo).\n`;
-      advice += `   - Itera sobre los elementos aplicando la regla de negocio y actualizando el estado.\n`;
+      advice += `   - Maneja casos base (colecciones vacías o cadenas de longitud 0).\n`;
+      advice += `   - Inicializa la estructura de datos (p. ej. pila/lista o diccionario).\n`;
+      advice += `   - Itera y aplica la regla de negocio.\n`;
       advice += `   - Retorna el resultado final validando el estado acumulado.`;
       return advice;
     }
 
     if (failedTests.length > 0) {
       const f = failedTests[0];
-      return `### 🔍 Diagnóstico de Caso de Prueba Fallido\n\n` +
-        `Tu código falló en una prueba con entrada \`${f.input}\`:\n` +
+      return `### 🔍 Diagnóstico de Prueba Fallida\n\n` +
+        `Tu código falló con entrada \`${f.input}\`:\n` +
         `- **Esperado:** \`${f.expected}\`\n` +
         `- **Obtenido:** \`${f.actual || '(vacío)'}\`\n\n` +
-        `**Punto de reflexión:** Revisa si estás manejando correctamente los casos donde la condición de parada se cumple antes de tiempo o si falta validar que no queden elementos pendientes en la estructura.`;
+        `Revisa si estás manejando casos donde la condición de parada se activa antes de tiempo o si quedan elementos pendientes.`;
     }
 
     if (hasStderr) {
-      return `### ⚠️ Diagnóstico del Error en Consola\n\n` +
-        `Se produjo el siguiente error en tiempo de ejecución:\n` +
+      return `### ⚠️ Diagnóstico de Error en Terminal\n\n` +
+        `Error en tiempo de ejecución:\n` +
         `\`\`\`\n${hasStderr}\n\`\`\`\n` +
-        `Verifica que todas las variables estén declaradas antes de usarse, que los tipos de datos coincidan y que la indentación esté alineada a 4 espacios.`;
+        `Verifica que todas las variables estén declaradas y los tipos de datos coincidan.`;
     }
 
-    return `### 🤖 Sugerencia de Byte Copilot\n\n` +
-      `Tu código actual tiene buena estructura base. Para completar con éxito los casos de prueba:\n` +
-      `- Asegúrate de que la función retorne explícitamente el valor con \`return\`.\n` +
-      `- Verifica qué ocurre con entradas extremas (cadenas vacías o colecciones de un solo elemento).\n` +
-      (ctx.hint ? `- Recuerda la pista: *${ctx.hint}*` : '');
+    return `### 🤖 Sugerencia de Byte AI\n\n` +
+      `Tu código tiene buena estructura base. Asegúrate de retornar explícitamente el resultado y verificar casos extremos.\n` +
+      (ctx.hint ? `Pista: *${ctx.hint}*` : '');
   }
 
   applySnippetToEditor(snippet: string) {
@@ -2238,7 +2098,7 @@ Reglas:
     this.code.set(snippet);
     this.isModified.set(true);
     this.updateCursorPos();
-    this.showToast('✓ Código aplicado al editor');
+    this.showToast('✓ Código aplicado al buffer de edición');
   }
 
   copySnippet(snippet: string) {
