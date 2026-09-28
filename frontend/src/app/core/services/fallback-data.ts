@@ -1985,20 +1985,20 @@ export const FALLBACK_COURSES: Course[] = [
                 "order": 1,
                 "lessons": [
                     {
-                        "id": 620,
+                        "id": 654,
                         "module_id": 234,
-                        "title": "Estructura del archivo compose.yaml y directivas esenciales",
-                        "slug": "docker-compose-multiservicio-estructura-del-archivo-composeyaml-y-directivas-esenciales",
+                        "title": "Estructura Limpia de un Archivo Compose",
+                        "slug": "docker-compose-multiservicio-estructura-limpia-de-un-archivo-compose",
                         "type": "article",
                         "duration_minutes": 15,
                         "order": 1,
                         "is_preview": true
                     },
                     {
-                        "id": 654,
+                        "id": 620,
                         "module_id": 234,
-                        "title": "Estructura Limpia de un Archivo Compose",
-                        "slug": "docker-compose-multiservicio-estructura-limpia-de-un-archivo-compose",
+                        "title": "Estructura del archivo compose.yaml y directivas esenciales",
+                        "slug": "docker-compose-multiservicio-estructura-del-archivo-composeyaml-y-directivas-esenciales",
                         "type": "article",
                         "duration_minutes": 15,
                         "order": 1,
@@ -3152,22 +3152,22 @@ export const FALLBACK_COURSES: Course[] = [
                         "is_preview": true
                     },
                     {
-                        "id": 597,
-                        "module_id": 226,
-                        "title": "Inyección de dependencias a través de interfaces",
-                        "slug": "diseno-modular-interfaces-inyeccion-de-dependencias-a-traves-de-interfaces",
-                        "type": "article",
-                        "duration_minutes": 16,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
                         "id": 639,
                         "module_id": 226,
                         "title": "Reto Práctico: Pasarela de Pago Polimórfica",
                         "slug": "diseno-modular-interfaces-reto-practico-pasarela-de-pago-polimorfica",
                         "type": "code_challenge",
                         "duration_minutes": 25,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 597,
+                        "module_id": 226,
+                        "title": "Inyección de dependencias a través de interfaces",
+                        "slug": "diseno-modular-interfaces-inyeccion-de-dependencias-a-traves-de-interfaces",
+                        "type": "article",
+                        "duration_minutes": 16,
                         "order": 2,
                         "is_preview": false
                     },

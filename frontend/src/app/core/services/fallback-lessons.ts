@@ -1352,36 +1352,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "logica-pensamiento-computacional-operadores-booleanos-y-tablas-de-verdad": {
-        "id": 581,
-        "module_id": 220,
-        "title": "Operadores booleanos y tablas de verdad",
-        "slug": "logica-pensamiento-computacional-operadores-booleanos-y-tablas-de-verdad",
-        "type": "code_challenge",
-        "duration_minutes": 18,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Operadores booleanos y tablas de verdad\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 220,
-            "title": "Fundamentos del Pensamiento Lógico",
-            "course_id": 97,
-            "course_slug": "logica-pensamiento-computacional",
-            "course_title": "Lógica y Pensamiento Computacional",
-            "course": {
-                "id": 97,
-                "slug": "logica-pensamiento-computacional",
-                "title": "Lógica y Pensamiento Computacional"
-            }
-        }
-    },
     "git-avanzado-rebase-conflictos-diferencia-real-entre-git-merge-y-git-rebase": {
         "id": 614,
         "module_id": 232,
@@ -1391,7 +1361,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 15,
         "order": 1,
         "is_preview": true,
-        "content": "# Diferencia real entre Git Merge y Git Rebase\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Diferencia Real entre Git Merge y Git Rebase\n\nTanto `git merge` como `git rebase` integran cambios de una rama en otra, pero con filosofías de historial completamente distintas.\n\n### Git Merge (Integración No Destructiva)\n* Crea un nuevo **commit de unión (Merge Commit)** con dos padres.\n* Preserva la historia exacta y cronológica de cuándo se desarrollaron los commits.\n* **Desventaja:** Historial en forma de telaraña (*railroad tracks*) cuando muchos desarrolladores integran ramas.\n\n### Git Rebase (Historia Lineal y Limpia)\n* Toma los commits de tu rama de funcionalidad y los *reaplica uno a uno* sobre la punta de la rama base (ej. `main`).\n* Crea nuevos hashes SHA-1 para cada commit reubicado.\n* **Ventaja:** Historial completamente plano y legible (ideal para `git bisect` y auditoría).\n\n> **La Regla de Oro del Rebase:** **NUNCA** hagas rebase sobre una rama pública compartida (como `main` en producción). Solo haz rebase en tus ramas locales de trabajo antes de abrir el Pull Request.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -2592,36 +2562,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "logica-pensamiento-computacional-condicionales-anidados-y-multiples-caminos-logicos": {
-        "id": 582,
-        "module_id": 221,
-        "title": "Condicionales anidados y múltiples caminos lógicos",
-        "slug": "logica-pensamiento-computacional-condicionales-anidados-y-multiples-caminos-logicos",
-        "type": "article",
-        "duration_minutes": 14,
-        "order": 1,
-        "is_preview": true,
-        "content": "# Condicionales anidados y múltiples caminos lógicos\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 221,
-            "title": "Estructuración de Algoritmos",
-            "course_id": 97,
-            "course_slug": "logica-pensamiento-computacional",
-            "course_title": "Lógica y Pensamiento Computacional",
-            "course": {
-                "id": 97,
-                "slug": "logica-pensamiento-computacional",
-                "title": "Lógica y Pensamiento Computacional"
-            }
-        }
-    },
     "protegiendo-tu-pila-completa": {
         "id": 515,
         "module_id": 201,
@@ -3561,36 +3501,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "logica-pensamiento-computacional-bucles-de-control-mientras-vs-para": {
-        "id": 583,
-        "module_id": 221,
-        "title": "Bucles de control: mientras vs para",
-        "slug": "logica-pensamiento-computacional-bucles-de-control-mientras-vs-para",
-        "type": "code_challenge",
-        "duration_minutes": 20,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Bucles de control: mientras vs para\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 221,
-            "title": "Estructuración de Algoritmos",
-            "course_id": 97,
-            "course_slug": "logica-pensamiento-computacional",
-            "course_title": "Lógica y Pensamiento Computacional",
-            "course": {
-                "id": 97,
-                "slug": "logica-pensamiento-computacional",
-                "title": "Lógica y Pensamiento Computacional"
-            }
-        }
-    },
     "arrays-y-listas-en-memoria": {
         "id": 520,
         "module_id": 203,
@@ -4333,36 +4243,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "logica-pensamiento-computacional-quiz-formativo-pensamiento-logico": {
-        "id": 584,
-        "module_id": 221,
-        "title": "Quiz formativo: Pensamiento Lógico",
-        "slug": "logica-pensamiento-computacional-quiz-formativo-pensamiento-logico",
-        "type": "quiz",
-        "duration_minutes": 10,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Quiz formativo: Pensamiento Lógico\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 221,
-            "title": "Estructuración de Algoritmos",
-            "course_id": 97,
-            "course_slug": "logica-pensamiento-computacional",
-            "course_title": "Lógica y Pensamiento Computacional",
-            "course": {
-                "id": 97,
-                "slug": "logica-pensamiento-computacional",
-                "title": "Lógica y Pensamiento Computacional"
-            }
-        }
-    },
     "event-loop-y-concurrencia-js": {
         "id": 529,
         "module_id": 206,
@@ -4833,36 +4713,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "python-estructurado-definicion-de-funciones-parametros-y-retornos": {
-        "id": 585,
-        "module_id": 222,
-        "title": "Definición de funciones, parámetros y retornos",
-        "slug": "python-estructurado-definicion-de-funciones-parametros-y-retornos",
-        "type": "article",
-        "duration_minutes": 15,
-        "order": 1,
-        "is_preview": true,
-        "content": "# Definición de funciones, parámetros y retornos\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 222,
-            "title": "Modularidad y Funciones en Python",
-            "course_id": 98,
-            "course_slug": "python-estructurado",
-            "course_title": "Programación Estructurada con Python",
-            "course": {
-                "id": 98,
-                "slug": "python-estructurado",
-                "title": "Programación Estructurada con Python"
-            }
-        }
-    },
     "dominio-de-visual-studio-code-atajos-y-productividad": {
         "id": 630,
         "module_id": 237,
@@ -5285,36 +5135,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "python-estructurado-alcance-de-variables-local-vs-global-y-closures": {
-        "id": 586,
-        "module_id": 222,
-        "title": "Alcance de variables: local vs global y closures",
-        "slug": "python-estructurado-alcance-de-variables-local-vs-global-y-closures",
-        "type": "article",
-        "duration_minutes": 12,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Alcance de variables: local vs global y closures\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 222,
-            "title": "Modularidad y Funciones en Python",
-            "course_id": 98,
-            "course_slug": "python-estructurado",
-            "course_title": "Programación Estructurada con Python",
-            "course": {
-                "id": 98,
-                "slug": "python-estructurado",
-                "title": "Programación Estructurada con Python"
-            }
-        }
-    },
     "primeros-pasos-en-poo": {
         "id": 422,
         "module_id": 169,
@@ -5649,36 +5469,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                 "id": 2,
                 "slug": "algoritmos-ordenamiento",
                 "title": "Algoritmos de Ordenamiento"
-            }
-        }
-    },
-    "python-estructurado-reto-practico-refactorizacion-modular-de-scripts": {
-        "id": 587,
-        "module_id": 222,
-        "title": "Reto práctico: Refactorización modular de scripts",
-        "slug": "python-estructurado-reto-practico-refactorizacion-modular-de-scripts",
-        "type": "code_challenge",
-        "duration_minutes": 25,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Reto práctico: Refactorización modular de scripts\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 222,
-            "title": "Modularidad y Funciones en Python",
-            "course_id": 98,
-            "course_slug": "python-estructurado",
-            "course_title": "Programación Estructurada con Python",
-            "course": {
-                "id": 98,
-                "slug": "python-estructurado",
-                "title": "Programación Estructurada con Python"
             }
         }
     },
@@ -6051,36 +5841,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                 "id": 2,
                 "slug": "algoritmos-ordenamiento",
                 "title": "Algoritmos de Ordenamiento"
-            }
-        }
-    },
-    "python-estructurado-colecciones-indexadas-listas-y-sus-metodos-clave": {
-        "id": 588,
-        "module_id": 223,
-        "title": "Colecciones indexadas: listas y sus métodos clave",
-        "slug": "python-estructurado-colecciones-indexadas-listas-y-sus-metodos-clave",
-        "type": "article",
-        "duration_minutes": 16,
-        "order": 1,
-        "is_preview": true,
-        "content": "# Colecciones indexadas: listas y sus métodos clave\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 223,
-            "title": "Estructuras de Datos Nativas",
-            "course_id": 98,
-            "course_slug": "python-estructurado",
-            "course_title": "Programación Estructurada con Python",
-            "course": {
-                "id": 98,
-                "slug": "python-estructurado",
-                "title": "Programación Estructurada con Python"
             }
         }
     },
@@ -7639,36 +7399,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "python-estructurado-mapeos-asociativos-diccionarios-para-modelar-entidades": {
-        "id": 589,
-        "module_id": 223,
-        "title": "Mapeos asociativos: diccionarios para modelar entidades",
-        "slug": "python-estructurado-mapeos-asociativos-diccionarios-para-modelar-entidades",
-        "type": "article",
-        "duration_minutes": 18,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Mapeos asociativos: diccionarios para modelar entidades\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 223,
-            "title": "Estructuras de Datos Nativas",
-            "course_id": 98,
-            "course_slug": "python-estructurado",
-            "course_title": "Programación Estructurada con Python",
-            "course": {
-                "id": 98,
-                "slug": "python-estructurado",
-                "title": "Programación Estructurada con Python"
-            }
-        }
-    },
     "pseint-ejercicio-par-impar": {
         "id": 446,
         "module_id": 176,
@@ -8841,36 +8571,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "python-estructurado-evaluacion-de-estructuras-compuestas": {
-        "id": 590,
-        "module_id": 223,
-        "title": "Evaluación de estructuras compuestas",
-        "slug": "python-estructurado-evaluacion-de-estructuras-compuestas",
-        "type": "quiz",
-        "duration_minutes": 12,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Evaluación de estructuras compuestas\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 223,
-            "title": "Estructuras de Datos Nativas",
-            "course_id": 98,
-            "course_slug": "python-estructurado",
-            "course_title": "Programación Estructurada con Python",
-            "course": {
-                "id": 98,
-                "slug": "python-estructurado",
-                "title": "Programación Estructurada con Python"
-            }
-        }
-    },
     "css-flexbox-y-grid": {
         "id": 23,
         "module_id": 180,
@@ -9204,36 +8904,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                 "id": 9,
                 "slug": "html-css-javascript",
                 "title": "HTML, CSS y JavaScript"
-            }
-        }
-    },
-    "estructuras-datos-lineales-complejidad-temporal-o1-on-olog-n-y-on2": {
-        "id": 591,
-        "module_id": 224,
-        "title": "Complejidad temporal O(1), O(n), O(log n) y O(n²)",
-        "slug": "estructuras-datos-lineales-complejidad-temporal-o1-on-olog-n-y-on2",
-        "type": "article",
-        "duration_minutes": 16,
-        "order": 1,
-        "is_preview": true,
-        "content": "# Complejidad temporal O(1), O(n), O(log n) y O(n²)\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 224,
-            "title": "Notación Asintótica y Big-O",
-            "course_id": 99,
-            "course_slug": "estructuras-datos-lineales",
-            "course_title": "Estructuras de Datos Lineales y Complejidad",
-            "course": {
-                "id": 99,
-                "slug": "estructuras-datos-lineales",
-                "title": "Estructuras de Datos Lineales y Complejidad"
             }
         }
     },
@@ -10643,36 +10313,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "estructuras-datos-lineales-comparacion-de-algoritmos-por-consumo-de-memoria": {
-        "id": 592,
-        "module_id": 224,
-        "title": "Comparación de algoritmos por consumo de memoria",
-        "slug": "estructuras-datos-lineales-comparacion-de-algoritmos-por-consumo-de-memoria",
-        "type": "article",
-        "duration_minutes": 14,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Comparación de algoritmos por consumo de memoria\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 224,
-            "title": "Notación Asintótica y Big-O",
-            "course_id": 99,
-            "course_slug": "estructuras-datos-lineales",
-            "course_title": "Estructuras de Datos Lineales y Complejidad",
-            "course": {
-                "id": 99,
-                "slug": "estructuras-datos-lineales",
-                "title": "Estructuras de Datos Lineales y Complejidad"
-            }
-        }
-    },
     "poo-ocp-lsp": {
         "id": 480,
         "module_id": 190,
@@ -10984,36 +10624,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                 "id": 96,
                 "slug": "patrones-de-diseno",
                 "title": "Patrones de Diseño"
-            }
-        }
-    },
-    "estructuras-datos-lineales-implementacion-de-pilas-con-punteros-en-memoria": {
-        "id": 593,
-        "module_id": 225,
-        "title": "Implementación de Pilas con punteros en memoria",
-        "slug": "estructuras-datos-lineales-implementacion-de-pilas-con-punteros-en-memoria",
-        "type": "article",
-        "duration_minutes": 18,
-        "order": 1,
-        "is_preview": true,
-        "content": "# Implementación de Pilas con punteros en memoria\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 225,
-            "title": "Pilas y Colas (LIFO vs FIFO)",
-            "course_id": 99,
-            "course_slug": "estructuras-datos-lineales",
-            "course_title": "Estructuras de Datos Lineales y Complejidad",
-            "course": {
-                "id": 99,
-                "slug": "estructuras-datos-lineales",
-                "title": "Estructuras de Datos Lineales y Complejidad"
             }
         }
     },
@@ -12582,36 +12192,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "estructuras-datos-lineales-reto-algoritmo-de-balanceo-de-parentesis-con-stack": {
-        "id": 594,
-        "module_id": 225,
-        "title": "Reto: Algoritmo de balanceo de paréntesis con Stack",
-        "slug": "estructuras-datos-lineales-reto-algoritmo-de-balanceo-de-parentesis-con-stack",
-        "type": "code_challenge",
-        "duration_minutes": 25,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Reto: Algoritmo de balanceo de paréntesis con Stack\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 225,
-            "title": "Pilas y Colas (LIFO vs FIFO)",
-            "course_id": 99,
-            "course_slug": "estructuras-datos-lineales",
-            "course_title": "Estructuras de Datos Lineales y Complejidad",
-            "course": {
-                "id": 99,
-                "slug": "estructuras-datos-lineales",
-                "title": "Estructuras de Datos Lineales y Complejidad"
-            }
-        }
-    },
     "estructuras-datos-lineales-quiz-big-o-y-estructuras-lineales": {
         "id": 595,
         "module_id": 225,
@@ -12621,7 +12201,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 10,
         "order": 3,
         "is_preview": false,
-        "content": "# Quiz: Big-O y Estructuras Lineales\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Quiz: Big-O y Estructuras Lineales\n\nComprueba tus conocimientos sobre análisis de algoritmos, complejidad asintótica y estructuras LIFO/FIFO.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -13402,66 +12982,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "diseno-modular-interfaces-definicion-de-contratos-con-interfaces-vs-clases-abstractas": {
-        "id": 596,
-        "module_id": 226,
-        "title": "Definición de contratos con Interfaces vs Clases Abstractas",
-        "slug": "diseno-modular-interfaces-definicion-de-contratos-con-interfaces-vs-clases-abstractas",
-        "type": "article",
-        "duration_minutes": 15,
-        "order": 1,
-        "is_preview": true,
-        "content": "# Definición de contratos con Interfaces vs Clases Abstractas\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 226,
-            "title": "Módulo 1: Contratos y Desacoplamiento de Software",
-            "course_id": 100,
-            "course_slug": "diseno-modular-interfaces",
-            "course_title": "Diseño Modular, Interfaces y Contratos",
-            "course": {
-                "id": 100,
-                "slug": "diseno-modular-interfaces",
-                "title": "Diseño Modular, Interfaces y Contratos"
-            }
-        }
-    },
-    "diseno-modular-interfaces-inyeccion-de-dependencias-a-traves-de-interfaces": {
-        "id": 597,
-        "module_id": 226,
-        "title": "Inyección de dependencias a través de interfaces",
-        "slug": "diseno-modular-interfaces-inyeccion-de-dependencias-a-traves-de-interfaces",
-        "type": "article",
-        "duration_minutes": 16,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Inyección de dependencias a través de interfaces\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 226,
-            "title": "Módulo 1: Contratos y Desacoplamiento de Software",
-            "course_id": 100,
-            "course_slug": "diseno-modular-interfaces",
-            "course_title": "Diseño Modular, Interfaces y Contratos",
-            "course": {
-                "id": 100,
-                "slug": "diseno-modular-interfaces",
-                "title": "Diseño Modular, Interfaces y Contratos"
-            }
-        }
-    },
     "probando-apis-con-curl": {
         "id": 15,
         "module_id": 7,
@@ -13795,36 +13315,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                 "id": 7,
                 "slug": "modelos-relaciones-y-consultas",
                 "title": "Modelos, Relaciones y Consultas"
-            }
-        }
-    },
-    "diseno-modular-interfaces-reto-implementacion-de-pasarela-de-pago-polimorfica": {
-        "id": 598,
-        "module_id": 226,
-        "title": "Reto: Implementación de pasarela de pago polimórfica",
-        "slug": "diseno-modular-interfaces-reto-implementacion-de-pasarela-de-pago-polimorfica",
-        "type": "code_challenge",
-        "duration_minutes": 22,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Reto: Implementación de pasarela de pago polimórfica\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 226,
-            "title": "Módulo 1: Contratos y Desacoplamiento de Software",
-            "course_id": 100,
-            "course_slug": "diseno-modular-interfaces",
-            "course_title": "Diseño Modular, Interfaces y Contratos",
-            "course": {
-                "id": 100,
-                "slug": "diseno-modular-interfaces",
-                "title": "Diseño Modular, Interfaces y Contratos"
             }
         }
     },
@@ -15100,36 +14590,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "arquitectura-proyecto-poo-separacion-de-logica-de-negocio-y-framework": {
-        "id": 599,
-        "module_id": 227,
-        "title": "Separación de lógica de negocio y framework",
-        "slug": "arquitectura-proyecto-poo-separacion-de-logica-de-negocio-y-framework",
-        "type": "article",
-        "duration_minutes": 18,
-        "order": 1,
-        "is_preview": true,
-        "content": "# Separación de lógica de negocio y framework\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 227,
-            "title": "Modelado del Dominio",
-            "course_id": 101,
-            "course_slug": "arquitectura-proyecto-poo",
-            "course_title": "Proyecto Final: Arquitectura de Software Orientada a Objetos",
-            "course": {
-                "id": 101,
-                "slug": "arquitectura-proyecto-poo",
-                "title": "Proyecto Final: Arquitectura de Software Orientada a Objetos"
-            }
-        }
-    },
     "requerimientos-ambiguos": {
         "id": 553,
         "module_id": 213,
@@ -15297,36 +14757,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                 "id": 20,
                 "slug": "fundamentos-requerimientos",
                 "title": "Fundamentos de requerimientos"
-            }
-        }
-    },
-    "arquitectura-proyecto-poo-implementacion-del-patron-repository-y-data-transfer-objects": {
-        "id": 600,
-        "module_id": 227,
-        "title": "Implementación del patrón Repository y Data Transfer Objects",
-        "slug": "arquitectura-proyecto-poo-implementacion-del-patron-repository-y-data-transfer-objects",
-        "type": "article",
-        "duration_minutes": 20,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Implementación del patrón Repository y Data Transfer Objects\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 227,
-            "title": "Modelado del Dominio",
-            "course_id": 101,
-            "course_slug": "arquitectura-proyecto-poo",
-            "course_title": "Proyecto Final: Arquitectura de Software Orientada a Objetos",
-            "course": {
-                "id": 101,
-                "slug": "arquitectura-proyecto-poo",
-                "title": "Proyecto Final: Arquitectura de Software Orientada a Objetos"
             }
         }
     },
@@ -16691,36 +16121,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "logica-pensamiento-computacional-que-es-un-algoritmo-y-propiedades-de-una-solucion": {
-        "id": 579,
-        "module_id": 220,
-        "title": "Qué es un algoritmo y propiedades de una solución",
-        "slug": "logica-pensamiento-computacional-que-es-un-algoritmo-y-propiedades-de-una-solucion",
-        "type": "article",
-        "duration_minutes": 12,
-        "order": 1,
-        "is_preview": true,
-        "content": "# Qué es un algoritmo y propiedades de una solución\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 220,
-            "title": "Fundamentos del Pensamiento Lógico",
-            "course_id": 97,
-            "course_slug": "logica-pensamiento-computacional",
-            "course_title": "Lógica y Pensamiento Computacional",
-            "course": {
-                "id": 97,
-                "slug": "logica-pensamiento-computacional",
-                "title": "Lógica y Pensamiento Computacional"
-            }
-        }
-    },
     "few-shot-y-cadena-de-pensamiento": {
         "id": 57,
         "module_id": 26,
@@ -17143,36 +16543,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                 "id": 24,
                 "slug": "prompt-engineering-practico",
                 "title": "Prompt Engineering práctico"
-            }
-        }
-    },
-    "logica-pensamiento-computacional-diagramas-de-flujo-y-representacion-grafica-de-decisiones": {
-        "id": 580,
-        "module_id": 220,
-        "title": "Diagramas de flujo y representación gráfica de decisiones",
-        "slug": "logica-pensamiento-computacional-diagramas-de-flujo-y-representacion-grafica-de-decisiones",
-        "type": "article",
-        "duration_minutes": 15,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Diagramas de flujo y representación gráfica de decisiones\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 220,
-            "title": "Fundamentos del Pensamiento Lógico",
-            "course_id": 97,
-            "course_slug": "logica-pensamiento-computacional",
-            "course_title": "Lógica y Pensamiento Computacional",
-            "course": {
-                "id": 97,
-                "slug": "logica-pensamiento-computacional",
-                "title": "Lógica y Pensamiento Computacional"
             }
         }
     },
@@ -17602,66 +16972,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
-    "arquitectura-proyecto-poo-reto-construccion-del-nucleo-de-gestion-de-pedidos": {
-        "id": 601,
-        "module_id": 227,
-        "title": "Reto: Construcción del núcleo de gestión de pedidos",
-        "slug": "arquitectura-proyecto-poo-reto-construccion-del-nucleo-de-gestion-de-pedidos",
-        "type": "code_challenge",
-        "duration_minutes": 30,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Reto: Construcción del núcleo de gestión de pedidos\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 227,
-            "title": "Modelado del Dominio",
-            "course_id": 101,
-            "course_slug": "arquitectura-proyecto-poo",
-            "course_title": "Proyecto Final: Arquitectura de Software Orientada a Objetos",
-            "course": {
-                "id": 101,
-                "slug": "arquitectura-proyecto-poo",
-                "title": "Proyecto Final: Arquitectura de Software Orientada a Objetos"
-            }
-        }
-    },
-    "arquitectura-web-http-estructura-de-peticiones-y-respuestas-headers-y-body": {
-        "id": 602,
-        "module_id": 228,
-        "title": "Estructura de peticiones y respuestas: Headers y Body",
-        "slug": "arquitectura-web-http-estructura-de-peticiones-y-respuestas-headers-y-body",
-        "type": "article",
-        "duration_minutes": 14,
-        "order": 1,
-        "is_preview": true,
-        "content": "# Estructura de peticiones y respuestas: Headers y Body\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 228,
-            "title": "Módulo 1: El Ciclo de Vida Request-Response y Semántica HTTP",
-            "course_id": 102,
-            "course_slug": "arquitectura-web-http",
-            "course_title": "Protocolo HTTP y Arquitectura Web",
-            "course": {
-                "id": 102,
-                "slug": "arquitectura-web-http",
-                "title": "Protocolo HTTP y Arquitectura Web"
-            }
-        }
-    },
     "arquitectura-web-http-codigos-de-estado-http-y-buenas-practicas-de-uso": {
         "id": 603,
         "module_id": 228,
@@ -17671,37 +16981,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 12,
         "order": 2,
         "is_preview": false,
-        "content": "# Códigos de estado HTTP y buenas prácticas de uso\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 228,
-            "title": "Módulo 1: El Ciclo de Vida Request-Response y Semántica HTTP",
-            "course_id": 102,
-            "course_slug": "arquitectura-web-http",
-            "course_title": "Protocolo HTTP y Arquitectura Web",
-            "course": {
-                "id": 102,
-                "slug": "arquitectura-web-http",
-                "title": "Protocolo HTTP y Arquitectura Web"
-            }
-        }
-    },
-    "arquitectura-web-http-cors-cookies-y-manejo-de-sesiones-sin-estado": {
-        "id": 604,
-        "module_id": 228,
-        "title": "CORS, Cookies y manejo de sesiones sin estado",
-        "slug": "arquitectura-web-http-cors-cookies-y-manejo-de-sesiones-sin-estado",
-        "type": "article",
-        "duration_minutes": 15,
-        "order": 3,
-        "is_preview": false,
-        "content": "# CORS, Cookies y manejo de sesiones sin estado\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Códigos de Estado HTTP y Buenas Prácticas\n\nUtilizar los códigos de estado adecuados según la especificación RFC 9110 es indispensable para que los clientes frontend y consumidores de API reaccionen con precisión:\n\n### Familias de Códigos\n* **2xx (Éxito):**\n  - `200 OK`: Petición exitosa estándar (GET, PUT, PATCH).\n  - `201 Created`: Recurso creado exitosamente (POST). Devuelve cabecera `Location` o el recurso en el body.\n  - `204 No Content`: Petición procesada exitosamente sin contenido en el cuerpo (DELETE).\n* **4xx (Errores del Cliente):**\n  - `400 Bad Request`: Formato de petición inválido o malformado.\n  - `401 Unauthorized`: El usuario no está autenticado (falta token o expiró).\n  - `403 Forbidden`: El usuario está autenticado pero no tiene permisos para este recurso.\n  - `404 Not Found`: El recurso no existe.\n  - `422 Unprocessable Entity`: La petición es legible pero falla validaciones de negocio.\n* **5xx (Errores del Servidor):**\n  - `500 Internal Server Error`: Excepción no controlada en el backend.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -17731,67 +17011,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 15,
         "order": 1,
         "is_preview": true,
-        "content": "# Nomenclatura RESTful y recursos anidados vs independientes\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 229,
-            "title": "Estándares de Diseño de APIs",
-            "course_id": 103,
-            "course_slug": "diseno-apis-restful",
-            "course_title": "Diseño y Versionado de APIs RESTful",
-            "course": {
-                "id": 103,
-                "slug": "diseno-apis-restful",
-                "title": "Diseño y Versionado de APIs RESTful"
-            }
-        }
-    },
-    "diseno-apis-restful-estrategias-de-versionado-y-retrocompatibilidad": {
-        "id": 606,
-        "module_id": 229,
-        "title": "Estrategias de versionado y retrocompatibilidad",
-        "slug": "diseno-apis-restful-estrategias-de-versionado-y-retrocompatibilidad",
-        "type": "article",
-        "duration_minutes": 14,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Estrategias de versionado y retrocompatibilidad\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 229,
-            "title": "Estándares de Diseño de APIs",
-            "course_id": 103,
-            "course_slug": "diseno-apis-restful",
-            "course_title": "Diseño y Versionado de APIs RESTful",
-            "course": {
-                "id": 103,
-                "slug": "diseno-apis-restful",
-                "title": "Diseño y Versionado de APIs RESTful"
-            }
-        }
-    },
-    "diseno-apis-restful-paginacion-eficiente-y-transformadores-de-datos-api-resources": {
-        "id": 607,
-        "module_id": 229,
-        "title": "Paginación eficiente y transformadores de datos (API Resources)",
-        "slug": "diseno-apis-restful-paginacion-eficiente-y-transformadores-de-datos-api-resources",
-        "type": "code_challenge",
-        "duration_minutes": 24,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Paginación eficiente y transformadores de datos (API Resources)\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Nomenclatura RESTful y Recursos Anidados\n\nEl diseño de APIs RESTful se basa en **Recursos** modelados con sustantivos en plural, nunca verbos:\n\n```\nBIEN: GET    /api/v1/cursos              (Listar cursos)\nBIEN: POST   /api/v1/cursos              (Crear curso)\nBIEN: GET    /api/v1/cursos/12           (Ver detalle del curso 12)\nBIEN: DELETE /api/v1/cursos/12           (Eliminar curso 12)\n\nMAL:  POST   /api/v1/crearCurso          (Antipatrón RPC)\nMAL:  GET    /api/v1/obtenerCursos       (Antipatrón RPC)\n```\n\n### Recursos Anidados vs Independientes\n* **Anidado (Relación de pertenencia estricta):** `/api/v1/cursos/{id}/lecciones` (las lecciones solo existen en el contexto de un curso).\n* **Independiente:** Si la profundidad de anidamiento supera 2 niveles, rompe a un endpoint plano: `/api/v1/lecciones/{id}/comentarios`.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -17821,7 +17041,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 16,
         "order": 1,
         "is_preview": true,
-        "content": "# Flexbox a fondo: alineación, distribución y wrapping\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Flexbox a Fondo: Alineación, Distribución y Wrapping\n\nFlexbox (CSS Flexible Box Layout) es el estándar unidimensional para alinear y distribuir espacio entre elementos en una fila o columna.\n\n```css\n.contenedor-flex {\n  display: flex;\n  flex-direction: row;            /* row | column */\n  justify-content: space-between; /* Eje principal: flex-start, center, space-between */\n  align-items: center;            /* Eje transversal: stretch, center, flex-start */\n  gap: 1.5rem;                    /* Espacio moderno entre elementos */\n  flex-wrap: wrap;                /* Permite saltar a la siguiente línea si no hay espacio */\n}\n```\n\n### Propiedades de los Hijos (Flex Items)\n* `flex-grow: 1`: El elemento se expande para ocupar el espacio libre disponible.\n* `flex-shrink: 0`: Evita que el elemento se comprima si falta espacio.\n* `flex-basis: 300px`: Tamaño base ideal antes de aplicar grow o shrink.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -17851,37 +17071,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 18,
         "order": 2,
         "is_preview": false,
-        "content": "# CSS Grid: áreas, columnas implícitas y minmax()\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 230,
-            "title": "Sistemas de Layout Moderno",
-            "course_id": 104,
-            "course_slug": "css-moderno-flexbox-grid",
-            "course_title": "CSS Moderno: Flexbox, CSS Grid y Responsive Design",
-            "course": {
-                "id": 104,
-                "slug": "css-moderno-flexbox-grid",
-                "title": "CSS Moderno: Flexbox, CSS Grid y Responsive Design"
-            }
-        }
-    },
-    "css-moderno-flexbox-grid-reto-construccion-de-una-interfaz-tipo-dashboard-responsiva": {
-        "id": 610,
-        "module_id": 230,
-        "title": "Reto: Construcción de una interfaz tipo dashboard responsiva",
-        "slug": "css-moderno-flexbox-grid-reto-construccion-de-una-interfaz-tipo-dashboard-responsiva",
-        "type": "code_challenge",
-        "duration_minutes": 25,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Reto: Construcción de una interfaz tipo dashboard responsiva\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## CSS Grid: Áreas, Columnas Implícitas y minmax()\n\nA diferencia de Flexbox (unidimensional), **CSS Grid** es un sistema bidimensional (filas y columnas simultáneas) diseñado para layouts de página completos.\n\n### El Patrón Responsivo Definitivo sin Media Queries\n```css\n.grid-auto-responsive {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));\n  gap: 1.5rem;\n}\n```\n* `auto-fit`: Llena el ancho de pantalla creando tantas columnas como quepan.\n* `minmax(280px, 1fr)`: Cada tarjeta mide como mínimo 280px y se estira equitativamente (`1fr`) si sobra espacio.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -17911,7 +17101,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 16,
         "order": 1,
         "is_preview": true,
-        "content": "# Uniones discriminadas, tipos mapeados y keyof\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Uniones Discriminadas, Tipos Mapeados y keyof en TypeScript\n\nTypeScript permite modelar estados complejos de forma segura mediante **Discriminated Unions (Uniones Etiquetadas)**:\n\n```typescript\ntype EstadoPeticion<T> =\n  | { estado: 'inactivo' }\n  | { estado: 'cargando' }\n  | { estado: 'exito'; datos: T }\n  | { estado: 'error'; mensaje: string };\n\nfunction renderizar(res: EstadoPeticion<string[]>) {\n  switch (res.estado) {\n    case 'inactivo': return 'Listo';\n    case 'cargando': return 'Cargando...';\n    case 'exito':    return res.datos.join(', '); // Autocompletado garantizado\n    case 'error':    return `Error: ${res.mensaje}`;\n  }\n}\n```\n\n> **Garantía del Compilador:** Al usar un campo discriminador (`estado`), el compilador sabe exactamente qué propiedades existen dentro de cada rama del `switch` sin casteos inseguros.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -17941,7 +17131,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 18,
         "order": 2,
         "is_preview": false,
-        "content": "# Genéricos reutilizables para clientes HTTP y estados\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Genéricos Reutilizables para Clientes HTTP y Estados\n\nLos tipos genéricos permiten escribir componentes, funciones y servicios que operan sobre múltiples tipos de datos preservando la seguridad de tipos estricta:\n\n```typescript\nexport interface ApiResponse<T> {\n  data: T;\n  message?: string;\n  status: number;\n}\n\nexport interface Paginado<T> {\n  items: T[];\n  total: number;\n  pagina: number;\n}\n\nasync function fetchJson<T>(url: string): Promise<ApiResponse<T>> {\n  const res = await fetch(url);\n  return res.json();\n}\n```",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -17959,96 +17149,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                 "id": 105,
                 "slug": "typescript-profesional-frontend",
                 "title": "TypeScript Profesional para Aplicaciones Frontend"
-            }
-        }
-    },
-    "typescript-profesional-frontend-reto-modelado-con-tipado-estricto-de-una-api-compleja": {
-        "id": 613,
-        "module_id": 231,
-        "title": "Reto: Modelado con tipado estricto de una API compleja",
-        "slug": "typescript-profesional-frontend-reto-modelado-con-tipado-estricto-de-una-api-compleja",
-        "type": "code_challenge",
-        "duration_minutes": 22,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Reto: Modelado con tipado estricto de una API compleja\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 231,
-            "title": "Módulo 1: Tipado Estricto, Genéricos y Seguridad en Runtime",
-            "course_id": 105,
-            "course_slug": "typescript-profesional-frontend",
-            "course_title": "TypeScript Profesional para Aplicaciones Frontend",
-            "course": {
-                "id": 105,
-                "slug": "typescript-profesional-frontend",
-                "title": "TypeScript Profesional para Aplicaciones Frontend"
-            }
-        }
-    },
-    "git-avanzado-rebase-conflictos-git-rebase-interactivo-squash-reword-drop-y-fixup": {
-        "id": 615,
-        "module_id": 232,
-        "title": "Git Rebase Interactivo: squash, reword, drop y fixup",
-        "slug": "git-avanzado-rebase-conflictos-git-rebase-interactivo-squash-reword-drop-y-fixup",
-        "type": "article",
-        "duration_minutes": 18,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Git Rebase Interactivo: squash, reword, drop y fixup\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 232,
-            "title": "Rebase y Limpieza del Historial",
-            "course_id": 106,
-            "course_slug": "git-avanzado-rebase-conflictos",
-            "course_title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos",
-            "course": {
-                "id": 106,
-                "slug": "git-avanzado-rebase-conflictos",
-                "title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos"
-            }
-        }
-    },
-    "git-avanzado-rebase-conflictos-reto-reestructurar-una-rama-caotica-antes-del-pull-request": {
-        "id": 616,
-        "module_id": 232,
-        "title": "Reto: Reestructurar una rama caótica antes del Pull Request",
-        "slug": "git-avanzado-rebase-conflictos-reto-reestructurar-una-rama-caotica-antes-del-pull-request",
-        "type": "code_challenge",
-        "duration_minutes": 22,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Reto: Reestructurar una rama caótica antes del Pull Request\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 232,
-            "title": "Rebase y Limpieza del Historial",
-            "course_id": 106,
-            "course_slug": "git-avanzado-rebase-conflictos",
-            "course_title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos",
-            "course": {
-                "id": 106,
-                "slug": "git-avanzado-rebase-conflictos",
-                "title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos"
             }
         }
     },
@@ -18061,7 +17161,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 14,
         "order": 1,
         "is_preview": true,
-        "content": "# Recuperación de commits perdidos con Git Reflog\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Recuperación de Commits Perdidos con Git Reflog\n\n`git reflog` (Reference Log) es el salvavidas de todo desarrollador. Registra cada vez que la punta de `HEAD` cambia en tu repositorio local (por commit, checkout, rebase, merge o reset).\n\n```bash\n# Ver el historial de todos los movimientos de HEAD\ngit reflog\n\n# Salida típica:\n# a1b2c3d HEAD@{0}: reset: moving to HEAD~1\n# f4e5d6c HEAD@{1}: commit: feat: módulo de pagos\n# 7a8b9c0 HEAD@{2}: checkout: moving from main to feature/pagos\n```\n\n### ¿Cómo Recuperar un Commit Borrado accidentalmente?\nSi hiciste un `git reset --hard` no deseado:\n```bash\n# 1. Identifica el hash del commit en el reflog (ej. f4e5d6c)\n# 2. Restaura el estado de tu rama a ese commit:\ngit reset --hard f4e5d6c\n```",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -18091,7 +17191,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 16,
         "order": 2,
         "is_preview": false,
-        "content": "# Depuración binaria de regresiones con Git Bisect\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Depuración Binaria de Regresiones con Git Bisect\n\nCuando un bug aparece en producción y no sabes qué commit lo causó entre cientos de cambios, `git bisect` realiza una **búsqueda binaria** en el historial para encontrar el commit culpable en tiempo `O(log n)`.\n\n```bash\n# 1. Iniciar la sesión de búsqueda binaria\ngit bisect start\n\n# 2. Marcar la versión actual como rota (bad)\ngit bisect bad\n\n# 3. Indicar el último commit o tag conocido donde todo funcionaba bien\ngit bisect good v1.4.0\n\n# 4. Git ubica automáticamente el commit intermedio; ejecutas tus pruebas\n# Si falla:\ngit bisect bad\n# Si pasa:\ngit bisect good\n\n# 5. Git te informa el commit exacto que introdujo el error. Al finalizar:\ngit bisect reset\n```",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -18121,7 +17221,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 10,
         "order": 3,
         "is_preview": false,
-        "content": "# Evaluación final: Estrategias avanzadas en Git\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Evaluación Final: Estrategias Avanzadas en Git\n\nPon a prueba tu dominio de Rebase, Reflog, Bisect y resolución de conflictos complejos en equipos distribuidos.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -18142,6 +17242,36 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
             }
         }
     },
+    "rag-embeddings-bases-vectoriales-estrategias-de-chunking-y-preprocesamiento-de-textos-tecnicos": {
+        "id": 624,
+        "module_id": 235,
+        "title": "Estrategias de chunking y preprocesamiento de textos técnicos",
+        "slug": "rag-embeddings-bases-vectoriales-estrategias-de-chunking-y-preprocesamiento-de-textos-tecnicos",
+        "type": "article",
+        "duration_minutes": 18,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Estrategias de Chunking y Preprocesamiento\n\nLos modelos de lenguaje tienen una ventana de contexto limitada y recuperan mejor fragmentos de texto específicos que documentos enteros de 100 páginas. El proceso de dividir documentos se denomina **Chunking**.\n\n### Estrategias de Partición\n* **Fixed-size con Overlap:** Divide el texto en fragmentos de tamaño fijo (ej. 500 caracteres) con solapamiento (ej. 100 caracteres) para no cortar ideas a la mitad.\n* **Semantic Chunking:** Divide el texto respetando los límites de párrafos, títulos markdown y bloques de código.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 235,
+            "title": "Módulo 1: Fundamentos de Embeddings y Segmentación de Texto",
+            "course_id": 108,
+            "course_slug": "rag-embeddings-bases-vectoriales",
+            "course_title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales",
+            "course": {
+                "id": 108,
+                "slug": "rag-embeddings-bases-vectoriales",
+                "title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales"
+            }
+        }
+    },
     "docker-compose-multiservicio-estructura-del-archivo-composeyaml-y-directivas-esenciales": {
         "id": 620,
         "module_id": 234,
@@ -18151,7 +17281,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 15,
         "order": 1,
         "is_preview": true,
-        "content": "# Estructura del archivo compose.yaml y directivas esenciales\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Estructura del Archivo compose.yaml y Directivas Esenciales\n\nDocker Compose define y ejecuta aplicaciones multicontenedor mediante un único manifiesto declarativo en formato YAML.\n\n```yaml\nservices:\n  api:\n    build: .\n    ports:\n      - \"8000:8000\"\n    environment:\n      - DB_HOST=postgres\n      - DB_PORT=5432\n    depends_on:\n      postgres:\n        condition: service_healthy\n    networks:\n      - backend-net\n\n  postgres:\n    image: postgres:16-alpine\n    environment:\n      POSTGRES_DB: syseng_db\n      POSTGRES_USER: postgres\n      POSTGRES_PASSWORD: secretpassword\n    volumes:\n      - pgdata:/var/lib/postgresql/data\n    healthcheck:\n      test: [\"CMD-SHELL\", \"pg_isready -U postgres\"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n    networks:\n      - backend-net\n\nvolumes:\n  pgdata:\n\nnetworks:\n  backend-net:\n```",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -18181,7 +17311,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 16,
         "order": 2,
         "is_preview": false,
-        "content": "# Persistencia con volúmenes y variables de entorno seguras\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Persistencia con Volúmenes y Variables de Entorno Seguras\n\nLos contenedores son efímeros por naturaleza: al eliminarse un contenedor, todos los archivos modificados dentro de su capa de escritura se destruyen.\n\n### Tipos de Volúmenes en Docker\n* **Named Volumes (`pgdata:/var/lib/...`):** Administrados directamente por el motor de Docker en `/var/lib/docker/volumes/`. Ideales para bases de datos en producción por su rendimiento y aislamiento.\n* **Bind Mounts (`./src:/app`):** Mapean directamente una carpeta de tu sistema host dentro del contenedor. Ideales para recarga en caliente (*Hot Reloading*) en entornos de desarrollo local.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -18199,126 +17329,6 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                 "id": 107,
                 "slug": "docker-compose-multiservicio",
                 "title": "Docker Compose y Arquitecturas Multiservicio"
-            }
-        }
-    },
-    "docker-compose-multiservicio-reto-levantar-stack-php-postgres-redis-con-compose": {
-        "id": 622,
-        "module_id": 234,
-        "title": "Reto: Levantar stack PHP + Postgres + Redis con Compose",
-        "slug": "docker-compose-multiservicio-reto-levantar-stack-php-postgres-redis-con-compose",
-        "type": "code_challenge",
-        "duration_minutes": 25,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Reto: Levantar stack PHP + Postgres + Redis con Compose\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 234,
-            "title": "Módulo 1: Orquestación Local y Redes Aisladas",
-            "course_id": 107,
-            "course_slug": "docker-compose-multiservicio",
-            "course_title": "Docker Compose y Arquitecturas Multiservicio",
-            "course": {
-                "id": 107,
-                "slug": "docker-compose-multiservicio",
-                "title": "Docker Compose y Arquitecturas Multiservicio"
-            }
-        }
-    },
-    "rag-embeddings-bases-vectoriales-que-es-un-vector-embedding-y-como-cuantifica-el-significado": {
-        "id": 623,
-        "module_id": 235,
-        "title": "Qué es un vector embedding y cómo cuantifica el significado",
-        "slug": "rag-embeddings-bases-vectoriales-que-es-un-vector-embedding-y-como-cuantifica-el-significado",
-        "type": "article",
-        "duration_minutes": 16,
-        "order": 1,
-        "is_preview": true,
-        "content": "# Qué es un vector embedding y cómo cuantifica el significado\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 235,
-            "title": "Módulo 1: Fundamentos de Embeddings y Segmentación de Texto",
-            "course_id": 108,
-            "course_slug": "rag-embeddings-bases-vectoriales",
-            "course_title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales",
-            "course": {
-                "id": 108,
-                "slug": "rag-embeddings-bases-vectoriales",
-                "title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales"
-            }
-        }
-    },
-    "rag-embeddings-bases-vectoriales-estrategias-de-chunking-y-preprocesamiento-de-textos-tecnicos": {
-        "id": 624,
-        "module_id": 235,
-        "title": "Estrategias de chunking y preprocesamiento de textos técnicos",
-        "slug": "rag-embeddings-bases-vectoriales-estrategias-de-chunking-y-preprocesamiento-de-textos-tecnicos",
-        "type": "article",
-        "duration_minutes": 18,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Estrategias de chunking y preprocesamiento de textos técnicos\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 235,
-            "title": "Módulo 1: Fundamentos de Embeddings y Segmentación de Texto",
-            "course_id": 108,
-            "course_slug": "rag-embeddings-bases-vectoriales",
-            "course_title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales",
-            "course": {
-                "id": 108,
-                "slug": "rag-embeddings-bases-vectoriales",
-                "title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales"
-            }
-        }
-    },
-    "rag-embeddings-bases-vectoriales-reto-implementacion-de-busqueda-semantica-con-similitud-coseno": {
-        "id": 625,
-        "module_id": 235,
-        "title": "Reto: Implementación de búsqueda semántica con similitud coseno",
-        "slug": "rag-embeddings-bases-vectoriales-reto-implementacion-de-busqueda-semantica-con-similitud-coseno",
-        "type": "code_challenge",
-        "duration_minutes": 25,
-        "order": 3,
-        "is_preview": false,
-        "content": "# Reto: Implementación de búsqueda semántica con similitud coseno\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 235,
-            "title": "Módulo 1: Fundamentos de Embeddings y Segmentación de Texto",
-            "course_id": 108,
-            "course_slug": "rag-embeddings-bases-vectoriales",
-            "course_title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales",
-            "course": {
-                "id": 108,
-                "slug": "rag-embeddings-bases-vectoriales",
-                "title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales"
             }
         }
     },
@@ -18331,37 +17341,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 16,
         "order": 1,
         "is_preview": true,
-        "content": "# Estructura de una Especificación de Requisitos de Software (SRS)\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
-        "starter_code": null,
-        "solution": null,
-        "test_cases": null,
-        "hint": null,
-        "language": "python",
-        "completed": false,
-        "quiz": null,
-        "module": {
-            "id": 236,
-            "title": "Modelado y Documentación Formal",
-            "course_id": 109,
-            "course_slug": "especificacion-srs-diagramas",
-            "course_title": "Especificación Formal (SRS) y Casos de Uso",
-            "course": {
-                "id": 109,
-                "slug": "especificacion-srs-diagramas",
-                "title": "Especificación Formal (SRS) y Casos de Uso"
-            }
-        }
-    },
-    "especificacion-srs-diagramas-diagramas-de-casos-de-uso-y-diagramas-de-secuencia-uml": {
-        "id": 627,
-        "module_id": 236,
-        "title": "Diagramas de casos de uso y diagramas de secuencia UML",
-        "slug": "especificacion-srs-diagramas-diagramas-de-casos-de-uso-y-diagramas-de-secuencia-uml",
-        "type": "article",
-        "duration_minutes": 18,
-        "order": 2,
-        "is_preview": false,
-        "content": "# Diagramas de casos de uso y diagramas de secuencia UML\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Estructura de una Especificación de Requisitos de Software (SRS)\n\nLa **Especificación de Requisitos de Software (SRS)** según el estándar IEEE 830 / ISO/IEC/IEEE 29148 formaliza el acuerdo entre clientes, usuarios y el equipo de ingeniería de software.\n\n### Clasificación FURPS+ de Requisitos\n* **F - Funcionalidad (Functional):** Capacidades, características, flujos y seguridad de la aplicación.\n* **U - Usabilidad (Usability):** Ergonomía, diseño centrado en el usuario, estética, accesibilidad (WCAG).\n* **R - Confiabilidad (Reliability):** Tolerancia a fallos, frecuencia de caídas, capacidad de recuperación (MTTR).\n* **P - Rendimiento (Performance):** Tiempos de respuesta, concurrencia, rendimiento transaccional (*throughput*).\n* **S - Soporte y Mantenibilidad (Supportability):** Facilidad de prueba, escalabilidad, portabilidad.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -18391,7 +17371,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 12,
         "order": 3,
         "is_preview": false,
-        "content": "# Quiz: Análisis de ambigüedades en requerimientos\n\nEn esta clase práctica exploraremos los fundamentos técnicos, sintaxis y mejores prácticas de la industria con documentación detallada.\n\n```python\n# Ejemplo de implementación práctica\ndef ejecutar_analisis():\n    return 'Dominio del concepto asegurado'\n```\n",
+        "content": "## Quiz: Análisis de Ambigüedades en Requerimientos\n\nEvalúa tu capacidad para detectar requisitos ambiguos, no medibles o contradictorios en especificaciones de software.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -20413,6 +19393,1170 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                 "id": 109,
                 "slug": "especificacion-srs-diagramas",
                 "title": "Especificación Formal (SRS) y Casos de Uso"
+            }
+        }
+    },
+    "logica-pensamiento-computacional-que-es-un-algoritmo-y-propiedades-de-una-solucion": {
+        "id": 579,
+        "module_id": 220,
+        "title": "Qué es un algoritmo y propiedades de una solución",
+        "slug": "logica-pensamiento-computacional-que-es-un-algoritmo-y-propiedades-de-una-solucion",
+        "type": "article",
+        "duration_minutes": 12,
+        "order": 1,
+        "is_preview": true,
+        "content": "## ¿Qué es un Algoritmo?\n\nUn algoritmo es una secuencia finita, ordenada y no ambigua de pasos e instrucciones que resuelven un problema o ejecutan una tarea computacional.\n\n```\nEntrada (Input) ──> [ Procesamiento Algorítmico ] ──> Salida (Output)\n```\n\n### Propiedades Fundamentales de todo Algoritmo\n1. **Finitud:** Debe terminar después de un número finito de pasos. Un bucle infinito no es un algoritmo válido.\n2. **Definición y Precisión:** Cada paso debe estar definido sin ambigüedades. Las operaciones deben ser exactas.\n3. **Entrada definida:** Cero o más datos proporcionados al inicio.\n4. **Salida comprobable:** Uno o más resultados directamente relacionados con las entradas.\n5. **Efectividad:** Cada instrucción debe ser lo suficientemente básica para que una computadora pueda ejecutarla en un tiempo finito.\n\n> **Regla de oro de ingeniería:** Antes de escribir una sola línea de código, debes ser capaz de explicar la solución paso a paso en lenguaje natural (pseudocódigo). Si no puedes explicarlo paso a paso, no puedes programarlo.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 220,
+            "title": "Fundamentos del Pensamiento Lógico",
+            "course_id": 97,
+            "course_slug": "logica-pensamiento-computacional",
+            "course_title": "Lógica y Pensamiento Computacional",
+            "course": {
+                "id": 97,
+                "slug": "logica-pensamiento-computacional",
+                "title": "Lógica y Pensamiento Computacional"
+            }
+        }
+    },
+    "logica-pensamiento-computacional-diagramas-de-flujo-y-representacion-grafica-de-decisiones": {
+        "id": 580,
+        "module_id": 220,
+        "title": "Diagramas de flujo y representación gráfica de decisiones",
+        "slug": "logica-pensamiento-computacional-diagramas-de-flujo-y-representacion-grafica-de-decisiones",
+        "type": "article",
+        "duration_minutes": 15,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Diagramas de Flujo y Representación Gráfica\n\nLos diagramas de flujo permiten visualizar la arquitectura lógica de un algoritmo antes de codificarlo, identificando bifurcaciones complejas y bucles redundantes.\n\n### Simbología Estándar (ISO 5807)\n* **Óvalo / Rectángulo redondeado:** Inicio o Fin del algoritmo.\n* **Rectángulo:** Proceso u operación (asignación, cálculo matemático).\n* **Rombo:** Decisión condicional (pregunta lógica que bifurca en ramas *Sí* o *No*).\n* **Paralelogramo:** Entrada o Salida de datos (lectura de teclado o impresión en pantalla).\n* **Líneas de flujo:** Flechas que indican el orden estricto de ejecución.\n\n### Buenas Prácticas al Diseñar Flujos\n1. Todo flujo debe iniciar arriba o a la izquierda y fluir hacia abajo o a la derecha.\n2. Cada rombo de decisión debe tener etiquetadas claramente sus salidas (`True` / `False`).\n3. Evita cruce de líneas; usa conectores circulares si la lógica se ramifica demasiado.\n4. Mantén los bloques con una única responsabilidad clara.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 220,
+            "title": "Fundamentos del Pensamiento Lógico",
+            "course_id": 97,
+            "course_slug": "logica-pensamiento-computacional",
+            "course_title": "Lógica y Pensamiento Computacional",
+            "course": {
+                "id": 97,
+                "slug": "logica-pensamiento-computacional",
+                "title": "Lógica y Pensamiento Computacional"
+            }
+        }
+    },
+    "logica-pensamiento-computacional-operadores-booleanos-y-tablas-de-verdad": {
+        "id": 581,
+        "module_id": 220,
+        "title": "Operadores booleanos y tablas de verdad",
+        "slug": "logica-pensamiento-computacional-operadores-booleanos-y-tablas-de-verdad",
+        "type": "code_challenge",
+        "duration_minutes": 18,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Operadores Booleanos y Tablas de Verdad\n\nLa lógica computacional se fundamenta en el álgebra de Boole: evaluar proposiciones que solo pueden ser `True` (Verdadero, 1) o `False` (Falso, 0).\n\n### Operadores Fundamentales\n* **AND (Conjunción):** `A and B` es verdadero **únicamente** si ambos operandos son verdaderos.\n* **OR (Disyunción):** `A or B` es verdadero si **al menos uno** de los operandos es verdadero.\n* **NOT (Negación):** `not A` invierte el valor de verdad.\n\n### Reto Práctico\nImplementa la función `puede_acceder(edad, tiene_pase, es_vip)` que determine si un usuario puede ingresar a una zona restringida:\n* Si es VIP, puede entrar sin importar su edad ni su pase.\n* Si no es VIP, debe ser mayor de edad (>= 18) **Y** tener pase activo.",
+        "starter_code": "def puede_acceder(edad: int, tiene_pase: bool, es_vip: bool) -> bool:\n    \"\"\"\n    Determina si un usuario tiene autorización de acceso.\n    \"\"\"\n    # TODO: Retorna True o False aplicando lógica booleana\n    pass\n\n# Pruebas manuales:\nprint(puede_acceder(20, True, False))   # True\nprint(puede_acceder(16, True, False))   # False\nprint(puede_acceder(15, False, True))   # True (es VIP)\n",
+        "solution": "def puede_acceder(edad: int, tiene_pase: bool, es_vip: bool) -> bool:\n    return es_vip or (edad >= 18 and tiene_pase)\n",
+        "test_cases": [
+            {
+                "input": "20, True, False",
+                "expected": "True"
+            },
+            {
+                "input": "16, True, False",
+                "expected": "False"
+            },
+            {
+                "input": "15, False, True",
+                "expected": "True"
+            },
+            {
+                "input": "18, True, False",
+                "expected": "True"
+            },
+            {
+                "input": "18, False, False",
+                "expected": "False"
+            }
+        ],
+        "hint": "Usa el operador 'or' para el caso VIP y agrupa con paréntesis '(edad >= 18 and tiene_pase)'.",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 220,
+            "title": "Fundamentos del Pensamiento Lógico",
+            "course_id": 97,
+            "course_slug": "logica-pensamiento-computacional",
+            "course_title": "Lógica y Pensamiento Computacional",
+            "course": {
+                "id": 97,
+                "slug": "logica-pensamiento-computacional",
+                "title": "Lógica y Pensamiento Computacional"
+            }
+        }
+    },
+    "logica-pensamiento-computacional-condicionales-anidados-y-multiples-caminos-logicos": {
+        "id": 582,
+        "module_id": 221,
+        "title": "Condicionales anidados y múltiples caminos lógicos",
+        "slug": "logica-pensamiento-computacional-condicionales-anidados-y-multiples-caminos-logicos",
+        "type": "article",
+        "duration_minutes": 14,
+        "order": 1,
+        "is_preview": true,
+        "content": "## Condicionales Anidados y Múltiples Caminos Lógicos\n\nEl exceso de condicionales anidados (`if` dentro de `if` dentro de `if`) genera el antipatrón conocido como **Código Piramidal (Arrow Anti-pattern)**, que dificulta la lectura y aumenta la complejidad ciclomática.\n\n### La Técnica de Cláusulas de Guarda (Guard Clauses)\nEn lugar de anidar niveles profundos, valida las condiciones de error o salida rápida al inicio de la función (Early Return):\n\n```python\n# ANTIPATRÓN: Pirámide de anidamiento\ndef procesar_pago_malo(usuario, monto):\n    if usuario is not None:\n        if usuario.activo:\n            if usuario.saldo >= monto:\n                return ejecutar_cobro(usuario, monto)\n            else:\n                return 'Saldo insuficiente'\n        else:\n            return 'Usuario inactivo'\n    return 'Usuario nulo'\n\n# BUENA PRÁCTICA: Guard Clauses\ndef procesar_pago_limpio(usuario, monto):\n    if not usuario:\n        return 'Usuario nulo'\n    if not usuario.activo:\n        return 'Usuario inactivo'\n    if usuario.saldo < monto:\n        return 'Saldo insuficiente'\n    \n    return ejecutar_cobro(usuario, monto)\n```\n\n> **Beneficio:** Cada nivel de indentación eliminado reduce la carga cognitiva para entender y depurar la lógica.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 221,
+            "title": "Estructuración de Algoritmos",
+            "course_id": 97,
+            "course_slug": "logica-pensamiento-computacional",
+            "course_title": "Lógica y Pensamiento Computacional",
+            "course": {
+                "id": 97,
+                "slug": "logica-pensamiento-computacional",
+                "title": "Lógica y Pensamiento Computacional"
+            }
+        }
+    },
+    "logica-pensamiento-computacional-bucles-de-control-mientras-vs-para": {
+        "id": 583,
+        "module_id": 221,
+        "title": "Bucles de control: mientras vs para",
+        "slug": "logica-pensamiento-computacional-bucles-de-control-mientras-vs-para",
+        "type": "code_challenge",
+        "duration_minutes": 20,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Bucles de Control: Mientras vs Para\n\nLos bucles permiten repetir un bloque de código. La elección correcta depende de la condición de parada:\n* **Bucle `for`:** Se utiliza cuando se conoce de antemano el número de iteraciones o se recorre una colección finita.\n* **Bucle `while`:** Se utiliza cuando la repetición depende de una condición dinámica que cambia durante la ejecución.\n\n### Reto Práctico\nImplementa la función `serie_fibonacci(n)` que retorne una lista con los primeros `n` números de la serie de Fibonacci: `[0, 1, 1, 2, 3, 5, 8, ...]`\n* Si `n <= 0`, retorna `[]`.\n* Si `n == 1`, retorna `[0]`.\n* Si `n == 2`, retorna `[0, 1]`.",
+        "starter_code": "def serie_fibonacci(n: int) -> list[int]:\n    \"\"\"\n    Genera los primeros n números de Fibonacci usando un bucle iterativo.\n    \"\"\"\n    if n <= 0:\n        return []\n    if n == 1:\n        return [0]\n    \n    secuencia = [0, 1]\n    # TODO: Usa un bucle for o while para completar hasta n números\n    \n    return secuencia\n\n# Prueba:\nprint(serie_fibonacci(7)) # [0, 1, 1, 2, 3, 5, 8]\n",
+        "solution": "def serie_fibonacci(n: int) -> list[int]:\n    if n <= 0:\n        return []\n    if n == 1:\n        return [0]\n    secuencia = [0, 1]\n    for _ in range(2, n):\n        secuencia.append(secuencia[-1] + secuencia[-2])\n    return secuencia\n",
+        "test_cases": [
+            {
+                "input": "1",
+                "expected": "[0]"
+            },
+            {
+                "input": "2",
+                "expected": "[0, 1]"
+            },
+            {
+                "input": "5",
+                "expected": "[0, 1, 1, 2, 3]"
+            },
+            {
+                "input": "7",
+                "expected": "[0, 1, 1, 2, 3, 5, 8]"
+            }
+        ],
+        "hint": "En cada iteración, el nuevo número es la suma de los dos últimos: secuencia[-1] + secuencia[-2].",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 221,
+            "title": "Estructuración de Algoritmos",
+            "course_id": 97,
+            "course_slug": "logica-pensamiento-computacional",
+            "course_title": "Lógica y Pensamiento Computacional",
+            "course": {
+                "id": 97,
+                "slug": "logica-pensamiento-computacional",
+                "title": "Lógica y Pensamiento Computacional"
+            }
+        }
+    },
+    "logica-pensamiento-computacional-quiz-formativo-pensamiento-logico": {
+        "id": 584,
+        "module_id": 221,
+        "title": "Quiz formativo: Pensamiento Lógico",
+        "slug": "logica-pensamiento-computacional-quiz-formativo-pensamiento-logico",
+        "type": "quiz",
+        "duration_minutes": 10,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Quiz Formativo: Pensamiento Lógico\n\nPon a prueba tu comprensión de estructuras de control, álgebra booleana y diseño de algoritmos eficaces.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 221,
+            "title": "Estructuración de Algoritmos",
+            "course_id": 97,
+            "course_slug": "logica-pensamiento-computacional",
+            "course_title": "Lógica y Pensamiento Computacional",
+            "course": {
+                "id": 97,
+                "slug": "logica-pensamiento-computacional",
+                "title": "Lógica y Pensamiento Computacional"
+            }
+        }
+    },
+    "python-estructurado-definicion-de-funciones-parametros-y-retornos": {
+        "id": 585,
+        "module_id": 222,
+        "title": "Definición de funciones, parámetros y retornos",
+        "slug": "python-estructurado-definicion-de-funciones-parametros-y-retornos",
+        "type": "article",
+        "duration_minutes": 15,
+        "order": 1,
+        "is_preview": true,
+        "content": "## Definición de Funciones, Parámetros y Retornos\n\nEn desarrollo profesional con Python, las funciones deben tener **una única responsabilidad**, documentación clara y tipado estático opcional (`Type Hints`).\n\n```python\ndef calcular_descuento(precio: float, porcentaje: float = 0.10) -> float:\n    \"\"\"\n    Calcula el precio final aplicando un porcentaje de descuento.\n\n    Args:\n        precio: Precio original del producto en COP o USD.\n        porcentaje: Fracción de descuento (por defecto 10%).\n\n    Returns:\n        Precio con descuento aplicado.\n    \"\"\"\n    if precio < 0 or not (0 <= porcentaje <= 1):\n        raise ValueError('Valores de precio o descuento inválidos.')\n    return round(precio * (1 - porcentaje), 2)\n```\n\n### Reglas de Diseño Limpio\n1. **Funciones puras:** Con los mismos argumentos de entrada, siempre devuelven la misma salida y no producen efectos secundarios en variables externas.\n2. **Número de parámetros:** Procura mantener un máximo de 3 a 4 parámetros. Si requieres más, agrúpalos en un diccionario o `dataclass`.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 222,
+            "title": "Modularidad y Funciones en Python",
+            "course_id": 98,
+            "course_slug": "python-estructurado",
+            "course_title": "Programación Estructurada con Python",
+            "course": {
+                "id": 98,
+                "slug": "python-estructurado",
+                "title": "Programación Estructurada con Python"
+            }
+        }
+    },
+    "python-estructurado-alcance-de-variables-local-vs-global-y-closures": {
+        "id": 586,
+        "module_id": 222,
+        "title": "Alcance de variables: local vs global y closures",
+        "slug": "python-estructurado-alcance-de-variables-local-vs-global-y-closures",
+        "type": "article",
+        "duration_minutes": 12,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Alcance de Variables: Local vs Global y Closures\n\nEl alcance (*Scope*) define en qué partes del programa es accesible un identificador. Python resuelve las variables usando la regla **LEGB**:\n1. **L (Local):** Nombres asignados dentro de una función o lambda.\n2. **E (Enclosing):** Nombres en funciones contenedoras (cierres o *closures*).\n3. **G (Global):** Nombres asignados en el nivel superior del módulo o con la palabra clave `global`.\n4. **B (Built-in):** Nombres predefinidos en Python (`print`, `len`, `range`).\n\n### ¿Qué es un Closure?\nUna función interna que recuerda y conserva acceso al entorno donde fue creada, incluso después de que la función externa haya finalizado:\n\n```python\ndef crear_multiplicador(factor: int):\n    def multiplicador(numero: int) -> int:\n        return numero * factor  # 'factor' proviene del scope exterior\n    return multiplicador\n\ndoble = crear_multiplicador(2)\nprint(doble(15)) # 30\n```",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 222,
+            "title": "Modularidad y Funciones en Python",
+            "course_id": 98,
+            "course_slug": "python-estructurado",
+            "course_title": "Programación Estructurada con Python",
+            "course": {
+                "id": 98,
+                "slug": "python-estructurado",
+                "title": "Programación Estructurada con Python"
+            }
+        }
+    },
+    "estructuras-datos-lineales-implementacion-de-pilas-con-punteros-en-memoria": {
+        "id": 593,
+        "module_id": 225,
+        "title": "Implementación de Pilas con punteros en memoria",
+        "slug": "estructuras-datos-lineales-implementacion-de-pilas-con-punteros-en-memoria",
+        "type": "article",
+        "duration_minutes": 18,
+        "order": 1,
+        "is_preview": true,
+        "content": "## Implementación de Pilas (Stack - LIFO) con Punteros\n\nUna **Pila (Stack)** es una estructura de datos lineal que sigue el principio **LIFO** (*Last In, First Out*: el último elemento en entrar es el primero en salir).\n\n```\n       Push (Insertar)\n            |\n            v\n     +--------------+\n     |   Dato C     | <--- Tope (Top)\n     +--------------+\n     |   Dato B     |\n     +--------------+\n     |   Dato A     | <--- Fondo (Base)\n     +--------------+\n```\n\n### Operaciones Fundamentales\n* `push(elemento)`: Inserta un elemento en el tope (`O(1)`).\n* `pop()`: Remueve y retorna el elemento en el tope (`O(1)`).\n* `peek()` o `top()`: Consulta el elemento del tope sin removerlo (`O(1)`).\n* `is_empty()`: Comprueba si la pila no tiene elementos (`O(1)`).\n\n### Casos de Uso en Ingeniería de Software\n* Mecanismos de deshacer/rehacer (*Undo/Redo*) en editores de texto.\n* Evaluación de expresiones matemáticas y análisis sintáctico en compiladores.\n* Historial de navegación en navegadores web.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 225,
+            "title": "Pilas y Colas (LIFO vs FIFO)",
+            "course_id": 99,
+            "course_slug": "estructuras-datos-lineales",
+            "course_title": "Estructuras de Datos Lineales y Complejidad",
+            "course": {
+                "id": 99,
+                "slug": "estructuras-datos-lineales",
+                "title": "Estructuras de Datos Lineales y Complejidad"
+            }
+        }
+    },
+    "python-estructurado-reto-practico-refactorizacion-modular-de-scripts": {
+        "id": 587,
+        "module_id": 222,
+        "title": "Reto práctico: Refactorización modular de scripts",
+        "slug": "python-estructurado-reto-practico-refactorizacion-modular-de-scripts",
+        "type": "code_challenge",
+        "duration_minutes": 25,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Reto: Refactorización Modular de Scripts\n\nUn error común al iniciar es escribir scripts planos donde los datos, la lógica de cálculo y la presentación están mezclados en el script global.\n\n### Objetivo del Reto\nImplementa una función `analizar_temperaturas(registros)` que reciba una lista de temperaturas en grados Celsius y retorne un diccionario con:\n* `\"promedio\"`: La media aritmética redondeada a 2 decimales.\n* `\"maxima\"`: La temperatura más alta.\n* `\"minima\"`: La temperatura más baja.\n* Si la lista está vacía, retorna `None`.",
+        "starter_code": "def analizar_temperaturas(registros: list[float]) -> dict | None:\n    \"\"\"\n    Calcula estadísticas básicas de una serie de temperaturas.\n    \"\"\"\n    if not registros:\n        return None\n    \n    # TODO: Calcula promedio, máxima y mínima\n    promedio = round(sum(registros) / len(registros), 2)\n    maxima = max(registros)\n    minima = min(registros)\n    \n    return {\n        \"promedio\": promedio,\n        \"maxima\": maxima,\n        \"minima\": minima\n    }\n\n# Prueba:\nprint(analizar_temperaturas([22.5, 25.0, 19.5, 31.0]))\n",
+        "solution": "def analizar_temperaturas(registros: list[float]) -> dict | None:\n    if not registros:\n        return None\n    return {\n        \"promedio\": round(sum(registros) / len(registros), 2),\n        \"maxima\": max(registros),\n        \"minima\": min(registros)\n    }\n",
+        "test_cases": [
+            {
+                "input": "[20.0, 20.0, 20.0]",
+                "expected": "{'promedio': 20.0, 'maxima': 20.0, 'minima': 20.0}"
+            },
+            {
+                "input": "[10.0, 20.0, 30.0]",
+                "expected": "{'promedio': 20.0, 'maxima': 30.0, 'minima': 10.0}"
+            },
+            {
+                "input": "[]",
+                "expected": "None"
+            }
+        ],
+        "hint": "Recuerda validar si la lista está vacía al principio con 'if not registros: return None'.",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 222,
+            "title": "Modularidad y Funciones en Python",
+            "course_id": 98,
+            "course_slug": "python-estructurado",
+            "course_title": "Programación Estructurada con Python",
+            "course": {
+                "id": 98,
+                "slug": "python-estructurado",
+                "title": "Programación Estructurada con Python"
+            }
+        }
+    },
+    "python-estructurado-colecciones-indexadas-listas-y-sus-metodos-clave": {
+        "id": 588,
+        "module_id": 223,
+        "title": "Colecciones indexadas: listas y sus métodos clave",
+        "slug": "python-estructurado-colecciones-indexadas-listas-y-sus-metodos-clave",
+        "type": "article",
+        "duration_minutes": 16,
+        "order": 1,
+        "is_preview": true,
+        "content": "## Colecciones Indexadas: Listas y Comprensiones\n\nLas listas en Python son arreglos dinámicos en memoria contigua que ofrecen acceso por índice en tiempo constante `O(1)`.\n\n### List Comprehensions (Comprensiones de Lista)\nSintaxis idiomática y rápida para transformar y filtrar elementos:\n\n```python\n# Sintaxis tradicional\ncuadrados_pares = []\nfor x in range(10):\n    if x % 2 == 0:\n        cuadrados_pares.append(x ** 2)\n\n# Pythonico con List Comprehension\ncuadrados_pares = [x ** 2 for x in range(10) if x % 2 == 0]\n```\n\n### Operaciones Clave y Complejidad\n* `lista[i]` (Acceso por índice): `O(1)`\n* `lista.append(x)` (Inserción al final amortizada): `O(1)`\n* `lista.insert(0, x)` (Inserción al inicio, requiere desplazar): `O(n)`\n* `x in lista` (Búsqueda lineal): `O(n)`",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 223,
+            "title": "Estructuras de Datos Nativas",
+            "course_id": 98,
+            "course_slug": "python-estructurado",
+            "course_title": "Programación Estructurada con Python",
+            "course": {
+                "id": 98,
+                "slug": "python-estructurado",
+                "title": "Programación Estructurada con Python"
+            }
+        }
+    },
+    "python-estructurado-mapeos-asociativos-diccionarios-para-modelar-entidades": {
+        "id": 589,
+        "module_id": 223,
+        "title": "Mapeos asociativos: diccionarios para modelar entidades",
+        "slug": "python-estructurado-mapeos-asociativos-diccionarios-para-modelar-entidades",
+        "type": "article",
+        "duration_minutes": 18,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Mapeos Asociativos: Diccionarios para Modelar Entidades\n\nLos diccionarios en Python son tablas hash (*Hash Maps*) que asocian claves únicas con valores. Ofrecen búsquedas e inserciones promedio en tiempo `O(1)`.\n\n### Métodos Esenciales\n* `dict.get(key, default)`: Evita `KeyError` si la clave no existe.\n* `dict.setdefault(key, default)`: Inserta un valor si la clave no existe y la retorna.\n* `dict.items()`: Itera tuplas `(clave, valor)` eficientemente.\n\n```python\nestudiantes = [\n    {\"nombre\": \"Lucía\", \"materia\": \"Algoritmos\", \"nota\": 4.5},\n    {\"nombre\": \"Carlos\", \"materia\": \"Algoritmos\", \"nota\": 3.8},\n    {\"nombre\": \"Ana\", \"materia\": \"Bases de Datos\", \"nota\": 4.9}\n]\n\n# Agrupar notas por materia\nnotas_por_materia = {}\nfor e in estudiantes:\n    notas_por_materia.setdefault(e[\"materia\"], []).append(e[\"nota\"])\n```",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 223,
+            "title": "Estructuras de Datos Nativas",
+            "course_id": 98,
+            "course_slug": "python-estructurado",
+            "course_title": "Programación Estructurada con Python",
+            "course": {
+                "id": 98,
+                "slug": "python-estructurado",
+                "title": "Programación Estructurada con Python"
+            }
+        }
+    },
+    "python-estructurado-evaluacion-de-estructuras-compuestas": {
+        "id": 590,
+        "module_id": 223,
+        "title": "Evaluación de estructuras compuestas",
+        "slug": "python-estructurado-evaluacion-de-estructuras-compuestas",
+        "type": "quiz",
+        "duration_minutes": 12,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Evaluación de Estructuras Compuestas\n\nValida tus conocimientos sobre listas, tuplas, conjuntos (`set`) y diccionarios en Python.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 223,
+            "title": "Estructuras de Datos Nativas",
+            "course_id": 98,
+            "course_slug": "python-estructurado",
+            "course_title": "Programación Estructurada con Python",
+            "course": {
+                "id": 98,
+                "slug": "python-estructurado",
+                "title": "Programación Estructurada con Python"
+            }
+        }
+    },
+    "estructuras-datos-lineales-complejidad-temporal-o1-on-olog-n-y-on2": {
+        "id": 591,
+        "module_id": 224,
+        "title": "Complejidad temporal O(1), O(n), O(log n) y O(n²)",
+        "slug": "estructuras-datos-lineales-complejidad-temporal-o1-on-olog-n-y-on2",
+        "type": "article",
+        "duration_minutes": 16,
+        "order": 1,
+        "is_preview": true,
+        "content": "## Complejidad Temporal: Notación Big-O\n\nLa notación Big-O describe cómo escala el tiempo de ejecución de un algoritmo conforme el tamaño de la entrada `n` crece hacia el infinito.\n\n```\nOperaciones\n ^\n |             O(n!)  O(2^n)    O(n²)\n |               |      |        /\n |               |      |       /     O(n log n)\n |               |      |      /     /\n |               |      |     /     /    O(n)\n |               |      |    /     /    /\n |               |      |   /     /    /    O(log n)\n |               |      |  /     /    /    /\n |               |      | /     /    /    /  O(1)\n +-------------------------------------------------> Entrada (n)\n```\n\n### Clasificación de Complejidades\n* **O(1) Constante:** El tiempo no varía con la entrada (ej. acceder a un índice de array).\n* **O(log n) Logarítmica:** El problema se divide a la mitad en cada paso (ej. Búsqueda binaria).\n* **O(n) Lineal:** El tiempo crece proporcionalmente a la entrada (ej. recorrer una lista).\n* **O(n log n) Casi-lineal:** Común en algoritmos de ordenamiento óptimos (MergeSort, QuickSort promedio).\n* **O(n²) Cuadrática:** Bucles anidados sobre la misma entrada (ej. BubbleSort). Evitar en producción con grandes volúmenes de datos.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 224,
+            "title": "Notación Asintótica y Big-O",
+            "course_id": 99,
+            "course_slug": "estructuras-datos-lineales",
+            "course_title": "Estructuras de Datos Lineales y Complejidad",
+            "course": {
+                "id": 99,
+                "slug": "estructuras-datos-lineales",
+                "title": "Estructuras de Datos Lineales y Complejidad"
+            }
+        }
+    },
+    "estructuras-datos-lineales-comparacion-de-algoritmos-por-consumo-de-memoria": {
+        "id": 592,
+        "module_id": 224,
+        "title": "Comparación de algoritmos por consumo de memoria",
+        "slug": "estructuras-datos-lineales-comparacion-de-algoritmos-por-consumo-de-memoria",
+        "type": "article",
+        "duration_minutes": 14,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Comparación de Algoritmos por Consumo de Memoria\n\nAsí como medimos el tiempo, la **Complejidad Espacial** mide cuánta memoria adicional requiere un algoritmo para resolver un problema.\n\n### Memoria Auxiliar vs Espacio de Entrada\n* **Algoritmos In-Place (Espacio O(1)):** Modifican la estructura existente sin crear copias (ej. invertir un array intercambiando punteros izquierda/derecha).\n* **Algoritmos con Espacio O(n):** Crean nuevas estructuras proporcionales a la entrada (ej. `list(filter(...))` o duplicación de datos).\n\n### El Costo Oculto de la Recursión\nCada llamada recursiva apila un nuevo marco de ejecución (*Stack Frame*) en la memoria de la pila de llamadas (Call Stack). Una recursión profunda de `n` niveles consume `O(n)` de memoria en el stack, arriesgando un desbordamiento de pila (*Stack Overflow*).",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 224,
+            "title": "Notación Asintótica y Big-O",
+            "course_id": 99,
+            "course_slug": "estructuras-datos-lineales",
+            "course_title": "Estructuras de Datos Lineales y Complejidad",
+            "course": {
+                "id": 99,
+                "slug": "estructuras-datos-lineales",
+                "title": "Estructuras de Datos Lineales y Complejidad"
+            }
+        }
+    },
+    "estructuras-datos-lineales-reto-algoritmo-de-balanceo-de-parentesis-con-stack": {
+        "id": 594,
+        "module_id": 225,
+        "title": "Reto: Algoritmo de balanceo de paréntesis con Stack",
+        "slug": "estructuras-datos-lineales-reto-algoritmo-de-balanceo-de-parentesis-con-stack",
+        "type": "code_challenge",
+        "duration_minutes": 25,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Reto: Algoritmo de Balanceo de Paréntesis con Stack\n\nEl problema de balanceo de paréntesis (LeetCode #20: Valid Parentheses) es uno de los problemas clásicos de entrevistas técnicas y parsing de código.\n\n### Enunciado\nDada una cadena de texto compuesta por caracteres `'('`, `')'`, `'{'`, `'}'`, `'['` y `']'`, determina si la cadena de entrada es válida:\n1. Los corchetes abiertos deben cerrarse con el mismo tipo de corchetes.\n2. Los corchetes abiertos deben cerrarse en el orden correcto.\n3. Cada corchete de cierre tiene su correspondiente corchete de apertura previo.\n\n### Estrategia Algorítmica con Stack\n* Recorre cada carácter de la cadena.\n* Si encuentras apertura (`(`, `[`, `{`), haz `push` al stack.\n* Si encuentras cierre (`)`, `]`, `}`):\n  - Si el stack está vacío, es inválido (cierre sin apertura).\n  - Si el tope del stack no coincide con la apertura esperada, es inválido.\n  - Si coincide, haz `pop()`.\n* Al finalizar el recorrido, si el stack está vacío retorna `True`, de lo contrario `False`.",
+        "starter_code": "def esta_balanceado(cadena: str) -> bool:\n    \"\"\"\n    Retorna True si los parentesis, corchetes y llaves estan balanceados,\n    False en caso contrario.\n    \"\"\"\n    stack = []\n    mapa = {')': '(', ']': '[', '}': '{'}\n    \n    for char in cadena:\n        if char in mapa.values():\n            stack.append(char)\n        elif char in mapa:\n            if not stack or stack.pop() != mapa[char]:\n                return False\n                \n    return len(stack) == 0\n\n# Casos de prueba:\nprint(esta_balanceado(\"({[]})\")) # True\nprint(esta_balanceado(\"([)]\"))   # False\nprint(esta_balanceado(\"()[]{}\")) # True\n",
+        "solution": "def esta_balanceado(cadena: str) -> bool:\n    stack = []\n    mapa = {')': '(', ']': '[', '}': '{'}\n    for char in cadena:\n        if char in mapa.values():\n            stack.append(char)\n        elif char in mapa:\n            if not stack or stack.pop() != mapa[char]:\n                return False\n    return len(stack) == 0\n",
+        "test_cases": [
+            {
+                "input": "\"({[]})\"",
+                "expected": "True"
+            },
+            {
+                "input": "\"([)]\"",
+                "expected": "False"
+            },
+            {
+                "input": "\"()[]{}\"",
+                "expected": "True"
+            },
+            {
+                "input": "\"(((\"",
+                "expected": "False"
+            },
+            {
+                "input": "\"\"",
+                "expected": "True"
+            }
+        ],
+        "hint": "Usa una lista de Python como stack con .append() y .pop(). Compara los cierres con un diccionario clave:valor.",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 225,
+            "title": "Pilas y Colas (LIFO vs FIFO)",
+            "course_id": 99,
+            "course_slug": "estructuras-datos-lineales",
+            "course_title": "Estructuras de Datos Lineales y Complejidad",
+            "course": {
+                "id": 99,
+                "slug": "estructuras-datos-lineales",
+                "title": "Estructuras de Datos Lineales y Complejidad"
+            }
+        }
+    },
+    "diseno-modular-interfaces-definicion-de-contratos-con-interfaces-vs-clases-abstractas": {
+        "id": 596,
+        "module_id": 226,
+        "title": "Definición de contratos con Interfaces vs Clases Abstractas",
+        "slug": "diseno-modular-interfaces-definicion-de-contratos-con-interfaces-vs-clases-abstractas",
+        "type": "article",
+        "duration_minutes": 15,
+        "order": 1,
+        "is_preview": true,
+        "content": "## Contratos con Interfaces vs Clases Abstractas\n\nEn diseño orientado a objetos y Clean Architecture, desacoplar implementaciones concretas mediante **contratos abstractos** es la base de la mantenibilidad.\n\n### Interfaz vs Clase Abstracta\n* **Interfaz (Interface / Protocol):** Define *QUÉ* debe hacer un objeto (métodos y firmas públicas), sin proveer ninguna implementación ni estado.\n* **Clase Abstracta (Abstract Base Class):** Puede definir tanto contratos obligatorios (`@abstractmethod`) como código común reutilizable por las subclases.\n\n```python\nfrom abc import ABC, abstractmethod\n\nclass Notificador(ABC):\n    \"\"\"Contrato abstracto: cualquier canal de notificación debe implementarlo.\"\"\"\n    @abstractmethod\n    def enviar(self, destinatario: str, mensaje: str) -> bool:\n        pass\n```",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 226,
+            "title": "Módulo 1: Contratos y Desacoplamiento de Software",
+            "course_id": 100,
+            "course_slug": "diseno-modular-interfaces",
+            "course_title": "Diseño Modular, Interfaces y Contratos",
+            "course": {
+                "id": 100,
+                "slug": "diseno-modular-interfaces",
+                "title": "Diseño Modular, Interfaces y Contratos"
+            }
+        }
+    },
+    "diseno-modular-interfaces-inyeccion-de-dependencias-a-traves-de-interfaces": {
+        "id": 597,
+        "module_id": 226,
+        "title": "Inyección de dependencias a través de interfaces",
+        "slug": "diseno-modular-interfaces-inyeccion-de-dependencias-a-traves-de-interfaces",
+        "type": "article",
+        "duration_minutes": 16,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Inyección de Dependencias a través de Interfaces\n\nEl **Principio de Inversión de Dependencias (DIP)** establece que:\n1. Los módulos de alto nivel no deben depender de módulos de bajo nivel; ambos deben depender de abstracciones.\n2. Las abstracciones no deben depender de los detalles; los detalles deben depender de abstracciones.\n\n```python\n# Módulo de Alto Nivel dependiente solo de la abstracción Notificador\nclass ServicioRegistro:\n    def __init__(self, notificador: Notificador):\n        self.notificador = notificador  # Inyección por constructor\n\n    def registrar_usuario(self, email: str):\n        # ... lógica de negocio ...\n        self.notificador.enviar(email, '¡Bienvenido a SysEngAcademy!')\n```\n\n> **Ventaja en Pruebas Unitarias:** Podemos inyectar un `MockNotificador` en los tests automatizados sin enviar correos reales ni depender de APIs de terceros.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 226,
+            "title": "Módulo 1: Contratos y Desacoplamiento de Software",
+            "course_id": 100,
+            "course_slug": "diseno-modular-interfaces",
+            "course_title": "Diseño Modular, Interfaces y Contratos",
+            "course": {
+                "id": 100,
+                "slug": "diseno-modular-interfaces",
+                "title": "Diseño Modular, Interfaces y Contratos"
+            }
+        }
+    },
+    "diseno-modular-interfaces-reto-implementacion-de-pasarela-de-pago-polimorfica": {
+        "id": 598,
+        "module_id": 226,
+        "title": "Reto: Implementación de pasarela de pago polimórfica",
+        "slug": "diseno-modular-interfaces-reto-implementacion-de-pasarela-de-pago-polimorfica",
+        "type": "code_challenge",
+        "duration_minutes": 22,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Reto: Implementación de Pasarela de Pago Polimórfica\n\n### Objetivo\nCrea un sistema polimórfico de pagos donde el servicio de cobro pueda operar indistintamente con Stripe o PayPal mediante un contrato común.\n\nImplementa:\n1. La clase abstracta `PasarelaPago` con el método abstracto `procesar(monto: float) -> str`.\n2. Las clases concretas `StripeGateway` y `PayPalGateway` que retornen:\n   - `Stripe: Cobro exitoso de $monto`\n   - `PayPal: Cobro exitoso de $monto`\n3. La función `ejecutar_transaccion(pasarela: PasarelaPago, monto: float) -> str`.",
+        "starter_code": "from abc import ABC, abstractmethod\n\nclass PasarelaPago(ABC):\n    @abstractmethod\n    def procesar(self, monto: float) -> str:\n        pass\n\nclass StripeGateway(PasarelaPago):\n    def procesar(self, monto: float) -> str:\n        # TODO: Implementa retorno de Stripe\n        return f\"Stripe: Cobro exitoso de ${monto}\"\n\nclass PayPalGateway(PasarelaPago):\n    def procesar(self, monto: float) -> str:\n        # TODO: Implementa retorno de PayPal\n        return f\"PayPal: Cobro exitoso de ${monto}\"\n\ndef ejecutar_transaccion(pasarela: PasarelaPago, monto: float) -> str:\n    return pasarela.procesar(monto)\n\n# Prueba:\nprint(ejecutar_transaccion(StripeGateway(), 150.0))\nprint(ejecutar_transaccion(PayPalGateway(), 80.0))\n",
+        "solution": "from abc import ABC, abstractmethod\n\nclass PasarelaPago(ABC):\n    @abstractmethod\n    def procesar(self, monto: float) -> str:\n        pass\n\nclass StripeGateway(PasarelaPago):\n    def procesar(self, monto: float) -> str:\n        return f\"Stripe: Cobro exitoso de ${monto}\"\n\nclass PayPalGateway(PasarelaPago):\n    def procesar(self, monto: float) -> str:\n        return f\"PayPal: Cobro exitoso de ${monto}\"\n\ndef ejecutar_transaccion(pasarela: PasarelaPago, monto: float) -> str:\n    return pasarela.procesar(monto)\n",
+        "test_cases": [
+            {
+                "input": "ejecutar_transaccion(StripeGateway(), 100.0)",
+                "expected": "Stripe: Cobro exitoso de $100.0"
+            },
+            {
+                "input": "ejecutar_transaccion(PayPalGateway(), 50.0)",
+                "expected": "PayPal: Cobro exitoso de $50.0"
+            }
+        ],
+        "hint": "Asegúrate de que ambas clases hereden de PasarelaPago e implementen el método procesar exactamente con la misma firma.",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 226,
+            "title": "Módulo 1: Contratos y Desacoplamiento de Software",
+            "course_id": 100,
+            "course_slug": "diseno-modular-interfaces",
+            "course_title": "Diseño Modular, Interfaces y Contratos",
+            "course": {
+                "id": 100,
+                "slug": "diseno-modular-interfaces",
+                "title": "Diseño Modular, Interfaces y Contratos"
+            }
+        }
+    },
+    "arquitectura-proyecto-poo-separacion-de-logica-de-negocio-y-framework": {
+        "id": 599,
+        "module_id": 227,
+        "title": "Separación de lógica de negocio y framework",
+        "slug": "arquitectura-proyecto-poo-separacion-de-logica-de-negocio-y-framework",
+        "type": "article",
+        "duration_minutes": 18,
+        "order": 1,
+        "is_preview": true,
+        "content": "## Separación de Lógica de Negocio y Framework\n\nUno de los postulados principales de **Clean Architecture** (Robert C. Martin) y **Arquitectura Hexagonal** (Alistair Cockburn) es:\n> *\"La lógica de negocio de tu aplicación no debe saber nada sobre Laravel, Django, FastAPI o PostgreSQL. Tu framework es solo un detalle de entrega, no tu aplicación.\"*\n\n```\n               [ Controladores HTTP / CLI ]\n                           |\n                           v\n               [ Casos de Uso / Servicios ]\n                           |\n                           v\n                [ Entidades de Dominio ] <--- Núcleo Puro (Reglas de Negocio)\n                           ^\n                           |\n               [ Adaptadores de BD / ORM ]\n```\n\n### Reglas para mantener el Dominio Puro\n1. Las entidades de negocio deben ser clases planas sin heredar del ORM (ActiveRecord).\n2. Las operaciones de cálculo y validación de reglas viven en métodos de dominio, no en controladores HTTP.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 227,
+            "title": "Modelado del Dominio",
+            "course_id": 101,
+            "course_slug": "arquitectura-proyecto-poo",
+            "course_title": "Proyecto Final: Arquitectura de Software Orientada a Objetos",
+            "course": {
+                "id": 101,
+                "slug": "arquitectura-proyecto-poo",
+                "title": "Proyecto Final: Arquitectura de Software Orientada a Objetos"
+            }
+        }
+    },
+    "arquitectura-proyecto-poo-implementacion-del-patron-repository-y-data-transfer-objects": {
+        "id": 600,
+        "module_id": 227,
+        "title": "Implementación del patrón Repository y Data Transfer Objects",
+        "slug": "arquitectura-proyecto-poo-implementacion-del-patron-repository-y-data-transfer-objects",
+        "type": "article",
+        "duration_minutes": 20,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Patrón Repository y Data Transfer Objects (DTOs)\n\n### El Patrón Repository\nActúa como una colección en memoria de objetos de dominio, aislando el resto de la aplicación de los detalles específicos de persistencia (SQL, NoSQL, APIs externas).\n\n### ¿Por qué usar DTOs?\nUn **Data Transfer Object (DTO)** es un objeto simple cuya única responsabilidad es transportar datos estructurados e inmutables entre capas (por ejemplo, desde el request HTTP hacia el servicio de dominio):\n\n```python\nfrom dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass CrearCursoDTO:\n    titulo: str\n    categoria_id: int\n    precio: float\n    duracion_horas: int\n```\n\n> **Beneficios:** Tipado fuerte estricto, autocompletado en IDEs y garantía de que los datos no sufrirán mutaciones accidentales.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 227,
+            "title": "Modelado del Dominio",
+            "course_id": 101,
+            "course_slug": "arquitectura-proyecto-poo",
+            "course_title": "Proyecto Final: Arquitectura de Software Orientada a Objetos",
+            "course": {
+                "id": 101,
+                "slug": "arquitectura-proyecto-poo",
+                "title": "Proyecto Final: Arquitectura de Software Orientada a Objetos"
+            }
+        }
+    },
+    "arquitectura-proyecto-poo-reto-construccion-del-nucleo-de-gestion-de-pedidos": {
+        "id": 601,
+        "module_id": 227,
+        "title": "Reto: Construcción del núcleo de gestión de pedidos",
+        "slug": "arquitectura-proyecto-poo-reto-construccion-del-nucleo-de-gestion-de-pedidos",
+        "type": "code_challenge",
+        "duration_minutes": 30,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Reto: Núcleo de Gestión de Pedidos\n\n### Objetivo\nDiseña una entidad de dominio `Pedido` con reglas de negocio independientes:\n* Cada pedido tiene una lista de ítems: `{\"nombre\": str, \"precio\": float, \"cantidad\": int}`.\n* Método `agregar_item(nombre, precio, cantidad)`: Si el precio es <= 0 o cantidad <= 0, debe lanzar `ValueError`.\n* Método `calcular_total(tasa_impuesto=0.19)`: Calcula el subtotal sumando `precio * cantidad`, aplica el porcentaje de impuesto y retorna el total redondeado a 2 decimales.",
+        "starter_code": "class Pedido:\n    def __init__(self):\n        self.items = []\n\n    def agregar_item(self, nombre: str, precio: float, cantidad: int) -> None:\n        if precio <= 0 or cantidad <= 0:\n            raise ValueError(\"Precio y cantidad deben ser positivos.\")\n        self.items.append({\"nombre\": nombre, \"precio\": precio, \"cantidad\": cantidad})\n\n    def calcular_total(self, tasa_impuesto: float = 0.19) -> float:\n        subtotal = sum(i[\"precio\"] * i[\"cantidad\"] for i in self.items)\n        return round(subtotal * (1 + tasa_impuesto), 2)\n\n# Prueba:\np = Pedido()\np.agregar_item(\"Laptop\", 1000.0, 1)\np.agregar_item(\"Mouse\", 50.0, 2)\nprint(\"Total con IVA:\", p.calcular_total(0.19)) # 1100 * 1.19 = 1309.0\n",
+        "solution": "class Pedido:\n    def __init__(self):\n        self.items = []\n    def agregar_item(self, nombre: str, precio: float, cantidad: int) -> None:\n        if precio <= 0 or cantidad <= 0:\n            raise ValueError('Precio y cantidad deben ser positivos.')\n        self.items.append({'nombre': nombre, 'precio': precio, 'cantidad': cantidad})\n    def calcular_total(self, tasa_impuesto: float = 0.19) -> float:\n        subtotal = sum(i['precio'] * i['cantidad'] for i in self.items)\n        return round(subtotal * (1 + tasa_impuesto), 2)\n",
+        "test_cases": [
+            {
+                "input": "p = Pedido(); p.agregar_item(\"A\", 100.0, 1); p.calcular_total(0.19)",
+                "expected": "119.0"
+            },
+            {
+                "input": "p = Pedido(); p.agregar_item(\"A\", 200.0, 2); p.calcular_total(0.0)",
+                "expected": "400.0"
+            }
+        ],
+        "hint": "Multiplica precio por cantidad para cada ítem en una comprensión o generador sum(...).",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 227,
+            "title": "Modelado del Dominio",
+            "course_id": 101,
+            "course_slug": "arquitectura-proyecto-poo",
+            "course_title": "Proyecto Final: Arquitectura de Software Orientada a Objetos",
+            "course": {
+                "id": 101,
+                "slug": "arquitectura-proyecto-poo",
+                "title": "Proyecto Final: Arquitectura de Software Orientada a Objetos"
+            }
+        }
+    },
+    "git-avanzado-rebase-conflictos-git-rebase-interactivo-squash-reword-drop-y-fixup": {
+        "id": 615,
+        "module_id": 232,
+        "title": "Git Rebase Interactivo: squash, reword, drop y fixup",
+        "slug": "git-avanzado-rebase-conflictos-git-rebase-interactivo-squash-reword-drop-y-fixup",
+        "type": "article",
+        "duration_minutes": 18,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Git Rebase Interactivo: Squash, Reword, Drop y Fixup\n\nEl rebase interactivo (`git rebase -i`) es la herramienta para limpiar tu historial local antes de enviar tu código a revisión.\n\n```bash\n# Iniciar rebase interactivo sobre los últimos 4 commits\ngit rebase -i HEAD~4\n```\n\n### Comandos Clave en el Editor\n* `pick`: Conservar el commit tal como está.\n* `reword`: Conservar el commit pero modificar el mensaje de commit.\n* `squash`: Fusionar este commit con el commit anterior e integrar sus mensajes.\n* `fixup`: Igual que `squash`, pero descarta el mensaje de este commit (ideal para commits tipo \"fix typo\").\n* `drop`: Eliminar por completo el commit.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 232,
+            "title": "Rebase y Limpieza del Historial",
+            "course_id": 106,
+            "course_slug": "git-avanzado-rebase-conflictos",
+            "course_title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos",
+            "course": {
+                "id": 106,
+                "slug": "git-avanzado-rebase-conflictos",
+                "title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos"
+            }
+        }
+    },
+    "git-avanzado-rebase-conflictos-reto-reestructurar-una-rama-caotica-antes-del-pull-request": {
+        "id": 616,
+        "module_id": 232,
+        "title": "Reto: Reestructurar una rama caótica antes del Pull Request",
+        "slug": "git-avanzado-rebase-conflictos-reto-reestructurar-una-rama-caotica-antes-del-pull-request",
+        "type": "code_challenge",
+        "duration_minutes": 22,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Reto: Reestructurar una Rama Caótica antes del Pull Request\n\nEn este ejercicio aprenderás a planificar y ejecutar la consolidación de un historial de desarrollo desordenado en un conjunto atómico de commits profesionales.",
+        "starter_code": "# Simulación interactiva de comandos Git\ndef verificar_estrategia_pr(commits: list[str]) -> bool:\n    \"\"\"\n    Verifica que no existan mensajes de commit de baja calidad como 'fix', 'wip' o 'typo'.\n    \"\"\"\n    mensajes_invalidos = ['wip', 'fix', 'prueba', 'arreglos', 'temp']\n    for c in commits:\n        if any(inv in c.lower() for inv in mensajes_invalidos):\n            return False\n    return True\n\n# Prueba:\nprint(verificar_estrategia_pr(['feat: agregar autenticacion JWT', 'test: pruebas unitarias'])) # True\n",
+        "solution": "def verificar_estrategia_pr(commits: list[str]) -> bool:\n    mensajes_invalidos = ['wip', 'fix', 'prueba', 'arreglos', 'temp']\n    for c in commits:\n        if any(inv in c.lower() for inv in mensajes_invalidos):\n            return False\n    return True\n",
+        "test_cases": [
+            {
+                "input": "['feat: login', 'wip commit']",
+                "expected": "False"
+            },
+            {
+                "input": "['feat: login', 'test: login tests']",
+                "expected": "True"
+            }
+        ],
+        "hint": "Valida que los mensajes sigan la convención de Conventional Commits (feat, fix, docs, refactor).",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 232,
+            "title": "Rebase y Limpieza del Historial",
+            "course_id": 106,
+            "course_slug": "git-avanzado-rebase-conflictos",
+            "course_title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos",
+            "course": {
+                "id": 106,
+                "slug": "git-avanzado-rebase-conflictos",
+                "title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos"
+            }
+        }
+    },
+    "rag-embeddings-bases-vectoriales-que-es-un-vector-embedding-y-como-cuantifica-el-significado": {
+        "id": 623,
+        "module_id": 235,
+        "title": "Qué es un vector embedding y cómo cuantifica el significado",
+        "slug": "rag-embeddings-bases-vectoriales-que-es-un-vector-embedding-y-como-cuantifica-el-significado",
+        "type": "article",
+        "duration_minutes": 16,
+        "order": 1,
+        "is_preview": true,
+        "content": "## ¿Qué es un Vector Embedding y Cómo Cuantifica el Significado?\n\nUn **Vector Embedding** es una representación numérica densa de un texto (o imagen) en un espacio matemático vectorial multidimensional (frecuentemente de 1536 o 3072 dimensiones).\n\n```\nConceptos Similares ──> Vectores Cercanos en el Espacio\n'Rey' - 'Hombre' + 'Mujer' ≈ 'Reina'\n```\n\n### Propiedades Clave\n1. **Semántica en Distancias:** Palabras o frases con significados similares tienen vectores que apuntan en direcciones muy cercanas.\n2. **Independencia del léxico exacto:** Permite encontrar que *\"error de memoria\"* se relaciona con *\"out of memory crash\"*, aunque no compartan ninguna palabra exacta.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 235,
+            "title": "Módulo 1: Fundamentos de Embeddings y Segmentación de Texto",
+            "course_id": 108,
+            "course_slug": "rag-embeddings-bases-vectoriales",
+            "course_title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales",
+            "course": {
+                "id": 108,
+                "slug": "rag-embeddings-bases-vectoriales",
+                "title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales"
+            }
+        }
+    },
+    "rag-embeddings-bases-vectoriales-reto-implementacion-de-busqueda-semantica-con-similitud-coseno": {
+        "id": 625,
+        "module_id": 235,
+        "title": "Reto: Implementación de búsqueda semántica con similitud coseno",
+        "slug": "rag-embeddings-bases-vectoriales-reto-implementacion-de-busqueda-semantica-con-similitud-coseno",
+        "type": "code_challenge",
+        "duration_minutes": 25,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Reto: Implementación de Similitud Coseno\n\nLa **Similitud Coseno** mide el coseno del ángulo entre dos vectores. Varía entre -1 y 1 (o 0 y 1 para vectores de embedding normalizados), donde 1 indica vectores idénticos en dirección.\n\n$$\\text{similitud}(u, v) = \\frac{u \\cdot v}{\\|u\\| \\|v\\|} = \\frac{\\sum u_i v_i}{\\sqrt{\\sum u_i^2} \\sqrt{\\sum v_i^2}}$$\n\n### Objetivo\nImplementa la función `similitud_coseno(v1, v2)` que calcule la similitud entre dos listas de números de igual longitud. Redondea a 4 decimales.",
+        "starter_code": "import math\n\ndef similitud_coseno(v1: list[float], v2: list[float]) -> float:\n    \"\"\"\n    Calcula la similitud coseno entre dos vectores numericos.\n    \"\"\"\n    if len(v1) != len(v2) or not v1:\n        raise ValueError(\"Los vectores deben tener la misma longitud y no estar vacios.\")\n    \n    producto_punto = sum(a * b for a, b in zip(v1, v2))\n    norma_v1 = math.sqrt(sum(a * a for a in v1))\n    norma_v2 = math.sqrt(sum(b * b for b in v2))\n    \n    if norma_v1 == 0 or norma_v2 == 0:\n        return 0.0\n        \n    return round(producto_punto / (norma_v1 * norma_v2), 4)\n\n# Prueba con vectores identicos (debe dar 1.0):\nprint(similitud_coseno([1.0, 2.0, 3.0], [1.0, 2.0, 3.0]))\n# Prueba con ortogonales (debe dar 0.0):\nprint(similitud_coseno([1.0, 0.0], [0.0, 1.0]))\n",
+        "solution": "import math\ndef similitud_coseno(v1: list[float], v2: list[float]) -> float:\n    producto_punto = sum(a * b for a, b in zip(v1, v2))\n    norma_v1 = math.sqrt(sum(a * a for a in v1))\n    norma_v2 = math.sqrt(sum(b * b for b in v2))\n    if norma_v1 == 0 or norma_v2 == 0:\n        return 0.0\n    return round(producto_punto / (norma_v1 * norma_v2), 4)\n",
+        "test_cases": [
+            {
+                "input": "similitud_coseno([1.0, 0.0], [1.0, 0.0])",
+                "expected": "1.0"
+            },
+            {
+                "input": "similitud_coseno([1.0, 0.0], [0.0, 1.0])",
+                "expected": "0.0"
+            }
+        ],
+        "hint": "Usa sum(a * b for a, b in zip(v1, v2)) para el producto punto.",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 235,
+            "title": "Módulo 1: Fundamentos de Embeddings y Segmentación de Texto",
+            "course_id": 108,
+            "course_slug": "rag-embeddings-bases-vectoriales",
+            "course_title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales",
+            "course": {
+                "id": 108,
+                "slug": "rag-embeddings-bases-vectoriales",
+                "title": "RAG (Retrieval-Augmented Generation) y Bases de Datos Vectoriales"
+            }
+        }
+    },
+    "docker-compose-multiservicio-reto-levantar-stack-php-postgres-redis-con-compose": {
+        "id": 622,
+        "module_id": 234,
+        "title": "Reto: Levantar stack PHP + Postgres + Redis con Compose",
+        "slug": "docker-compose-multiservicio-reto-levantar-stack-php-postgres-redis-con-compose",
+        "type": "code_challenge",
+        "duration_minutes": 25,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Reto: Levantar Stack PHP + Postgres + Redis con Compose\n\nEn este reto validarás la sintaxis y dependencias necesarias para orquestar un backend completo con base de datos relacional y caché en memoria.",
+        "starter_code": "def validar_servicios_compose(config: dict) -> list[str]:\n    \"\"\"\n    Verifica que los servicios requeridos (app, db, redis) esten declarados.\n    \"\"\"\n    requeridos = {'app', 'db', 'redis'}\n    declarados = set(config.get('services', {}).keys())\n    faltantes = list(requeridos - declarados)\n    return sorted(faltantes)\n\n# Prueba:\nprint(validar_servicios_compose({'services': {'app': {}, 'db': {}, 'redis': {}}})) # []\n",
+        "solution": "def validar_servicios_compose(config: dict) -> list[str]:\n    requeridos = {'app', 'db', 'redis'}\n    declarados = set(config.get('services', {}).keys())\n    return sorted(list(requeridos - declarados))\n",
+        "test_cases": [
+            {
+                "input": "{'services': {'app': {}, 'db': {}, 'redis': {}}}",
+                "expected": "[]"
+            },
+            {
+                "input": "{'services': {'app': {}}}",
+                "expected": "['db', 'redis']"
+            }
+        ],
+        "hint": "Usa operaciones de conjuntos (set) en Python para comparar los servicios requeridos con los declarados.",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 234,
+            "title": "Módulo 1: Orquestación Local y Redes Aisladas",
+            "course_id": 107,
+            "course_slug": "docker-compose-multiservicio",
+            "course_title": "Docker Compose y Arquitecturas Multiservicio",
+            "course": {
+                "id": 107,
+                "slug": "docker-compose-multiservicio",
+                "title": "Docker Compose y Arquitecturas Multiservicio"
+            }
+        }
+    },
+    "especificacion-srs-diagramas-diagramas-de-casos-de-uso-y-diagramas-de-secuencia-uml": {
+        "id": 627,
+        "module_id": 236,
+        "title": "Diagramas de casos de uso y diagramas de secuencia UML",
+        "slug": "especificacion-srs-diagramas-diagramas-de-casos-de-uso-y-diagramas-de-secuencia-uml",
+        "type": "article",
+        "duration_minutes": 18,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Diagramas de Casos de Uso y Diagramas de Secuencia UML\n\n### Diagrama de Casos de Uso\nRepresenta las interacciones entre los **Actores** (usuarios externos o sistemas) y las funcionalidades del sistema (Casos de Uso).\n* `<<include>>`: El caso de uso base no puede completarse sin el incluido (ej. *Realizar Pago* incluye *Validar Fondos*).\n* `<<extend>>`: Comportamiento opcional que se ejecuta bajo ciertas condiciones (ej. *Comprar* extendido por *Aplicar Cupón de Descuento*).\n\n### Diagrama de Secuencia\nMuestra el intercambio de mensajes entre objetos a lo largo del tiempo:\n* **Líneas de vida (Lifelines):** Representan la existencia del objeto.\n* **Mensajes síncronos (Flecha sólida):** El emisor espera respuesta antes de continuar.\n* **Mensajes asíncronos (Flecha abierta):** Comunicación sin bloqueo.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 236,
+            "title": "Modelado y Documentación Formal",
+            "course_id": 109,
+            "course_slug": "especificacion-srs-diagramas",
+            "course_title": "Especificación Formal (SRS) y Casos de Uso",
+            "course": {
+                "id": 109,
+                "slug": "especificacion-srs-diagramas",
+                "title": "Especificación Formal (SRS) y Casos de Uso"
+            }
+        }
+    },
+    "arquitectura-web-http-estructura-de-peticiones-y-respuestas-headers-y-body": {
+        "id": 602,
+        "module_id": 228,
+        "title": "Estructura de peticiones y respuestas: Headers y Body",
+        "slug": "arquitectura-web-http-estructura-de-peticiones-y-respuestas-headers-y-body",
+        "type": "article",
+        "duration_minutes": 14,
+        "order": 1,
+        "is_preview": true,
+        "content": "## Estructura de Peticiones y Respuestas HTTP: Headers y Body\n\nEl protocolo HTTP/1.1 y HTTP/2 es la columna vertebral de la web moderna. Cada comunicación entre cliente y servidor se compone de dos mensajes fundamentales:\n\n### Anatomía de una Petición (Request)\n* **Start Line:** Método (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`), URI (`/api/v1/cursos`) y versión (`HTTP/1.1`).\n* **Headers clave:**\n  - `Content-Type: application/json` (formato del cuerpo enviado).\n  - `Accept: application/json` (formato esperado en la respuesta).\n  - `Authorization: Bearer <token_jwt>` (credenciales de autenticación sin estado).\n* **Body (Cuerpo):** Payload de datos enviados al servidor (JSON, FormData, binario).\n\n### Anatomía de una Respuesta (Response)\n* **Status Line:** Código de estado y mensaje (`HTTP/1.1 200 OK`).\n* **Headers de respuesta:** `Cache-Control`, `Set-Cookie`, `Access-Control-Allow-Origin`.\n* **Body:** Datos JSON serializados solicitados.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 228,
+            "title": "Módulo 1: El Ciclo de Vida Request-Response y Semántica HTTP",
+            "course_id": 102,
+            "course_slug": "arquitectura-web-http",
+            "course_title": "Protocolo HTTP y Arquitectura Web",
+            "course": {
+                "id": 102,
+                "slug": "arquitectura-web-http",
+                "title": "Protocolo HTTP y Arquitectura Web"
+            }
+        }
+    },
+    "arquitectura-web-http-cors-cookies-y-manejo-de-sesiones-sin-estado": {
+        "id": 604,
+        "module_id": 228,
+        "title": "CORS, Cookies y manejo de sesiones sin estado",
+        "slug": "arquitectura-web-http-cors-cookies-y-manejo-de-sesiones-sin-estado",
+        "type": "article",
+        "duration_minutes": 15,
+        "order": 3,
+        "is_preview": false,
+        "content": "## CORS, Cookies y Manejo de Sesiones sin Estado\n\n### ¿Qué es CORS (Cross-Origin Resource Sharing)?\nMecanismo de seguridad del navegador que bloquea peticiones HTTP cross-origin a menos que el servidor devuelva las cabeceras `Access-Control-Allow-Origin` apropiadas.\n* Para peticiones no simples (ej. con método `PUT` o cabecera `Authorization`), el navegador envía una petición previa de prueba (**Preflight**) con método `OPTIONS`.\n\n### Cookies Seguras vs Tokens Bearer\n* **Cookies HttpOnly & SameSite=Lax/Strict:** Mitigan ataques XSS porque JavaScript no puede acceder al token almacenado en `document.cookie`.\n* **Tokens Bearer (JWT):** Ideales para aplicaciones móviles y arquitecturas desacopladas donde el cliente envía el token explícitamente en el header `Authorization`.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 228,
+            "title": "Módulo 1: El Ciclo de Vida Request-Response y Semántica HTTP",
+            "course_id": 102,
+            "course_slug": "arquitectura-web-http",
+            "course_title": "Protocolo HTTP y Arquitectura Web",
+            "course": {
+                "id": 102,
+                "slug": "arquitectura-web-http",
+                "title": "Protocolo HTTP y Arquitectura Web"
+            }
+        }
+    },
+    "diseno-apis-restful-estrategias-de-versionado-y-retrocompatibilidad": {
+        "id": 606,
+        "module_id": 229,
+        "title": "Estrategias de versionado y retrocompatibilidad",
+        "slug": "diseno-apis-restful-estrategias-de-versionado-y-retrocompatibilidad",
+        "type": "article",
+        "duration_minutes": 14,
+        "order": 2,
+        "is_preview": false,
+        "content": "## Estrategias de Versionado y Retrocompatibilidad\n\nEl cambio es inevitable en una API en producción. El objetivo del versionado es permitir la evolución sin romper las aplicaciones existentes de los usuarios.\n\n### Estrategias de Versionado\n1. **Versionado por URI (Recomendado):** `/api/v1/cursos` y `/api/v2/cursos`. Fácil de inspeccionar, compatible con caches HTTP y CDNs.\n2. **Versionado por Headers (Content Negotiation):** `Accept: application/vnd.syseng.v2+json`. URLs limpias pero más complejo de probar en navegador.\n\n### Principios de Retrocompatibilidad\n* **Cambio No Destructivo:** Agregar un nuevo campo al JSON de respuesta.\n* **Cambio Destructivo (Breaking Change):** Renombrar o eliminar un campo existente, o cambiar su tipo de dato.",
+        "starter_code": null,
+        "solution": null,
+        "test_cases": null,
+        "hint": null,
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 229,
+            "title": "Estándares de Diseño de APIs",
+            "course_id": 103,
+            "course_slug": "diseno-apis-restful",
+            "course_title": "Diseño y Versionado de APIs RESTful",
+            "course": {
+                "id": 103,
+                "slug": "diseno-apis-restful",
+                "title": "Diseño y Versionado de APIs RESTful"
+            }
+        }
+    },
+    "diseno-apis-restful-paginacion-eficiente-y-transformadores-de-datos-api-resources": {
+        "id": 607,
+        "module_id": 229,
+        "title": "Paginación eficiente y transformadores de datos (API Resources)",
+        "slug": "diseno-apis-restful-paginacion-eficiente-y-transformadores-de-datos-api-resources",
+        "type": "code_challenge",
+        "duration_minutes": 24,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Reto: Paginación Eficiente y Transformadores de Datos\n\n### Objetivo\nImplementa la función `transformar_y_paginar(usuarios, pagina, por_pagina)` que:\n1. Oculte el campo sensible `\"password_hash\"` de cada usuario.\n2. Divida la lista en páginas según `pagina` (1-indexed) y `por_pagina`.\n3. Retorne un diccionario con:\n   - `\"data\"`: La lista de usuarios transformados para la página solicitada.\n   - `\"meta\"`: `{\"pagina_actual\": pagina, \"total\": len(usuarios), \"total_paginas\": ceil(...) }`.",
+        "starter_code": "import math\n\ndef transformar_y_paginar(usuarios: list[dict], pagina: int = 1, por_pagina: int = 2) -> dict:\n    \"\"\"\n    Oculta password_hash y pagina la lista de usuarios.\n    \"\"\"\n    # 1. Transformar limpiando password_hash\n    limpios = [{k: v for k, v in u.items() if k != 'password_hash'} for u in usuarios]\n    \n    # 2. Calcular índices de slicing\n    inicio = (pagina - 1) * por_pagina\n    fin = inicio + por_pagina\n    pagina_data = limpios[inicio:fin]\n    \n    total_paginas = max(1, math.ceil(len(usuarios) / por_pagina))\n    \n    return {\n        \"data\": pagina_data,\n        \"meta\": {\n            \"pagina_actual\": pagina,\n            \"total\": len(usuarios),\n            \"total_paginas\": total_paginas\n        }\n    }\n\n# Prueba:\nusuarios_test = [\n    {\"id\": 1, \"nombre\": \"Ana\", \"password_hash\": \"\\$2y\\$10\\$abc\"},\n    {\"id\": 2, \"nombre\": \"Beto\", \"password_hash\": \"\\$2y\\$10\\$def\"},\n    {\"id\": 3, \"nombre\": \"Carlos\", \"password_hash\": \"\\$2y\\$10\\$ghi\"}\n]\nprint(transformar_y_paginar(usuarios_test, 1, 2))\n",
+        "solution": "import math\ndef transformar_y_paginar(usuarios: list[dict], pagina: int = 1, por_pagina: int = 2) -> dict:\n    limpios = [{k: v for k, v in u.items() if k != 'password_hash'} for u in usuarios]\n    inicio = (pagina - 1) * por_pagina\n    fin = inicio + por_pagina\n    return {\n        'data': limpios[inicio:fin],\n        'meta': {\n            'pagina_actual': pagina,\n            'total': len(usuarios),\n            'total_paginas': max(1, math.ceil(len(usuarios) / por_pagina))\n        }\n    }\n",
+        "test_cases": [
+            {
+                "input": "transformar_y_paginar([{'id': 1, 'password_hash': 'x'}], 1, 10)['data'][0].get('password_hash')",
+                "expected": "None"
+            }
+        ],
+        "hint": "Usa comprensión de diccionarios para filtrar la clave password_hash y slicing [inicio:fin] para paginar.",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 229,
+            "title": "Estándares de Diseño de APIs",
+            "course_id": 103,
+            "course_slug": "diseno-apis-restful",
+            "course_title": "Diseño y Versionado de APIs RESTful",
+            "course": {
+                "id": 103,
+                "slug": "diseno-apis-restful",
+                "title": "Diseño y Versionado de APIs RESTful"
+            }
+        }
+    },
+    "css-moderno-flexbox-grid-reto-construccion-de-una-interfaz-tipo-dashboard-responsiva": {
+        "id": 610,
+        "module_id": 230,
+        "title": "Reto: Construcción de una interfaz tipo dashboard responsiva",
+        "slug": "css-moderno-flexbox-grid-reto-construccion-de-una-interfaz-tipo-dashboard-responsiva",
+        "type": "code_challenge",
+        "duration_minutes": 25,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Reto: Construcción de una Interfaz Tipo Dashboard Responsiva\n\nImplementa la estructura de cálculo de layout para un dashboard interactivo que distribuya métricas en columnas dinámicas.",
+        "starter_code": "def calcular_columnas_dashboard(ancho_pantalla: int, ancho_minimo_tarjeta: int = 280) -> int:\n    \"\"\"\n    Calcula el numero maximo de columnas responsivas que caben en pantalla.\n    \"\"\"\n    if ancho_pantalla <= 0:\n        return 1\n    columnas = ancho_pantalla // ancho_minimo_tarjeta\n    return max(1, columnas)\n\n# Prueba:\nprint(calcular_columnas_dashboard(1200)) # 4 columnas\nprint(calcular_columnas_dashboard(360))  # 1 columna\n",
+        "solution": "def calcular_columnas_dashboard(ancho_pantalla: int, ancho_minimo_tarjeta: int = 280) -> int:\n    if ancho_pantalla <= 0: return 1\n    return max(1, ancho_pantalla // ancho_minimo_tarjeta)\n",
+        "test_cases": [
+            {
+                "input": "calcular_columnas_dashboard(1200, 280)",
+                "expected": "4"
+            },
+            {
+                "input": "calcular_columnas_dashboard(320, 280)",
+                "expected": "1"
+            }
+        ],
+        "hint": "Usa división entera // entre el ancho de pantalla y el ancho mínimo de tarjeta.",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 230,
+            "title": "Sistemas de Layout Moderno",
+            "course_id": 104,
+            "course_slug": "css-moderno-flexbox-grid",
+            "course_title": "CSS Moderno: Flexbox, CSS Grid y Responsive Design",
+            "course": {
+                "id": 104,
+                "slug": "css-moderno-flexbox-grid",
+                "title": "CSS Moderno: Flexbox, CSS Grid y Responsive Design"
+            }
+        }
+    },
+    "typescript-profesional-frontend-reto-modelado-con-tipado-estricto-de-una-api-compleja": {
+        "id": 613,
+        "module_id": 231,
+        "title": "Reto: Modelado con tipado estricto de una API compleja",
+        "slug": "typescript-profesional-frontend-reto-modelado-con-tipado-estricto-de-una-api-compleja",
+        "type": "code_challenge",
+        "duration_minutes": 22,
+        "order": 3,
+        "is_preview": false,
+        "content": "## Reto: Modelado con Tipado Estricto de una API Compleja\n\nEn este reto validarás la estructura de tipos discriminados para eventos de webhook en una pasarela de pagos.",
+        "starter_code": "def validar_evento_webhook(evento: dict) -> bool:\n    \"\"\"\n    Valida que el evento tenga un tipo valido y su correspondiente payload obligatorio.\n    Tipos validos: 'pago.completado' (requiere monto y transaccion_id)\n                   'pago.fallido' (requiere motivo)\n    \"\"\"\n    tipo = evento.get('tipo')\n    if tipo == 'pago.completado':\n        return 'monto' in evento and 'transaccion_id' in evento\n    elif tipo == 'pago.fallido':\n        return 'motivo' in evento\n    return False\n\n# Prueba:\nprint(validar_evento_webhook({'tipo': 'pago.completado', 'monto': 99.0, 'transaccion_id': 'tx_123'})) # True\n",
+        "solution": "def validar_evento_webhook(evento: dict) -> bool:\n    tipo = evento.get('tipo')\n    if tipo == 'pago.completado':\n        return 'monto' in evento and 'transaccion_id' in evento\n    elif tipo == 'pago.fallido':\n        return 'motivo' in evento\n    return False\n",
+        "test_cases": [
+            {
+                "input": "{'tipo': 'pago.completado', 'monto': 10, 'transaccion_id': 'tx_1'}",
+                "expected": "True"
+            },
+            {
+                "input": "{'tipo': 'pago.fallido', 'motivo': 'fondos insuficientes'}",
+                "expected": "True"
+            },
+            {
+                "input": "{'tipo': 'desconocido'}",
+                "expected": "False"
+            }
+        ],
+        "hint": "Usa sentencias if/elif evaluando la clave 'tipo' y verificando la presencia de campos obligatorios.",
+        "language": "python",
+        "completed": false,
+        "quiz": null,
+        "module": {
+            "id": 231,
+            "title": "Módulo 1: Tipado Estricto, Genéricos y Seguridad en Runtime",
+            "course_id": 105,
+            "course_slug": "typescript-profesional-frontend",
+            "course_title": "TypeScript Profesional para Aplicaciones Frontend",
+            "course": {
+                "id": 105,
+                "slug": "typescript-profesional-frontend",
+                "title": "TypeScript Profesional para Aplicaciones Frontend"
             }
         }
     }

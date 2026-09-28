@@ -1901,13 +1901,13 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
       const doc = content as Record<string, unknown>;
       if (Array.isArray(doc['blocks'])) return this.normalizeBlocks(doc['blocks'] as unknown[]);
       if (typeof doc['text'] === 'string' && doc['text'].trim()) {
-        return this.textToParagraphs(doc['text']);
+        return this.parseMarkdownToBlocks(doc['text']);
       }
     }
 
-    // Formato 2 (defensivo): string plano
+    // Formato 2 (defensivo): string plano o markdown
     if (typeof content === 'string' && content.trim()) {
-      return this.textToParagraphs(content);
+      return this.parseMarkdownToBlocks(content);
     }
 
     return [];
@@ -1960,12 +1960,50 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     return out;
   }
 
-  private textToParagraphs(text: string): LessonDocBlock[] {
-    return text
-      .split(/\n{2,}/)
-      .map(t => t.trim())
-      .filter(Boolean)
-      .map(t => ({ type: 'paragraph', text: t }));
+  private parseMarkdownToBlocks(text: string): LessonDocBlock[] {
+    const blocks: LessonDocBlock[] = [];
+    const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    const parseTextChunks = (chunk: string) => {
+      const paragraphs = chunk.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+      for (const p of paragraphs) {
+        if (p.startsWith('### ')) {
+          blocks.push({ type: 'heading', level: 3, text: p.replace(/^###\s+/, '') });
+        } else if (p.startsWith('## ')) {
+          blocks.push({ type: 'heading', level: 2, text: p.replace(/^##\s+/, '') });
+        } else if (p.startsWith('# ')) {
+          blocks.push({ type: 'heading', level: 1, text: p.replace(/^#\s+/, '') });
+        } else if (p.startsWith('> ')) {
+          blocks.push({ type: 'callout', text: p.replace(/^>\s+/, '').replace(/\n>\s*/g, ' '), tone: 'info' });
+        } else if (/^[-*]\s+/.test(p)) {
+          const items = p.split('\n').map(l => l.replace(/^[-*]\s+/, '').trim()).filter(Boolean);
+          blocks.push({ type: 'list', items, ordered: false });
+        } else if (/^\d+\.\s+/.test(p)) {
+          const items = p.split('\n').map(l => l.replace(/^\d+\.\s+/, '').trim()).filter(Boolean);
+          blocks.push({ type: 'list', items, ordered: true });
+        } else {
+          blocks.push({ type: 'paragraph', text: p });
+        }
+      }
+    };
+
+    while ((match = codeBlockRegex.exec(text)) !== null) {
+      const preText = text.substring(lastIndex, match.index);
+      if (preText.trim()) parseTextChunks(preText);
+
+      const lang = match[1]?.trim() || 'python';
+      const code = match[2]?.trimEnd() || '';
+      blocks.push({ type: 'code', language: lang, text: code });
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    const remainingText = text.substring(lastIndex);
+    if (remainingText.trim()) parseTextChunks(remainingText);
+
+    return blocks;
   }
 
   readonly isCodeChallenge = computed(() => this.lesson()?.type === 'code_challenge');

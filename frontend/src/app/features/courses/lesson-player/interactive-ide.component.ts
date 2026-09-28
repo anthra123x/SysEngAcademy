@@ -25,347 +25,491 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="mini-ide" [class.is-fullscreen]="isFullscreen()">
-      <!-- COMPACT HEADER BAR -->
-      <div class="ide-bar">
-        <div class="ide-bar__left">
-          <!-- File Indicator -->
-          <div class="file-pill">
-            <span class="file-dot" [class.is-dirty]="isModified()"></span>
-            <span class="file-name">solution{{ currentLangInfo().extension }}</span>
-          </div>
-
-          <!-- Language Selector -->
-          <div class="lang-picker">
-            <label for="lang-select" class="sr-only">Lenguaje</label>
-            <select
-              id="lang-select"
-              class="lang-select"
-              [ngModel]="currentLanguage()"
-              (ngModelChange)="onLanguageChange($event)"
-              [disabled]="running() || testing()"
-            >
-              @for (lang of languages; track lang.id) {
-                <option [value]="lang.id">
-                  {{ lang.name }}
-                </option>
-              }
-            </select>
-          </div>
+    <div class="vscode-window" [class.is-fullscreen]="isFullscreen()">
+      <!-- TOP MENU TITLE BAR -->
+      <div class="vscode-titlebar">
+        <div class="titlebar-left">
+          <span class="window-dot dot-close"></span>
+          <span class="window-dot dot-minimize"></span>
+          <span class="window-dot dot-maximize"></span>
+          <span class="titlebar-app-name">Visual Studio Code</span>
         </div>
-
-        <div class="ide-bar__right">
-          <!-- Reset Code -->
+        <div class="titlebar-center">
+          <span class="titlebar-file">solution{{ currentLangInfo().extension }} — {{ lessonTitle() || 'SysEngAcademy' }} [Workspace]</span>
+        </div>
+        <div class="titlebar-right">
+          <!-- Fullscreen toggle -->
           <button
             type="button"
-            class="tool-btn"
-            (click)="resetCode()"
-            title="Reiniciar al código base"
-            [disabled]="running() || testing()"
-            aria-label="Reiniciar código"
-          >
-            <span>↺</span>
-          </button>
-
-          <!-- Stdin Input Toggle -->
-          <button
-            type="button"
-            class="tool-btn tool-btn--text"
-            [class.is-active]="showStdin()"
-            (click)="showStdin.set(!showStdin())"
-            title="Entrada estándar por teclado (stdin)"
-          >
-            <span>stdin</span>
-          </button>
-
-          <!-- Ask AI Socratic Help -->
-          <button
-            type="button"
-            class="tool-btn tool-btn--ai"
-            (click)="diagnoseWithAi()"
-            [disabled]="aiLoading() || !code().trim()"
-            title="Pedir orientación conceptual a Byte IA"
-          >
-            <span class="ai-icon">{{ aiLoading() ? '⚙️' : '🤖' }}</span>
-            <span class="ai-label">{{ aiLoading() ? 'Byte…' : 'Byte IA' }}</span>
-          </button>
-
-          <!-- Run Tests (if challenge has test cases) -->
-          @if (activeTestCases().length > 0) {
-            <button
-              type="button"
-              class="action-btn action-btn--test"
-              (click)="runTests()"
-              [disabled]="running() || testing() || !code().trim()"
-              title="Validar casos de prueba del reto"
-            >
-              <span class="btn-icon">{{ testing() ? '⏳' : '✓' }}</span>
-              <span>{{ testing() ? 'Validando…' : 'Validar Reto' }}</span>
-            </button>
-          }
-
-          <!-- Execute Code Primary Button -->
-          <button
-            type="button"
-            class="action-btn action-btn--run"
-            (click)="executeCode()"
-            [disabled]="running() || testing() || !code().trim()"
-            title="Ejecutar código (Ctrl + Enter)"
-          >
-            <span class="btn-icon">{{ running() ? '⏳' : '▶' }}</span>
-            <span>{{ running() ? 'Ejecutando…' : 'Ejecutar' }}</span>
-            <kbd class="key-hint">Ctrl ↵</kbd>
-          </button>
-
-          <!-- Fullscreen Toggle -->
-          <button
-            type="button"
-            class="tool-btn"
+            class="titlebar-btn"
             (click)="isFullscreen.set(!isFullscreen())"
             [title]="isFullscreen() ? 'Salir de pantalla completa' : 'Pantalla completa'"
-            aria-label="Pantalla completa"
           >
-            <span>{{ isFullscreen() ? '✕' : '⛶' }}</span>
+            {{ isFullscreen() ? '🗗' : '🗖' }}
           </button>
         </div>
       </div>
 
-      <!-- INLINE STDIN ROW (when toggled) -->
-      @if (showStdin()) {
-        <div class="stdin-bar">
-          <label for="stdin-input" class="stdin-label">&gt; stdin:</label>
-          <input
-            id="stdin-input"
-            type="text"
-            class="stdin-input"
-            [ngModel]="stdin()"
-            (ngModelChange)="stdin.set($event)"
-            placeholder="Valores de entrada separados por espacio o salto de línea..."
-          />
-        </div>
-      }
+      <!-- MAIN CONTAINER: ACTIVITY BAR + WORKSPACE -->
+      <div class="vscode-main">
+        <!-- LEFT ACTIVITY BAR -->
+        <aside class="activity-bar" aria-label="Barra de actividades">
+          <div class="activity-bar__top">
+            <!-- Explorer Tab -->
+            <button
+              type="button"
+              class="activity-icon"
+              [class.is-active]="activeSidebarTab() === 'explorer'"
+              (click)="toggleSidebar('explorer')"
+              title="Explorador de Archivos (Ctrl+Shift+E)"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                <polyline points="13 2 13 9 20 9"></polyline>
+              </svg>
+            </button>
 
-      <!-- WORKSPACE: CODE EDITOR + CONSOLE -->
-      <div class="ide-workspace">
-        <!-- CODE EDITOR PANEL -->
-        <div class="editor-pane">
-          <div class="editor-gutter" aria-hidden="true">
-            @for (line of lineNumbers(); track $index) {
-              <div class="gutter-num">{{ line }}</div>
-            }
-          </div>
-
-          <div class="editor-body">
-            <textarea
-              #codeTextarea
-              class="editor-input"
-              [ngModel]="code()"
-              (ngModelChange)="code.set($event)"
-              (keydown)="handleEditorKeyDown($event)"
-              spellcheck="false"
-              autocomplete="off"
-              autocapitalize="off"
-              placeholder="// Escribe aquí tu solución..."
-              aria-label="Editor de código"
-            ></textarea>
-          </div>
-        </div>
-
-        <!-- CONSOLE / OUTPUT PANEL -->
-        <div class="console-pane">
-          <!-- Console Tabs Header -->
-          <div class="console-nav">
-            <div class="console-tabs">
+            <!-- Testing Tab -->
+            @if (activeTestCases().length > 0) {
               <button
                 type="button"
-                class="tab-item"
-                [class.is-active]="activeTerminalTab() === 'terminal'"
-                (click)="activeTerminalTab.set('terminal')"
+                class="activity-icon"
+                [class.is-active]="activeSidebarTab() === 'tests'"
+                (click)="toggleSidebar('tests')"
+                title="Casos de Prueba y Validación"
               >
-                <span>Consola</span>
-                @if (executionResult()) {
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M10 2v7.5l-4 6.5A3 3 0 0 0 8.5 20h7a3 3 0 0 0 2.5-4L14 9.5V2"></path>
+                  <line x1="8.5" y1="2" x2="15.5" y2="2"></line>
+                </svg>
+                @if (testStats(); as stats) {
                   <span
-                    class="status-dot"
-                    [class.is-ok]="executionResult()!.exit_code === 0"
-                    [class.is-err]="executionResult()!.exit_code !== 0"
-                  ></span>
+                    class="activity-badge"
+                    [class.badge-ok]="stats.passed === stats.total"
+                    [class.badge-err]="stats.passed < stats.total"
+                  >
+                    {{ stats.passed }}/{{ stats.total }}
+                  </span>
                 }
               </button>
+            }
 
-              @if (activeTestCases().length > 0 || (executionResult()?.tests && executionResult()!.tests!.length > 0)) {
-                <button
-                  type="button"
-                  class="tab-item"
-                  [class.is-active]="activeTerminalTab() === 'tests'"
-                  (click)="activeTerminalTab.set('tests')"
-                >
-                  <span>Tests</span>
-                  @if (testStats(); as stats) {
-                    <span
-                      class="score-pill"
-                      [class.is-passed]="stats.passed === stats.total"
-                      [class.is-failed]="stats.passed < stats.total"
-                    >
-                      {{ stats.passed }}/{{ stats.total }}
-                    </span>
-                  }
-                </button>
-              }
+            <!-- Byte Copilot Tab -->
+            <button
+              type="button"
+              class="activity-icon"
+              [class.is-active]="activeSidebarTab() === 'ai'"
+              (click)="toggleSidebar('ai')"
+              title="Byte IA — Asistente Socrático Copilot"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                <circle cx="12" cy="5" r="2"></circle>
+                <path d="M12 7v4"></path>
+                <line x1="8" y1="16" x2="8" y2="16"></line>
+                <line x1="16" y1="16" x2="16" y2="16"></line>
+              </svg>
+            </button>
+          </div>
 
-              @if (aiReply() || aiLoading()) {
-                <button
-                  type="button"
-                  class="tab-item"
-                  [class.is-active]="activeTerminalTab() === 'ai'"
-                  (click)="activeTerminalTab.set('ai')"
+          <div class="activity-bar__bottom">
+            <button
+              type="button"
+              class="activity-icon"
+              (click)="resetCode()"
+              title="Restaurar código base inicial"
+            >
+              <span class="icon-glyph">↺</span>
+            </button>
+          </div>
+        </aside>
+
+        <!-- CENTER & RIGHT: EDITOR WORKSPACE -->
+        <div class="workspace-area">
+          <!-- VS CODE TABS BAR -->
+          <div class="editor-tabs-bar">
+            <div class="tabs-list">
+              <!-- Active Solution Tab -->
+              <div class="editor-tab is-active">
+                <span class="tab-lang-icon" [attr.data-lang]="currentLanguage()">
+                  {{ currentLangInfo().icon }}
+                </span>
+                <span class="tab-title">solution{{ currentLangInfo().extension }}</span>
+                @if (isModified()) {
+                  <span class="tab-dirty-dot" title="Modificado">●</span>
+                } @else {
+                  <span class="tab-close-icon">✕</span>
+                }
+              </div>
+
+              <!-- Read-only Problem Description Tab (optional) -->
+              @if (activeTestCases().length > 0) {
+                <div
+                  class="editor-tab tab-secondary"
+                  (click)="toggleSidebar('tests')"
+                  [class.is-active]="activeSidebarTab() === 'tests'"
                 >
-                  <span>Byte IA</span>
-                  @if (aiLoading()) {
-                    <span class="tab-pulse">●</span>
-                  }
-                </button>
+                  <span class="tab-lang-icon">🧪</span>
+                  <span class="tab-title">tests.spec{{ currentLangInfo().extension }}</span>
+                </div>
               }
             </div>
 
-            <div class="console-actions">
-              @if (executionResult()?.execution_time_ms !== undefined) {
-                <span class="time-tag">{{ executionResult()!.execution_time_ms }}ms</span>
-              }
-              @if (executionResult()) {
+            <!-- Toolbar actions at right of tabs -->
+            <div class="editor-actions">
+              <!-- Language Selector -->
+              <div class="vscode-select-wrap">
+                <select
+                  class="vscode-select"
+                  [ngModel]="currentLanguage()"
+                  (ngModelChange)="onLanguageChange($event)"
+                  [disabled]="running() || testing()"
+                  aria-label="Seleccionar lenguaje"
+                >
+                  @for (lang of languages; track lang.id) {
+                    <option [value]="lang.id">{{ lang.name }} ({{ lang.version }})</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Stdin Toggle -->
+              <button
+                type="button"
+                class="vscode-tool-btn"
+                [class.is-active]="showStdin()"
+                (click)="showStdin.set(!showStdin())"
+                title="Configurar entrada estándar stdin"
+              >
+                stdin
+              </button>
+
+              <!-- Validate Tests Button (if tests exist) -->
+              @if (activeTestCases().length > 0) {
                 <button
                   type="button"
-                  class="btn-clear"
-                  (click)="clearTerminal()"
-                  title="Limpiar consola"
+                  class="vscode-run-btn btn-test"
+                  (click)="runTests()"
+                  [disabled]="running() || testing() || !code().trim()"
+                  title="Ejecutar y validar todos los casos de prueba"
                 >
-                  Limpiar
+                  <span>{{ testing() ? '⏳' : '✓' }}</span>
+                  <span>{{ testing() ? 'Validando…' : 'Run Tests' }}</span>
                 </button>
               }
+
+              <!-- Run Code Button -->
+              <button
+                type="button"
+                class="vscode-run-btn btn-run"
+                (click)="executeCode()"
+                [disabled]="running() || testing() || !code().trim()"
+                title="Ejecutar código en el entorno aislado (Ctrl + Enter)"
+              >
+                <span>{{ running() ? '⏳' : '▶' }}</span>
+                <span>{{ running() ? 'Ejecutando…' : 'Run Code' }}</span>
+                <kbd class="key-shortcut">Ctrl ↵</kbd>
+              </button>
             </div>
           </div>
 
-          <!-- Console Viewport -->
-          <div class="console-viewport font-mono">
-            <!-- TAB: TERMINAL / STDOUT -->
-            @if (activeTerminalTab() === 'terminal') {
-              <div class="output-flow">
-                @if (running()) {
-                  <div class="output-state output-state--running">
-                    <span class="spinner"></span>
-                    <span>Ejecutando en entorno aislado...</span>
-                  </div>
-                } @else if (executionResult()) {
-                  @let res = executionResult()!;
-                  @if (res.stdout) {
-                    <pre class="stdout-block">{{ res.stdout }}</pre>
-                  }
-                  @if (res.stderr) {
-                    <pre class="stderr-block">{{ res.stderr }}</pre>
-                  }
-                  @if (!res.stdout && !res.stderr) {
-                    <div class="output-quiet">
-                      <span>Proceso finalizado sin generar salida (stdout/stderr).</span>
-                    </div>
-                  }
-                  <div
-                    class="exit-line"
-                    [class.is-ok]="res.exit_code === 0"
-                    [class.is-err]="res.exit_code !== 0"
-                  >
-                    <span>[Finalizado con código {{ res.exit_code }} · {{ res.execution_time_ms }}ms]</span>
-                  </div>
-                } @else {
-                  <div class="output-placeholder">
-                    <p class="placeholder-main">// Salida de la consola...</p>
-                    <p class="placeholder-sub">Presiona <strong>Ejecutar</strong> o <strong>Ctrl + Enter</strong> para ver los resultados.</p>
-                  </div>
+          <!-- BREADCRUMBS BAR -->
+          <div class="breadcrumbs-bar">
+            <span class="crumb">workspace</span>
+            <span class="crumb-sep">&gt;</span>
+            <span class="crumb">src</span>
+            <span class="crumb-sep">&gt;</span>
+            <span class="crumb crumb-active">solution{{ currentLangInfo().extension }}</span>
+            <span class="crumb-sep">&gt;</span>
+            <span class="crumb crumb-symbol">main</span>
+          </div>
+
+          <!-- OPTIONAL STDIN INPUT DRAWER -->
+          @if (showStdin()) {
+            <div class="stdin-tray">
+              <span class="stdin-prompt">INPUT (stdin):</span>
+              <input
+                type="text"
+                class="stdin-textbox"
+                [ngModel]="stdin()"
+                (ngModelChange)="stdin.set($event)"
+                placeholder="Ingresa valores de entrada para input() o cin..."
+              />
+            </div>
+          }
+
+          <!-- SPLIT WORKSPACE: CODE EDITOR (LEFT) + TERMINAL (RIGHT) -->
+          <div class="editor-split">
+            <!-- CODE PANE -->
+            <div class="editor-column">
+              <div class="editor-gutter" aria-hidden="true">
+                @for (line of lineNumbers(); track $index) {
+                  <div class="line-num">{{ line }}</div>
                 }
               </div>
-            }
+              <div class="editor-surface">
+                <textarea
+                  #codeTextarea
+                  class="monaco-textarea"
+                  [ngModel]="code()"
+                  (ngModelChange)="code.set($event)"
+                  (keydown)="handleEditorKeyDown($event)"
+                  spellcheck="false"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  placeholder="// Escribe tu solución aquí..."
+                  aria-label="Editor de código fuente"
+                ></textarea>
+              </div>
+            </div>
 
-            <!-- TAB: TESTS -->
-            @if (activeTerminalTab() === 'tests') {
-              <div class="tests-flow">
-                @if (testing()) {
-                  <div class="output-state output-state--running">
-                    <span class="spinner"></span>
-                    <span>Validando casos de prueba...</span>
-                  </div>
-                } @else if (executionResult()?.tests && executionResult()!.tests!.length > 0) {
-                  <div class="tests-list">
-                    @for (test of executionResult()!.tests; track $index) {
-                      <div class="test-item" [class.is-ok]="test.passed" [class.is-fail]="!test.passed">
-                        <div class="test-item__head">
-                          <span class="test-icon">{{ test.passed ? '✓' : '✗' }}</span>
-                          <span class="test-title">Prueba #{{ $index + 1 }}</span>
-                          <span class="test-state">{{ test.passed ? 'Aprobada' : 'Fallida' }}</span>
+            <!-- VS CODE INTEGRATED TERMINAL (RIGHT) -->
+            <div class="terminal-column">
+              <!-- Terminal Tabs -->
+              <div class="terminal-header">
+                <div class="term-tabs-group">
+                  <button
+                    type="button"
+                    class="term-header-tab"
+                    [class.is-active]="activeTerminalTab() === 'terminal'"
+                    (click)="activeTerminalTab.set('terminal')"
+                  >
+                    <span>TERMINAL</span>
+                    @if (executionResult()) {
+                      <span
+                        class="term-status-dot"
+                        [class.is-ok]="executionResult()!.exit_code === 0"
+                        [class.is-err]="executionResult()!.exit_code !== 0"
+                      ></span>
+                    }
+                  </button>
+
+                  @if (activeTestCases().length > 0 || (executionResult()?.tests && executionResult()!.tests!.length > 0)) {
+                    <button
+                      type="button"
+                      class="term-header-tab"
+                      [class.is-active]="activeTerminalTab() === 'tests'"
+                      (click)="activeTerminalTab.set('tests')"
+                    >
+                      <span>TEST RESULTS</span>
+                      @if (testStats(); as stats) {
+                        <span
+                          class="term-score"
+                          [class.is-ok]="stats.passed === stats.total"
+                          [class.is-err]="stats.passed < stats.total"
+                        >
+                          {{ stats.passed }}/{{ stats.total }}
+                        </span>
+                      }
+                    </button>
+                  }
+
+                  <button
+                    type="button"
+                    class="term-header-tab"
+                    [class.is-active]="activeTerminalTab() === 'ai'"
+                    (click)="activeTerminalTab.set('ai')"
+                  >
+                    <span>BYTE COPILOT</span>
+                    @if (aiLoading()) {
+                      <span class="copilot-pulse">●</span>
+                    }
+                  </button>
+                </div>
+
+                <div class="term-controls">
+                  @if (executionResult()?.execution_time_ms !== undefined) {
+                    <span class="time-metric">{{ executionResult()!.execution_time_ms }}ms</span>
+                  }
+                  @if (executionResult()) {
+                    <button
+                      type="button"
+                      class="term-btn"
+                      (click)="clearTerminal()"
+                      title="Limpiar terminal"
+                    >
+                      🗑
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Terminal Content Surface -->
+              <div class="terminal-screen font-mono">
+                <!-- VIEW 1: TERMINAL OUTPUT -->
+                @if (activeTerminalTab() === 'terminal') {
+                  <div class="term-log">
+                    @if (running()) {
+                      <div class="term-msg-running">
+                        <span class="term-spinner"></span>
+                        <span>[SysEng Engine] Compilando y ejecutando solución...</span>
+                      </div>
+                    } @else if (executionResult()) {
+                      @let res = executionResult()!;
+                      <div class="term-command-line">
+                        <span class="cmd-prompt">syseng&#64;vscode:~/workspace$</span>
+                        <span class="cmd-text">run solution{{ currentLangInfo().extension }}</span>
+                      </div>
+
+                      @if (res.stdout) {
+                        <pre class="term-stdout">{{ res.stdout }}</pre>
+                      }
+                      @if (res.stderr) {
+                        <pre class="term-stderr">{{ res.stderr }}</pre>
+                      }
+                      @if (!res.stdout && !res.stderr) {
+                        <div class="term-quiet">
+                          [El proceso finalizó sin generar salida en consola (stdout/stderr)]
                         </div>
-                        @if (!test.passed) {
-                          <div class="test-item__diff">
-                            @if (test.input) {
-                              <div class="diff-row">
-                                <span class="diff-lbl">Entrada:</span>
-                                <code>{{ test.input }}</code>
-                              </div>
-                            }
-                            <div class="diff-row">
-                              <span class="diff-lbl">Esperado:</span>
-                              <code class="diff-exp">{{ test.expected }}</code>
-                            </div>
-                            <div class="diff-row">
-                              <span class="diff-lbl">Obtenido:</span>
-                              <code class="diff-act">{{ test.actual || '(vacío)' }}</code>
-                            </div>
-                          </div>
-                        }
+                      }
+                      <div
+                        class="term-exit-status"
+                        [class.is-ok]="res.exit_code === 0"
+                        [class.is-err]="res.exit_code !== 0"
+                      >
+                        [Proceso finalizado con código {{ res.exit_code }} en {{ res.execution_time_ms }}ms]
+                      </div>
+                    } @else {
+                      <div class="term-idle-state">
+                        <p class="idle-line">syseng&#64;vscode:~/workspace$</p>
+                        <p class="idle-hint">// Presiona <strong>Run Code (Ctrl + Enter)</strong> para compilar y ver la salida.</p>
                       </div>
                     }
                   </div>
-                } @else {
-                  <div class="output-placeholder">
-                    <p class="placeholder-main">// Casos de prueba sin ejecutar</p>
-                    <button type="button" class="btn-run-tests" (click)="runTests()">
-                      Validar Casos de Prueba
-                    </button>
-                  </div>
                 }
-              </div>
-            }
 
-            <!-- TAB: BYTE IA -->
-            @if (activeTerminalTab() === 'ai') {
-              <div class="ai-flow">
-                @if (aiLoading()) {
-                  <div class="output-state output-state--running">
-                    <span class="spinner"></span>
-                    <span>Byte IA está analizando tu código…</span>
+                <!-- VIEW 2: TESTS SPEC -->
+                @if (activeTerminalTab() === 'tests') {
+                  <div class="tests-screen">
+                    @if (testing()) {
+                      <div class="term-msg-running">
+                        <span class="term-spinner"></span>
+                        <span>Evaluando casos de prueba contra tu código...</span>
+                      </div>
+                    } @else if (executionResult()?.tests && executionResult()!.tests!.length > 0) {
+                      <div class="test-results-feed">
+                        @for (test of executionResult()!.tests; track $index) {
+                          <div class="test-card" [class.is-passed]="test.passed" [class.is-failed]="!test.passed">
+                            <div class="test-card__head">
+                              <span class="test-status-icon">{{ test.passed ? '✓' : '✗' }}</span>
+                              <span class="test-card__name">Test #{{ $index + 1 }}</span>
+                              <span class="test-card__result">{{ test.passed ? 'PASSED' : 'FAILED' }}</span>
+                            </div>
+                            @if (!test.passed) {
+                              <div class="test-card__diff">
+                                @if (test.input) {
+                                  <div class="diff-entry">
+                                    <span class="d-label">Entrada:</span>
+                                    <code class="d-val">{{ test.input }}</code>
+                                  </div>
+                                }
+                                <div class="diff-entry">
+                                  <span class="d-label">Esperado:</span>
+                                  <code class="d-val val-expected">{{ test.expected }}</code>
+                                </div>
+                                <div class="diff-entry">
+                                  <span class="d-label">Obtenido:</span>
+                                  <code class="d-val val-actual">{{ test.actual || '(vacío)' }}</code>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <div class="tests-empty-card">
+                        <p>No se han ejecutado los casos de prueba todavía.</p>
+                        <button type="button" class="btn-run-tests-action" (click)="runTests()">
+                          🧪 Ejecutar Casos de Prueba
+                        </button>
+                      </div>
+                    }
                   </div>
-                } @else if (aiReply()) {
-                  <div class="ai-bubble" [innerHTML]="renderMarkdown(aiReply()!)"></div>
+                }
+
+                <!-- VIEW 3: BYTE COPILOT -->
+                @if (activeTerminalTab() === 'ai') {
+                  <div class="copilot-screen">
+                    <div class="copilot-header">
+                      <div class="copilot-avatar">🤖</div>
+                      <div>
+                        <strong>Byte AI — Asistente de Código Socrático</strong>
+                        <small>Analizo tu lógica para guiarte sin darte la solución copiada.</small>
+                      </div>
+                    </div>
+
+                    @if (aiLoading()) {
+                      <div class="term-msg-running">
+                        <span class="term-spinner"></span>
+                        <span>Byte está inspeccionando la sintaxis y estructura de tu código…</span>
+                      </div>
+                    } @else if (aiReply()) {
+                      <div class="copilot-reply-box" [innerHTML]="renderMarkdown(aiReply()!)"></div>
+                    } @else {
+                      <div class="copilot-prompt-card">
+                        <p>¿Tienes dudas con algún bug, sintaxis o quieres validar tu lógica antes de enviar?</p>
+                        <button type="button" class="btn-ask-byte" (click)="diagnoseWithAi()">
+                          Pedir Asistencia a Byte IA
+                        </button>
+                      </div>
+                    }
+                  </div>
                 }
               </div>
-            }
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- VS CODE BOTTOM STATUS BAR -->
+      <footer class="vscode-statusbar" aria-label="Barra de estado">
+        <div class="statusbar-left">
+          <span class="status-item status-branch" title="Rama Git activa">
+            <span class="branch-icon">⎇</span> main*
+          </span>
+          <span class="status-item status-problems" title="0 Errores, 0 Advertencias">
+            <span class="prob-icon">⨂</span> 0
+            <span class="prob-icon warn">⚠</span> 0
+          </span>
+        </div>
+
+        <div class="statusbar-right">
+          <span class="status-item" title="Línea y Columna">
+            Ln {{ lineNumbers().length }}, Col 1
+          </span>
+          <span class="status-item" title="Indentación">
+            Spaces: 4
+          </span>
+          <span class="status-item" title="Codificación">
+            UTF-8
+          </span>
+          <span class="status-item status-lang" title="Modo de lenguaje">
+            {{ currentLangInfo().name }}
+          </span>
+          <span class="status-item status-env" title="Motor de ejecución local">
+            ⚡ SysEng Sandbox
+          </span>
+        </div>
+      </footer>
     </div>
   `,
   styles: [
     `
-      .mini-ide {
+      /* VS CODE WINDOW CONTAINER */
+      .vscode-window {
         display: flex;
         flex-direction: column;
-        background: #090d16;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 10px;
+        background: #181818;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
         overflow: hidden;
         margin: 1.25rem 0;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-        font-family: inherit;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: #cccccc;
         transition: all 0.2s ease;
       }
 
-      .mini-ide.is-fullscreen {
+      .vscode-window.is-fullscreen {
         position: fixed;
         inset: 0;
         z-index: 99999;
@@ -375,519 +519,695 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
         height: 100vh;
       }
 
-      /* HEADER TOOLBAR */
-      .ide-bar {
+      /* TITLE BAR (Classic window controls & file header) */
+      .vscode-titlebar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: #0d131f;
-        padding: 0.4rem 0.75rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-        gap: 0.5rem;
-        flex-wrap: wrap;
+        background: #1f1f1f;
+        padding: 0.35rem 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 0.75rem;
+        user-select: none;
       }
 
-      .ide-bar__left,
-      .ide-bar__right {
+      .titlebar-left {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+      }
+
+      .window-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .dot-close { background: #ff5f56; }
+      .dot-minimize { background: #ffbd2e; }
+      .dot-maximize { background: #27c93f; }
+
+      .titlebar-app-name {
+        margin-left: 0.5rem;
+        color: #858585;
+        font-weight: 500;
+        font-size: 0.72rem;
+      }
+
+      .titlebar-center {
+        flex: 1;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 1rem;
+        color: #9d9d9d;
+        font-size: 0.74rem;
+      }
+
+      .titlebar-btn {
+        background: transparent;
+        border: none;
+        color: #858585;
+        font-size: 0.8rem;
+        cursor: pointer;
+        padding: 0.15rem 0.4rem;
+        border-radius: 3px;
+
+        &:hover {
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.08);
+        }
+      }
+
+      /* MAIN LAYOUT: ACTIVITY BAR + WORKSPACE */
+      .vscode-main {
+        display: flex;
+        flex: 1;
+        min-height: 440px;
+        max-height: 560px;
+        overflow: hidden;
+      }
+
+      /* LEFT ACTIVITY BAR */
+      .activity-bar {
+        width: 46px;
+        background: #181818;
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        flex-shrink: 0;
+        user-select: none;
+      }
+
+      .activity-bar__top,
+      .activity-bar__bottom {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.65rem;
+        width: 100%;
+      }
+
+      .activity-icon {
+        background: transparent;
+        border: none;
+        color: #858585;
+        cursor: pointer;
+        width: 100%;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: color 0.15s;
+
+        &:hover {
+          color: #ffffff;
+        }
+
+        &.is-active {
+          color: #ffffff;
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 6px;
+            bottom: 6px;
+            width: 2px;
+            background: #0078d4;
+          }
+        }
+
+        .icon-glyph {
+          font-size: 1.2rem;
+          font-weight: bold;
+        }
+      }
+
+      .activity-badge {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        font-size: 0.55rem;
+        font-weight: 700;
+        padding: 0.05rem 0.25rem;
+        border-radius: 4px;
+        background: #333333;
+        color: #ffffff;
+
+        &.badge-ok { background: #10b981; }
+        &.badge-err { background: #ef4444; }
+      }
+
+      /* WORKSPACE AREA */
+      .workspace-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #1e1e1e;
+        overflow: hidden;
+      }
+
+      /* TABS BAR */
+      .editor-tabs-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #181818;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        min-height: 35px;
+      }
+
+      .tabs-list {
+        display: flex;
+        align-items: stretch;
+        overflow-x: auto;
+      }
+
+      .editor-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: #141414;
+        color: #969696;
+        padding: 0.45rem 0.85rem;
+        font-size: 0.78rem;
+        cursor: pointer;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        user-select: none;
+        transition: background 0.15s, color 0.15s;
+
+        &:hover {
+          color: #ffffff;
+          background: #1a1a1a;
+        }
+
+        &.is-active {
+          background: #1e1e1e;
+          color: #ffffff;
+          border-top: 2px solid #0078d4;
+        }
+      }
+
+      .tab-lang-icon {
+        font-size: 0.85rem;
+      }
+
+      .tab-title {
+        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      }
+
+      .tab-dirty-dot {
+        font-size: 0.75rem;
+        color: #0078d4;
+      }
+
+      .tab-close-icon {
+        font-size: 0.65rem;
+        color: #666666;
+        padding: 0.1rem;
+        border-radius: 2px;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+        }
+      }
+
+      /* TOOLBAR ACTIONS (RUN, TESTS, SELECT) */
+      .editor-actions {
         display: flex;
         align-items: center;
         gap: 0.4rem;
+        padding-right: 0.65rem;
       }
 
-      .file-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        padding: 0.25rem 0.55rem;
-        border-radius: 6px;
-        font-size: 0.78rem;
-        color: #e2e8f0;
-        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      .vscode-select-wrap {
+        position: relative;
       }
 
-      .file-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #10b981;
-      }
-
-      .file-dot.is-dirty {
-        background: #f59e0b;
-      }
-
-      .lang-select {
-        background: transparent;
-        color: #94a3b8;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 0.25rem 0.45rem;
-        border-radius: 6px;
-        font-size: 0.76rem;
+      .vscode-select {
+        background: #252526;
+        color: #cccccc;
+        border: 1px solid #3c3c3c;
+        border-radius: 3px;
+        padding: 0.2rem 0.45rem;
+        font-size: 0.73rem;
         cursor: pointer;
         outline: none;
-        transition: color 0.15s, border-color 0.15s;
 
-        &:hover,
         &:focus {
-          color: #f1f5f9;
-          border-color: rgba(255, 255, 255, 0.2);
+          border-color: #0078d4;
         }
 
         option {
-          background: #0d131f;
-          color: #f1f5f9;
+          background: #1e1e1e;
+          color: #ffffff;
         }
       }
 
-      /* BUTTONS */
-      .tool-btn {
+      .vscode-tool-btn {
+        background: transparent;
+        color: #9d9d9d;
+        border: 1px solid #3c3c3c;
+        border-radius: 3px;
+        padding: 0.2rem 0.5rem;
+        font-size: 0.72rem;
+        cursor: pointer;
+        font-weight: 500;
+
+        &:hover {
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.06);
+        }
+
+        &.is-active {
+          color: #0078d4;
+          border-color: #0078d4;
+          background: rgba(0, 120, 212, 0.15);
+        }
+      }
+
+      .vscode-run-btn {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        background: transparent;
-        color: #94a3b8;
-        border: 1px solid transparent;
-        border-radius: 6px;
-        padding: 0.25rem 0.5rem;
-        font-size: 0.8rem;
+        gap: 0.35rem;
+        border: none;
+        border-radius: 3px;
+        padding: 0.25rem 0.65rem;
+        font-size: 0.74rem;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.15s ease;
-
-        &:hover:not(:disabled) {
-          color: #f1f5f9;
-          background: rgba(255, 255, 255, 0.05);
-        }
+        transition: opacity 0.15s;
 
         &:disabled {
           opacity: 0.4;
           cursor: not-allowed;
         }
-
-        &.is-active {
-          color: #38bdf8;
-          background: rgba(56, 189, 248, 0.1);
-          border-color: rgba(56, 189, 248, 0.25);
-        }
       }
 
-      .tool-btn--text {
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 0.25rem 0.55rem;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-      }
-
-      .tool-btn--ai {
-        gap: 0.3rem;
-        background: rgba(99, 102, 241, 0.12);
-        color: #a5b4fc;
-        border: 1px solid rgba(99, 102, 241, 0.25);
-        font-size: 0.76rem;
-        font-weight: 600;
-        padding: 0.25rem 0.6rem;
-
-        &:hover:not(:disabled) {
-          background: rgba(99, 102, 241, 0.22);
-          color: #ffffff;
-        }
-      }
-
-      .action-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        font-size: 0.78rem;
-        font-weight: 600;
-        padding: 0.3rem 0.7rem;
-        border-radius: 6px;
-        border: none;
-        cursor: pointer;
-        transition: all 0.15s ease;
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-      }
-
-      .action-btn--run {
-        background: #10b981;
+      .btn-run {
+        background: #0078d4;
         color: #ffffff;
 
         &:hover:not(:disabled) {
-          background: #059669;
+          background: #0060aa;
         }
 
-        .key-hint {
+        .key-shortcut {
           background: rgba(0, 0, 0, 0.25);
-          color: rgba(255, 255, 255, 0.8);
-          font-size: 0.68rem;
-          padding: 0.1rem 0.3rem;
-          border-radius: 3px;
-          margin-left: 0.25rem;
+          padding: 0.05rem 0.25rem;
+          border-radius: 2px;
+          font-size: 0.65rem;
+          color: rgba(255, 255, 255, 0.85);
           font-family: inherit;
         }
       }
 
-      .action-btn--test {
-        background: #0284c7;
+      .btn-test {
+        background: #238636;
         color: #ffffff;
 
         &:hover:not(:disabled) {
-          background: #0369a1;
+          background: #2ea043;
         }
       }
 
-      /* STDIN BAR */
-      .stdin-bar {
+      /* BREADCRUMBS BAR */
+      .breadcrumbs-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: #1e1e1e;
+        padding: 0.2rem 0.85rem;
+        font-size: 0.7rem;
+        color: #858585;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        user-select: none;
+      }
+
+      .crumb-sep {
+        font-size: 0.65rem;
+        color: #555555;
+      }
+
+      .crumb-active {
+        color: #cccccc;
+      }
+
+      .crumb-symbol {
+        color: #4ec9b0;
+      }
+
+      /* STDIN TRAY */
+      .stdin-tray {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        background: #0a0e17;
-        padding: 0.35rem 0.75rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        background: #252526;
+        padding: 0.3rem 0.85rem;
+        border-bottom: 1px solid #3c3c3c;
       }
 
-      .stdin-label {
-        font-size: 0.75rem;
-        color: #64748b;
+      .stdin-prompt {
+        font-size: 0.72rem;
+        color: #858585;
         font-family: monospace;
       }
 
-      .stdin-input {
+      .stdin-textbox {
         flex: 1;
-        background: #03060c;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 4px;
-        color: #f1f5f9;
-        font-size: 0.78rem;
+        background: #1e1e1e;
+        border: 1px solid #3c3c3c;
+        border-radius: 2px;
+        color: #ffffff;
+        font-size: 0.75rem;
         padding: 0.2rem 0.5rem;
-        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-family: 'Consolas', monospace;
         outline: none;
 
         &:focus {
-          border-color: #38bdf8;
+          border-color: #0078d4;
         }
       }
 
-      /* WORKSPACE LAYOUT */
-      .ide-workspace {
+      /* SPLIT WORKSPACE: EDITOR + TERMINAL */
+      .editor-split {
         display: grid;
-        grid-template-columns: 1.15fr 0.85fr;
-        min-height: 380px;
-        max-height: 520px;
-        background: #050811;
+        grid-template-columns: 1.1fr 0.9fr;
+        flex: 1;
+        overflow: hidden;
       }
 
-      @media (max-width: 860px) {
-        .ide-workspace {
+      @media (max-width: 900px) {
+        .editor-split {
           grid-template-columns: 1fr;
-          max-height: none;
+          overflow-y: auto;
         }
       }
 
-      /* EDITOR COLUMN */
-      .editor-pane {
+      /* CODE PANE */
+      .editor-column {
         display: flex;
-        border-right: 1px solid rgba(255, 255, 255, 0.07);
-        background: #060913;
+        background: #1e1e1e;
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
         overflow: hidden;
       }
 
       .editor-gutter {
-        width: 38px;
+        width: 42px;
         padding: 0.75rem 0;
-        background: #080d1a;
-        color: #475569;
-        font-family: 'JetBrains Mono', 'Fira Code', monospace;
-        font-size: 0.78rem;
+        background: #1e1e1e;
+        color: #858585;
+        font-family: 'Consolas', 'Cascadia Code', 'Fira Code', monospace;
+        font-size: 0.8rem;
         line-height: 1.55;
         text-align: right;
         user-select: none;
         border-right: 1px solid rgba(255, 255, 255, 0.04);
       }
 
-      .gutter-num {
-        padding-right: 0.5rem;
+      .line-num {
+        padding-right: 0.65rem;
       }
 
-      .editor-body {
+      .editor-surface {
         flex: 1;
         position: relative;
         overflow: hidden;
       }
 
-      .editor-input {
+      .monaco-textarea {
         width: 100%;
         height: 100%;
-        padding: 0.75rem;
+        padding: 0.75rem 0.85rem;
         background: transparent;
-        color: #f8fafc;
+        color: #d4d4d4;
         border: none;
         outline: none;
         resize: none;
-        font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-        font-size: 0.83rem;
+        font-family: 'Consolas', 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+        font-size: 0.84rem;
         line-height: 1.55;
         white-space: pre;
         overflow-x: auto;
-        tab-size: 2;
-        caret-color: #38bdf8;
+        tab-size: 4;
+        caret-color: #aeafad;
       }
 
-      /* CONSOLE COLUMN */
-      .console-pane {
+      /* TERMINAL PANE (VS CODE INTEGRATED TERMINAL) */
+      .terminal-column {
         display: flex;
         flex-direction: column;
-        background: #03060c;
+        background: #181818;
         overflow: hidden;
       }
 
-      .console-nav {
+      .terminal-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: #0a0f1c;
-        padding: 0 0.5rem;
+        background: #181818;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 0 0.5rem;
         min-height: 32px;
+        user-select: none;
       }
 
-      .console-tabs {
+      .term-tabs-group {
         display: flex;
         gap: 0.25rem;
       }
 
-      .tab-item {
+      .term-header-tab {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
         background: transparent;
-        color: #94a3b8;
+        color: #969696;
         border: none;
         border-bottom: 2px solid transparent;
-        padding: 0.35rem 0.55rem;
-        font-size: 0.75rem;
+        padding: 0.4rem 0.55rem;
+        font-size: 0.72rem;
         font-weight: 600;
+        letter-spacing: 0.03em;
         cursor: pointer;
-        transition: all 0.15s;
+        transition: color 0.15s;
 
         &:hover {
-          color: #f1f5f9;
+          color: #ffffff;
         }
 
         &.is-active {
-          color: #38bdf8;
-          border-bottom-color: #38bdf8;
+          color: #ffffff;
+          border-bottom-color: #0078d4;
         }
       }
 
-      .status-dot {
+      .term-status-dot {
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: #64748b;
+        background: #858585;
 
-        &.is-ok {
-          background: #10b981;
-        }
-
-        &.is-err {
-          background: #ef4444;
-        }
+        &.is-ok { background: #10b981; }
+        &.is-err { background: #ef4444; }
       }
 
-      .score-pill {
-        font-size: 0.68rem;
-        padding: 0.05rem 0.35rem;
-        border-radius: 4px;
-        background: #1e293b;
-        color: #94a3b8;
+      .term-score {
+        font-size: 0.65rem;
+        padding: 0.05rem 0.3rem;
+        border-radius: 3px;
+        background: #333333;
+        color: #cccccc;
 
-        &.is-passed {
-          background: rgba(16, 185, 129, 0.2);
-          color: #34d399;
-        }
-
-        &.is-failed {
-          background: rgba(239, 68, 68, 0.2);
-          color: #f87171;
-        }
+        &.is-ok { background: #238636; color: #ffffff; }
+        &.is-err { background: #da3633; color: #ffffff; }
       }
 
-      .tab-pulse {
-        display: inline-block;
-        color: #818cf8;
-        font-size: 0.6rem;
+      .copilot-pulse {
+        color: #0078d4;
+        font-size: 0.65rem;
         animation: blink 1s infinite alternate;
       }
 
-      .console-actions {
+      .term-controls {
         display: flex;
         align-items: center;
         gap: 0.5rem;
       }
 
-      .time-tag {
-        font-size: 0.7rem;
-        color: #64748b;
+      .time-metric {
+        font-size: 0.68rem;
+        color: #858585;
         font-family: monospace;
       }
 
-      .btn-clear {
+      .term-btn {
         background: transparent;
         border: none;
-        color: #64748b;
-        font-size: 0.72rem;
+        color: #858585;
+        font-size: 0.75rem;
         cursor: pointer;
-        padding: 0.2rem 0.4rem;
-        border-radius: 4px;
+        padding: 0.15rem 0.35rem;
+        border-radius: 3px;
 
         &:hover {
-          color: #e2e8f0;
-          background: rgba(255, 255, 255, 0.05);
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.08);
         }
       }
 
-      /* CONSOLE VIEWPORT */
-      .console-viewport {
+      /* TERMINAL VIEWPORT */
+      .terminal-screen {
         flex: 1;
         overflow-y: auto;
         padding: 0.75rem;
+        background: #181818;
         font-size: 0.8rem;
         line-height: 1.5;
-        background: #03060c;
+        color: #cccccc;
       }
 
-      .output-placeholder {
-        padding: 1.5rem 0.5rem;
-        color: #475569;
-
-        .placeholder-main {
-          margin: 0 0 0.35rem 0;
-          font-family: 'JetBrains Mono', 'Fira Code', monospace;
-          color: #64748b;
-        }
-
-        .placeholder-sub {
-          margin: 0;
-          font-size: 0.75rem;
-          color: #475569;
-          font-family: inherit;
-
-          strong {
-            color: #94a3b8;
-          }
-        }
+      .term-command-line {
+        display: flex;
+        gap: 0.45rem;
+        margin-bottom: 0.45rem;
+        font-size: 0.78rem;
       }
 
-      .output-state--running {
+      .cmd-prompt {
+        color: #4ec9b0;
+      }
+
+      .cmd-text {
+        color: #dcdcaa;
+      }
+
+      .term-msg-running {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 1rem 0;
-        color: #38bdf8;
+        color: #0078d4;
+        padding: 0.5rem 0;
       }
 
-      .spinner {
+      .term-spinner {
         width: 14px;
         height: 14px;
-        border: 2px solid rgba(56, 189, 248, 0.2);
-        border-top-color: #38bdf8;
+        border: 2px solid rgba(0, 120, 212, 0.25);
+        border-top-color: #0078d4;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
       }
 
-      .stdout-block {
+      .term-stdout {
         margin: 0 0 0.5rem 0;
-        color: #f1f5f9;
+        color: #d4d4d4;
         white-space: pre-wrap;
         word-break: break-all;
       }
 
-      .stderr-block {
+      .term-stderr {
         margin: 0 0 0.5rem 0;
-        color: #f87171;
-        background: rgba(239, 68, 68, 0.08);
-        padding: 0.5rem;
-        border-radius: 4px;
+        color: #f48771;
+        background: rgba(244, 135, 113, 0.08);
+        padding: 0.45rem;
+        border-radius: 3px;
         white-space: pre-wrap;
         word-break: break-all;
       }
 
-      .output-quiet {
-        color: #64748b;
+      .term-quiet {
+        color: #858585;
         font-style: italic;
-        padding: 0.5rem 0;
+        padding: 0.35rem 0;
       }
 
-      .exit-line {
+      .term-exit-status {
         font-size: 0.72rem;
-        color: #64748b;
+        color: #858585;
         margin-top: 0.5rem;
-        padding-top: 0.5rem;
-        border-top: 1px dashed rgba(255, 255, 255, 0.06);
+        padding-top: 0.45rem;
+        border-top: 1px dashed rgba(255, 255, 255, 0.08);
 
         &.is-err {
-          color: #f87171;
+          color: #f48771;
         }
       }
 
-      /* TESTS TAB */
-      .tests-list {
+      .term-idle-state {
+        color: #858585;
+        padding: 0.5rem 0;
+
+        .idle-line {
+          margin: 0 0 0.35rem 0;
+          color: #4ec9b0;
+        }
+
+        .idle-hint {
+          margin: 0;
+          font-size: 0.75rem;
+
+          strong {
+            color: #ffffff;
+          }
+        }
+      }
+
+      /* TESTS RESULTS IN TERMINAL */
+      .test-results-feed {
         display: flex;
         flex-direction: column;
         gap: 0.45rem;
       }
 
-      .test-item {
-        background: #080d19;
+      .test-card {
+        background: #1f1f1f;
         border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 6px;
-        padding: 0.4rem 0.6rem;
+        border-radius: 4px;
+        padding: 0.45rem 0.65rem;
 
-        &.is-ok {
-          border-left: 3px solid #10b981;
+        &.is-passed {
+          border-left: 3px solid #238636;
         }
 
-        &.is-fail {
-          border-left: 3px solid #ef4444;
+        &.is-failed {
+          border-left: 3px solid #da3633;
         }
       }
 
-      .test-item__head {
+      .test-card__head {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
-        font-size: 0.75rem;
+        gap: 0.45rem;
+        font-size: 0.76rem;
       }
 
-      .test-icon {
+      .test-status-icon {
         font-weight: bold;
       }
 
-      .test-item.is-ok .test-icon {
-        color: #10b981;
-      }
+      .test-card.is-passed .test-status-icon { color: #238636; }
+      .test-card.is-failed .test-status-icon { color: #da3633; }
 
-      .test-item.is-fail .test-icon {
-        color: #ef4444;
-      }
-
-      .test-title {
+      .test-card__name {
         font-weight: 600;
-        color: #e2e8f0;
+        color: #ffffff;
         flex: 1;
       }
 
-      .test-state {
-        font-size: 0.7rem;
-        color: #94a3b8;
+      .test-card__result {
+        font-size: 0.68rem;
+        color: #858585;
       }
 
-      .test-item__diff {
+      .test-card__diff {
         margin-top: 0.35rem;
         padding-top: 0.35rem;
         border-top: 1px solid rgba(255, 255, 255, 0.04);
@@ -897,56 +1217,82 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
         font-size: 0.72rem;
       }
 
-      .diff-row {
+      .diff-entry {
         display: flex;
-        gap: 0.35rem;
-        align-items: baseline;
+        gap: 0.4rem;
       }
 
-      .diff-lbl {
-        color: #64748b;
-        min-width: 55px;
+      .d-label {
+        color: #858585;
+        min-width: 60px;
       }
 
-      .diff-exp {
-        color: #38bdf8;
+      .val-expected { color: #4fc1ff; }
+      .val-actual { color: #f48771; }
+
+      .tests-empty-card {
+        padding: 1.5rem 0.5rem;
+        text-align: center;
+        color: #858585;
       }
 
-      .diff-act {
-        color: #f87171;
-      }
-
-      .btn-run-tests {
-        margin-top: 0.75rem;
-        background: #0284c7;
-        color: #fff;
+      .btn-run-tests-action {
+        margin-top: 0.65rem;
+        background: #238636;
+        color: #ffffff;
         border: none;
-        padding: 0.35rem 0.75rem;
-        border-radius: 4px;
+        padding: 0.35rem 0.85rem;
+        border-radius: 3px;
         font-size: 0.75rem;
+        font-weight: 600;
         cursor: pointer;
 
         &:hover {
-          background: #0369a1;
+          background: #2ea043;
         }
       }
 
-      /* AI TAB */
-      .ai-bubble {
-        background: #090e1c;
-        border: 1px solid rgba(99, 102, 241, 0.2);
-        border-radius: 6px;
+      /* BYTE COPILOT SCREEN */
+      .copilot-screen {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+
+      .copilot-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+        strong {
+          color: #ffffff;
+          font-size: 0.78rem;
+          display: block;
+        }
+
+        small {
+          color: #858585;
+          font-size: 0.7rem;
+        }
+      }
+
+      .copilot-reply-box {
+        background: #1f1f1f;
+        border: 1px solid #3c3c3c;
+        border-radius: 4px;
         padding: 0.75rem;
-        color: #cbd5e1;
+        color: #d4d4d4;
         font-size: 0.8rem;
         line-height: 1.55;
         font-family: inherit;
 
         pre {
-          background: #02050b;
+          background: #141414;
           padding: 0.5rem;
-          border-radius: 4px;
-          color: #38bdf8;
+          border-radius: 3px;
+          color: #4fc1ff;
           overflow-x: auto;
           margin: 0.5rem 0;
         }
@@ -954,35 +1300,81 @@ import { AiChatService } from '../../../core/services/ai-chat.service';
         code {
           background: rgba(255, 255, 255, 0.08);
           padding: 0.1rem 0.3rem;
-          border-radius: 3px;
+          border-radius: 2px;
+          color: #dcdcaa;
         }
+      }
+
+      .copilot-prompt-card {
+        padding: 1rem 0;
+        color: #858585;
+      }
+
+      .btn-ask-byte {
+        margin-top: 0.5rem;
+        background: #0078d4;
+        color: #ffffff;
+        border: none;
+        padding: 0.35rem 0.85rem;
+        border-radius: 3px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+
+        &:hover {
+          background: #0060aa;
+        }
+      }
+
+      /* CLASSIC VS CODE BOTTOM STATUS BAR */
+      .vscode-statusbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #007acc;
+        color: #ffffff;
+        padding: 0 0.5rem;
+        height: 22px;
+        font-size: 0.7rem;
+        user-select: none;
+      }
+
+      .statusbar-left,
+      .statusbar-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .status-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        cursor: pointer;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.15);
+          padding: 0 0.2rem;
+          margin: 0 -0.2rem;
+        }
+      }
+
+      .branch-icon {
+        font-size: 0.8rem;
+      }
+
+      .prob-icon {
+        font-size: 0.75rem;
+        &.warn { margin-left: 0.2rem; }
       }
 
       @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
+        to { transform: rotate(360deg); }
       }
 
       @keyframes blink {
-        from {
-          opacity: 0.2;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border-width: 0;
+        from { opacity: 0.2; }
+        to { opacity: 1; }
       }
     `
   ]
@@ -1018,6 +1410,7 @@ export class InteractiveIdeComponent {
   readonly testing = signal<boolean>(false);
   readonly aiLoading = signal<boolean>(false);
 
+  readonly activeSidebarTab = signal<'explorer' | 'tests' | 'ai'>('explorer');
   readonly activeTerminalTab = signal<'terminal' | 'tests' | 'ai'>('terminal');
   readonly executionResult = signal<CodeExecutionResponse | null>(null);
   readonly aiReply = signal<string | null>(null);
@@ -1055,7 +1448,7 @@ export class InteractiveIdeComponent {
 
   readonly lineNumbers = computed(() => {
     const lines = this.code().split('\n').length;
-    return Array.from({ length: Math.max(lines, 10) }, (_, i) => i + 1);
+    return Array.from({ length: Math.max(lines, 12) }, (_, i) => i + 1);
   });
 
   readonly testStats = computed(() => {
@@ -1064,6 +1457,20 @@ export class InteractiveIdeComponent {
     const passed = res.tests.filter(t => t.passed).length;
     return { passed, total: res.tests.length };
   });
+
+  toggleSidebar(tab: 'explorer' | 'tests' | 'ai') {
+    this.activeSidebarTab.set(tab);
+    if (tab === 'tests') {
+      this.activeTerminalTab.set('tests');
+    } else if (tab === 'ai') {
+      this.activeTerminalTab.set('ai');
+      if (!this.aiReply() && !this.aiLoading()) {
+        this.diagnoseWithAi();
+      }
+    } else {
+      this.activeTerminalTab.set('terminal');
+    }
+  }
 
   onLanguageChange(newLang: string) {
     this.currentLanguage.set(newLang);
@@ -1098,7 +1505,7 @@ export class InteractiveIdeComponent {
       return;
     }
 
-    // Tab key: indent with 2 spaces
+    // Tab key handling: indent with 4 spaces (standard in VS Code Python)
     if (e.key === 'Tab') {
       e.preventDefault();
       const textarea = e.target as HTMLTextAreaElement;
@@ -1106,7 +1513,7 @@ export class InteractiveIdeComponent {
       const end = textarea.selectionEnd;
       const val = textarea.value;
 
-      const tabSpaces = '  ';
+      const tabSpaces = '    ';
       this.code.set(val.substring(0, start) + tabSpaces + val.substring(end));
 
       setTimeout(() => {
