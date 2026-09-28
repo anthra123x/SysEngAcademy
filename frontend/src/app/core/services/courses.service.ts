@@ -11,6 +11,7 @@ import {
   QuizAttemptResult,
 } from '../models';
 import { FALLBACK_COURSES } from './fallback-data';
+import { FALLBACK_LESSONS } from './fallback-lessons';
 
 const COURSES_CACHE_KEY = 'syseng_cache_courses';
 
@@ -79,30 +80,14 @@ export class CoursesService {
   }
 
   getLesson(lessonSlug: string): Observable<LessonDetail> {
+    const foundFallback = FALLBACK_LESSONS[lessonSlug] ||
+      Object.values(FALLBACK_LESSONS).find(l => l.slug === lessonSlug || l.slug.includes(lessonSlug) || lessonSlug.includes(l.slug)) ||
+      FALLBACK_LESSONS['introduccion-programacion-que-es-programar'] ||
+      Object.values(FALLBACK_LESSONS)[0];
+
     return this.api.get<LessonDetail>(`/lessons/${lessonSlug}`).pipe(
       catchError(() => {
-        const fallbackLesson: LessonDetail = {
-          id: 1,
-          module_id: 1,
-          title: 'Sintaxis básica y variables en Python',
-          slug: lessonSlug,
-          type: 'code_challenge',
-          duration_minutes: 15,
-          order: 1,
-          is_preview: true,
-          content: '### Introducción a Variables\n\nEn Python, las variables se definen asignando un valor con `=`.',
-          starter_code: '# Escribe tu código aquí\nnombre = "SysEng"\nprint("Hola " + nombre)',
-          solution: 'nombre = "SysEng"\nprint("Hola " + nombre)',
-          language: 'python',
-          completed: false,
-          module: {
-            id: 1,
-            title: 'Módulo 1: Fundamentos',
-            course: { id: 1, slug: 'introduccion-programacion', title: 'Introducción a la Programación' }
-          },
-          quiz: null,
-        };
-        return of(fallbackLesson);
+        return of(foundFallback);
       })
     );
   }

@@ -45,14 +45,17 @@ export interface Course {
   title: string;
   slug: string;
   description: string;
+  category_id?: number | null;
   category?: Category;
   instructor?: User;
-  thumbnail?: string;
+  thumbnail?: string | null;
   is_published: boolean;
   is_free: boolean;
+  price?: number;
   duration_hours: number;
   difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
   learning_path_id?: number | null;
+  learning_path_level_id?: number | null;
   learning_path?: LearningPath;
   order?: number;
   modules?: CourseModule[];
@@ -189,6 +192,8 @@ export interface LessonModuleRef {
   title: string;
   order?: number;
   course_id?: number;
+  course_slug?: string;
+  course_title?: string;
   course?: Pick<Course, 'id' | 'slug' | 'title'>;
 }
 
