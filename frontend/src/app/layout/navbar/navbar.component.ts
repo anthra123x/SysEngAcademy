@@ -380,6 +380,19 @@ import { AuthService } from '../../core/services/auth.service';
         font-size: 0.65rem;
         color: var(--text-muted);
       }
+
+      @media (max-width: 500px) {
+        padding: 3px 6px 3px 3px;
+        gap: 0;
+
+        .user-meta {
+          display: none;
+        }
+
+        .chevron-arrow {
+          display: none;
+        }
+      }
     }
 
     /* Dropdown */

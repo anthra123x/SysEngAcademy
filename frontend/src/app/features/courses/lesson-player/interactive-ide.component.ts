@@ -37,6 +37,9 @@ export interface TerminalAiMessage {
       [class.is-fullscreen]="isFullscreen()"
       [class.layout-stacked]="layoutMode() === 'bottom' && !isFullscreen()"
       [class.layout-split]="layoutMode() === 'side' || isFullscreen()"
+      [class.mobile-view-editor]="mobileActivePane() === 'editor'"
+      [class.mobile-view-terminal]="mobileActivePane() === 'terminal'"
+      [class.mobile-view-ai]="mobileActivePane() === 'ai'"
     >
       <!-- LINUX TERMINAL TITLE BAR -->
       <div class="terminal-titlebar">
@@ -139,7 +142,7 @@ export interface TerminalAiMessage {
           @if (!isFullscreen()) {
             <button
               type="button"
-              class="cli-btn"
+              class="cli-btn cli-btn-layout"
               (click)="toggleLayoutMode()"
               [title]="layoutMode() === 'bottom' ? 'Dividir pantalla verticalmente' : 'Poner terminal abajo (ancho completo)'"
             >
@@ -197,6 +200,46 @@ export interface TerminalAiMessage {
             {{ isFullscreen() ? '🗗' : '⛶' }}
           </button>
         </div>
+      </div>
+
+      <!-- MOBILE TERMINAL TABS (Visible only on screens <= 768px) -->
+      <div class="mobile-terminal-tabs" aria-label="Selector de vista en móvil">
+        <button
+          type="button"
+          class="m-tab"
+          [class.is-active]="mobileActivePane() === 'editor'"
+          (click)="mobileActivePane.set('editor')"
+        >
+          <span class="m-tab-glyph">📁</span>
+          <span>Editor</span>
+        </button>
+        <button
+          type="button"
+          class="m-tab"
+          [class.is-active]="mobileActivePane() === 'terminal'"
+          (click)="switchToTerminalTab()"
+        >
+          <span class="m-tab-glyph">💻</span>
+          <span>Terminal</span>
+          @if (testStats(); as stats) {
+            <span
+              class="m-badge"
+              [class.badge-ok]="stats.passed === stats.total"
+              [class.badge-err]="stats.passed < stats.total"
+            >
+              {{ stats.passed }}/{{ stats.total }}
+            </span>
+          }
+        </button>
+        <button
+          type="button"
+          class="m-tab"
+          [class.is-active]="mobileActivePane() === 'ai'"
+          (click)="switchToAiTab()"
+        >
+          <span class="m-tab-glyph ai-spark">✨</span>
+          <span>Byte AI</span>
+        </button>
       </div>
 
       <!-- COLLAPSIBLE HINT PROMPT -->
@@ -583,12 +626,12 @@ export interface TerminalAiMessage {
       <footer class="terminal-statusbar font-mono" aria-label="Estado de la terminal">
         <div class="status-left">
           <span class="status-item">
-            <span class="status-sym">🐧</span> Linux Sandbox (x86_64)
+            <span class="status-sym">🐧</span> <span class="status-hide-mobile">Linux Sandbox (x86_64)</span>
           </span>
-          <span class="status-item">
+          <span class="status-item status-hide-mobile">
             <span class="status-sym">⎇</span> main*
           </span>
-          <span class="status-item">
+          <span class="status-item status-hide-mobile">
             0 errors 0 warns
           </span>
         </div>
@@ -597,10 +640,10 @@ export interface TerminalAiMessage {
           <span class="status-item">
             Ln {{ cursorLine() }}, Col {{ cursorCol() }}
           </span>
-          <span class="status-item">
+          <span class="status-item status-hide-mobile">
             Spaces: 4
           </span>
-          <span class="status-item">
+          <span class="status-item status-hide-mobile">
             UTF-8
           </span>
           <span class="status-item status-lang">
@@ -1605,11 +1648,209 @@ export interface TerminalAiMessage {
 
       @keyframes spin { to { transform: rotate(360deg); } }
       @keyframes pulseBlink { from { opacity: 0.2; } to { opacity: 1; } }
-      @keyframes fadeInOut {
-        0% { opacity: 0; transform: translate(-50%, 10px); }
-        15% { opacity: 1; transform: translate(-50%, 0); }
-        80% { opacity: 1; transform: translate(-50%, 0); }
-        100% { opacity: 0; transform: translate(-50%, -10px); }
+      /* ============================================================
+         MOBILE TERMINAL TABS (VISIBLE <= 768px)
+         ============================================================ */
+      .mobile-terminal-tabs {
+        display: none;
+        background: #0d121f;
+        border-bottom: 1px solid #1e293b;
+        padding: 4px 6px;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      .m-tab {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 6px 8px;
+        border-radius: 4px;
+        background: #131926;
+        border: 1px solid #1e293b;
+        color: #94a3b8;
+        font-size: 0.74rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        &:hover {
+          color: #f1f5f9;
+          background: #1e293b;
+        }
+
+        &.is-active {
+          background: #1e293b;
+          color: #38bdf8;
+          border-color: rgba(56, 189, 248, 0.4);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+      }
+
+      .m-tab-glyph {
+        font-size: 0.8rem;
+      }
+
+      .m-badge {
+        font-size: 0.62rem;
+        padding: 0.05rem 0.3rem;
+        border-radius: 3px;
+        background: #0f172a;
+        color: #cbd5e1;
+
+        &.badge-ok { background: #059669; color: #fff; }
+        &.badge-err { background: #dc2626; color: #fff; }
+      }
+
+      /* ============================================================
+         RESPONSIVE STYLES (MOBILE <= 768px & <= 480px)
+         ============================================================ */
+      @media (max-width: 768px) {
+        .linux-terminal-window {
+          height: 480px;
+          min-height: 400px;
+          margin: 0.75rem 0;
+          border-radius: 6px;
+        }
+
+        .mobile-terminal-tabs {
+          display: flex;
+        }
+
+        .cli-btn-layout {
+          display: none !important;
+        }
+
+        /* Pane toggle in mobile: show 1 pane at 100% height instead of cramped stacking */
+        .linux-terminal-window.mobile-view-editor {
+          .terminal-workspace {
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          .editor-pane {
+            display: flex !important;
+            height: 100% !important;
+            flex: 1 1 0% !important;
+            border-right: none !important;
+            border-bottom: none !important;
+          }
+          .terminal-pane {
+            display: none !important;
+          }
+        }
+
+        .linux-terminal-window.mobile-view-terminal,
+        .linux-terminal-window.mobile-view-ai {
+          .terminal-workspace {
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          .editor-pane {
+            display: none !important;
+          }
+          .terminal-pane {
+            display: flex !important;
+            height: 100% !important;
+            flex: 1 1 0% !important;
+            border-right: none !important;
+          }
+        }
+
+        .terminal-titlebar {
+          padding: 0 0.4rem;
+          height: 38px;
+          gap: 0.3rem;
+        }
+
+        .titlebar-left {
+          min-width: auto;
+          gap: 0.25rem;
+          flex-shrink: 0;
+        }
+
+        .terminal-dots {
+          gap: 0.25rem;
+          margin-right: 0.15rem;
+        }
+
+        .terminal-tab {
+          font-size: 0.68rem;
+          padding: 0.15rem 0.4rem;
+
+          &:not(.is-active) {
+            display: none;
+          }
+        }
+
+        .titlebar-right {
+          gap: 0.2rem;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .cli-select {
+          font-size: 0.68rem;
+          padding: 0.15rem 0.25rem;
+          max-width: 90px;
+        }
+
+        .cli-btn {
+          padding: 0.18rem 0.38rem;
+          font-size: 0.68rem;
+
+          .cli-kbd {
+            display: none;
+          }
+        }
+
+        .editor-gutter {
+          width: 28px;
+          font-size: 0.72rem;
+          padding: 0.5rem 0;
+        }
+
+        .gutter-line {
+          padding-right: 0.3rem;
+        }
+
+        .editor-textarea {
+          font-size: 0.8rem;
+          padding: 0.5rem 0.65rem;
+          line-height: 1.5;
+        }
+
+        .terminal-viewport {
+          padding: 0.5rem 0.65rem;
+          font-size: 0.75rem;
+        }
+
+        .terminal-header-strip {
+          padding: 0 0.35rem;
+          height: 30px;
+        }
+
+        .term-strip-tab {
+          padding: 0.25rem 0.4rem;
+          font-size: 0.66rem;
+        }
+
+        .terminal-statusbar {
+          font-size: 0.62rem;
+          padding: 0 0.4rem;
+
+          .status-hide-mobile {
+            display: none !important;
+          }
+        }
+      }
+
+      @media (max-width: 480px) {
+        .linux-terminal-window {
+          height: 440px;
+          min-height: 380px;
+        }
       }
     `,
   ],
@@ -1655,6 +1896,7 @@ export class InteractiveIdeComponent {
   readonly isFullscreen = signal<boolean>(false);
   readonly isModified = signal<boolean>(false);
   readonly layoutMode = signal<'bottom' | 'side'>('bottom');
+  readonly mobileActivePane = signal<'editor' | 'terminal' | 'ai'>('editor');
 
   readonly cursorLine = signal<number>(1);
   readonly cursorCol = signal<number>(1);
@@ -1730,7 +1972,20 @@ export class InteractiveIdeComponent {
 
   openCopilotTab() {
     this.activeTerminalTab.set('ai');
+    this.mobileActivePane.set('ai');
     setTimeout(() => this.scrollCopilotToBottom(), 80);
+  }
+
+  switchToTerminalTab() {
+    this.mobileActivePane.set('terminal');
+    if (this.activeTerminalTab() === 'ai') {
+      this.activeTerminalTab.set('terminal');
+    }
+  }
+
+  switchToAiTab() {
+    this.mobileActivePane.set('ai');
+    this.openCopilotTab();
   }
 
   onCodeChange(val: string) {
@@ -1859,6 +2114,7 @@ export class InteractiveIdeComponent {
 
     this.running.set(true);
     this.activeTerminalTab.set('terminal');
+    this.mobileActivePane.set('terminal');
 
     this.codeRunner
       .execute(this.currentLanguage(), this.code(), this.stdin(), [])
@@ -1886,6 +2142,7 @@ export class InteractiveIdeComponent {
 
     this.testing.set(true);
     this.activeTerminalTab.set('tests');
+    this.mobileActivePane.set('terminal');
 
     this.codeRunner
       .execute(this.currentLanguage(), this.code(), '', tests)

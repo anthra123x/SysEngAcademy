@@ -275,7 +275,8 @@ export interface AchievementBadge {
       }
 
       @media (max-width: 480px) {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--sp-2);
       }
     }
 
@@ -601,6 +602,80 @@ export interface AchievementBadge {
     @keyframes pulseGlow {
       from { transform: scale(0.96); opacity: 0.4; }
       to { transform: scale(1.04); opacity: 0.8; }
+    }
+
+    @media (max-width: 640px) {
+      .profile-page {
+        padding: var(--sp-6) 0 var(--sp-10);
+      }
+
+      .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: var(--sp-4);
+        padding-bottom: var(--sp-6);
+        margin-bottom: var(--sp-6);
+
+        .profile-badges-row {
+          justify-content: center;
+        }
+      }
+
+      .profile-avatar {
+        width: 68px;
+        height: 68px;
+        font-size: var(--text-xl);
+      }
+
+      .stat-card {
+        padding: var(--sp-3) var(--sp-2);
+      }
+
+      .stat-num {
+        font-size: var(--text-2xl);
+      }
+
+      .achievements-section {
+        padding: var(--sp-4);
+        margin-bottom: var(--sp-6);
+        border-radius: var(--radius-lg);
+      }
+
+      .section-title-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--sp-3);
+      }
+
+      .badges-summary-capsule {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.4rem 0.8rem;
+      }
+
+      .badges-grid {
+        grid-template-columns: 1fr;
+        gap: var(--sp-3);
+      }
+
+      .badge-card {
+        padding: var(--sp-3) var(--sp-4);
+        gap: var(--sp-3);
+      }
+
+      .badge-icon-wrap {
+        width: 44px;
+        height: 44px;
+        font-size: 1.5rem;
+      }
+
+      .enrolled-grid {
+        grid-template-columns: 1fr;
+        gap: var(--sp-4);
+      }
     }
   `],
 })

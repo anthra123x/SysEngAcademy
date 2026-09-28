@@ -98,7 +98,7 @@ import {
             title="Mostrar u ocultar temario"
           >
             <span class="icon">📚</span>
-            <span>{{ sidebarOpen() ? 'Ocultar Temario' : 'Temario' }}</span>
+            <span>{{ sidebarOpen() ? 'Cerrar' : 'Temario' }}</span>
           </button>
 
           <!-- User Avatar or Login -->
@@ -109,7 +109,7 @@ import {
           } @else {
             <a routerLink="/auth/login" class="btn-login-unified" title="Iniciar sesión para acceder a tu perfil y guardar insignias">
               <span class="login-user-icon">👤</span>
-              <span>Iniciar Sesión</span>
+              <span class="login-btn-label">Iniciar Sesión</span>
             </a>
           }
         </div>
@@ -334,8 +334,24 @@ import {
             }
           </main>
 
+          <!-- Mobile Curriculum Drawer Backdrop -->
+          @if (sidebarOpen()) {
+            <div class="curriculum-drawer-backdrop" (click)="sidebarOpen.set(false)" aria-hidden="true"></div>
+          }
+
           <!-- Sidebar: lecciones del curso -->
           <aside id="player-side" class="player-side" [class.open]="sidebarOpen()" aria-label="Contenido del curso">
+            <!-- Mobile Drawer Header with Close Button -->
+            <div class="drawer-mobile-header">
+              <div class="drawer-mobile-title">
+                <span>📚</span>
+                <strong>Temario del Curso</strong>
+              </div>
+              <button type="button" class="drawer-close-btn" (click)="sidebarOpen.set(false)" aria-label="Cerrar temario">
+                ✕
+              </button>
+            </div>
+
             @if (course()) {
               <app-course-curriculum [course]="course()" [currentLessonId]="l.id" />
             } @else {
@@ -400,32 +416,19 @@ import {
       flex-shrink: 0;
     }
 
-    /* Slide Bar Toggle Button */
-    .btn-slidebar-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      height: 36px;
-      padding: 0 12px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-size: var(--text-xs);
-      font-weight: var(--font-medium);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      flex-shrink: 0;
+    /* Curriculum Drawer (Mobile & Tablet off-canvas) */
+    .curriculum-drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 2050;
+      animation: fade-in 0.2s ease;
+    }
 
-      &:hover {
-        background: var(--bg-surface-2);
-        border-color: var(--primary);
-        color: var(--primary);
-      }
-
-      .ham-icon {
-        font-size: 1rem;
-      }
+    .drawer-mobile-header {
+      display: none;
     }
 
     /* Logo inside Unified Header */
@@ -629,280 +632,10 @@ import {
         background: var(--primary-hover);
         box-shadow: var(--shadow-primary);
       }
-    }
 
-    /* ========================================================
-       NAVIGATION SLIDE BAR (Drawer)
-       ======================================================== */
-    .nav-slidebar-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 2000;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      animation: fade-overlay 0.22s ease both;
-    }
-
-    @keyframes fade-overlay {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .nav-slidebar-panel {
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 340px;
-      max-width: 88vw;
-      background: var(--bg-surface);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: var(--sp-6);
-      box-shadow: 16px 0 40px rgba(0, 0, 0, 0.65);
-      animation: slide-panel 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
-      overflow-y: auto;
-    }
-
-    @keyframes slide-panel {
-      from { transform: translateX(-100%); }
-      to { transform: translateX(0); }
-    }
-
-    .slidebar-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: var(--sp-6);
-
-      .slidebar-logo {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        text-decoration: none;
-        color: var(--text-primary);
-
-        .logo-icon-wrap {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: rgba(10, 233, 138, 0.12);
-          border: 1px solid rgba(10, 233, 138, 0.3);
-          display: grid;
-          place-items: center;
-          .logo-icon {
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            font-weight: var(--font-bold);
-            color: var(--primary);
-          }
-        }
-
-        .logo-title {
-          font-size: var(--text-base);
-          font-weight: var(--font-medium);
-          strong { color: var(--primary); font-weight: var(--font-bold); }
-        }
-      }
-
-      .slidebar-close-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: var(--radius-md);
-        background: var(--bg-surface-2);
-        border: 1px solid var(--border);
-        color: var(--text-secondary);
-        font-size: 1rem;
-        cursor: pointer;
-        display: grid;
-        place-items: center;
-        transition: all var(--transition-fast);
-
-        &:hover {
-          color: var(--text-primary);
-          border-color: var(--danger);
-          background: var(--danger-dim);
-        }
-      }
-    }
-
-    .slidebar-course-card {
-      background: var(--bg-surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: var(--sp-4);
-      margin-bottom: var(--sp-5);
-
-      .scc-tag {
-        font-size: 0.68rem;
-        font-weight: var(--font-bold);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--accent);
-        display: block;
-        margin-bottom: 4px;
-      }
-
-      .scc-title {
-        font-size: var(--text-sm);
-        font-weight: var(--font-bold);
-        color: var(--text-primary);
-        margin-bottom: var(--sp-3);
-        line-height: 1.35;
-      }
-
-      .scc-progress {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: var(--sp-3);
-
-        .scc-progress-bar {
-          flex: 1;
-          height: 6px;
-          background: var(--bg-surface-3);
-          border-radius: 99px;
-          overflow: hidden;
-
-          .scc-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-          }
-        }
-
-        .scc-percent {
-          font-size: 0.72rem;
-          color: var(--text-muted);
-          font-family: var(--font-mono);
-        }
-      }
-
-      .scc-link {
-        display: inline-block;
-        font-size: var(--text-xs);
-        color: var(--primary);
-        text-decoration: none;
-        font-weight: var(--font-medium);
-        transition: color var(--transition-fast);
-        &:hover { text-decoration: underline; color: var(--primary-hover); }
-      }
-    }
-
-    .slidebar-nav {
-      display: flex;
-      flex-direction: column;
-      gap: var(--sp-1);
-      flex: 1;
-
-      .slidebar-section-title {
-        font-size: 0.7rem;
-        font-weight: var(--font-bold);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--text-muted);
-        padding: var(--sp-2) var(--sp-3);
-      }
-
-      .slidebar-link {
-        display: flex;
-        align-items: center;
-        gap: var(--sp-3);
-        padding: 10px 14px;
-        border-radius: var(--radius-md);
-        text-decoration: none;
-        color: var(--text-secondary);
-        font-size: var(--text-sm);
-        font-weight: var(--font-medium);
-        transition: all var(--transition-fast);
-        background: transparent;
-        border: none;
-        width: 100%;
-        text-align: left;
-        cursor: pointer;
-
-        &:hover {
-          background: var(--bg-surface-2);
-          color: var(--text-primary);
-        }
-
-        .link-icon {
-          font-size: 1.1rem;
-        }
-
-        &--danger:hover {
-          color: var(--danger);
-          background: var(--danger-dim);
-        }
-      }
-    }
-
-    .slidebar-divider {
-      height: 1px;
-      background: var(--border);
-      margin: var(--sp-4) 0;
-    }
-
-    .slidebar-footer {
-      display: flex;
-      flex-direction: column;
-      gap: var(--sp-2);
-
-      .slidebar-user-info {
-        display: flex;
-        align-items: center;
-        gap: var(--sp-3);
-        padding: var(--sp-2) var(--sp-3);
-        margin-bottom: var(--sp-2);
-
-        .avatar-circle {
-          width: 36px;
-          height: 36px;
-          border-radius: var(--radius-full);
-          background: linear-gradient(135deg, var(--primary), var(--accent));
-          color: #08090D;
-          font-size: var(--text-xs);
-          font-weight: var(--font-bold);
-          display: grid;
-          place-items: center;
-          flex-shrink: 0;
-        }
-
-        .user-meta {
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-
-          .user-name {
-            font-size: var(--text-sm);
-            color: var(--text-primary);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-
-          .user-email {
-            font-size: var(--text-xs);
-            color: var(--text-muted);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-        }
-      }
-
-      .slidebar-auth-cta {
-        p {
-          font-size: var(--text-xs);
-          color: var(--text-muted);
-          line-height: 1.5;
-          margin-bottom: var(--sp-3);
-        }
-
-        .btn {
-          margin-bottom: var(--sp-2);
-          width: 100%;
+      @media (max-width: 480px) {
+        .login-btn-label {
+          display: none;
         }
       }
     }
@@ -1488,10 +1221,59 @@ import {
       flex-direction: column;
 
       @media (max-width: 1024px) {
-        position: static;
-        max-height: none;
+        .drawer-mobile-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 18px;
+          background: #141724;
+          border-bottom: 1px solid var(--border);
+          flex-shrink: 0;
+
+          .drawer-mobile-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--text-primary);
+          }
+
+          .drawer-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            line-height: 1;
+
+            &:hover {
+              color: #ffffff;
+              background: rgba(255, 255, 255, 0.1);
+            }
+          }
+        }
+
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(340px, 86vw);
+        height: 100vh;
+        max-height: 100vh;
+        z-index: 2100;
+        border-radius: 0;
+        box-shadow: -8px 0 32px rgba(0, 0, 0, 0.7);
         display: none;
-        &.open { display: block; }
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        &.open {
+          display: flex;
+          animation: slideDrawer 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
       }
 
       .side-head {
@@ -1580,6 +1362,95 @@ import {
     @keyframes fade-up {
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: none; }
+    }
+
+    @keyframes slideDrawer {
+      from { transform: translateX(100%); }
+      to   { transform: translateX(0); }
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+      .classroom-unified-header {
+        height: 56px;
+        padding: 0 var(--sp-3);
+        gap: var(--sp-2);
+      }
+
+      .player {
+        padding: calc(56px + var(--sp-3)) 0 var(--sp-10);
+      }
+
+      .btn-curriculum-pill {
+        padding: 5px 10px;
+        font-size: 0.72rem;
+        gap: 4px;
+      }
+
+      .unified-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.7rem;
+      }
+
+      .btn-login-unified {
+        height: 30px;
+        padding: 0 10px;
+        font-size: 0.72rem;
+      }
+
+      .lesson-header-card {
+        padding: var(--sp-4);
+        margin-bottom: var(--sp-4);
+      }
+
+      .lesson-headline {
+        font-size: 1.35rem;
+        line-height: 1.3;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .player-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--sp-3);
+        margin-top: var(--sp-6);
+        padding-top: var(--sp-4);
+
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
+
+        &__right {
+          width: 100%;
+          flex-direction: column;
+          align-items: stretch;
+          gap: var(--sp-3);
+
+          .btn { width: 100%; }
+          .done-chip { justify-content: center; width: 100%; }
+        }
+      }
+
+      .lesson-nav {
+        grid-template-columns: 1fr;
+        gap: var(--sp-3);
+
+        &__item {
+          text-align: left !important;
+          padding: var(--sp-3) var(--sp-4);
+        }
+      }
+
+      .quiz-card {
+        padding: var(--sp-4);
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
