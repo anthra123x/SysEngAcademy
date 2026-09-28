@@ -1,11 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { LearningPath, PaginatedResponse } from '../models';
 import { FALLBACK_LEARNING_PATHS } from './fallback-data';
 
-const PATHS_CACHE_KEY = 'syseng_cache_paths';
+const PATHS_CACHE_KEY = 'syseng_cache_paths_v3';
 
 @Injectable({ providedIn: 'root' })
 export class LearningPathsService {
@@ -49,19 +48,19 @@ export class LearningPathsService {
   }
 
   getBySlug(slug: string): Observable<LearningPath> {
-    const cached = this.readCache()?.data.find(p => p.slug === slug);
-    const fallback = cached ||
-      FALLBACK_LEARNING_PATHS.find(p => p.slug === slug || slug.includes(p.slug) || p.slug.includes(slug)) ||
+    const fallback = FALLBACK_LEARNING_PATHS.find(p => p.slug === slug || slug.includes(p.slug) || p.slug.includes(slug)) ||
       FALLBACK_LEARNING_PATHS[0];
 
     return new Observable<LearningPath>(subscriber => {
-      // 0ms instant emission
+      // Emisión instantánea (0ms) de la ruta completa con sus hitos, niveles y cursos asignados
       subscriber.next(fallback);
 
-      // Revalidate in background
+      // Revalidación en segundo plano si la API remota responde con niveles válidos
       this.api.get<LearningPath>(`/learning-paths/${slug}`).subscribe({
         next: fresh => {
-          subscriber.next(fresh);
+          if (fresh && fresh.levels && fresh.levels.length > 0) {
+            subscriber.next(fresh);
+          }
           subscriber.complete();
         },
         error: () => subscriber.complete(),
@@ -74,7 +73,8 @@ export class LearningPathsService {
       const raw = localStorage.getItem(PATHS_CACHE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed?.data?.length >= FALLBACK_LEARNING_PATHS.length) {
+        const hasLevels = parsed?.data?.some((p: any) => p.levels && p.levels.length > 0);
+        if (hasLevels && parsed?.data?.length >= FALLBACK_LEARNING_PATHS.length) {
           return parsed;
         }
       }

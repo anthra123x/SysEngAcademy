@@ -33,6 +33,13 @@ export class App {
   readonly isClassroomMode = signal(this.router.url.includes('/leccion/'));
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      try {
+        const legacyKeys = ['syseng_cache_paths', 'syseng_cache_courses', 'syseng_cache_home'];
+        legacyKeys.forEach(k => localStorage.removeItem(k));
+      } catch {}
+    }
+
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         this.isClassroomMode.set(event.urlAfterRedirects.includes('/leccion/'));

@@ -13,7 +13,7 @@ import {
 import { FALLBACK_COURSES } from './fallback-data';
 import { FALLBACK_LESSONS } from './fallback-lessons';
 
-const COURSES_CACHE_KEY = 'syseng_cache_courses';
+const COURSES_CACHE_KEY = 'syseng_cache_courses_v3';
 
 @Injectable({ providedIn: 'root' })
 export class CoursesService {
@@ -71,12 +71,22 @@ export class CoursesService {
   }
 
   getBySlug(slug: string): Observable<Course> {
-    return this.api.get<Course>(`/courses/${slug}`).pipe(
-      catchError(() => {
-        const found = FALLBACK_COURSES.find(c => c.slug === slug || c.slug.includes(slug) || slug.includes(c.slug)) || FALLBACK_COURSES[0];
-        return of(found);
-      })
-    );
+    const found = FALLBACK_COURSES.find(c => c.slug === slug || c.slug.includes(slug) || slug.includes(c.slug)) || FALLBACK_COURSES[0];
+
+    return new Observable<Course>(subscriber => {
+      // Emisión instantánea (0ms) con todos sus módulos y lecciones
+      subscriber.next(found);
+
+      this.api.get<Course>(`/courses/${slug}`).subscribe({
+        next: fresh => {
+          if (fresh && fresh.modules && fresh.modules.length > 0) {
+            subscriber.next(fresh);
+          }
+          subscriber.complete();
+        },
+        error: () => subscriber.complete(),
+      });
+    });
   }
 
   getLesson(lessonSlug: string): Observable<LessonDetail> {
@@ -85,11 +95,20 @@ export class CoursesService {
       FALLBACK_LESSONS['introduccion-programacion-que-es-programar'] ||
       Object.values(FALLBACK_LESSONS)[0];
 
-    return this.api.get<LessonDetail>(`/lessons/${lessonSlug}`).pipe(
-      catchError(() => {
-        return of(foundFallback);
-      })
-    );
+    return new Observable<LessonDetail>(subscriber => {
+      // Emisión instantánea (0ms) de la lección didáctica con IDE interactivo
+      subscriber.next(foundFallback);
+
+      this.api.get<LessonDetail>(`/lessons/${lessonSlug}`).subscribe({
+        next: fresh => {
+          if (fresh && fresh.title) {
+            subscriber.next(fresh);
+          }
+          subscriber.complete();
+        },
+        error: () => subscriber.complete(),
+      });
+    });
   }
 
   enroll(courseId: number): Observable<Enrollment> {

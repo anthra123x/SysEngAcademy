@@ -133,447 +133,6 @@ export const FALLBACK_CATEGORIES: Category[] = [
 
 export const FALLBACK_COURSES: Course[] = [
     {
-        "id": 2,
-        "title": "Algoritmos de Ordenamiento",
-        "slug": "algoritmos-ordenamiento",
-        "description": "Estudia los algoritmos de ordenamiento más importantes: Bubble Sort, Selection Sort, Merge Sort, Quick Sort. Aprende a analizar su complejidad temporal y espacial con Big-O notation.",
-        "category_id": 2,
-        "learning_path_id": 1,
-        "learning_path_level_id": 3,
-        "difficulty": "intermediate",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": true,
-        "price": 0,
-        "duration_hours": 8,
-        "order": 1,
-        "lessons_count": 9,
-        "category": {
-            "id": 2,
-            "name": "Algoritmos",
-            "slug": "algoritmos",
-            "icon": "GitBranch",
-            "color": "#00D9FF",
-            "description": "Diseño y análisis de algoritmos"
-        },
-        "modules": [
-            {
-                "id": 3,
-                "course_id": 2,
-                "title": "Análisis de Algoritmos",
-                "description": "Aprende a medir y comparar la eficiencia de los algoritmos con la notación Big-O.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 5,
-                        "module_id": 3,
-                        "title": "Notación Big-O",
-                        "slug": "notacion-big-o",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 423,
-                        "module_id": 3,
-                        "title": "Comparando algoritmos en la práctica",
-                        "slug": "comparando-algoritmos",
-                        "type": "article",
-                        "duration_minutes": 12,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 424,
-                        "module_id": 3,
-                        "title": "Complejidad espacial",
-                        "slug": "complejidad-espacial",
-                        "type": "article",
-                        "duration_minutes": 10,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 170,
-                "course_id": 2,
-                "title": "Ordenamiento Básico",
-                "description": "Los algoritmos cuadráticos clásicos: fáciles de entender e implementar, útiles para listas pequeñas.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 425,
-                        "module_id": 170,
-                        "title": "Bubble Sort",
-                        "slug": "bubble-sort",
-                        "type": "code_challenge",
-                        "duration_minutes": 14,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 426,
-                        "module_id": 170,
-                        "title": "Selection Sort",
-                        "slug": "selection-sort",
-                        "type": "code_challenge",
-                        "duration_minutes": 13,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 427,
-                        "module_id": 170,
-                        "title": "Insertion Sort",
-                        "slug": "insertion-sort",
-                        "type": "code_challenge",
-                        "duration_minutes": 13,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 171,
-                "course_id": 2,
-                "title": "Ordenamiento Avanzado y Búsqueda",
-                "description": "Divide y vencerás: Merge Sort, Quick Sort y la búsqueda binaria.",
-                "order": 3,
-                "lessons": [
-                    {
-                        "id": 428,
-                        "module_id": 171,
-                        "title": "Merge Sort",
-                        "slug": "merge-sort",
-                        "type": "code_challenge",
-                        "duration_minutes": 16,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 429,
-                        "module_id": 171,
-                        "title": "Quick Sort",
-                        "slug": "quick-sort",
-                        "type": "code_challenge",
-                        "duration_minutes": 16,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 430,
-                        "module_id": 171,
-                        "title": "Búsqueda binaria",
-                        "slug": "busqueda-binaria",
-                        "type": "code_challenge",
-                        "duration_minutes": 12,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 18,
-        "title": "Git desde cero",
-        "slug": "git-desde-cero",
-        "description": "Instala Git, haz tus primeros commits y domina los tres estados, las ramas y el viaje por la historia sin miedo.",
-        "category_id": 12,
-        "learning_path_id": 7,
-        "learning_path_level_id": 21,
-        "difficulty": "beginner",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": true,
-        "price": 0,
-        "duration_hours": 10,
-        "order": 1,
-        "lessons_count": 6,
-        "category": {
-            "id": 12,
-            "name": "Git y Control de Versiones",
-            "slug": "git",
-            "icon": "GitFork",
-            "color": "#FF7043",
-            "description": "Git, ramas, colaboración y flujos de trabajo"
-        },
-        "modules": [
-            {
-                "id": 20,
-                "course_id": 18,
-                "title": "Primeros pasos",
-                "description": "Instalación, commits y el modelo de estados de Git.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 44,
-                        "module_id": 20,
-                        "title": "¿Qué es Git y por qué usarlo?",
-                        "slug": "que-es-git",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 45,
-                        "module_id": 20,
-                        "title": "Tus primeros commits",
-                        "slug": "primeros-commits",
-                        "type": "code_challenge",
-                        "duration_minutes": 16,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 543,
-                        "module_id": 20,
-                        "title": "Los tres estados: working, staging y commit",
-                        "slug": "estados-y-staging",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 211,
-                "course_id": 18,
-                "title": "Ramas e historia",
-                "description": "Ramas, viaje por el historial y estrategias de organización.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 544,
-                        "module_id": 211,
-                        "title": "Ramas y merge",
-                        "slug": "ramas-y-merge",
-                        "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 545,
-                        "module_id": 211,
-                        "title": "Viajar por la historia: log, diff y revert",
-                        "slug": "historia-y-revert",
-                        "type": "code_challenge",
-                        "duration_minutes": 17,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 546,
-                        "module_id": 211,
-                        "title": ".gitignore, aliases y estrategias de commit",
-                        "slug": "gitignore-y-estrategias",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 9,
-        "title": "HTML, CSS y JavaScript",
-        "slug": "html-css-javascript",
-        "description": "Los tres pilares de la web: estructura semántica, maquetación moderna con Flexbox y Grid, e interactividad con el DOM. Construye tus primeras interfaces desde cero.",
-        "category_id": 10,
-        "learning_path_id": 4,
-        "learning_path_level_id": 12,
-        "difficulty": "beginner",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": true,
-        "price": 0,
-        "duration_hours": 15,
-        "order": 1,
-        "lessons_count": 12,
-        "category": {
-            "id": 10,
-            "name": "Desarrollo Frontend",
-            "slug": "desarrollo-frontend",
-            "icon": "Palette",
-            "color": "#F06292",
-            "description": "Interfaces, componentes, frameworks y experiencia de usuario"
-        },
-        "modules": [
-            {
-                "id": 10,
-                "course_id": 9,
-                "title": "HTML Semántico",
-                "description": "Estructura significativa, formularios y contenido multimedia.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 22,
-                        "module_id": 10,
-                        "title": "Estructura semántica de una página HTML",
-                        "slug": "estructura-de-una-pagina-html",
-                        "type": "article",
-                        "duration_minutes": 12,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 456,
-                        "module_id": 10,
-                        "title": "Etiquetas semánticas y accesibilidad",
-                        "slug": "etiquetas-semanticas-y-accesibilidad",
-                        "type": "article",
-                        "duration_minutes": 12,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 457,
-                        "module_id": 10,
-                        "title": "Formularios y contenido multimedia",
-                        "slug": "formularios-y-media",
-                        "type": "code_challenge",
-                        "duration_minutes": 14,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 180,
-                "course_id": 9,
-                "title": "Layout con CSS",
-                "description": "Flexbox, Grid, modelo de caja y diseño responsive.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 23,
-                        "module_id": 180,
-                        "title": "Flexbox y Grid: maquetación moderna",
-                        "slug": "css-flexbox-y-grid",
-                        "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 458,
-                        "module_id": 180,
-                        "title": "Colores, tipografía y modelo de caja",
-                        "slug": "colores-tipografia-y-box-model",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 459,
-                        "module_id": 180,
-                        "title": "Diseño responsive",
-                        "slug": "responsive-design",
-                        "type": "code_challenge",
-                        "duration_minutes": 16,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 181,
-                "course_id": 9,
-                "title": "JavaScript y el DOM",
-                "description": "Interactividad real: eventos, manipulación del DOM y un proyecto interactivo.",
-                "order": 3,
-                "lessons": [
-                    {
-                        "id": 24,
-                        "module_id": 181,
-                        "title": "JavaScript: el DOM y los eventos",
-                        "slug": "javascript-dom-y-eventos",
-                        "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 460,
-                        "module_id": 181,
-                        "title": "Manipulando el DOM en la práctica",
-                        "slug": "manipulando-el-dom",
-                        "type": "code_challenge",
-                        "duration_minutes": 16,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 461,
-                        "module_id": 181,
-                        "title": "Proyecto: galería interactiva",
-                        "slug": "proyecto-interactivo",
-                        "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 206,
-                "course_id": 9,
-                "title": "JavaScript Asíncrono, Promesas y Fetch API",
-                "description": "Domina el Event Loop, la programación asíncrona no bloqueante, Promesas y el consumo de APIs remotas según la documentación oficial de MDN.",
-                "order": 4,
-                "lessons": [
-                    {
-                        "id": 529,
-                        "module_id": 206,
-                        "title": "El Event Loop y el modelo de concurrencia",
-                        "slug": "event-loop-y-concurrencia-js",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 530,
-                        "module_id": 206,
-                        "title": "Promesas, Async/Await y la Fetch API",
-                        "slug": "promesas-async-await-y-fetch",
-                        "type": "article",
-                        "duration_minutes": 16,
-                        "order": 2,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 208,
-                "course_id": 9,
-                "title": "Almacenamiento Local, Persistencia y Proyecto Final",
-                "description": "Aprende a guardar el estado de las aplicaciones en el cliente con LocalStorage y SessionStorage, y consolida tus habilidades en un proyecto interactivo.",
-                "order": 5,
-                "lessons": [
-                    {
-                        "id": 535,
-                        "module_id": 208,
-                        "title": "Persistencia en el navegador con LocalStorage",
-                        "slug": "localstorage-persistencia-cliente",
-                        "type": "article",
-                        "duration_minutes": 12,
-                        "order": 1,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
         "id": 20,
         "title": "Fundamentos de requerimientos",
         "slug": "fundamentos-requerimientos",
@@ -679,238 +238,104 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
-        "id": 5,
-        "title": "Introducción al Backend",
-        "slug": "backend-introduccion",
-        "description": "Descubre qué pasa del lado del servidor: el modelo cliente-servidor, HTTP y el rol del backend en una aplicación moderna. La base para diseñar cualquier API.",
-        "category_id": 9,
-        "learning_path_id": 3,
-        "learning_path_level_id": 8,
-        "difficulty": "beginner",
+        "id": 12,
+        "title": "Integración Frontend ↔ Backend",
+        "slug": "integracion-frontend-backend",
+        "description": "Convierte la API en un contrato vivo entre equipos: documentación, manejo de CORS y tokens desde el frontend, y un flujo de datos sin fricción.",
+        "category_id": 8,
+        "learning_path_id": 5,
+        "learning_path_level_id": 15,
+        "difficulty": "intermediate",
         "thumbnail": null,
         "is_published": true,
         "is_free": true,
         "price": 0,
-        "duration_hours": 10,
-        "order": 1,
-        "lessons_count": 8,
-        "category": {
-            "id": 9,
-            "name": "Desarrollo Backend",
-            "slug": "desarrollo-backend",
-            "icon": "Server",
-            "color": "#64B5F6",
-            "description": "APIs, servidores, bases de datos y lógica de negocio"
-        },
-        "modules": [
-            {
-                "id": 5,
-                "course_id": 5,
-                "title": "El Mundo del Backend",
-                "description": "Qué es el backend y sobre qué cimientos se apoya: cliente-servidor y HTTP.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 8,
-                        "module_id": 5,
-                        "title": "¿Qué es el Backend?",
-                        "slug": "que-es-backend",
-                        "type": "article",
-                        "duration_minutes": 12,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 9,
-                        "module_id": 5,
-                        "title": "El modelo Cliente-Servidor",
-                        "slug": "modelo-cliente-servidor",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 10,
-                        "module_id": 5,
-                        "title": "HTTP y sus métodos",
-                        "slug": "http-y-sus-metodos",
-                        "type": "article",
-                        "duration_minutes": 20,
-                        "order": 3,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 667,
-                        "module_id": 5,
-                        "title": "Reto Práctico: Validador de Métodos y Verbos HTTP",
-                        "slug": "backend-introduccion-reto-validador-http",
-                        "type": "code_challenge",
-                        "duration_minutes": 15,
-                        "order": 4,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 197,
-                "course_id": 5,
-                "title": "Servidores y APIs",
-                "description": "Del servidor web a la API: los bloques con los que construyes servicios reales.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 498,
-                        "module_id": 197,
-                        "title": "¿Qué es un servidor web?",
-                        "slug": "que-es-un-servidor-web",
-                        "type": "article",
-                        "duration_minutes": 12,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 499,
-                        "module_id": 197,
-                        "title": "¿Qué es una API?",
-                        "slug": "que-es-una-api",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 500,
-                        "module_id": 197,
-                        "title": "Arquitectura típica de un backend",
-                        "slug": "arquitectura-de-un-backend",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 3,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 668,
-                        "module_id": 197,
-                        "title": "Reto Práctico: Despachador de Rutas REST",
-                        "slug": "backend-introduccion-reto-enrutador-basico",
-                        "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 4,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 93,
-        "title": "Introducción a la Programación Orientada a Objetos",
-        "slug": "introduccion-poo",
-        "description": "Da el salto del código imperativo a las clases y objetos. Entiende por qué agrupar datos y comportamiento en un mismo lugar hace que los sistemas resulten más fáciles de mantener.",
-        "category_id": 3,
-        "learning_path_id": 2,
-        "learning_path_level_id": 4,
-        "difficulty": "beginner",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": true,
-        "price": 0,
-        "duration_hours": 14,
+        "duration_hours": 12,
         "order": 1,
         "lessons_count": 6,
         "category": {
-            "id": 3,
-            "name": "POO",
-            "slug": "poo",
-            "icon": "Boxes",
-            "color": "#00E676",
-            "description": "Programación Orientada a Objetos"
+            "id": 8,
+            "name": "Desarrollo Web",
+            "slug": "desarrollo-web",
+            "icon": "Globe",
+            "color": "#26C6DA",
+            "description": "Frontend, backend y fullstack"
         },
         "modules": [
             {
-                "id": 183,
-                "course_id": 93,
-                "title": "Del imperativo a las clases",
-                "description": "Qué cambia cuando agrupamos datos y funciones.",
+                "id": 14,
+                "course_id": 12,
+                "title": "La API como Contrato",
+                "description": "Documentación, consumo y errores bien comunicados entre equipos.",
                 "order": 1,
                 "lessons": [
                     {
-                        "id": 466,
-                        "module_id": 183,
-                        "title": "Paradigma imperativo vs. orientado a objetos",
-                        "slug": "poo-paradigma-vs-imperativo",
+                        "id": 32,
+                        "module_id": 14,
+                        "title": "La API como contrato entre equipos",
+                        "slug": "api-como-contrato",
                         "type": "article",
-                        "duration_minutes": 12,
+                        "duration_minutes": 15,
                         "order": 1,
                         "is_preview": true
                     },
                     {
-                        "id": 467,
-                        "module_id": 183,
-                        "title": "Ejercicio: diseña tu primera clase",
-                        "slug": "poo-ejercicio-primera-clase",
+                        "id": 508,
+                        "module_id": 14,
+                        "title": "Consumiendo la API desde el frontend",
+                        "slug": "consumiendo-la-api-desde-el-frontend",
                         "type": "code_challenge",
-                        "duration_minutes": 15,
+                        "duration_minutes": 18,
                         "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 509,
+                        "module_id": 14,
+                        "title": "Errores típicos y debugging de integración",
+                        "slug": "errores-y-debug-de-integracion",
+                        "type": "article",
+                        "duration_minutes": 12,
+                        "order": 3,
                         "is_preview": false
                     }
                 ]
             },
             {
-                "id": 184,
-                "course_id": 93,
-                "title": "Atributos y métodos",
-                "description": "Estado interno de un objeto y las operaciones sobre ese estado.",
+                "id": 200,
+                "course_id": 12,
+                "title": "CORS y Autenticación en el Cliente",
+                "description": "Configura CORS, envía tokens Bearer y gestiona sesiones desde el frontend.",
                 "order": 2,
                 "lessons": [
                     {
-                        "id": 468,
-                        "module_id": 184,
-                        "title": "Atributos, métodos y el papel de self",
-                        "slug": "poo-atributos-y-metodos",
+                        "id": 33,
+                        "module_id": 200,
+                        "title": "CORS y tokens Bearer desde el frontend",
+                        "slug": "cors-y-token-bearer",
                         "type": "article",
-                        "duration_minutes": 12,
+                        "duration_minutes": 18,
                         "order": 1,
                         "is_preview": false
                     },
                     {
-                        "id": 469,
-                        "module_id": 184,
-                        "title": "Ejercicio: un contador con estado",
-                        "slug": "poo-ejercicio-contador",
-                        "type": "code_challenge",
-                        "duration_minutes": 12,
-                        "order": 2,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 185,
-                "course_id": 93,
-                "title": "Constructores y múltiples formas de crear objetos",
-                "description": "init, valores por defecto yclassmethod.",
-                "order": 3,
-                "lessons": [
-                    {
-                        "id": 470,
-                        "module_id": 185,
-                        "title": "Constructores y formas de crear objetos",
-                        "slug": "poo-constructores",
+                        "id": 510,
+                        "module_id": 200,
+                        "title": "Gestión de sesión en el cliente",
+                        "slug": "gestion-de-sesion-en-el-cliente",
                         "type": "article",
-                        "duration_minutes": 10,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 471,
-                        "module_id": 185,
-                        "title": "Ejercicio: valida en el constructor",
-                        "slug": "poo-ejercicio-validacion",
-                        "type": "code_challenge",
                         "duration_minutes": 14,
                         "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 511,
+                        "module_id": 200,
+                        "title": "Flujo de datos completo: del clic a la respuesta",
+                        "slug": "flujo-de-datos-completo",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 3,
                         "is_preview": false
                     }
                 ]
@@ -1015,206 +440,6 @@ export const FALLBACK_COURSES: Course[] = [
                         "slug": "etica-y-uso-responsable",
                         "type": "article",
                         "duration_minutes": 14,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 101,
-        "title": "Proyecto Final: Arquitectura de Software Orientada a Objetos",
-        "slug": "arquitectura-proyecto-poo",
-        "description": "Construye un sistema completo aplicando arquitectura en capas, entidades ricas, repositorios y patrones de diseño integrados.",
-        "category_id": 3,
-        "learning_path_id": 2,
-        "learning_path_level_id": 7,
-        "difficulty": "advanced",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": true,
-        "price": 0,
-        "duration_hours": 16,
-        "order": 1,
-        "lessons_count": 5,
-        "category": {
-            "id": 3,
-            "name": "POO",
-            "slug": "poo",
-            "icon": "Boxes",
-            "color": "#00E676",
-            "description": "Programación Orientada a Objetos"
-        },
-        "modules": [
-            {
-                "id": 227,
-                "course_id": 101,
-                "title": "Modelado del Dominio",
-                "description": "Diseño de entidades, objetos de valor y reglas de negocio.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 599,
-                        "module_id": 227,
-                        "title": "Separación de lógica de negocio y framework",
-                        "slug": "arquitectura-proyecto-poo-separacion-de-logica-de-negocio-y-framework",
-                        "type": "article",
-                        "duration_minutes": 18,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 600,
-                        "module_id": 227,
-                        "title": "Implementación del patrón Repository y Data Transfer Objects",
-                        "slug": "arquitectura-proyecto-poo-implementacion-del-patron-repository-y-data-transfer-objects",
-                        "type": "article",
-                        "duration_minutes": 20,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 601,
-                        "module_id": 227,
-                        "title": "Reto: Construcción del núcleo de gestión de pedidos",
-                        "slug": "arquitectura-proyecto-poo-reto-construccion-del-nucleo-de-gestion-de-pedidos",
-                        "type": "code_challenge",
-                        "duration_minutes": 30,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 248,
-                "course_id": 101,
-                "title": "Módulo 2: Patrones GoF y Refactorización Limpia",
-                "description": "Aplica los principios de Martin Fowler y GoF para desacoplar componentes y extender funcionalidad sin modificar código existente.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 671,
-                        "module_id": 248,
-                        "title": "El Patrón Decorator y Principio Abierto/Cerrado (OCP)",
-                        "slug": "arquitectura-proyecto-poo-patron-decorator",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 672,
-                        "module_id": 248,
-                        "title": "Reto Práctico: Implementación del Patrón Decorator de Logging",
-                        "slug": "arquitectura-proyecto-poo-reto-patron-decorator",
-                        "type": "code_challenge",
-                        "duration_minutes": 20,
-                        "order": 2,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 12,
-        "title": "Integración Frontend ↔ Backend",
-        "slug": "integracion-frontend-backend",
-        "description": "Convierte la API en un contrato vivo entre equipos: documentación, manejo de CORS y tokens desde el frontend, y un flujo de datos sin fricción.",
-        "category_id": 8,
-        "learning_path_id": 5,
-        "learning_path_level_id": 15,
-        "difficulty": "intermediate",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": true,
-        "price": 0,
-        "duration_hours": 12,
-        "order": 1,
-        "lessons_count": 6,
-        "category": {
-            "id": 8,
-            "name": "Desarrollo Web",
-            "slug": "desarrollo-web",
-            "icon": "Globe",
-            "color": "#26C6DA",
-            "description": "Frontend, backend y fullstack"
-        },
-        "modules": [
-            {
-                "id": 14,
-                "course_id": 12,
-                "title": "La API como Contrato",
-                "description": "Documentación, consumo y errores bien comunicados entre equipos.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 32,
-                        "module_id": 14,
-                        "title": "La API como contrato entre equipos",
-                        "slug": "api-como-contrato",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 508,
-                        "module_id": 14,
-                        "title": "Consumiendo la API desde el frontend",
-                        "slug": "consumiendo-la-api-desde-el-frontend",
-                        "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 509,
-                        "module_id": 14,
-                        "title": "Errores típicos y debugging de integración",
-                        "slug": "errores-y-debug-de-integracion",
-                        "type": "article",
-                        "duration_minutes": 12,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 200,
-                "course_id": 12,
-                "title": "CORS y Autenticación en el Cliente",
-                "description": "Configura CORS, envía tokens Bearer y gestiona sesiones desde el frontend.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 33,
-                        "module_id": 200,
-                        "title": "CORS y tokens Bearer desde el frontend",
-                        "slug": "cors-y-token-bearer",
-                        "type": "article",
-                        "duration_minutes": 18,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 510,
-                        "module_id": 200,
-                        "title": "Gestión de sesión en el cliente",
-                        "slug": "gestion-de-sesion-en-el-cliente",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 511,
-                        "module_id": 200,
-                        "title": "Flujo de datos completo: del clic a la respuesta",
-                        "slug": "flujo-de-datos-completo",
-                        "type": "article",
-                        "duration_minutes": 15,
                         "order": 3,
                         "is_preview": false
                     }
@@ -1494,13 +719,118 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
-        "id": 98,
-        "title": "Programación Estructurada con Python",
-        "slug": "python-estructurado",
-        "description": "Implementa soluciones modulares utilizando el lenguaje más versátil del mercado. Funciones, ámbito de variables, estructuras compuestas y manejo de excepciones.",
-        "category_id": 1,
-        "learning_path_id": 1,
-        "learning_path_level_id": 2,
+        "id": 106,
+        "title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos",
+        "slug": "git-avanzado-rebase-conflictos",
+        "description": "Conviértete en un experto en control de versiones. Domina rebase interactivo, git bisect para encontrar bugs, cherry-pick selectivo, reflog para recuperar commits y resolución de merge conflicts.",
+        "category_id": 12,
+        "learning_path_id": 7,
+        "learning_path_level_id": 23,
+        "difficulty": "advanced",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": true,
+        "price": 0,
+        "duration_hours": 12,
+        "order": 1,
+        "lessons_count": 6,
+        "category": {
+            "id": 12,
+            "name": "Git y Control de Versiones",
+            "slug": "git",
+            "icon": "GitFork",
+            "color": "#FF7043",
+            "description": "Git, ramas, colaboración y flujos de trabajo"
+        },
+        "modules": [
+            {
+                "id": 232,
+                "course_id": 106,
+                "title": "Rebase y Limpieza del Historial",
+                "description": "Historial lineal y commits atómicos con rebase interactivo.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 614,
+                        "module_id": 232,
+                        "title": "Diferencia real entre Git Merge y Git Rebase",
+                        "slug": "git-avanzado-rebase-conflictos-diferencia-real-entre-git-merge-y-git-rebase",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 615,
+                        "module_id": 232,
+                        "title": "Git Rebase Interactivo: squash, reword, drop y fixup",
+                        "slug": "git-avanzado-rebase-conflictos-git-rebase-interactivo-squash-reword-drop-y-fixup",
+                        "type": "article",
+                        "duration_minutes": 18,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 616,
+                        "module_id": 232,
+                        "title": "Reto: Reestructurar una rama caótica antes del Pull Request",
+                        "slug": "git-avanzado-rebase-conflictos-reto-reestructurar-una-rama-caotica-antes-del-pull-request",
+                        "type": "code_challenge",
+                        "duration_minutes": 22,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 233,
+                "course_id": 106,
+                "title": "Herramientas de Rescate y Depuración",
+                "description": "Git reflog, git bisect y cherry-picking.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 617,
+                        "module_id": 233,
+                        "title": "Recuperación de commits perdidos con Git Reflog",
+                        "slug": "git-avanzado-rebase-conflictos-recuperacion-de-commits-perdidos-con-git-reflog",
+                        "type": "article",
+                        "duration_minutes": 14,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 618,
+                        "module_id": 233,
+                        "title": "Depuración binaria de regresiones con Git Bisect",
+                        "slug": "git-avanzado-rebase-conflictos-depuracion-binaria-de-regresiones-con-git-bisect",
+                        "type": "article",
+                        "duration_minutes": 16,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 619,
+                        "module_id": 233,
+                        "title": "Evaluación final: Estrategias avanzadas en Git",
+                        "slug": "git-avanzado-rebase-conflictos-evaluacion-final-estrategias-avanzadas-en-git",
+                        "type": "quiz",
+                        "duration_minutes": 10,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 93,
+        "title": "Introducción a la Programación Orientada a Objetos",
+        "slug": "introduccion-poo",
+        "description": "Da el salto del código imperativo a las clases y objetos. Entiende por qué agrupar datos y comportamiento en un mismo lugar hace que los sistemas resulten más fáciles de mantener.",
+        "category_id": 3,
+        "learning_path_id": 2,
+        "learning_path_level_id": 4,
         "difficulty": "beginner",
         "thumbnail": null,
         "is_published": true,
@@ -1510,88 +840,97 @@ export const FALLBACK_COURSES: Course[] = [
         "order": 1,
         "lessons_count": 6,
         "category": {
-            "id": 1,
-            "name": "Programación Básica",
-            "slug": "programacion-basica",
-            "icon": "Code",
-            "color": "#6C63FF",
-            "description": "Fundamentos de programación y pensamiento lógico"
+            "id": 3,
+            "name": "POO",
+            "slug": "poo",
+            "icon": "Boxes",
+            "color": "#00E676",
+            "description": "Programación Orientada a Objetos"
         },
         "modules": [
             {
-                "id": 222,
-                "course_id": 98,
-                "title": "Modularidad y Funciones en Python",
-                "description": "Creación de código reutilizable y mantenible.",
+                "id": 183,
+                "course_id": 93,
+                "title": "Del imperativo a las clases",
+                "description": "Qué cambia cuando agrupamos datos y funciones.",
                 "order": 1,
                 "lessons": [
                     {
-                        "id": 585,
-                        "module_id": 222,
-                        "title": "Definición de funciones, parámetros y retornos",
-                        "slug": "python-estructurado-definicion-de-funciones-parametros-y-retornos",
+                        "id": 466,
+                        "module_id": 183,
+                        "title": "Paradigma imperativo vs. orientado a objetos",
+                        "slug": "poo-paradigma-vs-imperativo",
                         "type": "article",
-                        "duration_minutes": 15,
+                        "duration_minutes": 12,
                         "order": 1,
                         "is_preview": true
                     },
                     {
-                        "id": 586,
-                        "module_id": 222,
-                        "title": "Alcance de variables: local vs global y closures",
-                        "slug": "python-estructurado-alcance-de-variables-local-vs-global-y-closures",
-                        "type": "article",
-                        "duration_minutes": 12,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 587,
-                        "module_id": 222,
-                        "title": "Reto práctico: Refactorización modular de scripts",
-                        "slug": "python-estructurado-reto-practico-refactorizacion-modular-de-scripts",
+                        "id": 467,
+                        "module_id": 183,
+                        "title": "Ejercicio: diseña tu primera clase",
+                        "slug": "poo-ejercicio-primera-clase",
                         "type": "code_challenge",
-                        "duration_minutes": 25,
-                        "order": 3,
+                        "duration_minutes": 15,
+                        "order": 2,
                         "is_preview": false
                     }
                 ]
             },
             {
-                "id": 223,
-                "course_id": 98,
-                "title": "Estructuras de Datos Nativas",
-                "description": "Listas, tuplas, diccionarios y conjuntos.",
+                "id": 184,
+                "course_id": 93,
+                "title": "Atributos y métodos",
+                "description": "Estado interno de un objeto y las operaciones sobre ese estado.",
                 "order": 2,
                 "lessons": [
                     {
-                        "id": 588,
-                        "module_id": 223,
-                        "title": "Colecciones indexadas: listas y sus métodos clave",
-                        "slug": "python-estructurado-colecciones-indexadas-listas-y-sus-metodos-clave",
+                        "id": 468,
+                        "module_id": 184,
+                        "title": "Atributos, métodos y el papel de self",
+                        "slug": "poo-atributos-y-metodos",
                         "type": "article",
-                        "duration_minutes": 16,
+                        "duration_minutes": 12,
                         "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 589,
-                        "module_id": 223,
-                        "title": "Mapeos asociativos: diccionarios para modelar entidades",
-                        "slug": "python-estructurado-mapeos-asociativos-diccionarios-para-modelar-entidades",
-                        "type": "article",
-                        "duration_minutes": 18,
-                        "order": 2,
                         "is_preview": false
                     },
                     {
-                        "id": 590,
-                        "module_id": 223,
-                        "title": "Evaluación de estructuras compuestas",
-                        "slug": "python-estructurado-evaluacion-de-estructuras-compuestas",
-                        "type": "quiz",
+                        "id": 469,
+                        "module_id": 184,
+                        "title": "Ejercicio: un contador con estado",
+                        "slug": "poo-ejercicio-contador",
+                        "type": "code_challenge",
                         "duration_minutes": 12,
-                        "order": 3,
+                        "order": 2,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 185,
+                "course_id": 93,
+                "title": "Constructores y múltiples formas de crear objetos",
+                "description": "init, valores por defecto yclassmethod.",
+                "order": 3,
+                "lessons": [
+                    {
+                        "id": 470,
+                        "module_id": 185,
+                        "title": "Constructores y formas de crear objetos",
+                        "slug": "poo-constructores",
+                        "type": "article",
+                        "duration_minutes": 10,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 471,
+                        "module_id": 185,
+                        "title": "Ejercicio: valida en el constructor",
+                        "slug": "poo-ejercicio-validacion",
+                        "type": "code_challenge",
+                        "duration_minutes": 14,
+                        "order": 2,
                         "is_preview": false
                     }
                 ]
@@ -1743,6 +1082,350 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
+        "id": 101,
+        "title": "Proyecto Final: Arquitectura de Software Orientada a Objetos",
+        "slug": "arquitectura-proyecto-poo",
+        "description": "Construye un sistema completo aplicando arquitectura en capas, entidades ricas, repositorios y patrones de diseño integrados.",
+        "category_id": 3,
+        "learning_path_id": 2,
+        "learning_path_level_id": 7,
+        "difficulty": "advanced",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": true,
+        "price": 0,
+        "duration_hours": 16,
+        "order": 1,
+        "lessons_count": 5,
+        "category": {
+            "id": 3,
+            "name": "POO",
+            "slug": "poo",
+            "icon": "Boxes",
+            "color": "#00E676",
+            "description": "Programación Orientada a Objetos"
+        },
+        "modules": [
+            {
+                "id": 227,
+                "course_id": 101,
+                "title": "Modelado del Dominio",
+                "description": "Diseño de entidades, objetos de valor y reglas de negocio.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 599,
+                        "module_id": 227,
+                        "title": "Separación de lógica de negocio y framework",
+                        "slug": "arquitectura-proyecto-poo-separacion-de-logica-de-negocio-y-framework",
+                        "type": "article",
+                        "duration_minutes": 18,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 600,
+                        "module_id": 227,
+                        "title": "Implementación del patrón Repository y Data Transfer Objects",
+                        "slug": "arquitectura-proyecto-poo-implementacion-del-patron-repository-y-data-transfer-objects",
+                        "type": "article",
+                        "duration_minutes": 20,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 601,
+                        "module_id": 227,
+                        "title": "Reto: Construcción del núcleo de gestión de pedidos",
+                        "slug": "arquitectura-proyecto-poo-reto-construccion-del-nucleo-de-gestion-de-pedidos",
+                        "type": "code_challenge",
+                        "duration_minutes": 30,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 248,
+                "course_id": 101,
+                "title": "Módulo 2: Patrones GoF y Refactorización Limpia",
+                "description": "Aplica los principios de Martin Fowler y GoF para desacoplar componentes y extender funcionalidad sin modificar código existente.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 671,
+                        "module_id": 248,
+                        "title": "El Patrón Decorator y Principio Abierto/Cerrado (OCP)",
+                        "slug": "arquitectura-proyecto-poo-patron-decorator",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 672,
+                        "module_id": 248,
+                        "title": "Reto Práctico: Implementación del Patrón Decorator de Logging",
+                        "slug": "arquitectura-proyecto-poo-reto-patron-decorator",
+                        "type": "code_challenge",
+                        "duration_minutes": 20,
+                        "order": 2,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 98,
+        "title": "Programación Estructurada con Python",
+        "slug": "python-estructurado",
+        "description": "Implementa soluciones modulares utilizando el lenguaje más versátil del mercado. Funciones, ámbito de variables, estructuras compuestas y manejo de excepciones.",
+        "category_id": 1,
+        "learning_path_id": 1,
+        "learning_path_level_id": 2,
+        "difficulty": "beginner",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": true,
+        "price": 0,
+        "duration_hours": 14,
+        "order": 1,
+        "lessons_count": 6,
+        "category": {
+            "id": 1,
+            "name": "Programación Básica",
+            "slug": "programacion-basica",
+            "icon": "Code",
+            "color": "#6C63FF",
+            "description": "Fundamentos de programación y pensamiento lógico"
+        },
+        "modules": [
+            {
+                "id": 222,
+                "course_id": 98,
+                "title": "Modularidad y Funciones en Python",
+                "description": "Creación de código reutilizable y mantenible.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 585,
+                        "module_id": 222,
+                        "title": "Definición de funciones, parámetros y retornos",
+                        "slug": "python-estructurado-definicion-de-funciones-parametros-y-retornos",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 586,
+                        "module_id": 222,
+                        "title": "Alcance de variables: local vs global y closures",
+                        "slug": "python-estructurado-alcance-de-variables-local-vs-global-y-closures",
+                        "type": "article",
+                        "duration_minutes": 12,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 587,
+                        "module_id": 222,
+                        "title": "Reto práctico: Refactorización modular de scripts",
+                        "slug": "python-estructurado-reto-practico-refactorizacion-modular-de-scripts",
+                        "type": "code_challenge",
+                        "duration_minutes": 25,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 223,
+                "course_id": 98,
+                "title": "Estructuras de Datos Nativas",
+                "description": "Listas, tuplas, diccionarios y conjuntos.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 588,
+                        "module_id": 223,
+                        "title": "Colecciones indexadas: listas y sus métodos clave",
+                        "slug": "python-estructurado-colecciones-indexadas-listas-y-sus-metodos-clave",
+                        "type": "article",
+                        "duration_minutes": 16,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 589,
+                        "module_id": 223,
+                        "title": "Mapeos asociativos: diccionarios para modelar entidades",
+                        "slug": "python-estructurado-mapeos-asociativos-diccionarios-para-modelar-entidades",
+                        "type": "article",
+                        "duration_minutes": 18,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 590,
+                        "module_id": 223,
+                        "title": "Evaluación de estructuras compuestas",
+                        "slug": "python-estructurado-evaluacion-de-estructuras-compuestas",
+                        "type": "quiz",
+                        "duration_minutes": 12,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "title": "Algoritmos de Ordenamiento",
+        "slug": "algoritmos-ordenamiento",
+        "description": "Estudia los algoritmos de ordenamiento más importantes: Bubble Sort, Selection Sort, Merge Sort, Quick Sort. Aprende a analizar su complejidad temporal y espacial con Big-O notation.",
+        "category_id": 2,
+        "learning_path_id": 1,
+        "learning_path_level_id": 3,
+        "difficulty": "intermediate",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": true,
+        "price": 0,
+        "duration_hours": 8,
+        "order": 1,
+        "lessons_count": 9,
+        "category": {
+            "id": 2,
+            "name": "Algoritmos",
+            "slug": "algoritmos",
+            "icon": "GitBranch",
+            "color": "#00D9FF",
+            "description": "Diseño y análisis de algoritmos"
+        },
+        "modules": [
+            {
+                "id": 3,
+                "course_id": 2,
+                "title": "Análisis de Algoritmos",
+                "description": "Aprende a medir y comparar la eficiencia de los algoritmos con la notación Big-O.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 5,
+                        "module_id": 3,
+                        "title": "Notación Big-O",
+                        "slug": "notacion-big-o",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 423,
+                        "module_id": 3,
+                        "title": "Comparando algoritmos en la práctica",
+                        "slug": "comparando-algoritmos",
+                        "type": "article",
+                        "duration_minutes": 12,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 424,
+                        "module_id": 3,
+                        "title": "Complejidad espacial",
+                        "slug": "complejidad-espacial",
+                        "type": "article",
+                        "duration_minutes": 10,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 170,
+                "course_id": 2,
+                "title": "Ordenamiento Básico",
+                "description": "Los algoritmos cuadráticos clásicos: fáciles de entender e implementar, útiles para listas pequeñas.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 425,
+                        "module_id": 170,
+                        "title": "Bubble Sort",
+                        "slug": "bubble-sort",
+                        "type": "code_challenge",
+                        "duration_minutes": 14,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 426,
+                        "module_id": 170,
+                        "title": "Selection Sort",
+                        "slug": "selection-sort",
+                        "type": "code_challenge",
+                        "duration_minutes": 13,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 427,
+                        "module_id": 170,
+                        "title": "Insertion Sort",
+                        "slug": "insertion-sort",
+                        "type": "code_challenge",
+                        "duration_minutes": 13,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 171,
+                "course_id": 2,
+                "title": "Ordenamiento Avanzado y Búsqueda",
+                "description": "Divide y vencerás: Merge Sort, Quick Sort y la búsqueda binaria.",
+                "order": 3,
+                "lessons": [
+                    {
+                        "id": 428,
+                        "module_id": 171,
+                        "title": "Merge Sort",
+                        "slug": "merge-sort",
+                        "type": "code_challenge",
+                        "duration_minutes": 16,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 429,
+                        "module_id": 171,
+                        "title": "Quick Sort",
+                        "slug": "quick-sort",
+                        "type": "code_challenge",
+                        "duration_minutes": 16,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 430,
+                        "module_id": 171,
+                        "title": "Búsqueda binaria",
+                        "slug": "busqueda-binaria",
+                        "type": "code_challenge",
+                        "duration_minutes": 12,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": 15,
         "title": "Linux y línea de comandos",
         "slug": "linux-y-linea-de-comandos",
@@ -1848,19 +1531,211 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
-        "id": 106,
-        "title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos",
-        "slug": "git-avanzado-rebase-conflictos",
-        "description": "Conviértete en un experto en control de versiones. Domina rebase interactivo, git bisect para encontrar bugs, cherry-pick selectivo, reflog para recuperar commits y resolución de merge conflicts.",
-        "category_id": 12,
-        "learning_path_id": 7,
-        "learning_path_level_id": 23,
-        "difficulty": "advanced",
+        "id": 9,
+        "title": "HTML, CSS y JavaScript",
+        "slug": "html-css-javascript",
+        "description": "Los tres pilares de la web: estructura semántica, maquetación moderna con Flexbox y Grid, e interactividad con el DOM. Construye tus primeras interfaces desde cero.",
+        "category_id": 10,
+        "learning_path_id": 4,
+        "learning_path_level_id": 12,
+        "difficulty": "beginner",
         "thumbnail": null,
         "is_published": true,
         "is_free": true,
         "price": 0,
-        "duration_hours": 12,
+        "duration_hours": 15,
+        "order": 1,
+        "lessons_count": 12,
+        "category": {
+            "id": 10,
+            "name": "Desarrollo Frontend",
+            "slug": "desarrollo-frontend",
+            "icon": "Palette",
+            "color": "#F06292",
+            "description": "Interfaces, componentes, frameworks y experiencia de usuario"
+        },
+        "modules": [
+            {
+                "id": 10,
+                "course_id": 9,
+                "title": "HTML Semántico",
+                "description": "Estructura significativa, formularios y contenido multimedia.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 22,
+                        "module_id": 10,
+                        "title": "Estructura semántica de una página HTML",
+                        "slug": "estructura-de-una-pagina-html",
+                        "type": "article",
+                        "duration_minutes": 12,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 456,
+                        "module_id": 10,
+                        "title": "Etiquetas semánticas y accesibilidad",
+                        "slug": "etiquetas-semanticas-y-accesibilidad",
+                        "type": "article",
+                        "duration_minutes": 12,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 457,
+                        "module_id": 10,
+                        "title": "Formularios y contenido multimedia",
+                        "slug": "formularios-y-media",
+                        "type": "code_challenge",
+                        "duration_minutes": 14,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 180,
+                "course_id": 9,
+                "title": "Layout con CSS",
+                "description": "Flexbox, Grid, modelo de caja y diseño responsive.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 23,
+                        "module_id": 180,
+                        "title": "Flexbox y Grid: maquetación moderna",
+                        "slug": "css-flexbox-y-grid",
+                        "type": "code_challenge",
+                        "duration_minutes": 18,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 458,
+                        "module_id": 180,
+                        "title": "Colores, tipografía y modelo de caja",
+                        "slug": "colores-tipografia-y-box-model",
+                        "type": "article",
+                        "duration_minutes": 14,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 459,
+                        "module_id": 180,
+                        "title": "Diseño responsive",
+                        "slug": "responsive-design",
+                        "type": "code_challenge",
+                        "duration_minutes": 16,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 181,
+                "course_id": 9,
+                "title": "JavaScript y el DOM",
+                "description": "Interactividad real: eventos, manipulación del DOM y un proyecto interactivo.",
+                "order": 3,
+                "lessons": [
+                    {
+                        "id": 24,
+                        "module_id": 181,
+                        "title": "JavaScript: el DOM y los eventos",
+                        "slug": "javascript-dom-y-eventos",
+                        "type": "code_challenge",
+                        "duration_minutes": 18,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 460,
+                        "module_id": 181,
+                        "title": "Manipulando el DOM en la práctica",
+                        "slug": "manipulando-el-dom",
+                        "type": "code_challenge",
+                        "duration_minutes": 16,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 461,
+                        "module_id": 181,
+                        "title": "Proyecto: galería interactiva",
+                        "slug": "proyecto-interactivo",
+                        "type": "code_challenge",
+                        "duration_minutes": 18,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 206,
+                "course_id": 9,
+                "title": "JavaScript Asíncrono, Promesas y Fetch API",
+                "description": "Domina el Event Loop, la programación asíncrona no bloqueante, Promesas y el consumo de APIs remotas según la documentación oficial de MDN.",
+                "order": 4,
+                "lessons": [
+                    {
+                        "id": 529,
+                        "module_id": 206,
+                        "title": "El Event Loop y el modelo de concurrencia",
+                        "slug": "event-loop-y-concurrencia-js",
+                        "type": "article",
+                        "duration_minutes": 14,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 530,
+                        "module_id": 206,
+                        "title": "Promesas, Async/Await y la Fetch API",
+                        "slug": "promesas-async-await-y-fetch",
+                        "type": "article",
+                        "duration_minutes": 16,
+                        "order": 2,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 208,
+                "course_id": 9,
+                "title": "Almacenamiento Local, Persistencia y Proyecto Final",
+                "description": "Aprende a guardar el estado de las aplicaciones en el cliente con LocalStorage y SessionStorage, y consolida tus habilidades en un proyecto interactivo.",
+                "order": 5,
+                "lessons": [
+                    {
+                        "id": 535,
+                        "module_id": 208,
+                        "title": "Persistencia en el navegador con LocalStorage",
+                        "slug": "localstorage-persistencia-cliente",
+                        "type": "article",
+                        "duration_minutes": 12,
+                        "order": 1,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 18,
+        "title": "Git desde cero",
+        "slug": "git-desde-cero",
+        "description": "Instala Git, haz tus primeros commits y domina los tres estados, las ramas y el viaje por la historia sin miedo.",
+        "category_id": 12,
+        "learning_path_id": 7,
+        "learning_path_level_id": 21,
+        "difficulty": "beginner",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": true,
+        "price": 0,
+        "duration_hours": 10,
         "order": 1,
         "lessons_count": 6,
         "category": {
@@ -1873,78 +1748,78 @@ export const FALLBACK_COURSES: Course[] = [
         },
         "modules": [
             {
-                "id": 232,
-                "course_id": 106,
-                "title": "Rebase y Limpieza del Historial",
-                "description": "Historial lineal y commits atómicos con rebase interactivo.",
+                "id": 20,
+                "course_id": 18,
+                "title": "Primeros pasos",
+                "description": "Instalación, commits y el modelo de estados de Git.",
                 "order": 1,
                 "lessons": [
                     {
-                        "id": 614,
-                        "module_id": 232,
-                        "title": "Diferencia real entre Git Merge y Git Rebase",
-                        "slug": "git-avanzado-rebase-conflictos-diferencia-real-entre-git-merge-y-git-rebase",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 615,
-                        "module_id": 232,
-                        "title": "Git Rebase Interactivo: squash, reword, drop y fixup",
-                        "slug": "git-avanzado-rebase-conflictos-git-rebase-interactivo-squash-reword-drop-y-fixup",
-                        "type": "article",
-                        "duration_minutes": 18,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 616,
-                        "module_id": 232,
-                        "title": "Reto: Reestructurar una rama caótica antes del Pull Request",
-                        "slug": "git-avanzado-rebase-conflictos-reto-reestructurar-una-rama-caotica-antes-del-pull-request",
-                        "type": "code_challenge",
-                        "duration_minutes": 22,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 233,
-                "course_id": 106,
-                "title": "Herramientas de Rescate y Depuración",
-                "description": "Git reflog, git bisect y cherry-picking.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 617,
-                        "module_id": 233,
-                        "title": "Recuperación de commits perdidos con Git Reflog",
-                        "slug": "git-avanzado-rebase-conflictos-recuperacion-de-commits-perdidos-con-git-reflog",
+                        "id": 44,
+                        "module_id": 20,
+                        "title": "¿Qué es Git y por qué usarlo?",
+                        "slug": "que-es-git",
                         "type": "article",
                         "duration_minutes": 14,
                         "order": 1,
                         "is_preview": true
                     },
                     {
-                        "id": 618,
-                        "module_id": 233,
-                        "title": "Depuración binaria de regresiones con Git Bisect",
-                        "slug": "git-avanzado-rebase-conflictos-depuracion-binaria-de-regresiones-con-git-bisect",
-                        "type": "article",
+                        "id": 45,
+                        "module_id": 20,
+                        "title": "Tus primeros commits",
+                        "slug": "primeros-commits",
+                        "type": "code_challenge",
                         "duration_minutes": 16,
                         "order": 2,
                         "is_preview": false
                     },
                     {
-                        "id": 619,
-                        "module_id": 233,
-                        "title": "Evaluación final: Estrategias avanzadas en Git",
-                        "slug": "git-avanzado-rebase-conflictos-evaluacion-final-estrategias-avanzadas-en-git",
-                        "type": "quiz",
-                        "duration_minutes": 10,
+                        "id": 543,
+                        "module_id": 20,
+                        "title": "Los tres estados: working, staging y commit",
+                        "slug": "estados-y-staging",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 211,
+                "course_id": 18,
+                "title": "Ramas e historia",
+                "description": "Ramas, viaje por el historial y estrategias de organización.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 544,
+                        "module_id": 211,
+                        "title": "Ramas y merge",
+                        "slug": "ramas-y-merge",
+                        "type": "code_challenge",
+                        "duration_minutes": 18,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 545,
+                        "module_id": 211,
+                        "title": "Viajar por la historia: log, diff y revert",
+                        "slug": "historia-y-revert",
+                        "type": "code_challenge",
+                        "duration_minutes": 17,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 546,
+                        "module_id": 211,
+                        "title": ".gitignore, aliases y estrategias de commit",
+                        "slug": "gitignore-y-estrategias",
+                        "type": "article",
+                        "duration_minutes": 14,
                         "order": 3,
                         "is_preview": false
                     }
@@ -1953,13 +1828,138 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
-        "id": 109,
-        "title": "Especificación Formal (SRS) y Casos de Uso",
-        "slug": "especificacion-srs-diagramas",
-        "description": "Aprende a documentar software según el estándar IEEE 830. Diagramas de casos de uso UML, especificación de flujos principales, alternativos y de excepción.",
-        "category_id": 13,
-        "learning_path_id": 8,
-        "learning_path_level_id": 25,
+        "id": 5,
+        "title": "Introducción al Backend",
+        "slug": "backend-introduccion",
+        "description": "Descubre qué pasa del lado del servidor: el modelo cliente-servidor, HTTP y el rol del backend en una aplicación moderna. La base para diseñar cualquier API.",
+        "category_id": 9,
+        "learning_path_id": 3,
+        "learning_path_level_id": 8,
+        "difficulty": "beginner",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": true,
+        "price": 0,
+        "duration_hours": 10,
+        "order": 1,
+        "lessons_count": 8,
+        "category": {
+            "id": 9,
+            "name": "Desarrollo Backend",
+            "slug": "desarrollo-backend",
+            "icon": "Server",
+            "color": "#64B5F6",
+            "description": "APIs, servidores, bases de datos y lógica de negocio"
+        },
+        "modules": [
+            {
+                "id": 5,
+                "course_id": 5,
+                "title": "El Mundo del Backend",
+                "description": "Qué es el backend y sobre qué cimientos se apoya: cliente-servidor y HTTP.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 8,
+                        "module_id": 5,
+                        "title": "¿Qué es el Backend?",
+                        "slug": "que-es-backend",
+                        "type": "article",
+                        "duration_minutes": 12,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 9,
+                        "module_id": 5,
+                        "title": "El modelo Cliente-Servidor",
+                        "slug": "modelo-cliente-servidor",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 10,
+                        "module_id": 5,
+                        "title": "HTTP y sus métodos",
+                        "slug": "http-y-sus-metodos",
+                        "type": "article",
+                        "duration_minutes": 20,
+                        "order": 3,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 667,
+                        "module_id": 5,
+                        "title": "Reto Práctico: Validador de Métodos y Verbos HTTP",
+                        "slug": "backend-introduccion-reto-validador-http",
+                        "type": "code_challenge",
+                        "duration_minutes": 15,
+                        "order": 4,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 197,
+                "course_id": 5,
+                "title": "Servidores y APIs",
+                "description": "Del servidor web a la API: los bloques con los que construyes servicios reales.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 498,
+                        "module_id": 197,
+                        "title": "¿Qué es un servidor web?",
+                        "slug": "que-es-un-servidor-web",
+                        "type": "article",
+                        "duration_minutes": 12,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 499,
+                        "module_id": 197,
+                        "title": "¿Qué es una API?",
+                        "slug": "que-es-una-api",
+                        "type": "article",
+                        "duration_minutes": 14,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 500,
+                        "module_id": 197,
+                        "title": "Arquitectura típica de un backend",
+                        "slug": "arquitectura-de-un-backend",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 3,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 668,
+                        "module_id": 197,
+                        "title": "Reto Práctico: Despachador de Rutas REST",
+                        "slug": "backend-introduccion-reto-enrutador-basico",
+                        "type": "code_challenge",
+                        "duration_minutes": 18,
+                        "order": 4,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 107,
+        "title": "Docker Compose y Arquitecturas Multiservicio",
+        "slug": "docker-compose-multiservicio",
+        "description": "Orquesta entornos completos de desarrollo y producción con bases de datos, caché Redis, servidores web y workers integrados en redes aisladas.",
+        "category_id": 11,
+        "learning_path_id": 6,
+        "learning_path_level_id": 19,
         "difficulty": "intermediate",
         "thumbnail": null,
         "is_published": true,
@@ -1967,79 +1967,99 @@ export const FALLBACK_COURSES: Course[] = [
         "price": 0,
         "duration_hours": 12,
         "order": 2,
-        "lessons_count": 5,
+        "lessons_count": 7,
         "category": {
-            "id": 13,
-            "name": "Ingeniería de Software",
-            "slug": "ingenieria-software",
-            "icon": "ClipboardList",
-            "color": "#9575CD",
-            "description": "Requerimientos, diseño, arquitectura y gestión de proyectos"
+            "id": 11,
+            "name": "DevOps",
+            "slug": "devops",
+            "icon": "Container",
+            "color": "#81C784",
+            "description": "CI/CD, contenedores, cloud y automatización"
         },
         "modules": [
             {
-                "id": 236,
-                "course_id": 109,
-                "title": "Modelado y Documentación Formal",
-                "description": "Creación de especificaciones de requerimientos claras y no ambiguas.",
+                "id": 234,
+                "course_id": 107,
+                "title": "Módulo 1: Orquestación Local y Redes Aisladas",
+                "description": "Define entornos reproducibles de backend, base de datos y caché con compose.yaml.",
                 "order": 1,
                 "lessons": [
                     {
-                        "id": 626,
-                        "module_id": 236,
-                        "title": "Estructura de una Especificación de Requisitos de Software (SRS)",
-                        "slug": "especificacion-srs-diagramas-estructura-de-una-especificacion-de-requisitos-de-software-srs",
+                        "id": 620,
+                        "module_id": 234,
+                        "title": "Estructura del archivo compose.yaml y directivas esenciales",
+                        "slug": "docker-compose-multiservicio-estructura-del-archivo-composeyaml-y-directivas-esenciales",
                         "type": "article",
-                        "duration_minutes": 16,
+                        "duration_minutes": 15,
                         "order": 1,
                         "is_preview": true
                     },
                     {
-                        "id": 627,
-                        "module_id": 236,
-                        "title": "Diagramas de casos de uso y diagramas de secuencia UML",
-                        "slug": "especificacion-srs-diagramas-diagramas-de-casos-de-uso-y-diagramas-de-secuencia-uml",
+                        "id": 654,
+                        "module_id": 234,
+                        "title": "Estructura Limpia de un Archivo Compose",
+                        "slug": "docker-compose-multiservicio-estructura-limpia-de-un-archivo-compose",
                         "type": "article",
-                        "duration_minutes": 18,
+                        "duration_minutes": 15,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 621,
+                        "module_id": 234,
+                        "title": "Persistencia con volúmenes y variables de entorno seguras",
+                        "slug": "docker-compose-multiservicio-persistencia-con-volumenes-y-variables-de-entorno-seguras",
+                        "type": "article",
+                        "duration_minutes": 16,
                         "order": 2,
                         "is_preview": false
                     },
                     {
-                        "id": 628,
-                        "module_id": 236,
-                        "title": "Quiz: Análisis de ambigüedades en requerimientos",
-                        "slug": "especificacion-srs-diagramas-quiz-analisis-de-ambiguedades-en-requerimientos",
-                        "type": "quiz",
-                        "duration_minutes": 12,
+                        "id": 655,
+                        "module_id": 234,
+                        "title": "Reto Práctico: Generador de String de Conexión Docker",
+                        "slug": "docker-compose-multiservicio-reto-practico-generador-de-string-de-conexion-docker",
+                        "type": "code_challenge",
+                        "duration_minutes": 20,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 622,
+                        "module_id": 234,
+                        "title": "Reto: Levantar stack PHP + Postgres + Redis con Compose",
+                        "slug": "docker-compose-multiservicio-reto-levantar-stack-php-postgres-redis-con-compose",
+                        "type": "code_challenge",
+                        "duration_minutes": 25,
                         "order": 3,
                         "is_preview": false
                     }
                 ]
             },
             {
-                "id": 251,
-                "course_id": 109,
-                "title": "Módulo 2: Criterios de Aceptación con BDD y Gherkin",
-                "description": "Traduce requerimientos ambiguos en pruebas ejecutables con la sintaxis Given / When / Then de Gherkin.",
+                "id": 244,
+                "course_id": 107,
+                "title": "Módulo 2: Optimización con Multi-stage Builds",
+                "description": "Reduce el tamaño de tus imágenes de producción hasta en un 80% usando constructores temporales.",
                 "order": 2,
                 "lessons": [
                     {
-                        "id": 677,
-                        "module_id": 251,
-                        "title": "Sintaxis Gherkin: El Puente entre Negocio e Ingeniería",
-                        "slug": "especificacion-srs-diagramas-bdd-gherkin",
+                        "id": 656,
+                        "module_id": 244,
+                        "title": "El Patrón Multi-stage Build",
+                        "slug": "docker-compose-multiservicio-el-patron-multi-stage-build",
                         "type": "article",
-                        "duration_minutes": 16,
+                        "duration_minutes": 14,
                         "order": 1,
                         "is_preview": false
                     },
                     {
-                        "id": 678,
-                        "module_id": 251,
-                        "title": "Reto Práctico: Validador de Estructura de Escenarios BDD",
-                        "slug": "especificacion-srs-diagramas-reto-parser-bdd",
+                        "id": 657,
+                        "module_id": 244,
+                        "title": "Reto Práctico: Estimador de Ahorro Multi-stage",
+                        "slug": "docker-compose-multiservicio-reto-practico-estimador-de-ahorro-multi-stage",
                         "type": "code_challenge",
-                        "duration_minutes": 20,
+                        "duration_minutes": 18,
                         "order": 2,
                         "is_preview": false
                     }
@@ -2828,7 +2848,7 @@ export const FALLBACK_COURSES: Course[] = [
         "description": "Aprende SQL de manera práctica. Desde SELECT básicos hasta JOINs complejos, subconsultas, índices y optimización de consultas. Ideal para cualquier estudiante de ingeniería.",
         "category_id": 4,
         "learning_path_id": 1,
-        "learning_path_level_id": 2,
+        "learning_path_level_id": 3,
         "difficulty": "beginner",
         "thumbnail": null,
         "is_published": true,
@@ -3080,101 +3100,6 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
-        "id": 99,
-        "title": "Estructuras de Datos Lineales y Complejidad",
-        "slug": "estructuras-datos-lineales",
-        "description": "Aprende cómo organizar la información en memoria eficientemente. Implementa listas enlazadas, pilas (stacks) y colas (queues), analizando su costo con notación Big-O.",
-        "category_id": 2,
-        "learning_path_id": 1,
-        "learning_path_level_id": 3,
-        "difficulty": "intermediate",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": true,
-        "price": 0,
-        "duration_hours": 12,
-        "order": 2,
-        "lessons_count": 5,
-        "category": {
-            "id": 2,
-            "name": "Algoritmos",
-            "slug": "algoritmos",
-            "icon": "GitBranch",
-            "color": "#00D9FF",
-            "description": "Diseño y análisis de algoritmos"
-        },
-        "modules": [
-            {
-                "id": 224,
-                "course_id": 99,
-                "title": "Notación Asintótica y Big-O",
-                "description": "Medición de tiempo y espacio en algoritmos.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 591,
-                        "module_id": 224,
-                        "title": "Complejidad temporal O(1), O(n), O(log n) y O(n²)",
-                        "slug": "estructuras-datos-lineales-complejidad-temporal-o1-on-olog-n-y-on2",
-                        "type": "article",
-                        "duration_minutes": 16,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 592,
-                        "module_id": 224,
-                        "title": "Comparación de algoritmos por consumo de memoria",
-                        "slug": "estructuras-datos-lineales-comparacion-de-algoritmos-por-consumo-de-memoria",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 2,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 225,
-                "course_id": 99,
-                "title": "Pilas y Colas (LIFO vs FIFO)",
-                "description": "Casos de uso reales y construcción paso a paso.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 593,
-                        "module_id": 225,
-                        "title": "Implementación de Pilas con punteros en memoria",
-                        "slug": "estructuras-datos-lineales-implementacion-de-pilas-con-punteros-en-memoria",
-                        "type": "article",
-                        "duration_minutes": 18,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 594,
-                        "module_id": 225,
-                        "title": "Reto: Algoritmo de balanceo de paréntesis con Stack",
-                        "slug": "estructuras-datos-lineales-reto-algoritmo-de-balanceo-de-parentesis-con-stack",
-                        "type": "code_challenge",
-                        "duration_minutes": 25,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 595,
-                        "module_id": 225,
-                        "title": "Quiz: Big-O y Estructuras Lineales",
-                        "slug": "estructuras-datos-lineales-quiz-big-o-y-estructuras-lineales",
-                        "type": "quiz",
-                        "duration_minutes": 10,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
         "id": 100,
         "title": "Diseño Modular, Interfaces y Contratos",
         "slug": "diseno-modular-interfaces",
@@ -3282,121 +3207,6 @@ export const FALLBACK_COURSES: Course[] = [
                         "slug": "diseno-modular-interfaces-reto-practico-servicio-de-facturacion-desacoplado",
                         "type": "code_challenge",
                         "duration_minutes": 25,
-                        "order": 2,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 102,
-        "title": "Protocolo HTTP y Arquitectura Web",
-        "slug": "arquitectura-web-http",
-        "description": "Comprende el funcionamiento del protocolo que mueve Internet: cabeceras, códigos de estado, métodos idempotentes, CORS, cookies y ciclos de vida Request/Response.",
-        "category_id": 9,
-        "learning_path_id": 3,
-        "learning_path_level_id": 8,
-        "difficulty": "beginner",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": true,
-        "price": 0,
-        "duration_hours": 10,
-        "order": 2,
-        "lessons_count": 7,
-        "category": {
-            "id": 9,
-            "name": "Desarrollo Backend",
-            "slug": "desarrollo-backend",
-            "icon": "Server",
-            "color": "#64B5F6",
-            "description": "APIs, servidores, bases de datos y lógica de negocio"
-        },
-        "modules": [
-            {
-                "id": 228,
-                "course_id": 102,
-                "title": "Módulo 1: El Ciclo de Vida Request-Response y Semántica HTTP",
-                "description": "Aprende los fundamentos del protocolo que sostiene la web moderna: métodos idempotentes, cabeceras y negociación de contenido.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 642,
-                        "module_id": 228,
-                        "title": "Anatomía de una Petición HTTP y Métodos Idempotentes",
-                        "slug": "arquitectura-web-http-anatomia-de-una-peticion-http-y-metodos-idempotentes",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 602,
-                        "module_id": 228,
-                        "title": "Estructura de peticiones y respuestas: Headers y Body",
-                        "slug": "arquitectura-web-http-estructura-de-peticiones-y-respuestas-headers-y-body",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 603,
-                        "module_id": 228,
-                        "title": "Códigos de estado HTTP y buenas prácticas de uso",
-                        "slug": "arquitectura-web-http-codigos-de-estado-http-y-buenas-practicas-de-uso",
-                        "type": "article",
-                        "duration_minutes": 12,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 643,
-                        "module_id": 228,
-                        "title": "Reto Práctico: Parser y Validador de Headers HTTP",
-                        "slug": "arquitectura-web-http-reto-practico-parser-y-validador-de-headers-http",
-                        "type": "code_challenge",
-                        "duration_minutes": 20,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 604,
-                        "module_id": 228,
-                        "title": "CORS, Cookies y manejo de sesiones sin estado",
-                        "slug": "arquitectura-web-http-cors-cookies-y-manejo-de-sesiones-sin-estado",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 241,
-                "course_id": 102,
-                "title": "Módulo 2: Códigos de Estado y Manejo Semántico de Errores",
-                "description": "Aprende a comunicar el estado exacto de una operación sin ambigüedades.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 644,
-                        "module_id": 241,
-                        "title": "Códigos de Estado: 2xx, 4xx y 5xx en la Práctica",
-                        "slug": "arquitectura-web-http-codigos-de-estado-2xx-4xx-y-5xx-en-la-practica",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 645,
-                        "module_id": 241,
-                        "title": "Reto Práctico: Despachador de Status Code REST",
-                        "slug": "arquitectura-web-http-reto-practico-despachador-de-status-code-rest",
-                        "type": "code_challenge",
-                        "duration_minutes": 20,
                         "order": 2,
                         "is_preview": false
                     }
@@ -3615,13 +3425,13 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
-        "id": 107,
-        "title": "Docker Compose y Arquitecturas Multiservicio",
-        "slug": "docker-compose-multiservicio",
-        "description": "Orquesta entornos completos de desarrollo y producción con bases de datos, caché Redis, servidores web y workers integrados en redes aisladas.",
-        "category_id": 11,
-        "learning_path_id": 6,
-        "learning_path_level_id": 19,
+        "id": 99,
+        "title": "Estructuras de Datos Lineales y Complejidad",
+        "slug": "estructuras-datos-lineales",
+        "description": "Aprende cómo organizar la información en memoria eficientemente. Implementa listas enlazadas, pilas (stacks) y colas (queues), analizando su costo con notación Big-O.",
+        "category_id": 2,
+        "learning_path_id": 1,
+        "learning_path_level_id": 38,
         "difficulty": "intermediate",
         "thumbnail": null,
         "is_published": true,
@@ -3629,99 +3439,194 @@ export const FALLBACK_COURSES: Course[] = [
         "price": 0,
         "duration_hours": 12,
         "order": 2,
-        "lessons_count": 7,
+        "lessons_count": 5,
         "category": {
-            "id": 11,
-            "name": "DevOps",
-            "slug": "devops",
-            "icon": "Container",
-            "color": "#81C784",
-            "description": "CI/CD, contenedores, cloud y automatización"
+            "id": 2,
+            "name": "Algoritmos",
+            "slug": "algoritmos",
+            "icon": "GitBranch",
+            "color": "#00D9FF",
+            "description": "Diseño y análisis de algoritmos"
         },
         "modules": [
             {
-                "id": 234,
-                "course_id": 107,
-                "title": "Módulo 1: Orquestación Local y Redes Aisladas",
-                "description": "Define entornos reproducibles de backend, base de datos y caché con compose.yaml.",
+                "id": 224,
+                "course_id": 99,
+                "title": "Notación Asintótica y Big-O",
+                "description": "Medición de tiempo y espacio en algoritmos.",
                 "order": 1,
                 "lessons": [
                     {
-                        "id": 620,
-                        "module_id": 234,
-                        "title": "Estructura del archivo compose.yaml y directivas esenciales",
-                        "slug": "docker-compose-multiservicio-estructura-del-archivo-composeyaml-y-directivas-esenciales",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 654,
-                        "module_id": 234,
-                        "title": "Estructura Limpia de un Archivo Compose",
-                        "slug": "docker-compose-multiservicio-estructura-limpia-de-un-archivo-compose",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 621,
-                        "module_id": 234,
-                        "title": "Persistencia con volúmenes y variables de entorno seguras",
-                        "slug": "docker-compose-multiservicio-persistencia-con-volumenes-y-variables-de-entorno-seguras",
+                        "id": 591,
+                        "module_id": 224,
+                        "title": "Complejidad temporal O(1), O(n), O(log n) y O(n²)",
+                        "slug": "estructuras-datos-lineales-complejidad-temporal-o1-on-olog-n-y-on2",
                         "type": "article",
                         "duration_minutes": 16,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 592,
+                        "module_id": 224,
+                        "title": "Comparación de algoritmos por consumo de memoria",
+                        "slug": "estructuras-datos-lineales-comparacion-de-algoritmos-por-consumo-de-memoria",
+                        "type": "article",
+                        "duration_minutes": 14,
+                        "order": 2,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 225,
+                "course_id": 99,
+                "title": "Pilas y Colas (LIFO vs FIFO)",
+                "description": "Casos de uso reales y construcción paso a paso.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 593,
+                        "module_id": 225,
+                        "title": "Implementación de Pilas con punteros en memoria",
+                        "slug": "estructuras-datos-lineales-implementacion-de-pilas-con-punteros-en-memoria",
+                        "type": "article",
+                        "duration_minutes": 18,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 594,
+                        "module_id": 225,
+                        "title": "Reto: Algoritmo de balanceo de paréntesis con Stack",
+                        "slug": "estructuras-datos-lineales-reto-algoritmo-de-balanceo-de-parentesis-con-stack",
+                        "type": "code_challenge",
+                        "duration_minutes": 25,
                         "order": 2,
                         "is_preview": false
                     },
                     {
-                        "id": 655,
-                        "module_id": 234,
-                        "title": "Reto Práctico: Generador de String de Conexión Docker",
-                        "slug": "docker-compose-multiservicio-reto-practico-generador-de-string-de-conexion-docker",
+                        "id": 595,
+                        "module_id": 225,
+                        "title": "Quiz: Big-O y Estructuras Lineales",
+                        "slug": "estructuras-datos-lineales-quiz-big-o-y-estructuras-lineales",
+                        "type": "quiz",
+                        "duration_minutes": 10,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 102,
+        "title": "Protocolo HTTP y Arquitectura Web",
+        "slug": "arquitectura-web-http",
+        "description": "Comprende el funcionamiento del protocolo que mueve Internet: cabeceras, códigos de estado, métodos idempotentes, CORS, cookies y ciclos de vida Request/Response.",
+        "category_id": 9,
+        "learning_path_id": 3,
+        "learning_path_level_id": 9,
+        "difficulty": "beginner",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": true,
+        "price": 0,
+        "duration_hours": 10,
+        "order": 2,
+        "lessons_count": 7,
+        "category": {
+            "id": 9,
+            "name": "Desarrollo Backend",
+            "slug": "desarrollo-backend",
+            "icon": "Server",
+            "color": "#64B5F6",
+            "description": "APIs, servidores, bases de datos y lógica de negocio"
+        },
+        "modules": [
+            {
+                "id": 228,
+                "course_id": 102,
+                "title": "Módulo 1: El Ciclo de Vida Request-Response y Semántica HTTP",
+                "description": "Aprende los fundamentos del protocolo que sostiene la web moderna: métodos idempotentes, cabeceras y negociación de contenido.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 642,
+                        "module_id": 228,
+                        "title": "Anatomía de una Petición HTTP y Métodos Idempotentes",
+                        "slug": "arquitectura-web-http-anatomia-de-una-peticion-http-y-metodos-idempotentes",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 602,
+                        "module_id": 228,
+                        "title": "Estructura de peticiones y respuestas: Headers y Body",
+                        "slug": "arquitectura-web-http-estructura-de-peticiones-y-respuestas-headers-y-body",
+                        "type": "article",
+                        "duration_minutes": 14,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 603,
+                        "module_id": 228,
+                        "title": "Códigos de estado HTTP y buenas prácticas de uso",
+                        "slug": "arquitectura-web-http-codigos-de-estado-http-y-buenas-practicas-de-uso",
+                        "type": "article",
+                        "duration_minutes": 12,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 643,
+                        "module_id": 228,
+                        "title": "Reto Práctico: Parser y Validador de Headers HTTP",
+                        "slug": "arquitectura-web-http-reto-practico-parser-y-validador-de-headers-http",
                         "type": "code_challenge",
                         "duration_minutes": 20,
                         "order": 2,
                         "is_preview": false
                     },
                     {
-                        "id": 622,
-                        "module_id": 234,
-                        "title": "Reto: Levantar stack PHP + Postgres + Redis con Compose",
-                        "slug": "docker-compose-multiservicio-reto-levantar-stack-php-postgres-redis-con-compose",
-                        "type": "code_challenge",
-                        "duration_minutes": 25,
+                        "id": 604,
+                        "module_id": 228,
+                        "title": "CORS, Cookies y manejo de sesiones sin estado",
+                        "slug": "arquitectura-web-http-cors-cookies-y-manejo-de-sesiones-sin-estado",
+                        "type": "article",
+                        "duration_minutes": 15,
                         "order": 3,
                         "is_preview": false
                     }
                 ]
             },
             {
-                "id": 244,
-                "course_id": 107,
-                "title": "Módulo 2: Optimización con Multi-stage Builds",
-                "description": "Reduce el tamaño de tus imágenes de producción hasta en un 80% usando constructores temporales.",
+                "id": 241,
+                "course_id": 102,
+                "title": "Módulo 2: Códigos de Estado y Manejo Semántico de Errores",
+                "description": "Aprende a comunicar el estado exacto de una operación sin ambigüedades.",
                 "order": 2,
                 "lessons": [
                     {
-                        "id": 656,
-                        "module_id": 244,
-                        "title": "El Patrón Multi-stage Build",
-                        "slug": "docker-compose-multiservicio-el-patron-multi-stage-build",
+                        "id": 644,
+                        "module_id": 241,
+                        "title": "Códigos de Estado: 2xx, 4xx y 5xx en la Práctica",
+                        "slug": "arquitectura-web-http-codigos-de-estado-2xx-4xx-y-5xx-en-la-practica",
                         "type": "article",
                         "duration_minutes": 14,
                         "order": 1,
                         "is_preview": false
                     },
                     {
-                        "id": 657,
-                        "module_id": 244,
-                        "title": "Reto Práctico: Estimador de Ahorro Multi-stage",
-                        "slug": "docker-compose-multiservicio-reto-practico-estimador-de-ahorro-multi-stage",
+                        "id": 645,
+                        "module_id": 241,
+                        "title": "Reto Práctico: Despachador de Status Code REST",
+                        "slug": "arquitectura-web-http-reto-practico-despachador-de-status-code-rest",
                         "type": "code_challenge",
-                        "duration_minutes": 18,
+                        "duration_minutes": 20,
                         "order": 2,
                         "is_preview": false
                     }
@@ -3989,6 +3894,101 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
+        "id": 109,
+        "title": "Especificación Formal (SRS) y Casos de Uso",
+        "slug": "especificacion-srs-diagramas",
+        "description": "Aprende a documentar software según el estándar IEEE 830. Diagramas de casos de uso UML, especificación de flujos principales, alternativos y de excepción.",
+        "category_id": 13,
+        "learning_path_id": 8,
+        "learning_path_level_id": 25,
+        "difficulty": "intermediate",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": true,
+        "price": 0,
+        "duration_hours": 12,
+        "order": 2,
+        "lessons_count": 5,
+        "category": {
+            "id": 13,
+            "name": "Ingeniería de Software",
+            "slug": "ingenieria-software",
+            "icon": "ClipboardList",
+            "color": "#9575CD",
+            "description": "Requerimientos, diseño, arquitectura y gestión de proyectos"
+        },
+        "modules": [
+            {
+                "id": 236,
+                "course_id": 109,
+                "title": "Modelado y Documentación Formal",
+                "description": "Creación de especificaciones de requerimientos claras y no ambiguas.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 626,
+                        "module_id": 236,
+                        "title": "Estructura de una Especificación de Requisitos de Software (SRS)",
+                        "slug": "especificacion-srs-diagramas-estructura-de-una-especificacion-de-requisitos-de-software-srs",
+                        "type": "article",
+                        "duration_minutes": 16,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 627,
+                        "module_id": 236,
+                        "title": "Diagramas de casos de uso y diagramas de secuencia UML",
+                        "slug": "especificacion-srs-diagramas-diagramas-de-casos-de-uso-y-diagramas-de-secuencia-uml",
+                        "type": "article",
+                        "duration_minutes": 18,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 628,
+                        "module_id": 236,
+                        "title": "Quiz: Análisis de ambigüedades en requerimientos",
+                        "slug": "especificacion-srs-diagramas-quiz-analisis-de-ambiguedades-en-requerimientos",
+                        "type": "quiz",
+                        "duration_minutes": 12,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 251,
+                "course_id": 109,
+                "title": "Módulo 2: Criterios de Aceptación con BDD y Gherkin",
+                "description": "Traduce requerimientos ambiguos en pruebas ejecutables con la sintaxis Given / When / Then de Gherkin.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 677,
+                        "module_id": 251,
+                        "title": "Sintaxis Gherkin: El Puente entre Negocio e Ingeniería",
+                        "slug": "especificacion-srs-diagramas-bdd-gherkin",
+                        "type": "article",
+                        "duration_minutes": 16,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 678,
+                        "module_id": 251,
+                        "title": "Reto Práctico: Validador de Estructura de Escenarios BDD",
+                        "slug": "especificacion-srs-diagramas-reto-parser-bdd",
+                        "type": "code_challenge",
+                        "duration_minutes": 20,
+                        "order": 2,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": 14,
         "title": "Despliegue Full Stack",
         "slug": "despliegue-fullstack",
@@ -4094,21 +4094,336 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
-        "id": 104,
-        "title": "CSS Moderno: Flexbox, CSS Grid y Responsive Design",
-        "slug": "css-moderno-flexbox-grid",
-        "description": "Domina el diseño web profesional sin depender de librerías externas. Layouts fluidos, diseño adaptativo, variables nativas CSS y técnicas modernas de maquetación.",
-        "category_id": 10,
-        "learning_path_id": 4,
-        "learning_path_level_id": 12,
+        "id": 97,
+        "title": "Lógica y Pensamiento Computacional",
+        "slug": "logica-pensamiento-computacional",
+        "description": "Aprende a descomponer problemas complejos en pasos lógicos ejecutables. Domina diagramas de flujo, tablas de verdad, pseudocódigo y resolución estructurada de problemas.",
+        "category_id": 1,
+        "learning_path_id": 1,
+        "learning_path_level_id": 2,
         "difficulty": "beginner",
         "thumbnail": null,
         "is_published": true,
         "is_free": true,
         "price": 0,
+        "duration_hours": 10,
+        "order": 3,
+        "lessons_count": 6,
+        "category": {
+            "id": 1,
+            "name": "Programación Básica",
+            "slug": "programacion-basica",
+            "icon": "Code",
+            "color": "#6C63FF",
+            "description": "Fundamentos de programación y pensamiento lógico"
+        },
+        "modules": [
+            {
+                "id": 220,
+                "course_id": 97,
+                "title": "Fundamentos del Pensamiento Lógico",
+                "description": "Descomposición algorítmica y abstracción.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 579,
+                        "module_id": 220,
+                        "title": "Qué es un algoritmo y propiedades de una solución",
+                        "slug": "logica-pensamiento-computacional-que-es-un-algoritmo-y-propiedades-de-una-solucion",
+                        "type": "article",
+                        "duration_minutes": 12,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 580,
+                        "module_id": 220,
+                        "title": "Diagramas de flujo y representación gráfica de decisiones",
+                        "slug": "logica-pensamiento-computacional-diagramas-de-flujo-y-representacion-grafica-de-decisiones",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 581,
+                        "module_id": 220,
+                        "title": "Operadores booleanos y tablas de verdad",
+                        "slug": "logica-pensamiento-computacional-operadores-booleanos-y-tablas-de-verdad",
+                        "type": "code_challenge",
+                        "duration_minutes": 18,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 221,
+                "course_id": 97,
+                "title": "Estructuración de Algoritmos",
+                "description": "Estructuras de decisión y repetición.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 582,
+                        "module_id": 221,
+                        "title": "Condicionales anidados y múltiples caminos lógicos",
+                        "slug": "logica-pensamiento-computacional-condicionales-anidados-y-multiples-caminos-logicos",
+                        "type": "article",
+                        "duration_minutes": 14,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 583,
+                        "module_id": 221,
+                        "title": "Bucles de control: mientras vs para",
+                        "slug": "logica-pensamiento-computacional-bucles-de-control-mientras-vs-para",
+                        "type": "code_challenge",
+                        "duration_minutes": 20,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 584,
+                        "module_id": 221,
+                        "title": "Quiz formativo: Pensamiento Lógico",
+                        "slug": "logica-pensamiento-computacional-quiz-formativo-pensamiento-logico",
+                        "type": "quiz",
+                        "duration_minutes": 10,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 17,
+        "title": "CI/CD con GitHub Actions",
+        "slug": "ci-cd-github-actions",
+        "description": "Automatiza pruebas, calidad y despliegues con pipelines que se ejecutan en cada cambio de tu repositorio.",
+        "category_id": 11,
+        "learning_path_id": 6,
+        "learning_path_level_id": 42,
+        "difficulty": "intermediate",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": false,
+        "price": 0,
+        "duration_hours": 13,
+        "order": 3,
+        "lessons_count": 6,
+        "category": {
+            "id": 11,
+            "name": "DevOps",
+            "slug": "devops",
+            "icon": "Container",
+            "color": "#81C784",
+            "description": "CI/CD, contenedores, cloud y automatización"
+        },
+        "modules": [
+            {
+                "id": 19,
+                "course_id": 17,
+                "title": "Pipelines",
+                "description": "Fundamentos de integración y despliegue continuos con Actions.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 42,
+                        "module_id": 19,
+                        "title": "Integración y despliegue continuos",
+                        "slug": "que-es-ci-cd",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 43,
+                        "module_id": 19,
+                        "title": "GitHub Actions en la práctica",
+                        "slug": "github-actions-en-practica",
+                        "type": "code_challenge",
+                        "duration_minutes": 18,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 534,
+                        "module_id": 19,
+                        "title": "Workflows, jobs y steps en profundidad",
+                        "slug": "workflows-y-jobs",
+                        "type": "code_challenge",
+                        "duration_minutes": 17,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 209,
+                "course_id": 17,
+                "title": "Calidad y despliegue",
+                "description": "Tests, calidad, despliegue continuo y seguridad del pipeline.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 536,
+                        "module_id": 209,
+                        "title": "Tests, lint y calidad en CI",
+                        "slug": "tests-y-calidad-en-ci",
+                        "type": "code_challenge",
+                        "duration_minutes": 18,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 537,
+                        "module_id": 209,
+                        "title": "Deploy continuo con Actions",
+                        "slug": "despliegue-continuo",
+                        "type": "code_challenge",
+                        "duration_minutes": 17,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 538,
+                        "module_id": 209,
+                        "title": "Seguridad y buenas prácticas en CI/CD",
+                        "slug": "seguridad-y-buenas-practicas-cicd",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 25,
+        "title": "IA en el ciclo de desarrollo",
+        "slug": "ia-en-el-ciclo-de-desarrollo",
+        "description": "Aprovecha asistentes de código, usa IA en review y tests, y lleva sistemas generativos a producción con evaluación y seguridad.",
+        "category_id": 14,
+        "learning_path_id": 9,
+        "learning_path_level_id": 45,
+        "difficulty": "intermediate",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": false,
+        "price": 0,
         "duration_hours": 12,
         "order": 3,
-        "lessons_count": 5,
+        "lessons_count": 6,
+        "category": {
+            "id": 14,
+            "name": "IA para Desarrollo",
+            "slug": "ia-desarrollo",
+            "icon": "Sparkles",
+            "color": "#4DB6AC",
+            "description": "LLMs, prompt engineering y desarrollo asistido por IA"
+        },
+        "modules": [
+            {
+                "id": 27,
+                "course_id": 25,
+                "title": "Flujo de trabajo aumentado",
+                "description": "Asistentes de código, IA en review y en diseño.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 58,
+                        "module_id": 27,
+                        "title": "Asistentes de código y pair programming con IA",
+                        "slug": "asistentes-de-codigo",
+                        "type": "article",
+                        "duration_minutes": 16,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 59,
+                        "module_id": 27,
+                        "title": "IA en code review, tests y documentación",
+                        "slug": "ia-en-code-review-y-tests",
+                        "type": "article",
+                        "duration_minutes": 16,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 575,
+                        "module_id": 27,
+                        "title": "IA para diseño y arquitectura de soluciones",
+                        "slug": "ia-en-diseno-y-arquitectura",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 219,
+                "course_id": 25,
+                "title": "Integración avanzada",
+                "description": "Producción, evaluación y seguridad de sistemas con IA.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 576,
+                        "module_id": 219,
+                        "title": "Llevar IA generativa a producción",
+                        "slug": "ia-generativa-en-produccion",
+                        "type": "code_challenge",
+                        "duration_minutes": 18,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 577,
+                        "module_id": 219,
+                        "title": "Evaluación y métricas de calidad en sistemas con IA",
+                        "slug": "evaluacion-y-metricas-de-ia",
+                        "type": "code_challenge",
+                        "duration_minutes": 17,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 578,
+                        "module_id": 219,
+                        "title": "Seguridad y privacidad al usar IA en el desarrollo",
+                        "slug": "seguridad-y-privacidad-con-ia",
+                        "type": "article",
+                        "duration_minutes": 16,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 11,
+        "title": "Accesibilidad y Performance Web",
+        "slug": "accesibilidad-y-performance-web",
+        "description": "Haz tu interfaz usable para todas las personas y rápida para todos los dispositivos: criterios WCAG y métricas Core Web Vitals en la práctica.",
+        "category_id": 10,
+        "learning_path_id": 4,
+        "learning_path_level_id": 39,
+        "difficulty": "intermediate",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": true,
+        "price": 0,
+        "duration_hours": 8,
+        "order": 3,
+        "lessons_count": 6,
         "category": {
             "id": 10,
             "name": "Desarrollo Frontend",
@@ -4119,173 +4434,78 @@ export const FALLBACK_COURSES: Course[] = [
         },
         "modules": [
             {
-                "id": 230,
-                "course_id": 104,
-                "title": "Sistemas de Layout Moderno",
-                "description": "Flexbox para ejes y CSS Grid para estructuras bidimensionales.",
+                "id": 13,
+                "course_id": 11,
+                "title": "Accesibilidad",
+                "description": "WCAG, HTML accesible, ARIA y herramientas de verificación.",
                 "order": 1,
                 "lessons": [
                     {
-                        "id": 608,
-                        "module_id": 230,
-                        "title": "Flexbox a fondo: alineación, distribución y wrapping",
-                        "slug": "css-moderno-flexbox-grid-flexbox-a-fondo-alineacion-distribucion-y-wrapping",
+                        "id": 30,
+                        "module_id": 13,
+                        "title": "Accesibilidad: WCAG en la práctica",
+                        "slug": "accesibilidad-wcag",
                         "type": "article",
-                        "duration_minutes": 16,
+                        "duration_minutes": 14,
                         "order": 1,
                         "is_preview": true
                     },
                     {
-                        "id": 609,
-                        "module_id": 230,
-                        "title": "CSS Grid: áreas, columnas implícitas y minmax()",
-                        "slug": "css-moderno-flexbox-grid-css-grid-areas-columnas-implicitas-y-minmax",
-                        "type": "article",
-                        "duration_minutes": 18,
+                        "id": 494,
+                        "module_id": 13,
+                        "title": "HTML accesible y ARIA",
+                        "slug": "html-accesible-y-aria",
+                        "type": "code_challenge",
+                        "duration_minutes": 14,
                         "order": 2,
                         "is_preview": false
                     },
                     {
-                        "id": 610,
-                        "module_id": 230,
-                        "title": "Reto: Construcción de una interfaz tipo dashboard responsiva",
-                        "slug": "css-moderno-flexbox-grid-reto-construccion-de-una-interfaz-tipo-dashboard-responsiva",
-                        "type": "code_challenge",
-                        "duration_minutes": 25,
+                        "id": 495,
+                        "module_id": 13,
+                        "title": "Herramientas para evaluar accesibilidad",
+                        "slug": "testing-de-accesibilidad",
+                        "type": "article",
+                        "duration_minutes": 10,
                         "order": 3,
                         "is_preview": false
                     }
                 ]
             },
             {
-                "id": 250,
-                "course_id": 104,
-                "title": "Módulo 2: Diseño Fluido y Sistemas de Espaciado con Variables CSS",
-                "description": "Aprende a diseñar sistemas de diseño escalables con funciones matemáticas de CSS como clamp() y calc().",
+                "id": 196,
+                "course_id": 11,
+                "title": "Performance",
+                "description": "Core Web Vitals, optimización de recursos y métricas en producción.",
                 "order": 2,
                 "lessons": [
                     {
-                        "id": 675,
-                        "module_id": 250,
-                        "title": "Tipografía y Espaciado Fluido con clamp()",
-                        "slug": "css-moderno-flexbox-grid-diseno-fluido-clamp",
+                        "id": 31,
+                        "module_id": 196,
+                        "title": "Core Web Vitals y performance",
+                        "slug": "core-web-vitals",
                         "type": "article",
                         "duration_minutes": 15,
                         "order": 1,
                         "is_preview": false
                     },
                     {
-                        "id": 676,
-                        "module_id": 250,
-                        "title": "Reto Práctico: Generador de Propiedad CSS Grid Auto-fit",
-                        "slug": "css-moderno-flexbox-grid-reto-generador-grid",
+                        "id": 496,
+                        "module_id": 196,
+                        "title": "Optimización de recursos",
+                        "slug": "optimizacion-de-recursos",
                         "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 2,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 22,
-        "title": "Gestión de requerimientos",
-        "slug": "gestion-de-requerimientos",
-        "description": "Prioriza con MoSCoW, gestiona el cambio con trazabilidad y comunica con stakeholders como un profesional.",
-        "category_id": 13,
-        "learning_path_id": 8,
-        "learning_path_level_id": 26,
-        "difficulty": "intermediate",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": false,
-        "price": 0,
-        "duration_hours": 11,
-        "order": 3,
-        "lessons_count": 6,
-        "category": {
-            "id": 13,
-            "name": "Ingeniería de Software",
-            "slug": "ingenieria-software",
-            "icon": "ClipboardList",
-            "color": "#9575CD",
-            "description": "Requerimientos, diseño, arquitectura y gestión de proyectos"
-        },
-        "modules": [
-            {
-                "id": 24,
-                "course_id": 22,
-                "title": "Gestión del cambio",
-                "description": "Priorización, trazabilidad y control de cambios.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 52,
-                        "module_id": 24,
-                        "title": "Priorización con MoSCoW",
-                        "slug": "priorizacion-moscow",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 53,
-                        "module_id": 24,
-                        "title": "Trazabilidad y gestión del cambio",
-                        "slug": "trazabilidad-y-gestion-del-cambio",
-                        "type": "code_challenge",
-                        "duration_minutes": 17,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 563,
-                        "module_id": 24,
-                        "title": "Matrices de trazabilidad y su mantenimiento",
-                        "slug": "matrices-de-trazabilidad",
-                        "type": "code_challenge",
-                        "duration_minutes": 16,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 216,
-                "course_id": 22,
-                "title": "Comunicación y herramientas",
-                "description": "Solicitudes de cambio, stakeholders y herramientas de gestión.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 564,
-                        "module_id": 216,
-                        "title": "Solicitudes de cambio y control de versiones de requerimientos",
-                        "slug": "solicitudes-de-cambio",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 565,
-                        "module_id": 216,
-                        "title": "Comunicación efectiva con stakeholders",
-                        "slug": "comunicacion-con-stakeholders",
-                        "type": "article",
                         "duration_minutes": 14,
                         "order": 2,
                         "is_preview": false
                     },
                     {
-                        "id": 566,
-                        "module_id": 216,
-                        "title": "Herramientas y métricas en gestión de requerimientos",
-                        "slug": "herramientas-de-gestion",
+                        "id": 497,
+                        "module_id": 196,
+                        "title": "Medición y presupuestos de rendimiento",
+                        "slug": "medicion-y-presupuestos",
                         "type": "article",
-                        "duration_minutes": 14,
+                        "duration_minutes": 10,
                         "order": 3,
                         "is_preview": false
                     }
@@ -4419,6 +4639,111 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
+        "id": 22,
+        "title": "Gestión de requerimientos",
+        "slug": "gestion-de-requerimientos",
+        "description": "Prioriza con MoSCoW, gestiona el cambio con trazabilidad y comunica con stakeholders como un profesional.",
+        "category_id": 13,
+        "learning_path_id": 8,
+        "learning_path_level_id": 44,
+        "difficulty": "intermediate",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": false,
+        "price": 0,
+        "duration_hours": 11,
+        "order": 3,
+        "lessons_count": 6,
+        "category": {
+            "id": 13,
+            "name": "Ingeniería de Software",
+            "slug": "ingenieria-software",
+            "icon": "ClipboardList",
+            "color": "#9575CD",
+            "description": "Requerimientos, diseño, arquitectura y gestión de proyectos"
+        },
+        "modules": [
+            {
+                "id": 24,
+                "course_id": 22,
+                "title": "Gestión del cambio",
+                "description": "Priorización, trazabilidad y control de cambios.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 52,
+                        "module_id": 24,
+                        "title": "Priorización con MoSCoW",
+                        "slug": "priorizacion-moscow",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 53,
+                        "module_id": 24,
+                        "title": "Trazabilidad y gestión del cambio",
+                        "slug": "trazabilidad-y-gestion-del-cambio",
+                        "type": "code_challenge",
+                        "duration_minutes": 17,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 563,
+                        "module_id": 24,
+                        "title": "Matrices de trazabilidad y su mantenimiento",
+                        "slug": "matrices-de-trazabilidad",
+                        "type": "code_challenge",
+                        "duration_minutes": 16,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 216,
+                "course_id": 22,
+                "title": "Comunicación y herramientas",
+                "description": "Solicitudes de cambio, stakeholders y herramientas de gestión.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 564,
+                        "module_id": 216,
+                        "title": "Solicitudes de cambio y control de versiones de requerimientos",
+                        "slug": "solicitudes-de-cambio",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 565,
+                        "module_id": 216,
+                        "title": "Comunicación efectiva con stakeholders",
+                        "slug": "comunicacion-con-stakeholders",
+                        "type": "article",
+                        "duration_minutes": 14,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 566,
+                        "module_id": 216,
+                        "title": "Herramientas y métricas en gestión de requerimientos",
+                        "slug": "herramientas-de-gestion",
+                        "type": "article",
+                        "duration_minutes": 14,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": 95,
         "title": "Principios SOLID en la práctica",
         "slug": "principios-solid",
@@ -4533,21 +4858,21 @@ export const FALLBACK_COURSES: Course[] = [
         ]
     },
     {
-        "id": 11,
-        "title": "Accesibilidad y Performance Web",
-        "slug": "accesibilidad-y-performance-web",
-        "description": "Haz tu interfaz usable para todas las personas y rápida para todos los dispositivos: criterios WCAG y métricas Core Web Vitals en la práctica.",
+        "id": 104,
+        "title": "CSS Moderno: Flexbox, CSS Grid y Responsive Design",
+        "slug": "css-moderno-flexbox-grid",
+        "description": "Domina el diseño web profesional sin depender de librerías externas. Layouts fluidos, diseño adaptativo, variables nativas CSS y técnicas modernas de maquetación.",
         "category_id": 10,
         "learning_path_id": 4,
-        "learning_path_level_id": 14,
-        "difficulty": "intermediate",
+        "learning_path_level_id": 12,
+        "difficulty": "beginner",
         "thumbnail": null,
         "is_published": true,
         "is_free": true,
         "price": 0,
-        "duration_hours": 8,
+        "duration_hours": 12,
         "order": 3,
-        "lessons_count": 6,
+        "lessons_count": 5,
         "category": {
             "id": 10,
             "name": "Desarrollo Frontend",
@@ -4558,499 +4883,69 @@ export const FALLBACK_COURSES: Course[] = [
         },
         "modules": [
             {
-                "id": 13,
-                "course_id": 11,
-                "title": "Accesibilidad",
-                "description": "WCAG, HTML accesible, ARIA y herramientas de verificación.",
+                "id": 230,
+                "course_id": 104,
+                "title": "Sistemas de Layout Moderno",
+                "description": "Flexbox para ejes y CSS Grid para estructuras bidimensionales.",
                 "order": 1,
                 "lessons": [
                     {
-                        "id": 30,
-                        "module_id": 13,
-                        "title": "Accesibilidad: WCAG en la práctica",
-                        "slug": "accesibilidad-wcag",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 494,
-                        "module_id": 13,
-                        "title": "HTML accesible y ARIA",
-                        "slug": "html-accesible-y-aria",
-                        "type": "code_challenge",
-                        "duration_minutes": 14,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 495,
-                        "module_id": 13,
-                        "title": "Herramientas para evaluar accesibilidad",
-                        "slug": "testing-de-accesibilidad",
-                        "type": "article",
-                        "duration_minutes": 10,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 196,
-                "course_id": 11,
-                "title": "Performance",
-                "description": "Core Web Vitals, optimización de recursos y métricas en producción.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 31,
-                        "module_id": 196,
-                        "title": "Core Web Vitals y performance",
-                        "slug": "core-web-vitals",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 496,
-                        "module_id": 196,
-                        "title": "Optimización de recursos",
-                        "slug": "optimizacion-de-recursos",
-                        "type": "code_challenge",
-                        "duration_minutes": 14,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 497,
-                        "module_id": 196,
-                        "title": "Medición y presupuestos de rendimiento",
-                        "slug": "medicion-y-presupuestos",
-                        "type": "article",
-                        "duration_minutes": 10,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 17,
-        "title": "CI/CD con GitHub Actions",
-        "slug": "ci-cd-github-actions",
-        "description": "Automatiza pruebas, calidad y despliegues con pipelines que se ejecutan en cada cambio de tu repositorio.",
-        "category_id": 11,
-        "learning_path_id": 6,
-        "learning_path_level_id": 20,
-        "difficulty": "intermediate",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": false,
-        "price": 0,
-        "duration_hours": 13,
-        "order": 3,
-        "lessons_count": 6,
-        "category": {
-            "id": 11,
-            "name": "DevOps",
-            "slug": "devops",
-            "icon": "Container",
-            "color": "#81C784",
-            "description": "CI/CD, contenedores, cloud y automatización"
-        },
-        "modules": [
-            {
-                "id": 19,
-                "course_id": 17,
-                "title": "Pipelines",
-                "description": "Fundamentos de integración y despliegue continuos con Actions.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 42,
-                        "module_id": 19,
-                        "title": "Integración y despliegue continuos",
-                        "slug": "que-es-ci-cd",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 43,
-                        "module_id": 19,
-                        "title": "GitHub Actions en la práctica",
-                        "slug": "github-actions-en-practica",
-                        "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 534,
-                        "module_id": 19,
-                        "title": "Workflows, jobs y steps en profundidad",
-                        "slug": "workflows-y-jobs",
-                        "type": "code_challenge",
-                        "duration_minutes": 17,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 209,
-                "course_id": 17,
-                "title": "Calidad y despliegue",
-                "description": "Tests, calidad, despliegue continuo y seguridad del pipeline.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 536,
-                        "module_id": 209,
-                        "title": "Tests, lint y calidad en CI",
-                        "slug": "tests-y-calidad-en-ci",
-                        "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 537,
-                        "module_id": 209,
-                        "title": "Deploy continuo con Actions",
-                        "slug": "despliegue-continuo",
-                        "type": "code_challenge",
-                        "duration_minutes": 17,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 538,
-                        "module_id": 209,
-                        "title": "Seguridad y buenas prácticas en CI/CD",
-                        "slug": "seguridad-y-buenas-practicas-cicd",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 25,
-        "title": "IA en el ciclo de desarrollo",
-        "slug": "ia-en-el-ciclo-de-desarrollo",
-        "description": "Aprovecha asistentes de código, usa IA en review y tests, y lleva sistemas generativos a producción con evaluación y seguridad.",
-        "category_id": 14,
-        "learning_path_id": 9,
-        "learning_path_level_id": 29,
-        "difficulty": "intermediate",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": false,
-        "price": 0,
-        "duration_hours": 12,
-        "order": 3,
-        "lessons_count": 6,
-        "category": {
-            "id": 14,
-            "name": "IA para Desarrollo",
-            "slug": "ia-desarrollo",
-            "icon": "Sparkles",
-            "color": "#4DB6AC",
-            "description": "LLMs, prompt engineering y desarrollo asistido por IA"
-        },
-        "modules": [
-            {
-                "id": 27,
-                "course_id": 25,
-                "title": "Flujo de trabajo aumentado",
-                "description": "Asistentes de código, IA en review y en diseño.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 58,
-                        "module_id": 27,
-                        "title": "Asistentes de código y pair programming con IA",
-                        "slug": "asistentes-de-codigo",
+                        "id": 608,
+                        "module_id": 230,
+                        "title": "Flexbox a fondo: alineación, distribución y wrapping",
+                        "slug": "css-moderno-flexbox-grid-flexbox-a-fondo-alineacion-distribucion-y-wrapping",
                         "type": "article",
                         "duration_minutes": 16,
                         "order": 1,
                         "is_preview": true
                     },
                     {
-                        "id": 59,
-                        "module_id": 27,
-                        "title": "IA en code review, tests y documentación",
-                        "slug": "ia-en-code-review-y-tests",
-                        "type": "article",
-                        "duration_minutes": 16,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 575,
-                        "module_id": 27,
-                        "title": "IA para diseño y arquitectura de soluciones",
-                        "slug": "ia-en-diseno-y-arquitectura",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 219,
-                "course_id": 25,
-                "title": "Integración avanzada",
-                "description": "Producción, evaluación y seguridad de sistemas con IA.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 576,
-                        "module_id": 219,
-                        "title": "Llevar IA generativa a producción",
-                        "slug": "ia-generativa-en-produccion",
-                        "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 1,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 577,
-                        "module_id": 219,
-                        "title": "Evaluación y métricas de calidad en sistemas con IA",
-                        "slug": "evaluacion-y-metricas-de-ia",
-                        "type": "code_challenge",
-                        "duration_minutes": 17,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 578,
-                        "module_id": 219,
-                        "title": "Seguridad y privacidad al usar IA en el desarrollo",
-                        "slug": "seguridad-y-privacidad-con-ia",
-                        "type": "article",
-                        "duration_minutes": 16,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 97,
-        "title": "Lógica y Pensamiento Computacional",
-        "slug": "logica-pensamiento-computacional",
-        "description": "Aprende a descomponer problemas complejos en pasos lógicos ejecutables. Domina diagramas de flujo, tablas de verdad, pseudocódigo y resolución estructurada de problemas.",
-        "category_id": 1,
-        "learning_path_id": 1,
-        "learning_path_level_id": 1,
-        "difficulty": "beginner",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": true,
-        "price": 0,
-        "duration_hours": 10,
-        "order": 3,
-        "lessons_count": 6,
-        "category": {
-            "id": 1,
-            "name": "Programación Básica",
-            "slug": "programacion-basica",
-            "icon": "Code",
-            "color": "#6C63FF",
-            "description": "Fundamentos de programación y pensamiento lógico"
-        },
-        "modules": [
-            {
-                "id": 220,
-                "course_id": 97,
-                "title": "Fundamentos del Pensamiento Lógico",
-                "description": "Descomposición algorítmica y abstracción.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 579,
-                        "module_id": 220,
-                        "title": "Qué es un algoritmo y propiedades de una solución",
-                        "slug": "logica-pensamiento-computacional-que-es-un-algoritmo-y-propiedades-de-una-solucion",
-                        "type": "article",
-                        "duration_minutes": 12,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 580,
-                        "module_id": 220,
-                        "title": "Diagramas de flujo y representación gráfica de decisiones",
-                        "slug": "logica-pensamiento-computacional-diagramas-de-flujo-y-representacion-grafica-de-decisiones",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 581,
-                        "module_id": 220,
-                        "title": "Operadores booleanos y tablas de verdad",
-                        "slug": "logica-pensamiento-computacional-operadores-booleanos-y-tablas-de-verdad",
-                        "type": "code_challenge",
-                        "duration_minutes": 18,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            },
-            {
-                "id": 221,
-                "course_id": 97,
-                "title": "Estructuración de Algoritmos",
-                "description": "Estructuras de decisión y repetición.",
-                "order": 2,
-                "lessons": [
-                    {
-                        "id": 582,
-                        "module_id": 221,
-                        "title": "Condicionales anidados y múltiples caminos lógicos",
-                        "slug": "logica-pensamiento-computacional-condicionales-anidados-y-multiples-caminos-logicos",
-                        "type": "article",
-                        "duration_minutes": 14,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 583,
-                        "module_id": 221,
-                        "title": "Bucles de control: mientras vs para",
-                        "slug": "logica-pensamiento-computacional-bucles-de-control-mientras-vs-para",
-                        "type": "code_challenge",
-                        "duration_minutes": 20,
-                        "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 584,
-                        "module_id": 221,
-                        "title": "Quiz formativo: Pensamiento Lógico",
-                        "slug": "logica-pensamiento-computacional-quiz-formativo-pensamiento-logico",
-                        "type": "quiz",
-                        "duration_minutes": 10,
-                        "order": 3,
-                        "is_preview": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 8,
-        "title": "Seguridad en APIs",
-        "slug": "seguridad-en-apis",
-        "description": "Protege tus servicios: autenticación con tokens, vulnerabilidades OWASP más comunes y manejo seguro de secretos. La seguridad no es un extra, es parte del diseño.",
-        "category_id": 9,
-        "learning_path_id": 3,
-        "learning_path_level_id": 11,
-        "difficulty": "intermediate",
-        "thumbnail": null,
-        "is_published": true,
-        "is_free": true,
-        "price": 0,
-        "duration_hours": 8,
-        "order": 4,
-        "lessons_count": 6,
-        "category": {
-            "id": 9,
-            "name": "Desarrollo Backend",
-            "slug": "desarrollo-backend",
-            "icon": "Server",
-            "color": "#64B5F6",
-            "description": "APIs, servidores, bases de datos y lógica de negocio"
-        },
-        "modules": [
-            {
-                "id": 9,
-                "course_id": 8,
-                "title": "Autenticación y Protección",
-                "description": "Tokens, middleware y control de acceso en tus APIs.",
-                "order": 1,
-                "lessons": [
-                    {
-                        "id": 19,
-                        "module_id": 9,
-                        "title": "Autenticación con tokens (Sanctum)",
-                        "slug": "autenticacion-con-tokens",
-                        "type": "article",
-                        "duration_minutes": 15,
-                        "order": 1,
-                        "is_preview": true
-                    },
-                    {
-                        "id": 20,
-                        "module_id": 9,
-                        "title": "OWASP Top 10 para desarrolladores",
-                        "slug": "owasp-para-desarrolladores",
+                        "id": 609,
+                        "module_id": 230,
+                        "title": "CSS Grid: áreas, columnas implícitas y minmax()",
+                        "slug": "css-moderno-flexbox-grid-css-grid-areas-columnas-implicitas-y-minmax",
                         "type": "article",
                         "duration_minutes": 18,
                         "order": 2,
                         "is_preview": false
                     },
                     {
-                        "id": 21,
-                        "module_id": 9,
-                        "title": "Secretos y variables de entorno",
-                        "slug": "secretos-y-variables-de-entorno",
-                        "type": "article",
-                        "duration_minutes": 10,
+                        "id": 610,
+                        "module_id": 230,
+                        "title": "Reto: Construcción de una interfaz tipo dashboard responsiva",
+                        "slug": "css-moderno-flexbox-grid-reto-construccion-de-una-interfaz-tipo-dashboard-responsiva",
+                        "type": "code_challenge",
+                        "duration_minutes": 25,
                         "order": 3,
                         "is_preview": false
                     }
                 ]
             },
             {
-                "id": 199,
-                "course_id": 8,
-                "title": "Defensa en profundidad",
-                "description": "Seguridad más allá de la autenticación: errores, abuso y datos.",
+                "id": 250,
+                "course_id": 104,
+                "title": "Módulo 2: Diseño Fluido y Sistemas de Espaciado con Variables CSS",
+                "description": "Aprende a diseñar sistemas de diseño escalables con funciones matemáticas de CSS como clamp() y calc().",
                 "order": 2,
                 "lessons": [
                     {
-                        "id": 505,
-                        "module_id": 199,
-                        "title": "Manejo seguro de errores y logging",
-                        "slug": "manejo-seguro-de-errores",
+                        "id": 675,
+                        "module_id": 250,
+                        "title": "Tipografía y Espaciado Fluido con clamp()",
+                        "slug": "css-moderno-flexbox-grid-diseno-fluido-clamp",
                         "type": "article",
-                        "duration_minutes": 16,
+                        "duration_minutes": 15,
                         "order": 1,
                         "is_preview": false
                     },
                     {
-                        "id": 506,
-                        "module_id": 199,
-                        "title": "Rate limiting y protección contra abuso",
-                        "slug": "rate-limiting-y-proteccion-de-abuso",
+                        "id": 676,
+                        "module_id": 250,
+                        "title": "Reto Práctico: Generador de Propiedad CSS Grid Auto-fit",
+                        "slug": "css-moderno-flexbox-grid-reto-generador-grid",
                         "type": "code_challenge",
-                        "duration_minutes": 17,
+                        "duration_minutes": 18,
                         "order": 2,
-                        "is_preview": false
-                    },
-                    {
-                        "id": 507,
-                        "module_id": 199,
-                        "title": "Cifrado, cabeceras de seguridad y privacidad",
-                        "slug": "cifrado-y-privacidad-de-datos",
-                        "type": "article",
-                        "duration_minutes": 16,
-                        "order": 3,
                         "is_preview": false
                     }
                 ]
@@ -5170,6 +5065,111 @@ export const FALLBACK_COURSES: Course[] = [
                 ]
             }
         ]
+    },
+    {
+        "id": 8,
+        "title": "Seguridad en APIs",
+        "slug": "seguridad-en-apis",
+        "description": "Protege tus servicios: autenticación con tokens, vulnerabilidades OWASP más comunes y manejo seguro de secretos. La seguridad no es un extra, es parte del diseño.",
+        "category_id": 9,
+        "learning_path_id": 3,
+        "learning_path_level_id": 40,
+        "difficulty": "intermediate",
+        "thumbnail": null,
+        "is_published": true,
+        "is_free": true,
+        "price": 0,
+        "duration_hours": 8,
+        "order": 4,
+        "lessons_count": 6,
+        "category": {
+            "id": 9,
+            "name": "Desarrollo Backend",
+            "slug": "desarrollo-backend",
+            "icon": "Server",
+            "color": "#64B5F6",
+            "description": "APIs, servidores, bases de datos y lógica de negocio"
+        },
+        "modules": [
+            {
+                "id": 9,
+                "course_id": 8,
+                "title": "Autenticación y Protección",
+                "description": "Tokens, middleware y control de acceso en tus APIs.",
+                "order": 1,
+                "lessons": [
+                    {
+                        "id": 19,
+                        "module_id": 9,
+                        "title": "Autenticación con tokens (Sanctum)",
+                        "slug": "autenticacion-con-tokens",
+                        "type": "article",
+                        "duration_minutes": 15,
+                        "order": 1,
+                        "is_preview": true
+                    },
+                    {
+                        "id": 20,
+                        "module_id": 9,
+                        "title": "OWASP Top 10 para desarrolladores",
+                        "slug": "owasp-para-desarrolladores",
+                        "type": "article",
+                        "duration_minutes": 18,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 21,
+                        "module_id": 9,
+                        "title": "Secretos y variables de entorno",
+                        "slug": "secretos-y-variables-de-entorno",
+                        "type": "article",
+                        "duration_minutes": 10,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            },
+            {
+                "id": 199,
+                "course_id": 8,
+                "title": "Defensa en profundidad",
+                "description": "Seguridad más allá de la autenticación: errores, abuso y datos.",
+                "order": 2,
+                "lessons": [
+                    {
+                        "id": 505,
+                        "module_id": 199,
+                        "title": "Manejo seguro de errores y logging",
+                        "slug": "manejo-seguro-de-errores",
+                        "type": "article",
+                        "duration_minutes": 16,
+                        "order": 1,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 506,
+                        "module_id": 199,
+                        "title": "Rate limiting y protección contra abuso",
+                        "slug": "rate-limiting-y-proteccion-de-abuso",
+                        "type": "code_challenge",
+                        "duration_minutes": 17,
+                        "order": 2,
+                        "is_preview": false
+                    },
+                    {
+                        "id": 507,
+                        "module_id": 199,
+                        "title": "Cifrado, cabeceras de seguridad y privacidad",
+                        "slug": "cifrado-y-privacidad-de-datos",
+                        "type": "article",
+                        "duration_minutes": 16,
+                        "order": 3,
+                        "is_preview": false
+                    }
+                ]
+            }
+        ]
     }
 ];
 
@@ -5235,24 +5235,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                             "icon": "Code",
                             "color": "#6C63FF"
                         }
-                    },
-                    {
-                        "id": 97,
-                        "title": "Lógica y Pensamiento Computacional",
-                        "slug": "logica-pensamiento-computacional",
-                        "description": "Aprende a descomponer problemas complejos en pasos lógicos ejecutables. Domina diagramas de flujo, tablas de verdad, pseudocódigo y resolución estructurada de problemas.",
-                        "difficulty": "beginner",
-                        "is_published": true,
-                        "is_free": true,
-                        "duration_hours": 10,
-                        "lessons_count": 6,
-                        "category": {
-                            "id": 1,
-                            "name": "Programación Básica",
-                            "slug": "programacion-basica",
-                            "icon": "Code",
-                            "color": "#6C63FF"
-                        }
                     }
                 ]
             },
@@ -5282,21 +5264,21 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                         }
                     },
                     {
-                        "id": 3,
-                        "title": "SQL desde Cero",
-                        "slug": "sql-desde-cero",
-                        "description": "Aprende SQL de manera práctica. Desde SELECT básicos hasta JOINs complejos, subconsultas, índices y optimización de consultas. Ideal para cualquier estudiante de ingeniería.",
+                        "id": 97,
+                        "title": "Lógica y Pensamiento Computacional",
+                        "slug": "logica-pensamiento-computacional",
+                        "description": "Aprende a descomponer problemas complejos en pasos lógicos ejecutables. Domina diagramas de flujo, tablas de verdad, pseudocódigo y resolución estructurada de problemas.",
                         "difficulty": "beginner",
                         "is_published": true,
                         "is_free": true,
                         "duration_hours": 10,
-                        "lessons_count": 9,
+                        "lessons_count": 6,
                         "category": {
-                            "id": 4,
-                            "name": "Bases de Datos",
-                            "slug": "bases-de-datos",
-                            "icon": "Database",
-                            "color": "#FFD740"
+                            "id": 1,
+                            "name": "Programación Básica",
+                            "slug": "programacion-basica",
+                            "icon": "Code",
+                            "color": "#6C63FF"
                         }
                     }
                 ]
@@ -5327,6 +5309,33 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                         }
                     },
                     {
+                        "id": 3,
+                        "title": "SQL desde Cero",
+                        "slug": "sql-desde-cero",
+                        "description": "Aprende SQL de manera práctica. Desde SELECT básicos hasta JOINs complejos, subconsultas, índices y optimización de consultas. Ideal para cualquier estudiante de ingeniería.",
+                        "difficulty": "beginner",
+                        "is_published": true,
+                        "is_free": true,
+                        "duration_hours": 10,
+                        "lessons_count": 9,
+                        "category": {
+                            "id": 4,
+                            "name": "Bases de Datos",
+                            "slug": "bases-de-datos",
+                            "icon": "Database",
+                            "color": "#FFD740"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 38,
+                "learning_path_id": 1,
+                "title": "Nivel 4 — Clean Code, Refactorización y Estructuras de Datos",
+                "description": "Aplica principios de Robert C. Martin y Martin Fowler: complejidad asintótica, estructuras lineales y código mantenible.",
+                "order": 4,
+                "courses": [
+                    {
                         "id": 99,
                         "title": "Estructuras de Datos Lineales y Complejidad",
                         "slug": "estructuras-datos-lineales",
@@ -5345,14 +5354,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                         }
                     }
                 ]
-            },
-            {
-                "id": 38,
-                "learning_path_id": 1,
-                "title": "Nivel 4 — Clean Code, Refactorización y Proyecto de Consola",
-                "description": "Aplica los principios de Robert C. Martin (Clean Code) y Martin Fowler: nombres expresivos, funciones pequeñas y desarrollo de un proyecto integrador sin dependencias.",
-                "order": 4,
-                "courses": []
             }
         ]
     },
@@ -5564,24 +5565,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                             "icon": "Server",
                             "color": "#64B5F6"
                         }
-                    },
-                    {
-                        "id": 102,
-                        "title": "Protocolo HTTP y Arquitectura Web",
-                        "slug": "arquitectura-web-http",
-                        "description": "Comprende el funcionamiento del protocolo que mueve Internet: cabeceras, códigos de estado, métodos idempotentes, CORS, cookies y ciclos de vida Request/Response.",
-                        "difficulty": "beginner",
-                        "is_published": true,
-                        "is_free": true,
-                        "duration_hours": 10,
-                        "lessons_count": 7,
-                        "category": {
-                            "id": 9,
-                            "name": "Desarrollo Backend",
-                            "slug": "desarrollo-backend",
-                            "icon": "Server",
-                            "color": "#64B5F6"
-                        }
                     }
                 ]
             },
@@ -5627,6 +5610,24 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                             "icon": "Server",
                             "color": "#64B5F6"
                         }
+                    },
+                    {
+                        "id": 102,
+                        "title": "Protocolo HTTP y Arquitectura Web",
+                        "slug": "arquitectura-web-http",
+                        "description": "Comprende el funcionamiento del protocolo que mueve Internet: cabeceras, códigos de estado, métodos idempotentes, CORS, cookies y ciclos de vida Request/Response.",
+                        "difficulty": "beginner",
+                        "is_published": true,
+                        "is_free": true,
+                        "duration_hours": 10,
+                        "lessons_count": 7,
+                        "category": {
+                            "id": 9,
+                            "name": "Desarrollo Backend",
+                            "slug": "desarrollo-backend",
+                            "icon": "Server",
+                            "color": "#64B5F6"
+                        }
                     }
                 ]
             },
@@ -5658,10 +5659,10 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                 ]
             },
             {
-                "id": 11,
+                "id": 40,
                 "learning_path_id": 3,
-                "title": "Nivel 4 — Seguridad y Buenas Prácticas",
-                "description": "Autenticación, autorización y protección de APIs.",
+                "title": "Nivel 4 — Seguridad en APIs, Resiliencia y Buenas Prácticas",
+                "description": "Protege endpoints con OAuth2, rate limiting, validación criptográfica y tolerancia a fallos.",
                 "order": 4,
                 "courses": [
                     {
@@ -5683,14 +5684,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                         }
                     }
                 ]
-            },
-            {
-                "id": 40,
-                "learning_path_id": 3,
-                "title": "Nivel 5 — Arquitectura Limpia, Microservicios y Resiliencia",
-                "description": "Separación de capas según Clean Architecture, diseño de APIs desacopladas, rate limiting y contratos seguros.",
-                "order": 5,
-                "courses": []
             }
         ]
     },
@@ -5721,24 +5714,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                 "order": 1,
                 "courses": [
                     {
-                        "id": 9,
-                        "title": "HTML, CSS y JavaScript",
-                        "slug": "html-css-javascript",
-                        "description": "Los tres pilares de la web: estructura semántica, maquetación moderna con Flexbox y Grid, e interactividad con el DOM. Construye tus primeras interfaces desde cero.",
-                        "difficulty": "beginner",
-                        "is_published": true,
-                        "is_free": true,
-                        "duration_hours": 15,
-                        "lessons_count": 12,
-                        "category": {
-                            "id": 10,
-                            "name": "Desarrollo Frontend",
-                            "slug": "desarrollo-frontend",
-                            "icon": "Palette",
-                            "color": "#F06292"
-                        }
-                    },
-                    {
                         "id": 4,
                         "title": "Introducción al Desarrollo Web",
                         "slug": "intro-desarrollo-web",
@@ -5754,6 +5729,24 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                             "slug": "desarrollo-web",
                             "icon": "Globe",
                             "color": "#26C6DA"
+                        }
+                    },
+                    {
+                        "id": 9,
+                        "title": "HTML, CSS y JavaScript",
+                        "slug": "html-css-javascript",
+                        "description": "Los tres pilares de la web: estructura semántica, maquetación moderna con Flexbox y Grid, e interactividad con el DOM. Construye tus primeras interfaces desde cero.",
+                        "difficulty": "beginner",
+                        "is_published": true,
+                        "is_free": true,
+                        "duration_hours": 15,
+                        "lessons_count": 12,
+                        "category": {
+                            "id": 10,
+                            "name": "Desarrollo Frontend",
+                            "slug": "desarrollo-frontend",
+                            "icon": "Palette",
+                            "color": "#F06292"
                         }
                     },
                     {
@@ -5822,10 +5815,10 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                 ]
             },
             {
-                "id": 14,
+                "id": 39,
                 "learning_path_id": 4,
-                "title": "Nivel 3 — Calidad Frontend",
-                "description": "Accesibilidad, rendimiento y buenas prácticas.",
+                "title": "Nivel 3 — Calidad, Accesibilidad y Rendimiento Web",
+                "description": "Métricas Core Web Vitals, testing unitario y accesibilidad WCAG 2.1.",
                 "order": 3,
                 "courses": [
                     {
@@ -5847,14 +5840,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                         }
                     }
                 ]
-            },
-            {
-                "id": 39,
-                "learning_path_id": 4,
-                "title": "Nivel 4 — Testing, Tipado Avanzado y Rendimiento Web",
-                "description": "Pruebas unitarias de componentes, modelado estricto con TypeScript profesional y optimización de métricas Core Web Vitals.",
-                "order": 4,
-                "courses": []
             }
         ]
     },
@@ -5957,14 +5942,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                         }
                     }
                 ]
-            },
-            {
-                "id": 41,
-                "learning_path_id": 5,
-                "title": "Nivel 4 — Arquitectura de Producción y Monitoreo Cloud",
-                "description": "Despliegue automatizado, manejo de estados distribuidos y observabilidad de punta a punta.",
-                "order": 4,
-                "courses": []
             }
         ]
     },
@@ -6022,24 +5999,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                 "order": 2,
                 "courses": [
                     {
-                        "id": 16,
-                        "title": "Docker y contenedores",
-                        "slug": "docker-y-contenedores",
-                        "description": "Empaqueta aplicaciones con imágenes ligeras, orquesta servicios con Compose y despliega contenedores robustos en producción.",
-                        "difficulty": "intermediate",
-                        "is_published": true,
-                        "is_free": true,
-                        "duration_hours": 15,
-                        "lessons_count": 6,
-                        "category": {
-                            "id": 11,
-                            "name": "DevOps",
-                            "slug": "devops",
-                            "icon": "Container",
-                            "color": "#81C784"
-                        }
-                    },
-                    {
                         "id": 107,
                         "title": "Docker Compose y Arquitecturas Multiservicio",
                         "slug": "docker-compose-multiservicio",
@@ -6056,14 +6015,32 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                             "icon": "Container",
                             "color": "#81C784"
                         }
+                    },
+                    {
+                        "id": 16,
+                        "title": "Docker y contenedores",
+                        "slug": "docker-y-contenedores",
+                        "description": "Empaqueta aplicaciones con imágenes ligeras, orquesta servicios con Compose y despliega contenedores robustos en producción.",
+                        "difficulty": "intermediate",
+                        "is_published": true,
+                        "is_free": true,
+                        "duration_hours": 15,
+                        "lessons_count": 6,
+                        "category": {
+                            "id": 11,
+                            "name": "DevOps",
+                            "slug": "devops",
+                            "icon": "Container",
+                            "color": "#81C784"
+                        }
                     }
                 ]
             },
             {
-                "id": 20,
+                "id": 42,
                 "learning_path_id": 6,
-                "title": "Nivel 3 — CI/CD y Cloud",
-                "description": "Pipelines, despliegue continuo y observabilidad.",
+                "title": "Nivel 3 — Automatización CI/CD y DevSecOps",
+                "description": "Pipelines continuos con GitHub Actions, escaneo de dependencias y despliegue seguro.",
                 "order": 3,
                 "courses": [
                     {
@@ -6085,14 +6062,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                         }
                     }
                 ]
-            },
-            {
-                "id": 42,
-                "learning_path_id": 6,
-                "title": "Nivel 4 — Infraestructura como Código y DevSecOps",
-                "description": "Automatización con Compose avanzado, escaneo de vulnerabilidades en imágenes y observabilidad de contenedores.",
-                "order": 4,
-                "courses": []
             }
         ]
     },
@@ -6195,14 +6164,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                         }
                     }
                 ]
-            },
-            {
-                "id": 43,
-                "learning_path_id": 7,
-                "title": "Nivel 4 — GitOps, Automatización y Trunk-Based Development",
-                "description": "Hooks de Git automatizados, protección criptográfica de commits y flujos de alta velocidad en equipos de ingeniería.",
-                "order": 4,
-                "courses": []
             }
         ]
     },
@@ -6260,24 +6221,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                 "order": 2,
                 "courses": [
                     {
-                        "id": 109,
-                        "title": "Especificación Formal (SRS) y Casos de Uso",
-                        "slug": "especificacion-srs-diagramas",
-                        "description": "Aprende a documentar software según el estándar IEEE 830. Diagramas de casos de uso UML, especificación de flujos principales, alternativos y de excepción.",
-                        "difficulty": "intermediate",
-                        "is_published": true,
-                        "is_free": true,
-                        "duration_hours": 12,
-                        "lessons_count": 5,
-                        "category": {
-                            "id": 13,
-                            "name": "Ingeniería de Software",
-                            "slug": "ingenieria-software",
-                            "icon": "ClipboardList",
-                            "color": "#9575CD"
-                        }
-                    },
-                    {
                         "id": 21,
                         "title": "Historias de usuario y casos de uso",
                         "slug": "historias-de-usuario-y-casos-de-uso",
@@ -6294,14 +6237,32 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                             "icon": "ClipboardList",
                             "color": "#9575CD"
                         }
+                    },
+                    {
+                        "id": 109,
+                        "title": "Especificación Formal (SRS) y Casos de Uso",
+                        "slug": "especificacion-srs-diagramas",
+                        "description": "Aprende a documentar software según el estándar IEEE 830. Diagramas de casos de uso UML, especificación de flujos principales, alternativos y de excepción.",
+                        "difficulty": "intermediate",
+                        "is_published": true,
+                        "is_free": true,
+                        "duration_hours": 12,
+                        "lessons_count": 5,
+                        "category": {
+                            "id": 13,
+                            "name": "Ingeniería de Software",
+                            "slug": "ingenieria-software",
+                            "icon": "ClipboardList",
+                            "color": "#9575CD"
+                        }
                     }
                 ]
             },
             {
-                "id": 26,
+                "id": 44,
                 "learning_path_id": 8,
-                "title": "Nivel 3 — Gestión",
-                "description": "Priorización, trazabilidad y gestión del cambio.",
+                "title": "Nivel 3 — Gestión del Cambio y Domain-Driven Design",
+                "description": "Trazabilidad, priorización MoSCoW y modelado estratégico del dominio.",
                 "order": 3,
                 "courses": [
                     {
@@ -6323,14 +6284,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                         }
                     }
                 ]
-            },
-            {
-                "id": 44,
-                "learning_path_id": 8,
-                "title": "Nivel 4 — Arquitectura Ágil y Domain-Driven Design (DDD)",
-                "description": "Descubrimiento del dominio con Event Storming, Lenguaje Ubicuo y especificaciones ejecutables BDD.",
-                "order": 4,
-                "courses": []
             }
         ]
     },
@@ -6426,10 +6379,10 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                 ]
             },
             {
-                "id": 29,
+                "id": 45,
                 "learning_path_id": 9,
-                "title": "Nivel 3 — IA en el Desarrollo",
-                "description": "Asistentes de código, code review y automatización.",
+                "title": "Nivel 3 — Agentes Autónomos y Ciclo de Vida con IA",
+                "description": "Integración de asistentes en CI/CD, evaluación cuantitativa de prompts y observabilidad.",
                 "order": 3,
                 "courses": [
                     {
@@ -6451,14 +6404,6 @@ export const FALLBACK_LEARNING_PATHS: LearningPath[] = [
                         }
                     }
                 ]
-            },
-            {
-                "id": 45,
-                "learning_path_id": 9,
-                "title": "Nivel 4 — Agentes Autónomos, Model Context Protocol y LLMOps",
-                "description": "Arquitectura de agentes con herramientas externas, MCP y evaluación cuantitativa de sistemas RAG.",
-                "order": 4,
-                "courses": []
             }
         ]
     }
@@ -6493,27 +6438,6 @@ export const FALLBACK_TEACHER_OVERVIEW: TeacherOverviewResponse = {
     recent_activity: [],
     popular_courses: [
     {
-        "id": 2,
-        "title": "Algoritmos de Ordenamiento",
-        "slug": "algoritmos-ordenamiento",
-        "difficulty": "intermediate",
-        "enrollments_count": 84
-    },
-    {
-        "id": 18,
-        "title": "Git desde cero",
-        "slug": "git-desde-cero",
-        "difficulty": "beginner",
-        "enrollments_count": 84
-    },
-    {
-        "id": 9,
-        "title": "HTML, CSS y JavaScript",
-        "slug": "html-css-javascript",
-        "difficulty": "beginner",
-        "enrollments_count": 84
-    },
-    {
         "id": 20,
         "title": "Fundamentos de requerimientos",
         "slug": "fundamentos-requerimientos",
@@ -6521,10 +6445,31 @@ export const FALLBACK_TEACHER_OVERVIEW: TeacherOverviewResponse = {
         "enrollments_count": 84
     },
     {
-        "id": 5,
-        "title": "Introducción al Backend",
-        "slug": "backend-introduccion",
+        "id": 12,
+        "title": "Integración Frontend ↔ Backend",
+        "slug": "integracion-frontend-backend",
+        "difficulty": "intermediate",
+        "enrollments_count": 84
+    },
+    {
+        "id": 23,
+        "title": "Introducción a la IA para desarrolladores",
+        "slug": "introduccion-ia-para-desarrolladores",
         "difficulty": "beginner",
+        "enrollments_count": 84
+    },
+    {
+        "id": 1,
+        "title": "Introducción a la Programación",
+        "slug": "introduccion-programacion",
+        "difficulty": "beginner",
+        "enrollments_count": 84
+    },
+    {
+        "id": 106,
+        "title": "Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos",
+        "slug": "git-avanzado-rebase-conflictos",
+        "difficulty": "advanced",
         "enrollments_count": 84
     }
 ]

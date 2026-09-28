@@ -1285,16 +1285,9 @@ export class CourseDetailComponent implements OnInit {
           next: (c) => {
             this.course.set(c);
             this.loading.set(false);
-            // Por defecto, abrir los primeros módulos para explorar inmediatamente el temario
+            // Abrir todos los módulos por defecto para que el estudiante vea todo el temario y lecciones inmediatamente
             if (c?.modules && c.modules.length > 0) {
-              const initialOpen = new Set<number>();
-              // Abrir el primer módulo siempre
-              initialOpen.add(c.modules[0].id);
-              // Si son 2 o 3 módulos, abrirlos todos por defecto para mejor visualización
-              if (c.modules.length <= 3) {
-                c.modules.forEach(m => initialOpen.add(m.id));
-              }
-              this.openModules.set(initialOpen);
+              this.openModules.set(new Set<number>(c.modules.map(m => m.id)));
             }
           },
           error: () => {

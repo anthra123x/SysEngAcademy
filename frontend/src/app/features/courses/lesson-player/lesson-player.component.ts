@@ -2216,6 +2216,9 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
         this.loading.set(false);
         const firstCode = this.contentBlocks().find(b => b.type === 'code')?.text ?? '';
         this.code.set(detail.starter_code || firstCode);
+        if (!this.course() && detail.module?.course?.slug) {
+          this.loadCourse(detail.module.course.slug);
+        }
       },
       error: (err: HttpErrorResponse) => this.handleApiError(err),
     });
