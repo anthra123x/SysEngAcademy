@@ -74,51 +74,19 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
         }
 
-        <!-- SUB-NAVEGACIÓN DE PESTAÑAS (ESTILO GITHUB/LINEAR) -->
-        <div class="tab-bar" role="tablist">
-          <button
-            type="button"
-            class="tab-link"
-            [class.is-active]="activeTab() === 'students'"
-            (click)="setTab('students')"
-          >
-            <span>Alumnos Registrados</span>
-            <span class="tab-pill">{{ filteredStudents().length }}</span>
-          </button>
-
-          <button
-            type="button"
-            class="tab-link"
-            [class.is-active]="activeTab() === 'activities'"
-            (click)="setTab('activities')"
-          >
-            <span>Gestor de Actividades &amp; Quizzes</span>
-            <span class="tab-pill">{{ activities().length }}</span>
-          </button>
-
-          <button
-            type="button"
-            class="tab-link"
-            [class.is-active]="activeTab() === 'activity'"
-            (click)="setTab('activity')"
-          >
-            <span>Rendimiento de Cohorte</span>
-          </button>
-
-          <button
-            type="button"
-            class="tab-link"
-            [class.is-active]="activeTab() === 'ai'"
-            (click)="setTab('ai')"
-          >
-            <span>Asistente Byte IA</span>
-            <span class="tab-pill-ia">IA</span>
-          </button>
-        </div>
-
         <!-- PESTAÑA 1: DIRECTORIO DE ESTUDIANTES -->
         @if (activeTab() === 'students') {
           <div class="surface-panel">
+            <div class="panel-head-row">
+              <div>
+                <h2 class="panel-heading">Directorio de Alumnos Matriculados</h2>
+                <p class="panel-subtext">Supervisión en tiempo real de progreso académico, lecciones completadas y calificaciones.</p>
+              </div>
+              <div class="head-count-badge">
+                <span>{{ filteredStudents().length }} estudiantes registrados</span>
+              </div>
+            </div>
+
             <div class="panel-toolbar">
               <div class="search-input-group">
                 <span class="search-icon">🔍</span>
@@ -986,58 +954,16 @@ import { AuthService } from '../../core/services/auth.service';
         margin-top: 0.4rem;
       }
 
-      /* TAB BAR (GITHUB/LINEAR STYLE) */
-      .tab-bar {
-        display: flex;
-        gap: 0.5rem;
-        border-bottom: 1px solid #202436;
-        margin-bottom: 1.75rem;
-        overflow-x: auto;
-      }
-
-      .tab-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: none;
-        border: none;
-        border-bottom: 2px solid transparent;
-        color: #94A3B8;
-        font-size: 0.85rem;
-        font-weight: 500;
-        padding: 0.75rem 0.5rem;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        white-space: nowrap;
-      }
-
-      .tab-link:hover {
-        color: #F8FAFC;
-      }
-
-      .tab-link.is-active {
-        color: #F8FAFC;
+      /* BADGE DE CONTEO EN CABECERA DE PANEL */
+      .head-count-badge {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
         font-weight: 600;
-        border-bottom-color: #0AE98A;
-      }
-
-      .tab-pill {
-        font-size: 11px;
-        padding: 1px 6px;
-        border-radius: 9999px;
+        color: #94A3B8;
         background: #161926;
         border: 1px solid #202436;
-        color: #94A3B8;
-      }
-
-      .tab-pill-ia {
-        font-size: 10px;
-        font-weight: 700;
-        padding: 1px 5px;
-        border-radius: 4px;
-        background: #161926;
-        color: #0AE98A;
-        border: 1px solid rgba(10, 233, 138, 0.3);
+        border-radius: 9999px;
+        padding: 4px 12px;
       }
 
       /* SUPERFICIES Y PANELES */

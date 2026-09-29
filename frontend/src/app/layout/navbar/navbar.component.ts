@@ -151,7 +151,14 @@ import { AuthService } from '../../core/services/auth.service';
 
           <nav class="mobile-nav-links">
             @if (isTeacherDocenteZone()) {
-              <a routerLink="/docente" (click)="mobileOpen.set(false)">Panel Docente</a>
+              @if (isDocenteRoute()) {
+                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" (click)="mobileOpen.set(false)">Alumnos</a>
+                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" (click)="mobileOpen.set(false)">Actividades &amp; Quizzes</a>
+                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" (click)="mobileOpen.set(false)">Rendimiento</a>
+                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" (click)="mobileOpen.set(false)">Byte Asistente IA</a>
+              } @else {
+                <a routerLink="/docente" (click)="mobileOpen.set(false)">Panel Docente</a>
+              }
               <a routerLink="/perfil" (click)="mobileOpen.set(false)">Mi Perfil</a>
               <a routerLink="/" (click)="mobileOpen.set(false)" class="mobile-switch-link">Vista Estudiante</a>
             } @else {
