@@ -109,7 +109,7 @@ export interface StreakDay {
         <!-- ========================================================
              LINUX TERMINAL WINDOW FRAME (MINIMALISTA)
              ======================================================== -->
-        <div class="terminal-window">
+        <div class="terminal-window" [class.is-faculty-terminal]="isTeacher()">
           <!-- Terminal Titlebar -->
           <div class="terminal-titlebar">
             <div class="terminal-dots">
@@ -126,13 +126,15 @@ export interface StreakDay {
                 <span class="streak-pill-header" title="Racha activa de estudio consecutivo">
                   🔥 {{ currentStreak() }}d streak
                 </span>
+                <span class="status-indicator"></span>
+                <span class="status-label">ONLINE</span>
               } @else {
                 <span class="teacher-pill-header">
-                  ROOT AUTHORITY
+                  FACULTY ROOT // CÁTEDRA
                 </span>
+                <span class="status-indicator status-indicator--faculty"></span>
+                <span class="status-label status-label--faculty">SUPERVISOR</span>
               }
-              <span class="status-indicator"></span>
-              <span class="status-label">ONLINE</span>
             </div>
           </div>
 
@@ -142,16 +144,16 @@ export interface StreakDay {
             <!-- ========================================================
                  NEOFETCH SYSINFO HERO BANNER (CON ASCII ART ANIMADO)
                  ======================================================== -->
-            <div class="neofetch-card">
+            <div class="neofetch-card" [class.is-faculty-neofetch]="isTeacher()">
               <!-- ASCII Avatar Box with Animated Frames & Blink -->
-              <div class="neofetch-logo" (click)="openAvatarModal()" title="Haz clic para personalizar tu avatar ASCII animado">
+              <div class="neofetch-logo" (click)="openAvatarModal()" [title]="isTeacher() ? 'Personalizar Mascota y Firma de Cátedra' : 'Personalizar avatar ASCII animado'">
                 <pre class="ascii-art">{{ currentAsciiFrame() }}</pre>
                 <div class="ascii-hover-overlay">
-                  <span>[ ⚙ Cambiar ASCII ]</span>
+                  <span>[ ⚙ {{ isTeacher() ? 'Cambiar Mascota Docente' : 'Cambiar ASCII' }} ]</span>
                 </div>
                 <div class="ascii-motion-indicator">
                   <span class="motion-dot"></span>
-                  <span class="motion-lbl">LIVE</span>
+                  <span class="motion-lbl">{{ isTeacher() ? 'FACULTY LIVE' : 'LIVE' }}</span>
                 </div>
               </div>
 
@@ -170,30 +172,29 @@ export interface StreakDay {
 
                 <div class="neofetch-grid">
                   @if (isTeacher()) {
-                    <!-- MÉTRICAS PARA EL DOCENTE -->
                     <div class="meta-row">
                       <span class="meta-k">OS:</span>
-                      <span class="meta-v">SysEng Linux OS (Faculty Authority Pod v6.8.0-DOCENTE)</span>
+                      <span class="meta-v">SysEng Linux OS (Faculty Authority Pod v6.8-ACADEMIA)</span>
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Cargo Docente:</span>
-                      <span class="meta-v role-tag-teacher">Cátedra Principal &amp; Arquitecto de Contenido</span>
+                      <span class="meta-v role-tag-teacher">Profesor Titular &amp; Arquitecto de Cátedra</span>
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Alumnos a Cargo:</span>
-                      <span class="meta-v text-cyan"><strong>1,248 estudiantes</strong> en supervisión activa</span>
+                      <span class="meta-v"><strong>1,248 estudiantes</strong> en supervisión activa</span>
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Cursos en Catálogo:</span>
-                      <span class="meta-v text-purple"><strong>43 cursos técnicos</strong> estructurados</span>
+                      <span class="meta-v"><strong>43 asignaturas técnicas</strong> estructuradas</span>
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Actividades &amp; Quizzes:</span>
-                      <span class="meta-v text-success"><strong>{{ totalFacultyActivities() }} retos y quizzes</strong> publicados</span>
+                      <span class="meta-v"><strong>{{ totalFacultyActivities() }} retos y evaluaciones</strong> publicados</span>
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Aprobación Global:</span>
-                      <span class="meta-v text-orange"><strong>94.5% de aprobación</strong> en cohortes</span>
+                      <span class="meta-v"><strong>94.5% de efectividad</strong> en cohortes</span>
                     </div>
                   } @else {
                     <!-- MÉTRICAS PARA EL ESTUDIANTE -->
@@ -376,7 +377,7 @@ export interface StreakDay {
                       <span class="sensor-label">ALUMNOS MATRICULADOS</span>
                       <span class="sensor-code">[FAC_STU]</span>
                     </div>
-                    <div class="sensor-num text-cyan">1,248</div>
+                    <div class="sensor-num">1,248</div>
                     <div class="sensor-footer"><span class="sensor-sub">Supervisión en tiempo real</span></div>
                   </div>
 
@@ -385,7 +386,7 @@ export interface StreakDay {
                       <span class="sensor-label">CURSOS ACTIVOS</span>
                       <span class="sensor-code">[FAC_CRS]</span>
                     </div>
-                    <div class="sensor-num text-purple">43</div>
+                    <div class="sensor-num">43</div>
                     <div class="sensor-footer"><span class="sensor-sub">Catálogo académico oficial</span></div>
                   </div>
 
@@ -394,17 +395,17 @@ export interface StreakDay {
                       <span class="sensor-label">PROMEDIO EVALUATIVO</span>
                       <span class="sensor-code">[FAC_AVG]</span>
                     </div>
-                    <div class="sensor-num text-success">94.5%</div>
+                    <div class="sensor-num">94.5%</div>
                     <div class="sensor-footer"><span class="sensor-sub">Rendimiento en quizzes</span></div>
                   </div>
 
-                  <div class="sensor-card sensor-card--glow">
+                  <div class="sensor-card">
                     <div class="sensor-card__head">
                       <span class="sensor-label">ACTIVIDADES &amp; QUIZZES</span>
                       <span class="sensor-code">[FAC_ACT]</span>
                     </div>
-                    <div class="sensor-num text-orange">{{ totalFacultyActivities() }}</div>
-                    <div class="sensor-footer"><span class="sensor-sub text-primary">Creados por la cátedra</span></div>
+                    <div class="sensor-num">{{ totalFacultyActivities() }}</div>
+                    <div class="sensor-footer"><span class="sensor-sub">Creados por la cátedra</span></div>
                   </div>
                 </div>
 
@@ -414,22 +415,22 @@ export interface StreakDay {
                       <span class="term-prefix">ps aux | grep</span>
                       <span class="term-arg">faculty_supervision</span>
                     </div>
-                    <a routerLink="/docente" class="btn btn-xs btn-primary">Ir al Panel Docente Principal →</a>
+                    <a routerLink="/docente" class="btn btn-xs btn-outline">Ir al Panel Docente Principal →</a>
                   </div>
 
                   <div class="teacher-overview-block">
                     <div class="teacher-banner-box">
-                      <h3>👨‍🏫 Supervisión de Cátedra &amp; Calidad Académica</h3>
+                      <h3>Supervisión de Cátedra &amp; Calidad Académica</h3>
                       <p>Desde este portal tienes autoridad completa para diseñar actividades interactivas en terminal, crear quizzes de opción múltiple, supervisar el avance de cada estudiante y auditar el catálogo.</p>
                       <div class="faculty-action-pills">
                         <a routerLink="/docente" [queryParams]="{ tab: 'activities' }" class="btn btn-sm btn-primary">
-                          📝 Crear Nueva Actividad o Quiz
+                          Crear Nueva Actividad
                         </a>
                         <a routerLink="/docente" [queryParams]="{ tab: 'students' }" class="btn btn-sm btn-outline">
-                          👥 Ver Directorio de Alumnos
+                          Ver Directorio de Alumnos
                         </a>
                         <a routerLink="/docente" [queryParams]="{ tab: 'ai' }" class="btn btn-sm btn-outline">
-                          🤖 Consultar Asistente Docente IA
+                          Asistente Docente IA
                         </a>
                       </div>
                     </div>
@@ -1003,11 +1004,11 @@ export interface StreakDay {
 
               <div class="modal-content">
                 <p class="modal-help-text">
-                  Selecciona la firma ASCII animada que representará tu sesión en SysEng Academy (parpadea y reacciona en vivo):
+                  {{ isTeacher() ? 'Selecciona la mascota y firma ASCII de Cátedra que representará tu autoridad docente:' : 'Selecciona la firma ASCII animada que representará tu sesión en SysEng Academy:' }}
                 </p>
 
                 <div class="avatar-gallery-grid">
-                  @for (av of asciiAvatars; track av.id) {
+                  @for (av of availableAsciiAvatars(); track av.id) {
                     <div
                       class="avatar-card-option"
                       [class.is-selected]="selectedAvatarId() === av.id"
@@ -1516,6 +1517,184 @@ export interface StreakDay {
     .animate-fade-in { animation: fadeIn 0.2s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+    /* Dedicated Styling for Faculty Terminal (Docente) */
+    .terminal-window.is-faculty-terminal {
+      background: #08090D;
+      border: 1px solid #1E2235;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.08);
+
+      .terminal-titlebar {
+        background: #0D101A;
+        border-bottom: 1px solid #1E2235;
+        .terminal-title { color: #94A3B8; }
+      }
+
+      .teacher-pill-header {
+        background: #161926;
+        border: 1px solid #202436;
+        color: #F8FAFC;
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+      }
+
+      .status-indicator--faculty {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #38BDF8;
+        box-shadow: 0 0 6px #38BDF8;
+      }
+
+      .status-label--faculty {
+        color: #38BDF8;
+        font-weight: 700;
+        font-size: 10px;
+      }
+
+      .neofetch-card.is-faculty-neofetch {
+        background: #0E101A;
+        border: 1px solid #1E2235;
+
+        .neofetch-logo {
+          background: #08090D;
+          border: 1px solid #1E2235;
+
+          &:hover {
+            border-color: #38BDF8;
+            box-shadow: 0 0 16px rgba(56, 189, 248, 0.2);
+          }
+
+          .ascii-art {
+            color: #F8FAFC;
+          }
+
+          .ascii-motion-indicator {
+            color: #38BDF8;
+            .motion-dot {
+              background: #38BDF8;
+              box-shadow: 0 0 6px #38BDF8;
+            }
+          }
+
+          .ascii-hover-overlay span {
+            color: #38BDF8;
+          }
+        }
+
+        .neofetch-user-header {
+          .prompt-user { color: #F8FAFC; font-weight: 700; }
+          .prompt-at { color: #64748B; }
+          .prompt-host { color: #38BDF8; }
+          .btn-avatar-chip {
+            background: #161926;
+            border: 1px solid #202436;
+            color: #94A3B8;
+            &:hover {
+              color: #F8FAFC;
+              border-color: #38BDF8;
+              background: #1C2030;
+            }
+          }
+        }
+
+        .neofetch-divider {
+          color: #1E2235;
+        }
+
+        .meta-row {
+          .meta-k { color: #64748B; }
+          .meta-v { color: #CBD5E1; strong { color: #F8FAFC; } }
+          .role-tag-teacher {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: #38BDF8;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+          }
+        }
+      }
+
+      .terminal-nav {
+        border-bottom: 1px solid #1E2235;
+
+        .term-tab {
+          background: #0D101A;
+          border: 1px solid #1E2235;
+          color: #94A3B8;
+
+          &:hover {
+            background: #161926;
+            color: #F8FAFC;
+            border-color: #2E344E;
+          }
+
+          &.is-active {
+            background: #161926;
+            border-color: #38BDF8;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+
+            .term-tab__prompt { color: #38BDF8; }
+            .term-tab__cmd { color: #F8FAFC; }
+            .term-tab__flag { color: #38BDF8; }
+          }
+        }
+      }
+
+      .sensor-card {
+        background: #0E101A;
+        border: 1px solid #1E2235;
+        transition: all 0.15s ease;
+
+        &:hover {
+          border-color: #2E344E;
+          background: #111422;
+        }
+
+        .sensor-label { color: #64748B; }
+        .sensor-code { color: #38BDF8; }
+        .sensor-num { color: #F8FAFC; }
+        .sensor-footer { color: #94A3B8; }
+      }
+
+      .section-container {
+        background: #0E101A;
+        border: 1px solid #1E2235;
+      }
+
+      .section-terminal-bar {
+        background: #0D101A;
+        border-bottom: 1px solid #1E2235;
+        .term-prefix { color: #38BDF8; }
+        .term-arg { color: #F8FAFC; }
+      }
+
+      .teacher-overview-block {
+        .teacher-banner-box {
+          background: #08090D;
+          border: 1px solid #1E2235;
+          h3 { color: #F8FAFC; }
+          p { color: #94A3B8; }
+
+          .btn-primary {
+            background: #38BDF8;
+            color: #08090D;
+            border: 1px solid #38BDF8;
+            font-weight: 600;
+            &:hover { background: #0284C7; border-color: #0284C7; color: #FFF; }
+          }
+
+          .btn-outline {
+            background: #161926;
+            border: 1px solid #202436;
+            color: #E2E8F0;
+            &:hover { background: #1E2235; border-color: #38BDF8; color: #FFF; }
+          }
+        }
+      }
+    }
   `]
 })
 export class ProfileComponent implements OnInit, OnDestroy {
@@ -1535,8 +1714,127 @@ export class ProfileComponent implements OnInit, OnDestroy {
   currentFrame = signal(0);
   private frameTimer: any = null;
 
-  // ASCII Avatars with Multiple Interactive Blinking / Moving Frames
-  readonly asciiAvatars: AsciiAvatar[] = [
+  // Mascotas exclusivas para el cuerpo Docente y Cátedra
+  readonly facultyAvatars: AsciiAvatar[] = [
+    {
+      id: 'professor_owl',
+      name: 'Professor Owl',
+      subtitle: 'Búho sabio de Cátedra y Algoritmos',
+      frames: [
+        `   /\\___/\\
+  (( o,o ))
+   \\  -  /
+   /|| ||\\
+  (_"---"_)
+ PROFESSOR OWL`,
+        `   /\\___/\\
+  (( -,- ))
+   \\  -  /
+   /|| ||\\
+  (_"---"_)
+ PROFESSOR OWL`,
+        `   /\\___/\\
+  (( ^,o ))
+   \\  o  /
+   /|| ||\\
+  (_"---"_)
+ PROFESSOR OWL`,
+      ],
+    },
+    {
+      id: 'dean_tux',
+      name: 'Dean Tux (Decano)',
+      subtitle: 'Dirección Cátedra & Kernel Linux',
+      frames: [
+        `   .--.   [DOC]
+  |o_o |  /
+  |:_/ | < Cátedra
+ //   \\ \\
+(| [=] | )
+/'\\_   _/\\'\\
+\\___)=(___/
+ DEAN TUX`,
+        `   .--.   [DOC]
+  |-.- |  /
+  |:_/ | < Cátedra
+ //   \\ \\
+(| [=] | )
+/'\\_   _/\\'\\
+\\___)=(___/
+ DEAN TUX`,
+        `   .--.   [DOC]
+  |^_^ |  /
+  |:_/ | < Cátedra
+ //   \\ \\
+(| [=] | )
+/'\\_   _/\\'\\
+\\___)=(___/
+ DEAN TUX`,
+      ],
+    },
+    {
+      id: 'chief_architect',
+      name: 'Chief Architect',
+      subtitle: 'Arquitecto de Sistemas & Cloud',
+      frames: [
+        ` [====KERNEL====]
+ | [CPU] 3.8GHz |
+ |  MEM: 128 GB |
+ | ARCH: FACULTY|
+ +--------------+
+     ||    ||
+  CHIEF ARCHITECT`,
+        ` [====KERNEL====]
+ | [CPU] >RUN<  |
+ |  MEM: 128 GB |
+ | ARCH: FACULTY|
+ +--------------+
+     ||    ||
+  CHIEF ARCHITECT`,
+        ` [====KERNEL====]
+ | [CPU] 4.2GHz |
+ |  MEM: 128 GB |
+ | ARCH: FACULTY|
+ +--------------+
+     ||    ||
+  CHIEF ARCHITECT`,
+      ],
+    },
+    {
+      id: 'grand_mentor',
+      name: 'Grand Mentor',
+      subtitle: 'Profesor Emérito de Compiladores',
+      frames: [
+        `      .---.
+     /     \\
+    | [o] [o]|  🎓
+    |   _    | /
+     \\  -   /
+     /|===|\\
+    (_|   |_)
+   GRAND MENTOR`,
+        `      .---.
+     /     \\
+    | [-] [-]|  🎓
+    |   _    | /
+     \\  -   /
+     /|===|\\
+    (_|   |_)
+   GRAND MENTOR`,
+        `      .---.
+     /     \\
+    | [^] [^]|  🎓
+    |   o    | /
+     \\  -   /
+     /|===|\\
+    (_|   |_)
+   GRAND MENTOR`,
+      ],
+    },
+  ];
+
+  // Mascotas para los Estudiantes
+  readonly studentAvatars: AsciiAvatar[] = [
     {
       id: 'syseng_bot',
       name: 'SysEng Bot (Conejito)',
@@ -1701,7 +1999,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
     },
   ];
 
-  selectedAvatarId = signal<string>('syseng_bot');
+  readonly availableAsciiAvatars = computed<AsciiAvatar[]>(() => {
+    return this.isTeacher() ? this.facultyAvatars : this.studentAvatars;
+  });
+
+  selectedAvatarId = signal<string>('professor_owl');
   showAvatarModal = signal(false);
 
   // Streak state
@@ -1881,9 +2183,15 @@ const lastState = editor.popState();`,
   private initLocalData() {
     if (typeof window === 'undefined') return;
 
-    const savedAv = localStorage.getItem('syseng_selected_ascii_avatar');
-    if (savedAv && this.asciiAvatars.some(a => a.id === savedAv)) {
+    const teacher = this.isTeacher();
+    const storageKey = teacher ? 'syseng_selected_teacher_ascii_avatar' : 'syseng_selected_ascii_avatar';
+    const savedAv = localStorage.getItem(storageKey);
+    const pool = teacher ? this.facultyAvatars : this.studentAvatars;
+
+    if (savedAv && pool.some(a => a.id === savedAv)) {
       this.selectedAvatarId.set(savedAv);
+    } else {
+      this.selectedAvatarId.set(pool[0].id);
     }
 
     try {
@@ -1908,8 +2216,9 @@ const lastState = editor.popState();`,
   }
 
   readonly currentAsciiAvatar = computed(() => {
+    const pool = this.availableAsciiAvatars();
     const id = this.selectedAvatarId();
-    return this.asciiAvatars.find(a => a.id === id) || this.asciiAvatars[0];
+    return pool.find(a => a.id === id) || pool[0];
   });
 
   readonly currentAsciiFrame = computed(() => {
@@ -1924,7 +2233,8 @@ const lastState = editor.popState();`,
   selectAsciiAvatar(id: string) {
     this.selectedAvatarId.set(id);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('syseng_selected_ascii_avatar', id);
+      const storageKey = this.isTeacher() ? 'syseng_selected_teacher_ascii_avatar' : 'syseng_selected_ascii_avatar';
+      localStorage.setItem(storageKey, id);
     }
     this.closeAvatarModal();
   }

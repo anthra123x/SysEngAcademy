@@ -7,7 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
   selector: 'app-navbar',
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <div class="navbar-wrapper" [class.is-docente-zone]="isDocenteRoute()">
+    <div class="navbar-wrapper" [class.is-docente-zone]="isTeacherDocenteZone()">
       <header class="navbar">
         <!-- Logo -->
         <a routerLink="/" class="navbar__logo" aria-label="SysEng Academy - Inicio">
@@ -16,7 +16,7 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
           <div class="logo-text-group">
             <span class="logo-title">SysEng<strong>Academy</strong></span>
-            @if (isDocenteRoute()) {
+            @if (isTeacherDocenteZone()) {
               <span class="portal-badge portal-badge--teacher">Docente</span>
             }
           </div>
@@ -24,20 +24,29 @@ import { AuthService } from '../../core/services/auth.service';
 
         <!-- Desktop Navigation (Centered) -->
         <nav class="navbar__nav" aria-label="Navegación principal">
-          @if (isDocenteRoute()) {
-            <!-- Navbar Docente Exclusivo: Cero rutas genéricas, estilo neutro y sobrio -->
-            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'students'">
-              <span class="nav-pill__text">Alumnos</span>
-            </a>
-            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'activities'">
-              <span class="nav-pill__text">Actividades &amp; Quizzes</span>
-            </a>
-            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'activity'">
-              <span class="nav-pill__text">Rendimiento</span>
-            </a>
-            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'ai'">
-              <span class="nav-pill__text">Byte Asistente IA</span>
-            </a>
+          @if (isTeacherDocenteZone()) {
+            <!-- Navegación exclusiva para el Docente en su panel y perfil -->
+            @if (isDocenteRoute()) {
+              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'students'">
+                <span class="nav-pill__text">Alumnos</span>
+              </a>
+              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'activities'">
+                <span class="nav-pill__text">Actividades &amp; Quizzes</span>
+              </a>
+              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'activity'">
+                <span class="nav-pill__text">Rendimiento</span>
+              </a>
+              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'ai'">
+                <span class="nav-pill__text">Byte Asistente IA</span>
+              </a>
+            } @else {
+              <a routerLink="/docente" class="nav-pill nav-pill--doc-neutral">
+                <span class="nav-pill__text">Panel Docente</span>
+              </a>
+              <a routerLink="/perfil" class="nav-pill nav-pill--doc-neutral active">
+                <span class="nav-pill__text">Mi Perfil</span>
+              </a>
+            }
           } @else {
             <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-pill">
               <span class="nav-pill__text">Inicio</span>
@@ -62,7 +71,11 @@ import { AuthService } from '../../core/services/auth.service';
         <!-- Auth & Actions -->
         <div class="navbar__actions">
           @if (auth.isAuthenticated()) {
-            @if (!isTeacher()) {
+            @if (isTeacherDocenteZone()) {
+              <a routerLink="/" class="btn-switch-view" title="Explorar la plataforma como estudiante">
+                <span>Vista Estudiante</span>
+              </a>
+            } @else if (!isTeacher()) {
               <a routerLink="/perfil" class="streak-nav-pill" title="Racha activa de estudio consecutivo">
                 <span class="streak-nav-flame">🔥</span>
                 <span class="streak-nav-count">{{ studentStreak() }}d</span>
@@ -91,16 +104,18 @@ import { AuthService } from '../../core/services/auth.service';
                   </div>
                   <hr>
                   @if (isTeacher()) {
-                    <a routerLink="/docente" (click)="dropdownOpen.set(false)" class="dropdown-item dropdown-item--teacher">
-                      <span>🎓</span> Panel Docente & Alumnos
+                    <!-- SOLAMENTE MI PERFIL PARA EL DOCENTE -->
+                    <a routerLink="/perfil" (click)="dropdownOpen.set(false)" class="dropdown-item">
+                      <span>👤</span> Mi Perfil
+                    </a>
+                  } @else {
+                    <a routerLink="/perfil" (click)="dropdownOpen.set(false)" class="dropdown-item">
+                      <span>👤</span> Mi Perfil
+                    </a>
+                    <a routerLink="/rutas" (click)="dropdownOpen.set(false)" class="dropdown-item">
+                      <span>🗺️</span> Rutas de Aprendizaje
                     </a>
                   }
-                  <a routerLink="/perfil" (click)="dropdownOpen.set(false)" class="dropdown-item">
-                    <span>👤</span> Mi Perfil
-                  </a>
-                  <a routerLink="/rutas" (click)="dropdownOpen.set(false)" class="dropdown-item">
-                    <span>🗺️</span> Rutas de Aprendizaje
-                  </a>
                   <hr>
                   <button type="button" (click)="logout()" class="dropdown-item dropdown-item--danger">
                     <span>🚪</span> Cerrar Sesión
@@ -135,19 +150,17 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
 
           <nav class="mobile-nav-links">
-            @if (isDocenteRoute()) {
-              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" (click)="mobileOpen.set(false)">👥 Directorio de Alumnos</a>
-              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" (click)="mobileOpen.set(false)">📝 Actividades y Quizzes</a>
-              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" (click)="mobileOpen.set(false)">📊 Rendimiento &amp; Métricas</a>
-              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" (click)="mobileOpen.set(false)">🤖 Byte Asistente IA</a>
-              <a routerLink="/" (click)="mobileOpen.set(false)" style="color: #00d9ff; font-weight: 700;">👁️ Vista Estudiante</a>
+            @if (isTeacherDocenteZone()) {
+              <a routerLink="/docente" (click)="mobileOpen.set(false)">Panel Docente</a>
+              <a routerLink="/perfil" (click)="mobileOpen.set(false)">Mi Perfil</a>
+              <a routerLink="/" (click)="mobileOpen.set(false)" class="mobile-switch-link">Vista Estudiante</a>
             } @else {
               @if (isTeacher()) {
-                <a routerLink="/docente" (click)="mobileOpen.set(false)" style="color: #00d9ff; font-weight: 700;">🎓 Panel Docente</a>
+                <a routerLink="/docente" (click)="mobileOpen.set(false)">Panel Docente</a>
               }
-              <a routerLink="/" (click)="mobileOpen.set(false)">🏠 Inicio</a>
-              <a routerLink="/rutas" (click)="mobileOpen.set(false)">🗺️ Rutas de Aprendizaje</a>
-              <a routerLink="/cursos" (click)="mobileOpen.set(false)">📚 Catálogo de Cursos</a>
+              <a routerLink="/" (click)="mobileOpen.set(false)">Inicio</a>
+              <a routerLink="/rutas" (click)="mobileOpen.set(false)">Rutas de Aprendizaje</a>
+              <a routerLink="/cursos" (click)="mobileOpen.set(false)">Cursos</a>
             }
           </nav>
 
@@ -181,6 +194,12 @@ import { AuthService } from '../../core/services/auth.service';
       display: flex;
       align-items: center;
       transition: all var(--transition-base);
+
+      &.is-docente-zone {
+        background: #08090D !important;
+        border-bottom: 1px solid #1E2235 !important;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+      }
     }
 
     .navbar {
@@ -737,6 +756,15 @@ export class NavbarComponent {
   readonly isDocenteRoute = computed(() => {
     const url = this.currentUrl();
     return url.startsWith('/docente') || url.startsWith('/admin');
+  });
+
+  readonly isProfileRoute = computed(() => {
+    const url = this.currentUrl();
+    return url.startsWith('/perfil');
+  });
+
+  readonly isTeacherDocenteZone = computed(() => {
+    return this.isTeacher() && (this.isDocenteRoute() || this.isProfileRoute());
   });
 
   readonly currentTeacherTab = computed(() => {

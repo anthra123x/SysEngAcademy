@@ -1327,7 +1327,8 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
 
   private syncRoute() {
     const url = this.router.url;
-    const shouldHide = url.startsWith('/asistente') || url.startsWith('/auth');
+    const isTeacherRoute = url.startsWith('/docente') || (url.startsWith('/perfil') && this.isTeacherMode());
+    const shouldHide = url.startsWith('/asistente') || url.startsWith('/auth') || isTeacherRoute;
     this.hidden.set(shouldHide);
     if (shouldHide) this.closePanel();
     this.lessonContext.set(null);
