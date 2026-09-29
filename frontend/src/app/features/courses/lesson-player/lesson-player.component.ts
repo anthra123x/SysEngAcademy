@@ -17,6 +17,7 @@ import {
   QuizAttemptQuestionResult,
   QuizAttemptResult,
 } from '../../../core/models';
+import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from '../../../core/constants/ascii-avatars';
 
 @Component({
   selector: 'app-lesson-player',
@@ -88,23 +89,32 @@ import {
             <span class="progress-mini-text">{{ completedLessonsCount() }}/{{ totalLessonsCount() }} ({{ courseProgressPercent() }}%)</span>
           </div>
 
-          <!-- Temario Drawer Toggle -->
+          <!-- Temario Drawer Toggle (Sin recuadro, icono vectorial profesional) -->
           <button
             type="button"
             class="btn-curriculum-pill"
             (click)="sidebarOpen.set(!sidebarOpen())"
             [class.is-active]="sidebarOpen()"
             [attr.aria-expanded]="sidebarOpen()"
-            title="Mostrar u ocultar temario"
+            title="Mostrar u ocultar temario del curso"
           >
-            <span class="icon">📚</span>
+            <svg class="curriculum-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+              <path d="M8 7h8"/>
+              <path d="M8 11h6"/>
+            </svg>
             <span>{{ sidebarOpen() ? 'Cerrar' : 'Temario' }}</span>
           </button>
 
-          <!-- User Avatar or Login -->
+          <!-- User Avatar or Login (Avatar ASCII en miniatura animado sin recuadro de iniciales) -->
           @if (auth.isAuthenticated()) {
-            <a routerLink="/perfil" class="unified-avatar" [title]="(auth.user()?.name ?? 'Mi Perfil') + ' — Ver Insignias y Logros'">
-              {{ initials() }}
+            <a
+              routerLink="/perfil"
+              class="classroom-ascii-avatar"
+              [class.classroom-ascii-avatar--teacher]="isTeacher()"
+              [title]="(auth.user()?.name ?? 'Mi Perfil') + ' — Perfil y Logros'"
+            >
+              <pre class="mini-ascii-pre">{{ currentMiniFrame() }}</pre>
             </a>
           } @else {
             <a routerLink="/auth/login" class="btn-login-unified" title="Iniciar sesión para acceder a tu perfil y guardar insignias">
@@ -351,7 +361,11 @@ import {
             <!-- Mobile Drawer Header with Close Button -->
             <div class="drawer-mobile-header">
               <div class="drawer-mobile-title">
-                <span>📚</span>
+                <svg class="curriculum-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                  <path d="M8 7h8"/>
+                  <path d="M8 11h6"/>
+                </svg>
                 <strong>Temario del Curso</strong>
               </div>
               <button type="button" class="drawer-close-btn" (click)="sidebarOpen.set(false)" aria-label="Cerrar temario">
@@ -579,45 +593,97 @@ import {
       @media (max-width: 768px) { display: none; }
     }
 
+    /* Temario Button - Clean, Borderless & Sleek */
     .btn-curriculum-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: var(--radius-full);
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
+      gap: 7px;
+      padding: 6px 12px;
+      border-radius: var(--radius-md, 6px);
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94A3B8;
       font-size: var(--text-xs);
-      font-weight: var(--font-medium);
+      font-weight: 500;
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
-      &:hover, &.is-active {
-        border-color: var(--primary);
-        color: var(--primary);
-        background: var(--bg-surface-2);
+      .curriculum-icon {
+        color: #64748B;
+        flex-shrink: 0;
+        transition: color 0.18s ease, transform 0.18s ease;
+      }
+
+      &:hover {
+        color: #F8FAFC;
+        background: rgba(255, 255, 255, 0.05);
+
+        .curriculum-icon {
+          color: #38BDF8;
+          transform: translateY(-1px);
+        }
+      }
+
+      &.is-active {
+        color: #38BDF8;
+        background: rgba(56, 189, 248, 0.08);
+
+        .curriculum-icon {
+          color: #38BDF8;
+        }
       }
     }
 
-    /* Unified Header Avatar & Auth */
-    .unified-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: var(--radius-full);
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: #08090D;
-      font-size: var(--text-xs);
-      font-weight: var(--font-bold);
-      display: grid;
-      place-items: center;
+    /* Classroom Animated Mini ASCII Avatar (Sin recuadro de iniciales, puramente ASCII terminal) */
+    .classroom-ascii-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #06080E;
+      border: 1px solid #1A2234;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      flex: none;
+      box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.6);
       text-decoration: none;
-      flex-shrink: 0;
-      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+      .mini-ascii-pre {
+        margin: 0;
+        padding: 0;
+        font-family: var(--font-mono, monospace);
+        font-size: 5.5px;
+        line-height: 1.05;
+        color: #0AE98A;
+        text-align: center;
+        white-space: pre;
+        letter-spacing: -0.25px;
+        user-select: none;
+        display: block;
+      }
 
       &:hover {
-        transform: scale(1.06);
-        box-shadow: 0 0 12px rgba(10, 233, 138, 0.4);
+        transform: scale(1.08);
+        border-color: #0AE98A;
+        box-shadow: 0 0 12px rgba(10, 233, 138, 0.35);
+      }
+
+      &--teacher {
+        background: #080A14;
+        border-color: #1A243D;
+
+        .mini-ascii-pre {
+          color: #38BDF8;
+        }
+
+        &:hover {
+          border-color: #38BDF8;
+          box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
       }
     }
 
@@ -1409,15 +1475,14 @@ import {
       }
 
       .btn-curriculum-pill {
-        padding: 5px 10px;
+        padding: 5px 8px;
         font-size: 0.72rem;
-        gap: 4px;
+        gap: 5px;
       }
 
-      .unified-avatar {
+      .classroom-ascii-avatar {
         width: 30px;
         height: 30px;
-        font-size: 0.7rem;
       }
 
       .btn-login-unified {
@@ -1523,6 +1588,35 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   sidebarOpen   = signal(false);
   navDrawerOpen = signal(false);
   copiedIndex   = signal<number | null>(null);
+
+  // --- Avatar ASCII Animado ---
+  readonly currentFrame = signal<number>(0);
+  readonly selectedAvatarId = signal<string>('');
+  private frameTimer?: any;
+  private avatarListener?: () => void;
+
+  readonly isTeacher = computed(() => {
+    const user = this.auth.user();
+    return (
+      user?.email === 'andrescamilomartinez330@gmail.com' ||
+      user?.role === 'admin' ||
+      user?.role === 'instructor'
+    );
+  });
+
+  syncSelectedAvatar(): void {
+    const isT = this.isTeacher();
+    this.selectedAvatarId.set(getStoredMiniAvatar(isT));
+  }
+
+  readonly currentMiniFrame = computed(() => {
+    const isT = this.isTeacher();
+    const pool = isT ? TEACHER_MINI_AVATARS : STUDENT_MINI_AVATARS;
+    const id = this.selectedAvatarId();
+    const frames = pool[id] || (isT ? pool['professor_owl'] : pool['cyber_cat']);
+    const idx = this.currentFrame() % frames.length;
+    return frames[idx];
+  });
 
   readonly initials = computed(() => {
     const name = this.auth.user()?.name ?? '';
@@ -1864,6 +1958,16 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   // ===== Lifecycle =====
 
   ngOnInit() {
+    this.syncSelectedAvatar();
+    if (typeof window !== 'undefined') {
+      this.frameTimer = setInterval(() => {
+        this.currentFrame.update(f => f + 1);
+      }, 750);
+      this.avatarListener = () => this.syncSelectedAvatar();
+      window.addEventListener('ascii-avatar:changed', this.avatarListener);
+      window.addEventListener('storage', this.avatarListener);
+    }
+
     this.paramSub = this.route.paramMap.subscribe(params => {
       const lessonSlug = params.get('lessonSlug') ?? '';
       const courseSlug = params.get('slug') ?? '';
@@ -1873,6 +1977,11 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.paramSub?.unsubscribe();
+    if (this.frameTimer) clearInterval(this.frameTimer);
+    if (typeof window !== 'undefined' && this.avatarListener) {
+      window.removeEventListener('ascii-avatar:changed', this.avatarListener);
+      window.removeEventListener('storage', this.avatarListener);
+    }
   }
 
   // ===== Carga =====
