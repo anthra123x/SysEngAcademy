@@ -97,20 +97,7 @@ export interface TerminalAiMessage {
             </button>
           }
 
-          <!-- Byte AI Evaluator Button -->
-          <button
-            type="button"
-            class="cli-btn btn-eval-ai"
-            [class.is-loading]="aiLoading()"
-            (click)="evaluateSolutionWithAi()"
-            [disabled]="running() || testing() || aiLoading() || !code().trim()"
-            title="Solicitar validación a Byte IA para aprobar el ejercicio"
-          >
-            <span class="cli-icon">{{ aiLoading() ? '⏳' : '🤖' }}</span>
-            <span>{{ aiLoading() ? 'evaluando...' : 'byte-ai' }}</span>
-          </button>
-
-          @if (isCompleted() || challengeStatus() === 'passed_tests' || challengeStatus() === 'passed_ai') {
+          @if (isApproved()) {
             <span class="badge-challenge-done" title="Ejercicio aprobado">
               ✓ Superado
             </span>
@@ -503,16 +490,6 @@ export interface TerminalAiMessage {
 
                   <button
                     type="button"
-                    class="cli-chip chip-eval"
-                    (click)="evaluateSolutionWithAi()"
-                    [disabled]="aiLoading()"
-                    title="Solicitar a Byte AI la validación y aprobación de tu solución"
-                  >
-                    ⚡ byte --evaluate-solution
-                  </button>
-
-                  <button
-                    type="button"
                     class="cli-chip"
                     (click)="askByteWithChip('Analiza la complejidad temporal Big-O y espacial de mi solución. ¿Cómo optimizarla?')"
                     [disabled]="aiLoading()"
@@ -824,22 +801,6 @@ export interface TerminalAiMessage {
         &:hover:not(:disabled) {
           background: rgba(56, 189, 248, 0.18);
           color: #ffffff;
-        }
-      }
-
-      .btn-eval-ai {
-        background: rgba(168, 85, 247, 0.09);
-        color: #c084fc;
-        border-color: rgba(168, 85, 247, 0.32);
-
-        &:hover:not(:disabled) {
-          background: rgba(168, 85, 247, 0.2);
-          color: #ffffff;
-        }
-
-        &.is-loading {
-          opacity: 0.8;
-          cursor: wait;
         }
       }
 
@@ -1462,18 +1423,6 @@ export interface TerminalAiMessage {
         &:disabled { opacity: 0.4; cursor: not-allowed; }
       }
 
-      .chip-eval {
-        color: #facc15;
-        border-color: rgba(250, 204, 21, 0.3);
-        background: rgba(250, 204, 21, 0.06);
-
-        &:hover:not(:disabled) {
-          border-color: #facc15;
-          background: rgba(250, 204, 21, 0.18);
-          color: #ffffff;
-        }
-      }
-
       .cli-messages-stream {
         flex: 1 1 0%;
         overflow-y: auto;
@@ -1926,6 +1875,10 @@ export class InteractiveIdeComponent {
 
   readonly challengeStatus = signal<'pending' | 'evaluating' | 'passed_tests' | 'passed_ai' | 'needs_work'>('pending');
 
+  readonly isApproved = computed(() =>
+    this.isCompleted() || this.challengeStatus() === 'passed_tests' || this.challengeStatus() === 'passed_ai'
+  );
+
   // Supported languages list
   readonly languages: SupportedLanguage[] = SUPPORTED_LANGUAGES;
 
@@ -2164,6 +2117,29 @@ export class InteractiveIdeComponent {
         next: res => {
           this.executionResult.set(res);
           this.running.set(false);
+
+          // Evaluación automática continua del Agente y del Sistema:
+          if (res.exit_code === 0 && !this.isApproved()) {
+            if (this.activeTestCases().length > 0) {
+              // Si el ejercicio tiene tests, los verificamos silenciosamente en segundo plano
+              this.codeRunner
+                .execute(this.currentLanguage(), this.code(), '', this.activeTestCases())
+                .subscribe({
+                  next: testRes => {
+                    if (testRes.tests && testRes.tests.length > 0 && testRes.tests.every(t => t.passed)) {
+                      this.markApprovedAutomatically(
+                        'tests',
+                        100,
+                        'Todas las pruebas automatizadas del sistema pasaron exitosamente.'
+                      );
+                    }
+                  },
+                });
+            } else if (this.code().trim().length > 15) {
+              // Si no hay tests unitarios (ejercicio abierto / POO), el agente evalúa en segundo plano
+              this.runBackgroundAiEvaluation(res);
+            }
+          }
         },
         error: err => {
           this.running.set(false);
@@ -2192,19 +2168,18 @@ export class InteractiveIdeComponent {
         next: res => {
           this.executionResult.set(res);
           this.testing.set(false);
-          // If all test cases passed, register solved challenge for badges/profile and notify parent!
+
+          // Si pasaron todas las pruebas, aprobación inmediata y automática por el sistema
           if (res.tests && res.tests.length > 0 && res.tests.every(t => t.passed)) {
-            this.challengeStatus.set('passed_tests');
-            this.recordChallengeCompleted();
-            this.showToast('🏆 ¡Todas las pruebas del sistema pasaron! Ejercicio aprobado.');
-            this.challengeSolved.emit({
-              passed: true,
-              method: 'tests',
-              score: 100,
-              message: 'Todas las pruebas automatizadas del sistema pasaron exitosamente.',
-            });
+            this.markApprovedAutomatically(
+              'tests',
+              100,
+              'Todas las pruebas automatizadas del sistema pasaron exitosamente.'
+            );
           } else if (res.tests && res.tests.some(t => !t.passed)) {
             this.challengeStatus.set('needs_work');
+            // El agente analiza el fallo en segundo plano para tener el diagnóstico listo
+            this.runBackgroundAiEvaluation(res);
           }
         },
         error: err => {
@@ -2220,6 +2195,24 @@ export class InteractiveIdeComponent {
       });
   }
 
+  private markApprovedAutomatically(method: 'tests' | 'ai', score: number, message: string): void {
+    if (this.challengeStatus() === 'passed_tests' || this.challengeStatus() === 'passed_ai' || this.isCompleted()) {
+      return;
+    }
+    this.challengeStatus.set(method === 'tests' ? 'passed_tests' : 'passed_ai');
+    this.recordChallengeCompleted();
+    const successMsg = method === 'tests'
+      ? '🏆 ¡Pruebas superadas con éxito! Ejercicio aprobado por el Sistema.'
+      : '🤖 ¡Excelente! Solución validada y aprobada automáticamente por el Agente.';
+    this.showToast(successMsg);
+    this.challengeSolved.emit({
+      passed: true,
+      method,
+      score,
+      message,
+    });
+  }
+
   private recordChallengeCompleted() {
     if (typeof window === 'undefined') return;
     try {
@@ -2233,113 +2226,70 @@ export class InteractiveIdeComponent {
     } catch {}
   }
 
-  async evaluateSolutionWithAi(): Promise<void> {
-    if (this.aiLoading() || !this.code().trim()) {
-      if (!this.code().trim()) {
-        this.showToast('⚠️ Escribe tu solución antes de solicitar la evaluación.');
-      }
-      return;
-    }
+  /**
+   * Evaluación automática continua del Agente en segundo plano (sin intervención ni botones manuales)
+   */
+  async runBackgroundAiEvaluation(lastExec: CodeExecutionResponse): Promise<void> {
+    if (this.isApproved() || this.aiLoading()) return;
 
-    this.activeTerminalTab.set('ai');
-    this.mobileActivePane.set('terminal');
-
-    const promptText = `🤖 Solicito evaluación formal de mi solución para el ejercicio "${this.lessonTitle()}". ¿Cumple los requerimientos para ser aprobado?`;
-    const userMsg: TerminalAiMessage = {
-      id: String(Date.now()),
-      sender: 'user',
-      text: promptText,
-      timestamp: new Date(),
-    };
-    this.copilotMessages.update(msgs => [...msgs, userMsg]);
-    this.scrollCopilotToBottom();
     this.aiLoading.set(true);
-
     const context = {
       lesson: this.lessonTitle() || 'Reto de Programación',
       language: this.currentLanguage(),
       code: this.code(),
       testCases: this.activeTestCases(),
-      lastExecution: this.executionResult(),
+      lastExecution: lastExec,
       hint: this.hint(),
     };
 
     try {
       const evaluation = await this.callAiEvaluator(context);
 
-      const isApproved = !!evaluation.approved;
-      const score = evaluation.score ?? (isApproved ? 100 : 40);
+      if (evaluation.approved) {
+        this.markApprovedAutomatically('ai', evaluation.score ?? 100, evaluation.summary);
 
-      const statusTag = isApproved ? '🏆 ¡APROBADO POR BYTE IA!' : '❌ NECESITA MEJORAS';
-      const aiReplyText = `### ${statusTag} (Calificación: ${score}/100)\n\n` +
-        `**Veredicto:** ${evaluation.verdict || (isApproved ? 'Aprobado' : 'Rechazado')}\n\n` +
-        `**Resumen:** ${evaluation.summary}\n\n` +
-        (evaluation.feedback ? `**Diagnóstico:**\n${evaluation.feedback}\n\n` : '') +
-        (isApproved
-          ? `> ✅ **¡Excelente trabajo!** Has cumplido satisfactoriamente con los requerimientos pedagógicos del ejercicio. Tu progreso ha sido registrado y el siguiente contenido está habilitado.`
-          : `> 💡 **Guía:** Revisa las observaciones anteriores, ajusta tu código en el editor y vuelve a presionar *Evaluar con IA* o ejecuta los *Tests*.`);
-
-      const aiMsg: TerminalAiMessage = {
-        id: String(Date.now() + 1),
-        sender: 'assistant',
-        text: aiReplyText,
-        timestamp: new Date(),
-      };
-      this.copilotMessages.update(msgs => [...msgs, aiMsg]);
-
-      if (isApproved) {
-        this.challengeStatus.set('passed_ai');
-        this.recordChallengeCompleted();
-        this.showToast('🎉 ¡Ejercicio aprobado por Byte IA! Lección completada.');
-        this.challengeSolved.emit({
-          passed: true,
-          method: 'ai',
-          score,
-          message: evaluation.summary,
-        });
+        const aiMsg: TerminalAiMessage = {
+          id: String(Date.now()),
+          sender: 'assistant',
+          text: `### 🏆 ¡Solución Validada y Aprobada por el Agente!\n\n` +
+            `**Resumen:** ${evaluation.summary}\n\n` +
+            (evaluation.feedback ? `**Diagnóstico:**\n${evaluation.feedback}\n\n` : '') +
+            `> ✅ **Objetivo completado.** El avance ha sido registrado automáticamente y el siguiente módulo está habilitado.`,
+          timestamp: new Date(),
+        };
+        this.copilotMessages.update(msgs => [...msgs, aiMsg]);
       } else {
-        this.challengeStatus.set('needs_work');
-        this.showToast('⚠️ Tu solución aún necesita ajustes. Consulta el diagnóstico en Byte Copilot.');
+        const diagMsg: TerminalAiMessage = {
+          id: String(Date.now()),
+          sender: 'assistant',
+          text: `### 🤖 Diagnóstico en Vivo del Agente\n\n` +
+            `**Resumen:** ${evaluation.summary}\n\n` +
+            (evaluation.feedback ? `**Observaciones:**\n${evaluation.feedback}\n\n` : '') +
+            `> 💡 *El agente continúa evaluando tus ejecuciones en segundo plano.*`,
+          timestamp: new Date(),
+        };
+        this.copilotMessages.update(msgs => [...msgs, diagMsg]);
       }
     } catch (_err) {
-      // Fallback socrático local
       const localEval = this.evaluateLocally(context);
-      const isApproved = localEval.approved;
-      const score = isApproved ? 100 : 50;
-
-      const aiReplyText = `### ${isApproved ? '🏆 ¡APROBADO POR EL SISTEMA Y BYTE IA!' : '⚠️ REVISIÓN DEL EJERCICIO'}\n\n` +
-        `**Resumen:** ${localEval.summary}\n\n` +
-        `**Observaciones:**\n${localEval.feedback}\n\n` +
-        (isApproved
-          ? `> ✅ **Objetivo completado.** El código cumple la estructura y métodos requeridos.`
-          : `> 💡 Ajusta tu solución según lo pedido y prueba de nuevo.`);
-
-      const aiMsg: TerminalAiMessage = {
-        id: String(Date.now() + 1),
-        sender: 'assistant',
-        text: aiReplyText,
-        timestamp: new Date(),
-      };
-      this.copilotMessages.update(msgs => [...msgs, aiMsg]);
-
-      if (isApproved) {
-        this.challengeStatus.set('passed_ai');
-        this.recordChallengeCompleted();
-        this.showToast('🎉 ¡Ejercicio aprobado con éxito!');
-        this.challengeSolved.emit({
-          passed: true,
-          method: 'ai',
-          score,
-          message: localEval.summary,
-        });
-      } else {
-        this.challengeStatus.set('needs_work');
-        this.showToast('⚠️ Ajusta tu código antes de aprobar.');
+      if (localEval.approved) {
+        this.markApprovedAutomatically('ai', 100, localEval.summary);
       }
     } finally {
       this.aiLoading.set(false);
       this.scrollCopilotToBottom();
     }
+  }
+
+  async evaluateSolutionWithAi(): Promise<void> {
+    const lastExec = this.executionResult() || {
+      stdout: '',
+      stderr: '',
+      exit_code: 0,
+      execution_time_ms: 0,
+      language: this.currentLanguage(),
+    };
+    return this.runBackgroundAiEvaluation(lastExec);
   }
 
   private async callAiEvaluator(ctx: any): Promise<{

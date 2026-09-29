@@ -191,7 +191,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                       <h4>Condición de Desbloqueo de este Módulo</h4>
                       <p>
                         Para completar este módulo y acceder al siguiente, debes <strong>resolver correctamente este ejercicio</strong>.
-                        El <strong>propio sistema</strong> (mediante los tests automatizados) o el <strong>agente Byte IA</strong> (mediante evaluación socrática) validarán tu solución.
+                        El <strong>sistema y el agente Byte IA</strong> validarán tu solución automáticamente al ejecutar o probar tu código en la terminal.
                       </p>
                     </div>
                   </div>
@@ -335,36 +335,11 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
               <div class="player-actions__right">
                 @if (!completed()) {
                   @if (hasPractice()) {
-                    <div class="exercise-approval-bar">
-                      <div class="exercise-lock-indicator">
-                        <span class="lock-icon">🔒</span>
-                        <div class="lock-text">
-                          <strong>Ejercicio Práctico</strong>
-                          <span>Requiere aprobación del Sistema o de Byte IA</span>
-                        </div>
-                      </div>
-                      <div class="exercise-action-btns">
-                        <button
-                          type="button"
-                          class="btn btn-ai-eval"
-                          (click)="requestAiEvaluation()"
-                          [disabled]="completing()"
-                          title="El agente Byte IA revisará tu solución y la aprobará si cumple los requisitos"
-                        >
-                          🤖 Evaluar con Byte IA
-                        </button>
-                        @if (hasTestCases()) {
-                          <button
-                            type="button"
-                            class="btn btn-test-eval"
-                            (click)="requestRunTests()"
-                            [disabled]="completing()"
-                            title="Ejecutar la suite de pruebas del sistema"
-                          >
-                            🧪 Probar Tests
-                          </button>
-                        }
-                      </div>
+                    <div class="exercise-live-agent-badge" aria-label="Validación automática del agente">
+                      <span class="pulse-agent-dot" aria-hidden="true"></span>
+                      <span class="agent-badge-text">
+                        <strong>Agente activo</strong> · Validación automática al compilar tu código en la terminal
+                      </span>
                     </div>
                   } @else {
                     <button
@@ -1405,94 +1380,38 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       &__right { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
     }
 
-    .exercise-approval-bar {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-4);
-      flex-wrap: wrap;
-
-      @media (max-width: 768px) {
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
-      }
-    }
-
-    .exercise-lock-indicator {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: var(--radius-md);
-
-      .lock-icon { font-size: 1.1rem; }
-      .lock-text {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.25;
-
-        strong { font-size: var(--text-xs); color: #f87171; }
-        span { font-size: 0.72rem; color: var(--text-muted); }
-      }
-    }
-
-    .exercise-action-btns {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-2);
-      flex-wrap: wrap;
-    }
-
-    .btn-ai-eval {
-      background: linear-gradient(135deg, #7c3aed, #6366f1);
-      color: #ffffff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: var(--radius-md);
-      font-size: var(--text-sm);
-      font-weight: 600;
-      cursor: pointer;
+    .exercise-live-agent-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: all var(--transition-fast);
-      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+      gap: 10px;
+      padding: 8px 14px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: var(--radius-md);
+      font-size: var(--text-xs);
+      color: var(--text-muted);
 
-      &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(124, 58, 237, 0.5);
+      .pulse-agent-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+        animation: pulseAgent 1.8s infinite ease-in-out;
+        flex-shrink: 0;
       }
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+
+      .agent-badge-text {
+        strong {
+          color: #10b981;
+          font-weight: 600;
+        }
       }
     }
 
-    .btn-test-eval {
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      padding: 8px 16px;
-      border-radius: var(--radius-md);
-      font-size: var(--text-sm);
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all var(--transition-fast);
-
-      &:hover:not(:disabled) {
-        background: rgba(16, 185, 129, 0.25);
-        border-color: #34d399;
-        color: #ffffff;
-      }
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
+    @keyframes pulseAgent {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
     }
 
     .exercise-validation-banner {
@@ -2250,18 +2169,6 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     const l = this.lesson();
     return Array.isArray(l?.test_cases) && l.test_cases.length > 0;
   });
-
-  requestAiEvaluation(): void {
-    if (this.ideComponent) {
-      this.ideComponent.evaluateSolutionWithAi();
-    }
-  }
-
-  requestRunTests(): void {
-    if (this.ideComponent) {
-      this.ideComponent.runTests();
-    }
-  }
 
   onChallengeSolved(event: { passed: boolean; method: 'tests' | 'ai'; score?: number; message?: string }): void {
     if (!event.passed) return;
