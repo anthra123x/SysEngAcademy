@@ -123,13 +123,7 @@ export interface StreakDay {
               <span>syseng-profile — {{ auth.user()?.email || 'user' }}&#64;{{ isTeacher() ? 'syseng-faculty' : 'syseng-box' }}: ~/{{ isTeacher() ? 'faculty-portal' : 'profile' }} (bash)</span>
             </div>
             <div class="terminal-sys-status">
-              @if (!isTeacher()) {
-                <span class="streak-pill-header" title="Racha activa de estudio consecutivo">
-                  🔥 {{ currentStreak() }}d streak
-                </span>
-                <span class="status-indicator"></span>
-                <span class="status-label">ONLINE</span>
-              } @else {
+              @if (isTeacher()) {
                 <span class="teacher-pill-header">
                   FACULTY ROOT // CÁTEDRA
                 </span>
