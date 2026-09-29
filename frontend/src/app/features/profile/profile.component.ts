@@ -3049,6 +3049,7 @@ const lastState = editor.popState();`,
     if (typeof window !== 'undefined') {
       const storageKey = this.isTeacher() ? 'syseng_selected_teacher_ascii_avatar' : 'syseng_selected_ascii_avatar';
       localStorage.setItem(storageKey, id);
+      window.dispatchEvent(new CustomEvent('ascii-avatar:changed', { detail: { id, isTeacher: this.isTeacher() } }));
     }
     this.closeAvatarModal();
   }

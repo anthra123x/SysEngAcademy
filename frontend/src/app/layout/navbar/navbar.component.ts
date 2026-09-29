@@ -1,7 +1,68 @@
-import { Component, inject, signal, computed, HostListener } from '@angular/core';
+import { Component, inject, signal, computed, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
+
+const STUDENT_MINI_AVATARS: Record<string, string[]> = {
+  cyber_cat: [
+    ` /\\_/\\ \n( o.o )\n \\_v_/ `,
+    ` /\\_/\\ \n( -.- )\n \\_v_/ `,
+    ` /\\_/\\ \n( ^.^ )\n \\_o_/ `,
+  ],
+  syseng_bot: [
+    `  /_/  \n( o.o )\n > ^ < `,
+    `  /_/  \n( -.- )\n > ^ < `,
+    `  \\_/  \n( ^.^ )\n > o < `,
+  ],
+  tux_linux: [
+    ` .--. \n|o_o |\n|:_/ |`,
+    ` .--. \n|-.- |\n|:_/ |`,
+    ` .--. \n|^_^ |\n|:_/ |`,
+  ],
+  monolith_cli: [
+    `+-----+\n|>_ []|\n+-----+`,
+    `+-----+\n|>  []|\n+-----+`,
+    `+-----+\n|>_ []|\n+-----+`,
+  ],
+  root_skull: [
+    ` .---. \n|() ()|\n \\ ^ / `,
+    ` .---. \n|(•)(•)|\n \\ ^ / `,
+    ` .---. \n|(> <)|\n \\ - / `,
+  ],
+  code_wizard: [
+    `  /\\   \n ( ^.^ )\n (_|_|_)`,
+    `  /\\   \n ( -.- )\n (_|_|_)`,
+    `  /\\   \n ( o.o )\n (_|_|_)`,
+  ],
+};
+
+const TEACHER_MINI_AVATARS: Record<string, string[]> = {
+  professor_owl: [
+    ` {o,o} \n /)  ) \n  " "  `,
+    ` {-,o} \n /)  ) \n  " "  `,
+    ` {^,^} \n /)  ) \n  " "  `,
+  ],
+  byte_daemon: [
+    ` [o_o] \n <) (>\\\n  | |  `,
+    ` [-_-] \n <) (>\\\n  | |  `,
+    ` [^_^] \n <) (>\\\n  | |  `,
+  ],
+  grand_mentor: [
+    ` .---. \n|[o][o]|\n \\ - / `,
+    ` .---. \n|[-][-]\n \\ - / `,
+    ` .---. \n|[^][^]|\n \\ o / `,
+  ],
+  chief_architect: [
+    `+-----+\n|[CPU] |\n+-----+`,
+    `+-----+\n|[EXEC]|\n+-----+`,
+    `+-----+\n|[OK]  |\n+-----+`,
+  ],
+  faculty_server: [
+    `+-----+\n|[SRV] |\n+-----+`,
+    `+-----+\n|[LIVE]|\n+-----+`,
+    `+-----+\n|[SYS] |\n+-----+`,
+  ],
+};
 
 @Component({
   selector: 'app-navbar',
@@ -82,7 +143,9 @@ import { AuthService } from '../../core/services/auth.service';
               </a>
             }
             <div class="user-chip" (click)="toggleDropdown()" [class.is-open]="dropdownOpen()" [class.user-chip--teacher]="isTeacher()">
-              <div class="avatar-circle" [class.avatar-circle--teacher]="isTeacher()">{{ initials() }}</div>
+              <div class="avatar-ascii-badge" [class.avatar-ascii-badge--teacher]="isTeacher()" title="Firma ASCII animada de tu perfil">
+                <pre class="mini-ascii-pre">{{ currentMiniFrame() }}</pre>
+              </div>
               <div class="user-meta">
                 <span class="user-meta__name">{{ auth.user()?.name }}</span>
                 <span class="user-meta__role" [class.user-meta__role--teacher]="isTeacher()">
@@ -95,12 +158,19 @@ import { AuthService } from '../../core/services/auth.service';
                 <div class="user-dropdown">
                   <div class="dropdown-header">
                     <div class="dropdown-user-row">
-                      <strong>{{ auth.user()?.name }}</strong>
-                      @if (isTeacher()) {
-                        <span class="badge-teacher-tag">DOCENTE</span>
-                      }
+                      <div class="dropdown-avatar-mini" [class.dropdown-avatar-mini--teacher]="isTeacher()">
+                        <pre class="dropdown-ascii-pre">{{ currentMiniFrame() }}</pre>
+                      </div>
+                      <div class="dropdown-user-info">
+                        <div class="dropdown-name-row">
+                          <strong>{{ auth.user()?.name }}</strong>
+                          @if (isTeacher()) {
+                            <span class="badge-teacher-tag">DOCENTE</span>
+                          }
+                        </div>
+                        <span class="dropdown-email">{{ auth.user()?.email }}</span>
+                      </div>
                     </div>
-                    <span class="dropdown-email">{{ auth.user()?.email }}</span>
                   </div>
                   <hr>
                   @if (isTeacher()) {
@@ -367,34 +437,87 @@ import { AuthService } from '../../core/services/auth.service';
       }
     }
 
-    /* User Chip (Logged In) */
+    /* User Chip (Logged In) - Sleek neutral terminal hover */
     .user-chip {
       position: relative;
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 4px 10px 4px 4px;
-      background: rgba(26, 26, 40, 0.85);
-      border: 1px solid var(--border);
+      padding: 3px 11px 3px 3px;
+      background: #0B0E14;
+      border: 1px solid #1A2232;
       border-radius: 9999px;
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
 
       &:hover, &.is-open {
-        border-color: var(--primary);
-        background: rgba(34, 34, 58, 0.9);
+        background: #111520;
+        border-color: #2D3A52;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+
+        .avatar-ascii-badge {
+          border-color: #0AE98A;
+          box-shadow: 0 0 10px rgba(10, 233, 138, 0.25);
+        }
+
+        .chevron-arrow {
+          color: #E2E8F0;
+        }
       }
 
-      .avatar-circle {
-        width: 28px;
-        height: 28px;
+      &--teacher {
+        background: #0A0D16;
+        border-color: #1A2338;
+
+        &:hover, &.is-open {
+          background: #101524;
+          border-color: #2B3854;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+
+          .avatar-ascii-badge {
+            border-color: #38BDF8;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+          }
+        }
+      }
+
+      .avatar-ascii-badge {
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        color: #fff;
-        font-size: 0.72rem;
-        font-weight: var(--font-bold);
-        display: grid;
-        place-items: center;
+        background: #06080E;
+        border: 1px solid #1A2234;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+        flex: none;
+        box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.6);
+        transition: all 0.2s ease;
+
+        .mini-ascii-pre {
+          margin: 0;
+          padding: 0;
+          font-family: var(--font-mono);
+          font-size: 5.5px;
+          line-height: 1.05;
+          color: #0AE98A;
+          text-align: center;
+          white-space: pre;
+          letter-spacing: -0.25px;
+          user-select: none;
+          display: block;
+        }
+
+        &--teacher {
+          background: #080A14;
+          border-color: #1A243D;
+          .mini-ascii-pre {
+            color: #38BDF8;
+          }
+        }
       }
 
       .user-meta {
@@ -404,7 +527,7 @@ import { AuthService } from '../../core/services/auth.service';
 
         &__name {
           font-size: var(--text-xs);
-          font-weight: var(--font-semibold);
+          font-weight: 600;
           color: var(--text-primary);
           max-width: 110px;
           white-space: nowrap;
@@ -421,10 +544,11 @@ import { AuthService } from '../../core/services/auth.service';
       .chevron-arrow {
         font-size: 0.65rem;
         color: var(--text-muted);
+        transition: transform 0.15s ease, color 0.15s ease;
       }
 
       @media (max-width: 500px) {
-        padding: 3px 6px 3px 3px;
+        padding: 3px;
         gap: 0;
 
         .user-meta {
@@ -454,11 +578,73 @@ import { AuthService } from '../../core/services/auth.service';
       animation: fade-drop 0.15s ease-out;
 
       .dropdown-header {
-        padding: var(--sp-2) var(--sp-3);
-        display: flex;
-        flex-direction: column;
-        strong { font-size: var(--text-xs); color: var(--text-primary); }
-        .dropdown-email { font-size: 10px; color: var(--text-muted); }
+        padding: 10px 12px;
+        .dropdown-user-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          .dropdown-avatar-mini {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: #080A10;
+            border: 1px solid #1E273A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex: none;
+
+            .dropdown-ascii-pre {
+              margin: 0;
+              padding: 0;
+              font-family: var(--font-mono);
+              font-size: 5.5px;
+              line-height: 1.05;
+              color: #0AE98A;
+              text-align: center;
+              white-space: pre;
+              letter-spacing: -0.2px;
+            }
+
+            &--teacher {
+              background: #0A0D18;
+              border-color: #1F2B44;
+              .dropdown-ascii-pre {
+                color: #38BDF8;
+              }
+            }
+          }
+
+          .dropdown-user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+
+            .dropdown-name-row {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              strong {
+                font-size: 12px;
+                color: var(--text-primary);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+            }
+
+            .dropdown-email {
+              font-size: 10.5px;
+              color: var(--text-muted);
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+        }
       }
 
       hr { border-color: rgba(42, 42, 62, 0.5); margin: 4px 0; }
@@ -735,13 +921,19 @@ import { AuthService } from '../../core/services/auth.service';
     }
   `]
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   router = inject(Router);
 
   dropdownOpen = signal(false);
   mobileOpen   = signal(false);
   readonly currentUrl = signal<string>(this.router.url);
+
+  // Estados del avatar ASCII animado
+  readonly currentFrame = signal<number>(0);
+  readonly selectedAvatarId = signal<string>('');
+  private frameTimer?: any;
+  private avatarListener?: () => void;
 
   constructor() {
     this.router.events
@@ -750,6 +942,51 @@ export class NavbarComponent {
         this.currentUrl.set(event.urlAfterRedirects || event.url);
       });
   }
+
+  ngOnInit() {
+    this.syncSelectedAvatar();
+
+    if (typeof window !== 'undefined') {
+      this.frameTimer = setInterval(() => {
+        this.currentFrame.update(f => f + 1);
+      }, 750);
+
+      this.avatarListener = () => this.syncSelectedAvatar();
+      window.addEventListener('ascii-avatar:changed', this.avatarListener);
+      window.addEventListener('storage', this.avatarListener);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.frameTimer) clearInterval(this.frameTimer);
+    if (typeof window !== 'undefined' && this.avatarListener) {
+      window.removeEventListener('ascii-avatar:changed', this.avatarListener);
+      window.removeEventListener('storage', this.avatarListener);
+    }
+  }
+
+  syncSelectedAvatar() {
+    if (typeof window === 'undefined') return;
+    const isT = this.isTeacher();
+    const storageKey = isT ? 'syseng_selected_teacher_ascii_avatar' : 'syseng_selected_ascii_avatar';
+    const saved = localStorage.getItem(storageKey);
+    const pool = isT ? TEACHER_MINI_AVATARS : STUDENT_MINI_AVATARS;
+    if (saved && pool[saved]) {
+      this.selectedAvatarId.set(saved);
+    } else {
+      const defaultId = isT ? 'professor_owl' : 'cyber_cat';
+      this.selectedAvatarId.set(defaultId);
+    }
+  }
+
+  readonly currentMiniFrame = computed(() => {
+    const isT = this.isTeacher();
+    const pool = isT ? TEACHER_MINI_AVATARS : STUDENT_MINI_AVATARS;
+    const id = this.selectedAvatarId();
+    const frames = pool[id] || (isT ? pool['professor_owl'] : pool['cyber_cat']);
+    const idx = this.currentFrame() % frames.length;
+    return frames[idx];
+  });
 
   readonly isTeacher = computed(() => {
     const user = this.auth.user();
