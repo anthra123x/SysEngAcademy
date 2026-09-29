@@ -221,7 +221,12 @@ export class LoginComponent {
         ) {
           this.router.navigate(['/docente']);
         } else {
-          this.router.navigate(['/perfil']);
+          const isDiagDone = typeof window !== 'undefined' ? localStorage.getItem('syseng_diagnostic_completed') : 'true';
+          if (!isDiagDone) {
+            this.router.navigate(['/perfil'], { queryParams: { onboarding: 'true' } });
+          } else {
+            this.router.navigate(['/perfil']);
+          }
         }
       },
       error: (err) => {

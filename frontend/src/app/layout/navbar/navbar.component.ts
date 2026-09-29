@@ -60,6 +60,12 @@ import { AuthService } from '../../core/services/auth.service';
         <!-- Auth & Actions -->
         <div class="navbar__actions">
           @if (auth.isAuthenticated()) {
+            @if (!isTeacher()) {
+              <a routerLink="/perfil" class="streak-nav-pill" title="Racha activa de estudio consecutivo">
+                <span class="streak-nav-flame">🔥</span>
+                <span class="streak-nav-count">{{ studentStreak() }}d</span>
+              </a>
+            }
             <div class="user-chip" (click)="toggleDropdown()" [class.is-open]="dropdownOpen()" [class.user-chip--teacher]="isTeacher()">
               <div class="avatar-circle" [class.avatar-circle--teacher]="isTeacher()">{{ initials() }}</div>
               <div class="user-meta">
@@ -643,6 +649,32 @@ import { AuthService } from '../../core/services/auth.service';
         background: rgba(0, 217, 255, 0.12) !important;
       }
     }
+
+    .streak-nav-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      background: rgba(255, 136, 0, 0.12);
+      border: 1px solid rgba(255, 136, 0, 0.35);
+      border-radius: 9999px;
+      text-decoration: none;
+      font-family: var(--font-mono, monospace);
+      font-size: 11px;
+      font-weight: 700;
+      color: #ff9d33;
+      transition: all var(--transition-fast, 0.15s ease);
+
+      &:hover {
+        background: rgba(255, 136, 0, 0.22);
+        border-color: #ff9d33;
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 500px) {
+        display: none;
+      }
+    }
   `]
 })
 export class NavbarComponent {
@@ -669,6 +701,16 @@ export class NavbarComponent {
   readonly roleLabel = computed(() => {
     if (this.isTeacher()) return 'Docente & Admin';
     return 'Estudiante';
+  });
+
+  readonly studentStreak = computed(() => {
+    if (typeof window === 'undefined') return 5;
+    try {
+      const st = JSON.parse(localStorage.getItem('syseng_streak_data') || '{}');
+      return st.currentStreak !== undefined ? st.currentStreak : 5;
+    } catch {
+      return 5;
+    }
   });
 
   initials() {

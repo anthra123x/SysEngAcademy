@@ -489,7 +489,7 @@ export class RegisterComponent {
     ) {
       this.router.navigate(['/docente']);
     } else {
-      this.router.navigate(['/']);
+      this.router.navigate(['/perfil'], { queryParams: { onboarding: 'true' } });
     }
   }
 }
