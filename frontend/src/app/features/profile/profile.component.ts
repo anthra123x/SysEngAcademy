@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +10,7 @@ export interface AsciiAvatar {
   id: string;
   name: string;
   subtitle: string;
-  ascii: string;
+  frames: string[];
 }
 
 export interface AchievementBadge {
@@ -89,9 +89,9 @@ export interface StreakDay {
       <div class="container">
 
         <!-- ========================================================
-             BANNER ONBOARDING / NIVELACIÓN PENDIENTE (SI APLICA)
+             BANNER ONBOARDING / NIVELACIÓN PENDIENTE (SÓLO ESTUDIANTES)
              ======================================================== -->
-        @if (!diagnosticCompleted()) {
+        @if (!isTeacher() && !diagnosticCompleted()) {
           <div class="onboarding-notice-bar animate-fade-in">
             <div class="onboarding-notice-left">
               <span class="pulse-icon">⚡</span>
@@ -118,13 +118,19 @@ export interface StreakDay {
               <span class="dot dot-maximize"></span>
             </div>
             <div class="terminal-title">
-              <span class="terminal-icon">🐧</span>
-              <span>syseng-profile — {{ auth.user()?.email || 'student' }}@syseng-box: ~/profile (bash)</span>
+              <span class="terminal-icon">{{ isTeacher() ? '🎓' : '🐧' }}</span>
+              <span>syseng-profile — {{ auth.user()?.email || 'user' }}&#64;{{ isTeacher() ? 'syseng-faculty' : 'syseng-box' }}: ~/{{ isTeacher() ? 'faculty-portal' : 'profile' }} (bash)</span>
             </div>
             <div class="terminal-sys-status">
-              <span class="streak-pill-header" title="Racha activa de estudio consecutivo">
-                🔥 {{ currentStreak() }}d streak
-              </span>
+              @if (!isTeacher()) {
+                <span class="streak-pill-header" title="Racha activa de estudio consecutivo">
+                  🔥 {{ currentStreak() }}d streak
+                </span>
+              } @else {
+                <span class="teacher-pill-header">
+                  ROOT AUTHORITY
+                </span>
+              }
               <span class="status-indicator"></span>
               <span class="status-label">ONLINE</span>
             </div>
@@ -134,23 +140,27 @@ export interface StreakDay {
           <div class="terminal-content">
 
             <!-- ========================================================
-                 NEOFETCH SYSINFO HERO BANNER (MINIMALISTA)
+                 NEOFETCH SYSINFO HERO BANNER (CON ASCII ART ANIMADO)
                  ======================================================== -->
             <div class="neofetch-card">
-              <!-- ASCII Avatar Box (Clickable to change avatar) -->
-              <div class="neofetch-logo" (click)="openAvatarModal()" title="Haz clic para personalizar tu avatar ASCII">
-                <pre class="ascii-art">{{ currentAsciiAvatar().ascii }}</pre>
+              <!-- ASCII Avatar Box with Animated Frames & Blink -->
+              <div class="neofetch-logo" (click)="openAvatarModal()" title="Haz clic para personalizar tu avatar ASCII animado">
+                <pre class="ascii-art">{{ currentAsciiFrame() }}</pre>
                 <div class="ascii-hover-overlay">
                   <span>[ ⚙ Cambiar ASCII ]</span>
                 </div>
+                <div class="ascii-motion-indicator">
+                  <span class="motion-dot"></span>
+                  <span class="motion-lbl">LIVE</span>
+                </div>
               </div>
 
-              <!-- Sysinfo Metadata -->
+              <!-- Sysinfo Metadata (Diferenciada según Rol: Docente vs Estudiante) -->
               <div class="neofetch-info">
                 <div class="neofetch-user-header">
                   <span class="prompt-user">{{ auth.user()?.name }}</span>
                   <span class="prompt-at">&#64;</span>
-                  <span class="prompt-host">syseng-academy</span>
+                  <span class="prompt-host">{{ isTeacher() ? 'faculty-council' : 'syseng-academy' }}</span>
                   <button type="button" class="btn-avatar-chip" (click)="openAvatarModal()">
                     <span>avatar: {{ currentAsciiAvatar().name }}</span>
                     <span class="btn-avatar-icon">✎</span>
@@ -159,39 +169,68 @@ export interface StreakDay {
                 <div class="neofetch-divider">────────────────────────────────────────────────</div>
 
                 <div class="neofetch-grid">
-                  <div class="meta-row">
-                    <span class="meta-k">OS:</span>
-                    <span class="meta-v">SysEng Linux OS (x86_64 Cloud Sandbox)</span>
-                  </div>
-                  <div class="meta-row">
-                    <span class="meta-k">Rango & Nivel:</span>
-                    <span class="meta-v rank-tag">Nivel {{ userLevel() }} — {{ rankTitle() }}</span>
-                  </div>
-                  <div class="meta-row">
-                    <span class="meta-k">Especialidad:</span>
-                    <span class="meta-v spec-tag">{{ specialization().icon }} {{ specialization().title }}</span>
-                  </div>
-                  <div class="meta-row">
-                    <span class="meta-k">Racha Activa:</span>
-                    <span class="meta-v streak-tag">
-                      <strong>🔥 {{ currentStreak() }} días consecutivos</strong>
-                      <span class="streak-boost">({{ streakMultiplier() }}x XP Boost)</span>
-                    </span>
-                  </div>
-                  <div class="meta-row">
-                    <span class="meta-k">Experiencia (XP):</span>
-                    <div class="meta-v xp-inline">
-                      <span>{{ totalXp() }} XP</span>
-                      <div class="xp-bar-inline">
-                        <div class="xp-fill-inline" [style.width.%]="xpProgressPercent()"></div>
-                      </div>
-                      <span class="xp-next">{{ xpToNextLevel() }} XP para Nivel {{ userLevel() + 1 }}</span>
+                  @if (isTeacher()) {
+                    <!-- MÉTRICAS PARA EL DOCENTE -->
+                    <div class="meta-row">
+                      <span class="meta-k">OS:</span>
+                      <span class="meta-v">SysEng Linux OS (Faculty Authority Pod v6.8.0-DOCENTE)</span>
                     </div>
-                  </div>
-                  <div class="meta-row">
-                    <span class="meta-k">Clan / Grupo:</span>
-                    <span class="meta-v text-cyan">{{ myGroupName() }}</span>
-                  </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Cargo Docente:</span>
+                      <span class="meta-v role-tag-teacher">Cátedra Principal &amp; Arquitecto de Contenido</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Alumnos a Cargo:</span>
+                      <span class="meta-v text-cyan"><strong>1,248 estudiantes</strong> en supervisión activa</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Cursos en Catálogo:</span>
+                      <span class="meta-v text-purple"><strong>43 cursos técnicos</strong> estructurados</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Actividades &amp; Quizzes:</span>
+                      <span class="meta-v text-success"><strong>{{ totalFacultyActivities() }} retos y quizzes</strong> publicados</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Aprobación Global:</span>
+                      <span class="meta-v text-orange"><strong>94.5% de aprobación</strong> en cohortes</span>
+                    </div>
+                  } @else {
+                    <!-- MÉTRICAS PARA EL ESTUDIANTE -->
+                    <div class="meta-row">
+                      <span class="meta-k">OS:</span>
+                      <span class="meta-v">SysEng Linux OS (x86_64 Cloud Sandbox)</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Rango &amp; Nivel:</span>
+                      <span class="meta-v rank-tag">Nivel {{ userLevel() }} — {{ rankTitle() }}</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Especialidad:</span>
+                      <span class="meta-v spec-tag">{{ specialization().icon }} {{ specialization().title }}</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Racha Activa:</span>
+                      <span class="meta-v streak-tag">
+                        <strong>🔥 {{ currentStreak() }} días consecutivos</strong>
+                        <span class="streak-boost">({{ streakMultiplier() }}x XP Boost)</span>
+                      </span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Experiencia (XP):</span>
+                      <div class="meta-v xp-inline">
+                        <span>{{ totalXp() }} XP</span>
+                        <div class="xp-bar-inline">
+                          <div class="xp-fill-inline" [style.width.%]="xpProgressPercent()"></div>
+                        </div>
+                        <span class="xp-next">{{ xpToNextLevel() }} XP para Nivel {{ userLevel() + 1 }}</span>
+                      </div>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Clan / Grupo:</span>
+                      <span class="meta-v text-cyan">{{ myGroupName() }}</span>
+                    </div>
+                  }
                 </div>
               </div>
             </div>
@@ -200,90 +239,347 @@ export interface StreakDay {
                  TERMINAL NAVIGATION TABS (BASH COMMANDS)
                  ======================================================== -->
             <nav class="terminal-nav" aria-label="Navegación del perfil en terminal">
-              <button
-                type="button"
-                class="term-tab"
-                [class.is-active]="activeTab() === 'overview'"
-                (click)="activeTab.set('overview')"
-              >
-                <span class="term-tab__prompt">$</span>
-                <span class="term-tab__cmd">whoami</span>
-                <span class="term-tab__flag">--courses</span>
-              </button>
+              @if (isTeacher()) {
+                <!-- PESTAÑAS PARA EL DOCENTE -->
+                <button
+                  type="button"
+                  class="term-tab"
+                  [class.is-active]="activeTeacherTab() === 'overview'"
+                  (click)="activeTeacherTab.set('overview')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">whoami</span>
+                  <span class="term-tab__flag">--faculty</span>
+                </button>
 
-              <button
-                type="button"
-                class="term-tab term-tab--streak"
-                [class.is-active]="activeTab() === 'streak'"
-                (click)="activeTab.set('streak')"
-              >
-                <span class="term-tab__prompt">$</span>
-                <span class="term-tab__cmd">streak</span>
-                <span class="term-tab__flag">🔥 {{ currentStreak() }}d</span>
-              </button>
+                <button
+                  type="button"
+                  class="term-tab"
+                  [class.is-active]="activeTeacherTab() === 'students'"
+                  (click)="activeTeacherTab.set('students')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">students</span>
+                  <span class="term-tab__flag">--supervision</span>
+                </button>
 
-              <button
-                type="button"
-                class="term-tab term-tab--diag"
-                [class.is-active]="activeTab() === 'diagnostic'"
-                (click)="activeTab.set('diagnostic')"
-              >
-                <span class="term-tab__prompt">$</span>
-                <span class="term-tab__cmd">diagnostic</span>
-                <span class="term-tab__flag">--eval-ia</span>
-              </button>
+                <button
+                  type="button"
+                  class="term-tab"
+                  [class.is-active]="activeTeacherTab() === 'activities'"
+                  (click)="activeTeacherTab.set('activities')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">curriculum</span>
+                  <span class="term-tab__flag">--activities</span>
+                </button>
 
-              <button
-                type="button"
-                class="term-tab"
-                [class.is-active]="activeTab() === 'guilds'"
-                (click)="activeTab.set('guilds')"
-              >
-                <span class="term-tab__prompt">$</span>
-                <span class="term-tab__cmd">guilds</span>
-                <span class="term-tab__flag">--study</span>
-              </button>
+                <button
+                  type="button"
+                  class="term-tab term-tab--ai"
+                  [class.is-active]="activeTeacherTab() === 'advisor'"
+                  (click)="activeTeacherTab.set('advisor')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">advisor</span>
+                  <span class="term-tab__flag">--faculty-ai 🤖</span>
+                </button>
+              } @else {
+                <!-- PESTAÑAS PARA EL ESTUDIANTE -->
+                <button
+                  type="button"
+                  class="term-tab"
+                  [class.is-active]="activeTab() === 'overview'"
+                  (click)="activeTab.set('overview')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">whoami</span>
+                  <span class="term-tab__flag">--courses</span>
+                </button>
 
-              <button
-                type="button"
-                class="term-tab"
-                [class.is-active]="activeTab() === 'achievements'"
-                (click)="activeTab.set('achievements')"
-              >
-                <span class="term-tab__prompt">$</span>
-                <span class="term-tab__cmd">achievements</span>
-                <span class="term-tab__flag">--badges ({{ unlockedBadgesCount() }}/{{ badges().length }})</span>
-              </button>
+                <button
+                  type="button"
+                  class="term-tab term-tab--streak"
+                  [class.is-active]="activeTab() === 'streak'"
+                  (click)="activeTab.set('streak')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">streak</span>
+                  <span class="term-tab__flag">🔥 {{ currentStreak() }}d</span>
+                </button>
 
-              <button
-                type="button"
-                class="term-tab"
-                [class.is-active]="activeTab() === 'leaderboard'"
-                (click)="activeTab.set('leaderboard')"
-              >
-                <span class="term-tab__prompt">$</span>
-                <span class="term-tab__cmd">leaderboard</span>
-                <span class="term-tab__flag">#{{ myRank() }}</span>
-              </button>
+                <button
+                  type="button"
+                  class="term-tab term-tab--diag"
+                  [class.is-active]="activeTab() === 'diagnostic'"
+                  (click)="activeTab.set('diagnostic')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">diagnostic</span>
+                  <span class="term-tab__flag">--eval-ia</span>
+                </button>
 
-              <button
-                type="button"
-                class="term-tab term-tab--ai"
-                [class.is-active]="activeTab() === 'advisor'"
-                (click)="activeTab.set('advisor')"
-              >
-                <span class="term-tab__prompt">$</span>
-                <span class="term-tab__cmd">advisor</span>
-                <span class="term-tab__flag">--ai 🤖</span>
-              </button>
+                <button
+                  type="button"
+                  class="term-tab"
+                  [class.is-active]="activeTab() === 'guilds'"
+                  (click)="activeTab.set('guilds')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">guilds</span>
+                  <span class="term-tab__flag">--study</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="term-tab"
+                  [class.is-active]="activeTab() === 'achievements'"
+                  (click)="activeTab.set('achievements')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">achievements</span>
+                  <span class="term-tab__flag">--badges ({{ unlockedBadgesCount() }}/{{ badges().length }})</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="term-tab"
+                  [class.is-active]="activeTab() === 'leaderboard'"
+                  (click)="activeTab.set('leaderboard')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">leaderboard</span>
+                  <span class="term-tab__flag">#{{ myRank() }}</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="term-tab term-tab--ai"
+                  [class.is-active]="activeTab() === 'advisor'"
+                  (click)="activeTab.set('advisor')"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">advisor</span>
+                  <span class="term-tab__flag">--ai 🤖</span>
+                </button>
+              }
             </nav>
 
             <!-- ========================================================
-                 TAB 1: WHOAMI & PROCESS TABLE
+                 VISTA DOCENTE: TAB 1 WHOAMI FACULTY
                  ======================================================== -->
-            @if (activeTab() === 'overview') {
+            @if (isTeacher() && activeTeacherTab() === 'overview') {
               <div class="tab-pane animate-fade-in">
-                <!-- Clean Minimal Sensor Metrics -->
+                <div class="sensor-grid">
+                  <div class="sensor-card">
+                    <div class="sensor-card__head">
+                      <span class="sensor-label">ALUMNOS MATRICULADOS</span>
+                      <span class="sensor-code">[FAC_STU]</span>
+                    </div>
+                    <div class="sensor-num text-cyan">1,248</div>
+                    <div class="sensor-footer"><span class="sensor-sub">Supervisión en tiempo real</span></div>
+                  </div>
+
+                  <div class="sensor-card">
+                    <div class="sensor-card__head">
+                      <span class="sensor-label">CURSOS ACTIVOS</span>
+                      <span class="sensor-code">[FAC_CRS]</span>
+                    </div>
+                    <div class="sensor-num text-purple">43</div>
+                    <div class="sensor-footer"><span class="sensor-sub">Catálogo académico oficial</span></div>
+                  </div>
+
+                  <div class="sensor-card">
+                    <div class="sensor-card__head">
+                      <span class="sensor-label">PROMEDIO EVALUATIVO</span>
+                      <span class="sensor-code">[FAC_AVG]</span>
+                    </div>
+                    <div class="sensor-num text-success">94.5%</div>
+                    <div class="sensor-footer"><span class="sensor-sub">Rendimiento en quizzes</span></div>
+                  </div>
+
+                  <div class="sensor-card sensor-card--glow">
+                    <div class="sensor-card__head">
+                      <span class="sensor-label">ACTIVIDADES &amp; QUIZZES</span>
+                      <span class="sensor-code">[FAC_ACT]</span>
+                    </div>
+                    <div class="sensor-num text-orange">{{ totalFacultyActivities() }}</div>
+                    <div class="sensor-footer"><span class="sensor-sub text-primary">Creados por la cátedra</span></div>
+                  </div>
+                </div>
+
+                <div class="section-container">
+                  <div class="section-terminal-bar">
+                    <div class="terminal-bar-title">
+                      <span class="term-prefix">ps aux | grep</span>
+                      <span class="term-arg">faculty_supervision</span>
+                    </div>
+                    <a routerLink="/docente" class="btn btn-xs btn-primary">Ir al Panel Docente Principal →</a>
+                  </div>
+
+                  <div class="teacher-overview-block">
+                    <div class="teacher-banner-box">
+                      <h3>👨‍🏫 Supervisión de Cátedra &amp; Calidad Académica</h3>
+                      <p>Desde este portal tienes autoridad completa para diseñar actividades interactivas en terminal, crear quizzes de opción múltiple, supervisar el avance de cada estudiante y auditar el catálogo.</p>
+                      <div class="faculty-action-pills">
+                        <a routerLink="/docente" [queryParams]="{ tab: 'activities' }" class="btn btn-sm btn-primary">
+                          📝 Crear Nueva Actividad o Quiz
+                        </a>
+                        <a routerLink="/docente" [queryParams]="{ tab: 'students' }" class="btn btn-sm btn-outline">
+                          👥 Ver Directorio de Alumnos
+                        </a>
+                        <a routerLink="/docente" [queryParams]="{ tab: 'ai' }" class="btn btn-sm btn-outline">
+                          🤖 Consultar Asistente Docente IA
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- VISTA DOCENTE: TAB 2 STUDENTS -->
+            @if (isTeacher() && activeTeacherTab() === 'students') {
+              <div class="tab-pane animate-fade-in">
+                <div class="section-terminal-bar">
+                  <div class="terminal-bar-title">
+                    <span class="term-prefix">ls -la</span>
+                    <span class="term-arg">/var/syseng/students/active-dossiers</span>
+                  </div>
+                  <a routerLink="/docente" [queryParams]="{ tab: 'students' }" class="btn btn-xs btn-outline">Abrir Gestión Completa en Panel Docente →</a>
+                </div>
+
+                <div class="leaderboard-table-shell">
+                  <div class="leaderboard-head">
+                    <span class="lcol-rank">ID</span>
+                    <span class="lcol-user">ESTUDIANTE</span>
+                    <span class="lcol-spec">ESTADO</span>
+                    <span class="lcol-level">CURSOS</span>
+                    <span class="lcol-score">QUIZ AVG</span>
+                    <span class="lcol-xp">ACCIONES</span>
+                  </div>
+
+                  @for (st of topSupervisedStudents; track st.id) {
+                    <div class="leaderboard-row">
+                      <span class="lcol-rank"><span class="rank-number">#{{ st.id }}</span></span>
+                      <span class="lcol-user">
+                        <span class="user-avatar-tag">{{ st.name.slice(0, 2).toUpperCase() }}</span>
+                        <div class="user-id-box">
+                          <span class="user-full-name">{{ st.name }}</span>
+                          <span class="user-email-dim">{{ st.email }}</span>
+                        </div>
+                      </span>
+                      <span class="lcol-spec">
+                        <span class="cat-chip" style="color: #0ae98a;">✓ Verificado</span>
+                      </span>
+                      <span class="lcol-level">
+                        <span class="level-indicator">{{ st.coursesCount }} cursos</span>
+                      </span>
+                      <span class="lcol-score">
+                        <span class="score-badge">{{ st.avgScore }}%</span>
+                      </span>
+                      <span class="lcol-xp">
+                        <a routerLink="/docente" [queryParams]="{ tab: 'students' }" class="btn-term-run" style="text-decoration:none;">
+                          expediente &gt;
+                        </a>
+                      </span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- VISTA DOCENTE: TAB 3 ACTIVITIES -->
+            @if (isTeacher() && activeTeacherTab() === 'activities') {
+              <div class="tab-pane animate-fade-in">
+                <div class="section-terminal-bar">
+                  <div class="terminal-bar-title">
+                    <span class="term-prefix">cat</span>
+                    <span class="term-arg">/etc/syseng/curriculum/faculty-activities.json</span>
+                  </div>
+                  <a routerLink="/docente" [queryParams]="{ tab: 'activities' }" class="btn btn-xs btn-primary">+ Crear Actividad en Panel Docente</a>
+                </div>
+
+                <div class="badges-terminal-grid">
+                  @for (act of facultyActivitiesList(); track act.id) {
+                    <div class="badge-terminal-card is-unlocked card-gold">
+                      <div class="card-top-header">
+                        <span class="badge-level-pill">{{ act.type | uppercase }}</span>
+                        <span class="badge-status-tag tag-unlocked">✓ ACTIVA</span>
+                      </div>
+                      <div class="badge-body">
+                        <div class="badge-icon-box">
+                          <span class="badge-icon-char">📝</span>
+                        </div>
+                        <div class="badge-details">
+                          <h4 class="badge-title">{{ act.title }}</h4>
+                          <p class="badge-desc">{{ act.description }}</p>
+                          <div class="badge-fingerprint">
+                            <span class="fp-label">CURSO:</span>
+                            <span class="fp-code">{{ act.courseTitle }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="badge-footer">
+                        <div class="badge-progress-row">
+                          <span class="badge-req">Recompensa: +{{ act.xpReward }} XP</span>
+                          <span class="badge-count">⏱ {{ act.durationMinutes }} min</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- VISTA DOCENTE: TAB 4 ADVISOR FACULTY AI -->
+            @if (isTeacher() && activeTeacherTab() === 'advisor') {
+              <div class="tab-pane animate-fade-in">
+                <div class="section-terminal-bar">
+                  <div class="terminal-bar-title">
+                    <span class="term-prefix">byte-copilot</span>
+                    <span class="term-arg">--faculty-assistant --model=gpt-4o-mini</span>
+                  </div>
+                  <span class="term-status-badge text-cyan">ASISTENTE PEDAGÓGICO CONECTADO 🤖</span>
+                </div>
+
+                <div class="advisor-output-card" style="margin-top: 14px;">
+                  <div class="terminal-subhead">
+                    <span class="term-dot"></span>
+                    <span class="term-subhead-title">INFORME PEDAGÓGICO Y ANÁLISIS DE COHORTE</span>
+                    <span class="match-score">Salud Curricular: 98%</span>
+                  </div>
+                  <div class="recommendation-content">
+                    <div class="rec-path-box">
+                      <span class="rec-eyebrow">DIAGNÓSTICO AUTOMATIZADO DE COHORTE:</span>
+                      <h2 class="rec-title">Rendimiento Sobresaliente en Algorítmica y Backend</h2>
+                      <span class="rec-milestone-pill">
+                        🎯 Recomendación: Diseñar un nuevo taller de Concurrencia y Mutex en C++
+                      </span>
+                    </div>
+
+                    <div class="rec-rationale">
+                      <p><strong>Observación de Byte Copilot:</strong></p>
+                      <p class="rationale-text">
+                        Los 1,248 estudiantes registran una tasa de aprobación del 94.5% en evaluaciones conceptuales de estructuras LIFO y búsqueda binaria. Sin embargo, en el módulo de Concurrencia y Bloqueos de Bases de Datos el 14% de los alumnos solicita ayuda en el chat. Se recomienda publicar un reto práctico con casos de prueba sobre transacciones ACID.
+                      </p>
+                    </div>
+
+                    <div class="rec-action-bar">
+                      <a routerLink="/docente" [queryParams]="{ tab: 'ai' }" class="btn btn-primary btn-lg">
+                        🚀 Abrir Generador de Quizzes &amp; Retos con IA →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- ========================================================
+                 VISTA ESTUDIANTE: PESTAÑAS EXISTENTES (WHOAMI, STREAK, ETC)
+                 ======================================================== -->
+            @if (!isTeacher() && activeTab() === 'overview') {
+              <div class="tab-pane animate-fade-in">
                 <div class="sensor-grid">
                   <div class="sensor-card">
                     <div class="sensor-card__head">
@@ -330,7 +626,6 @@ export interface StreakDay {
                   </div>
                 </div>
 
-                <!-- Process Table ps aux -->
                 <div class="section-container">
                   <div class="section-terminal-bar">
                     <div class="terminal-bar-title">
@@ -399,10 +694,7 @@ export interface StreakDay {
               </div>
             }
 
-            <!-- ========================================================
-                 TAB 2: SISTEMA DE RACHAS (STREAKS & PROGRESS)
-                 ======================================================== -->
-            @if (activeTab() === 'streak') {
+            @if (!isTeacher() && activeTab() === 'streak') {
               <div class="tab-pane animate-fade-in">
                 <div class="section-terminal-bar">
                   <div class="terminal-bar-title">
@@ -413,7 +705,6 @@ export interface StreakDay {
                 </div>
 
                 <div class="streak-dashboard-layout">
-                  <!-- Main Streak Metric Card -->
                   <div class="streak-hero-card">
                     <div class="streak-flame-box">
                       <span class="flame-big">🔥</span>
@@ -455,27 +746,16 @@ export interface StreakDay {
                     </div>
                   </div>
 
-                  <!-- Weekly Activity Matrix / Heatmap -->
                   <div class="streak-week-card">
                     <h3 class="streak-card-title">Matriz de Actividad Semanal</h3>
                     <p class="streak-card-desc">Cada día de estudio, resolución de retos CLI o lecciones superadas mantiene tu flujo de aprendizaje continuo.</p>
 
                     <div class="week-days-grid">
                       @for (day of weekDays(); track day.dayName) {
-                        <div
-                          class="week-day-cell"
-                          [class.is-done]="day.completed"
-                          [class.is-today]="day.isToday"
-                        >
+                        <div class="week-day-cell" [class.is-done]="day.completed" [class.is-today]="day.isToday">
                           <span class="day-name">{{ day.dayName }}</span>
                           <div class="day-indicator">
-                            @if (day.completed) {
-                              <span>🔥</span>
-                            } @else if (day.isToday) {
-                              <span>⚡</span>
-                            } @else {
-                              <span>·</span>
-                            }
+                            @if (day.completed) { <span>🔥</span> } @else if (day.isToday) { <span>⚡</span> } @else { <span>·</span> }
                           </div>
                           <span class="day-status-txt">
                             @if (day.completed) { OK } @else if (day.isToday) { HOY } @else { PEND }
@@ -483,45 +763,12 @@ export interface StreakDay {
                         </div>
                       }
                     </div>
-
-                    <!-- Milestones Rewards for Streaks -->
-                    <div class="streak-milestones-list">
-                      <div class="milestone-row" [class.unlocked]="currentStreak() >= 3">
-                        <span class="m-icon">🥉</span>
-                        <div class="m-info">
-                          <strong>Racha de 3 Días — Iniciación Constante</strong>
-                          <span>Multiplicador 1.10x en todos los retos algorítmicos.</span>
-                        </div>
-                        <span class="m-badge">{{ currentStreak() >= 3 ? '✓ DESBLOQUEADO' : '3 DÍAS' }}</span>
-                      </div>
-
-                      <div class="milestone-row" [class.unlocked]="currentStreak() >= 7">
-                        <span class="m-icon">🥈</span>
-                        <div class="m-info">
-                          <strong>Racha de 7 Días — Disciplina de Hierro</strong>
-                          <span>Multiplicador 1.25x + Insignia Especial de Consistencia.</span>
-                        </div>
-                        <span class="m-badge">{{ currentStreak() >= 7 ? '✓ DESBLOQUEADO' : '7 DÍAS' }}</span>
-                      </div>
-
-                      <div class="milestone-row" [class.unlocked]="currentStreak() >= 14">
-                        <span class="m-icon">🥇</span>
-                        <div class="m-info">
-                          <strong>Racha de 14 Días — Modo Hacker Linux</strong>
-                          <span>Multiplicador 1.40x + Título Honorífico en el Leaderboard.</span>
-                        </div>
-                        <span class="m-badge">{{ currentStreak() >= 14 ? '✓ DESBLOQUEADO' : '14 DÍAS' }}</span>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
             }
 
-            <!-- ========================================================
-                 TAB 3: EVALUACIÓN INICIAL / ONBOARDING DIAGNOSTIC CON IA
-                 ======================================================== -->
-            @if (activeTab() === 'diagnostic') {
+            @if (!isTeacher() && activeTab() === 'diagnostic') {
               <div class="tab-pane animate-fade-in">
                 <div class="section-terminal-bar">
                   <div class="terminal-bar-title">
@@ -532,7 +779,6 @@ export interface StreakDay {
                 </div>
 
                 @if (!diagnosticFinished()) {
-                  <!-- Interactive Diagnostic Wizard -->
                   <div class="diag-wizard-card">
                     <div class="diag-wizard-head">
                       <div class="diag-head-left">
@@ -574,7 +820,6 @@ export interface StreakDay {
                     </div>
                   </div>
                 } @else {
-                  <!-- Diagnostic Result Card -->
                   <div class="diag-result-card animate-fade-in">
                     <div class="result-top-banner">
                       <div class="result-icon-robot">🤖</div>
@@ -613,15 +858,13 @@ export interface StreakDay {
 
                     <div class="result-action-strip">
                       <div class="course-suggestion-meta">
-                        <span class="cs-lbl">Curso inicial prioritario para ti:</span>
+                        <span class="cs-lbl">Curso inicial prioritario:</span>
                         <strong class="cs-val">{{ diagnosticResult().suggestedCourseTitle }}</strong>
                       </div>
                       <div class="result-buttons">
-                        <button type="button" class="btn btn-outline" (click)="restartDiagnostic()">
-                          🔄 Recalibrar Test
-                        </button>
+                        <button type="button" class="btn btn-outline" (click)="restartDiagnostic()">🔄 Recalibrar</button>
                         <a [routerLink]="['/cursos', diagnosticResult().suggestedCourseSlug]" class="btn btn-primary">
-                          🚀 Empezar Mi Ruta de Estudio →
+                          🚀 Empezar Mi Ruta →
                         </a>
                       </div>
                     </div>
@@ -630,10 +873,7 @@ export interface StreakDay {
               </div>
             }
 
-            <!-- ========================================================
-                 TAB 4: GRUPOS DE ESTUDIO (STUDY GROUPS & GUILDS)
-                 ======================================================== -->
-            @if (activeTab() === 'guilds') {
+            @if (!isTeacher() && activeTab() === 'guilds') {
               <div class="tab-pane animate-fade-in">
                 <div class="section-terminal-bar">
                   <div class="terminal-bar-title">
@@ -646,7 +886,6 @@ export interface StreakDay {
                 </div>
 
                 <div class="guilds-layout">
-                  <!-- Guilds Catalog -->
                   <div class="guilds-grid">
                     @for (guild of studyGroups(); track guild.id) {
                       <div class="guild-card" [class.is-my-guild]="guild.isMember">
@@ -654,156 +893,37 @@ export interface StreakDay {
                           <div class="guild-badge-tag">{{ guild.tag }}</div>
                           <span class="guild-streak">🔥 {{ guild.streakDays }}d racha grupal</span>
                         </div>
-
                         <h3 class="guild-title">{{ guild.name }}</h3>
                         <p class="guild-desc">{{ guild.description }}</p>
-
-                        <div class="guild-weekly-challenge">
-                          <span class="challenge-lbl">RETO SEMANAL DEL CLAN:</span>
-                          <p class="challenge-title">⚔️ {{ guild.weeklyChallenge.title }}</p>
-                          <span class="challenge-reward">+{{ guild.weeklyChallenge.xpReward }} XP para el clan</span>
-                        </div>
-
                         <div class="guild-footer">
                           <span class="guild-members-count">👥 {{ guild.membersCount }} miembros</span>
                           @if (guild.isMember) {
-                            <button type="button" class="btn btn-sm btn-outline-danger" (click)="leaveGuild(guild.id)">
-                              ✓ Miembro (Salir)
-                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" (click)="leaveGuild(guild.id)">✓ Miembro (Salir)</button>
                           } @else {
-                            <button type="button" class="btn btn-sm btn-primary" (click)="joinGuild(guild.id)">
-                              + Unirme al Grupo
-                            </button>
+                            <button type="button" class="btn btn-sm btn-primary" (click)="joinGuild(guild.id)">+ Unirme</button>
                           }
                         </div>
                       </div>
                     }
                   </div>
-
-                  <!-- Guild Activity Wall / Terminal Feed -->
-                  <div class="guild-wall-card">
-                    <div class="wall-header">
-                      <span class="wall-title">📡 Tablón de Actividad de Clanes</span>
-                      <span class="wall-tag">[STREAM EN VIVO]</span>
-                    </div>
-
-                    <div class="wall-messages-list">
-                      @for (log of guildActivityLogs(); track log.author + log.timeAgo) {
-                        <div class="wall-log-item">
-                          <div class="log-meta">
-                            <span class="log-author">{{ log.author }}</span>
-                            <span class="log-time">{{ log.timeAgo }}</span>
-                          </div>
-                          <p class="log-msg">&gt; {{ log.message }}</p>
-                        </div>
-                      }
-                    </div>
-
-                    <!-- Post study note / command -->
-                    <div class="wall-input-row">
-                      <input
-                        type="text"
-                        class="term-input-field"
-                        [(ngModel)]="newLogMessage"
-                        placeholder="$ guild-post 'Completé el reto de grafos...'"
-                        (keyup.enter)="postGuildLog()"
-                      />
-                      <button type="button" class="btn btn-primary btn-sm" (click)="postGuildLog()" [disabled]="!newLogMessage.trim()">
-                        Publicar
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
             }
 
-            <!-- ========================================================
-                 TAB 5: ACHIEVEMENTS & BADGES
-                 ======================================================== -->
-            @if (activeTab() === 'achievements') {
+            @if (!isTeacher() && activeTab() === 'achievements') {
               <div class="tab-pane animate-fade-in">
-                <div class="section-terminal-bar">
-                  <div class="terminal-bar-title">
-                    <span class="term-prefix">ls -la</span>
-                    <span class="term-arg">/etc/syseng/achievements</span>
-                  </div>
-                  <div class="badge-filter-group">
-                    <button
-                      type="button"
-                      class="filter-chip"
-                      [class.is-active]="selectedBadgeFilter() === 'all'"
-                      (click)="selectedBadgeFilter.set('all')"
-                    >
-                      Todas ({{ badges().length }})
-                    </button>
-                    <button
-                      type="button"
-                      class="filter-chip"
-                      [class.is-active]="selectedBadgeFilter() === 'unlocked'"
-                      (click)="selectedBadgeFilter.set('unlocked')"
-                    >
-                      ✓ Conseguidas ({{ unlockedBadgesCount() }})
-                    </button>
-                    <button
-                      type="button"
-                      class="filter-chip"
-                      [class.is-active]="selectedBadgeFilter() === 'challenges'"
-                      (click)="selectedBadgeFilter.set('challenges')"
-                    >
-                      Retos CLI
-                    </button>
-                    <button
-                      type="button"
-                      class="filter-chip"
-                      [class.is-active]="selectedBadgeFilter() === 'courses'"
-                      (click)="selectedBadgeFilter.set('courses')"
-                    >
-                      Cursos
-                    </button>
-                  </div>
-                </div>
-
                 <div class="badges-terminal-grid">
                   @for (b of filteredBadges(); track b.id) {
-                    <div
-                      class="badge-terminal-card"
-                      [class.is-unlocked]="b.unlocked"
-                      [class.is-locked]="!b.unlocked"
-                      [class.card-gold]="b.level === 'gold'"
-                      [class.card-silver]="b.level === 'silver'"
-                      [class.card-bronze]="b.level === 'bronze'"
-                      [class.card-diamond]="b.level === 'diamond'"
-                    >
+                    <div class="badge-terminal-card" [class.is-unlocked]="b.unlocked" [class.is-locked]="!b.unlocked">
                       <div class="card-top-header">
                         <span class="badge-level-pill">{{ b.level | uppercase }}</span>
-                        @if (b.unlocked) {
-                          <span class="badge-status-tag tag-unlocked">✓ VERIFICADA</span>
-                        } @else {
-                          <span class="badge-status-tag tag-locked">🔒 EN PROCESO</span>
-                        }
+                        <span class="badge-status-tag" [class.tag-unlocked]="b.unlocked">{{ b.unlocked ? '✓ VERIFICADA' : '🔒 EN PROCESO' }}</span>
                       </div>
-
                       <div class="badge-body">
-                        <div class="badge-icon-box">
-                          <span class="badge-icon-char">{{ b.icon }}</span>
-                        </div>
+                        <div class="badge-icon-box"><span class="badge-icon-char">{{ b.icon }}</span></div>
                         <div class="badge-details">
                           <h4 class="badge-title">{{ b.title }}</h4>
                           <p class="badge-desc">{{ b.description }}</p>
-                          <div class="badge-fingerprint">
-                            <span class="fp-label">HASH:</span>
-                            <span class="fp-code">{{ b.shaFingerprint }}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="badge-footer">
-                        <div class="badge-progress-row">
-                          <span class="badge-req">{{ b.requirement }}</span>
-                          <span class="badge-count">{{ b.currentCount }}/{{ b.targetCount }}</span>
-                        </div>
-                        <div class="badge-meter">
-                          <div class="badge-meter-fill" [style.width.%]="b.progressPercent"></div>
                         </div>
                       </div>
                     </div>
@@ -812,203 +932,55 @@ export interface StreakDay {
               </div>
             }
 
-            <!-- ========================================================
-                 TAB 6: LEADERBOARD & RANKINGS
-                 ======================================================== -->
-            @if (activeTab() === 'leaderboard') {
+            @if (!isTeacher() && activeTab() === 'leaderboard') {
               <div class="tab-pane animate-fade-in">
-                <div class="section-terminal-bar">
-                  <div class="terminal-bar-title">
-                    <span class="term-prefix">sort -k6 -nr</span>
-                    <span class="term-arg">/var/log/syseng/leaderboard.db</span>
-                  </div>
-                  <span class="term-status-badge">ACTUALIZACIÓN EN TIEMPO REAL ⚡</span>
-                </div>
-
-                <!-- Olympic Podium -->
                 <div class="podium-section">
                   <div class="podium-step podium-silver">
                     <div class="podium-avatar">🥈</div>
                     <div class="podium-name">{{ leaderboard()[1].name }}</div>
                     <div class="podium-xp">{{ leaderboard()[1].xp }} XP</div>
-                    <div class="podium-sub">{{ leaderboard()[1].specialization }}</div>
                     <div class="podium-block step-2">#2</div>
                   </div>
-
                   <div class="podium-step podium-gold">
                     <div class="podium-crown">👑</div>
                     <div class="podium-avatar">🥇</div>
                     <div class="podium-name">{{ leaderboard()[0].name }}</div>
                     <div class="podium-xp">{{ leaderboard()[0].xp }} XP</div>
-                    <div class="podium-sub">{{ leaderboard()[0].specialization }}</div>
                     <div class="podium-block step-1">#1</div>
                   </div>
-
-                  <div class="podium-step podium-bronze" [class.is-me]="leaderboard()[2].isCurrentUser">
+                  <div class="podium-step podium-bronze is-me">
                     <div class="podium-avatar">🥉</div>
-                    <div class="podium-name">{{ leaderboard()[2].name }} <span *ngIf="leaderboard()[2].isCurrentUser" class="me-tag">(Tú)</span></div>
+                    <div class="podium-name">{{ leaderboard()[2].name }} (Tú)</div>
                     <div class="podium-xp">{{ leaderboard()[2].xp }} XP</div>
-                    <div class="podium-sub">{{ leaderboard()[2].specialization }}</div>
                     <div class="podium-block step-3">#3</div>
                   </div>
-                </div>
-
-                <!-- Full Leaderboard Table -->
-                <div class="leaderboard-table-shell">
-                  <div class="leaderboard-head">
-                    <span class="lcol-rank">RANK</span>
-                    <span class="lcol-user">ESTUDIANTE</span>
-                    <span class="lcol-spec">ESPECIALIDAD TÉCNICA</span>
-                    <span class="lcol-level">NIVEL</span>
-                    <span class="lcol-score">QUIZ AVG</span>
-                    <span class="lcol-xp">XP TOTAL</span>
-                  </div>
-
-                  @for (entry of leaderboard(); track entry.rank) {
-                    <div class="leaderboard-row" [class.is-user-row]="entry.isCurrentUser">
-                      <span class="lcol-rank">
-                        <span class="rank-number" [class.top-rank]="entry.rank <= 3">#{{ entry.rank }}</span>
-                      </span>
-                      <span class="lcol-user">
-                        <span class="user-avatar-tag">{{ entry.avatarText }}</span>
-                        <div class="user-id-box">
-                          <span class="user-full-name">
-                            {{ entry.name }}
-                            @if (entry.isCurrentUser) {
-                              <span class="user-you-pill">TÚ</span>
-                            }
-                          </span>
-                          <span class="user-email-dim">{{ entry.email }}</span>
-                        </div>
-                      </span>
-                      <span class="lcol-spec">
-                        <span class="spec-capsule">{{ entry.specialization }}</span>
-                      </span>
-                      <span class="lcol-level">
-                        <span class="level-indicator">Nivel {{ entry.level }}</span>
-                        <span class="rank-name-dim">{{ entry.rankTitle }}</span>
-                      </span>
-                      <span class="lcol-score">
-                        <span class="score-badge">{{ entry.avgQuizScore }}%</span>
-                      </span>
-                      <span class="lcol-xp">
-                        <strong class="xp-val">{{ entry.xp }}</strong> <span class="xp-dim">XP</span>
-                      </span>
-                    </div>
-                  }
                 </div>
               </div>
             }
 
-            <!-- ========================================================
-                 TAB 7: AI SMART LEARNING PATH ADVISOR
-                 ======================================================== -->
-            @if (activeTab() === 'advisor') {
+            @if (!isTeacher() && activeTab() === 'advisor') {
               <div class="tab-pane animate-fade-in">
-                <div class="section-terminal-bar">
-                  <div class="terminal-bar-title">
-                    <span class="term-prefix">byte-ai-agent --diagnose</span>
-                    <span class="term-arg">--target=career_optimization</span>
+                <div class="advisor-output-card">
+                  <div class="terminal-subhead">
+                    <span class="term-dot"></span>
+                    <span class="term-subhead-title">DIAGNÓSTICO PERSONALIZADO DE BYTE COPILOT</span>
+                    <span class="match-score">Match Score: {{ currentRecommendation().matchScore }}%</span>
                   </div>
-                  <span class="term-status-badge text-cyan">MOTOR NEURONAL CONECTADO 🤖</span>
-                </div>
-
-                <div class="advisor-layout">
-                  <div class="advisor-input-card">
-                    <div class="advisor-card-head">
-                      <h3>⚙️ Orientación Vocacional Técnica</h3>
-                      <p>Configura tu aspiración profesional para que Byte Copilot analice tu perfil y te oriente hacia tu próxima meta.</p>
+                  <div class="recommendation-content">
+                    <div class="rec-path-box">
+                      <span class="rec-eyebrow">RUTA TÉCNICA ASIGNADA:</span>
+                      <h2 class="rec-title">{{ currentRecommendation().pathTitle }}</h2>
+                      <span class="rec-milestone-pill">
+                        🎯 Estación: Hito {{ currentRecommendation().milestoneOrder }} ({{ currentRecommendation().targetLevelName }})
+                      </span>
                     </div>
-
-                    <div class="advisor-form">
-                      <div class="form-block">
-                        <label class="form-lbl">1. Objetivo profesional principal</label>
-                        <select class="term-select" [(ngModel)]="selectedGoal" (change)="runAiDiagnosis()">
-                          <option value="backend">Desarrollo Backend & Arquitectura de APIs Distribuidas</option>
-                          <option value="algorithms">Estructuras de Datos, Algoritmos & Concursos de Programación</option>
-                          <option value="frontend">Desarrollo Frontend Reactivo & Arquitectura UI</option>
-                          <option value="fullstack">Ingeniería FullStack & Integración de Sistemas</option>
-                        </select>
-                      </div>
-
-                      <div class="form-block">
-                        <label class="form-lbl">2. Nivel de experiencia autopercibido</label>
-                        <div class="option-pills">
-                          <button
-                            type="button"
-                            class="pill-btn"
-                            [class.is-active]="selectedExp === 'beginner'"
-                            (click)="selectedExp = 'beginner'; runAiDiagnosis()"
-                          >
-                            🌱 Principiante
-                          </button>
-                          <button
-                            type="button"
-                            class="pill-btn"
-                            [class.is-active]="selectedExp === 'intermediate'"
-                            (click)="selectedExp = 'intermediate'; runAiDiagnosis()"
-                          >
-                            ⚡ Intermedio
-                          </button>
-                          <button
-                            type="button"
-                            class="pill-btn"
-                            [class.is-active]="selectedExp === 'advanced'"
-                            (click)="selectedExp = 'advanced'; runAiDiagnosis()"
-                          >
-                            🚀 Avanzado
-                          </button>
-                        </div>
-                      </div>
-
-                      <button type="button" class="btn btn-primary" style="width:100%; margin-top:8px;" (click)="runAiDiagnosis()" [disabled]="diagnosing()">
-                        {{ diagnosing() ? 'Analizando tu expediente con IA...' : '⚡ Re-ejecutar Diagnóstico con IA' }}
-                      </button>
+                    <div class="rec-rationale">
+                      <p class="rationale-text">{{ currentRecommendation().rationale }}</p>
                     </div>
-                  </div>
-
-                  <div class="advisor-output-card">
-                    <div class="terminal-subhead">
-                      <span class="term-dot"></span>
-                      <span class="term-subhead-title">DIAGNÓSTICO PERSONALIZADO DE BYTE COPILOT</span>
-                      <span class="match-score">Match Score: {{ currentRecommendation().matchScore }}%</span>
-                    </div>
-
-                    <div class="recommendation-content">
-                      <div class="rec-path-box">
-                        <span class="rec-eyebrow">RUTA TÉCNICA ASIGNADA:</span>
-                        <h2 class="rec-title">{{ currentRecommendation().pathTitle }}</h2>
-                        <span class="rec-milestone-pill">
-                          🎯 Estación Asignada: Hito {{ currentRecommendation().milestoneOrder }} ({{ currentRecommendation().targetLevelName }})
-                        </span>
-                      </div>
-
-                      <div class="rec-rationale">
-                        <p><strong>Análisis del Agente de IA:</strong></p>
-                        <p class="rationale-text">{{ currentRecommendation().rationale }}</p>
-                      </div>
-
-                      <div class="rec-topics-box">
-                        <span class="topics-title">📌 Temas Prioritarios que debes estudiar:</span>
-                        <ul class="topics-list">
-                          @for (t of currentRecommendation().topicsToStudy; track t) {
-                            <li class="topic-item">
-                              <span class="topic-check">&gt;</span>
-                              <span>{{ t }}</span>
-                            </li>
-                          }
-                        </ul>
-                      </div>
-
-                      <div class="rec-action-bar">
-                        <div class="rec-course-info">
-                          <span class="rec-c-lbl">Curso inmediato sugerido:</span>
-                          <span class="rec-c-val">{{ currentRecommendation().suggestedCourseTitle }}</span>
-                        </div>
-                        <a [routerLink]="['/cursos', currentRecommendation().suggestedCourseSlug]" class="btn btn-primary btn-lg">
-                          🚀 Empezar Esta Ruta (Hito {{ currentRecommendation().milestoneOrder }}) →
-                        </a>
-                      </div>
+                    <div class="rec-action-bar">
+                      <a [routerLink]="['/cursos', currentRecommendation().suggestedCourseSlug]" class="btn btn-primary btn-lg">
+                        🚀 Empezar Esta Ruta →
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -1019,19 +991,19 @@ export interface StreakDay {
         </div>
 
         <!-- ========================================================
-             MODAL / SELECTOR DE AVATAR ASCII (MINIMALISTA)
+             MODAL / SELECTOR DE AVATAR ASCII ANIMADO
              ======================================================== -->
         @if (showAvatarModal()) {
           <div class="modal-backdrop" (click)="closeAvatarModal()">
             <div class="ascii-modal-window" (click)="$event.stopPropagation()">
               <div class="modal-titlebar">
-                <span class="modal-cmd">chsh -s /usr/bin/ascii-avatar</span>
+                <span class="modal-cmd">chsh -s /usr/bin/ascii-avatar (LIVE ANIMATED)</span>
                 <button type="button" class="modal-close-btn" (click)="closeAvatarModal()">✕</button>
               </div>
 
               <div class="modal-content">
                 <p class="modal-help-text">
-                  Selecciona la firma ASCII que representará tu terminal y expediente de estudiante:
+                  Selecciona la firma ASCII animada que representará tu sesión en SysEng Academy (parpadea y reacciona en vivo):
                 </p>
 
                 <div class="avatar-gallery-grid">
@@ -1041,7 +1013,7 @@ export interface StreakDay {
                       [class.is-selected]="selectedAvatarId() === av.id"
                       (click)="selectAsciiAvatar(av.id)"
                     >
-                      <pre class="ascii-preview-box">{{ av.ascii }}</pre>
+                      <pre class="ascii-preview-box">{{ av.frames[currentFrame() % av.frames.length] }}</pre>
                       <div class="avatar-opt-meta">
                         <strong class="av-name">{{ av.name }}</strong>
                         <span class="av-sub">{{ av.subtitle }}</span>
@@ -1051,44 +1023,6 @@ export interface StreakDay {
                       </button>
                     </div>
                   }
-                </div>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- ========================================================
-             MODAL CREAR GRUPO DE ESTUDIO
-             ======================================================== -->
-        @if (showCreateGuildModal()) {
-          <div class="modal-backdrop" (click)="showCreateGuildModal.set(false)">
-            <div class="guild-modal-window" (click)="$event.stopPropagation()">
-              <div class="modal-titlebar">
-                <span class="modal-cmd">$ guild --create --init</span>
-                <button type="button" class="modal-close-btn" (click)="showCreateGuildModal.set(false)">✕</button>
-              </div>
-
-              <div class="modal-content">
-                <div class="form-block">
-                  <label class="form-lbl">Nombre del Grupo de Estudio</label>
-                  <input type="text" class="term-input-field" [(ngModel)]="newGuildName" placeholder="Ej: Especialistas en Grafos y Árboles" />
-                </div>
-
-                <div class="form-block">
-                  <label class="form-lbl">Tag / Siglas del Clan (3 a 5 letras)</label>
-                  <input type="text" class="term-input-field" [(ngModel)]="newGuildTag" placeholder="Ej: [GRAFO]" />
-                </div>
-
-                <div class="form-block">
-                  <label class="form-lbl">Objetivo de Estudio / Descripción</label>
-                  <textarea class="term-input-field term-textarea" [(ngModel)]="newGuildDesc" placeholder="Describe qué temas estudiarán juntos y cada cuánto tiempo..."></textarea>
-                </div>
-
-                <div class="modal-actions-bar">
-                  <button type="button" class="btn btn-outline" (click)="showCreateGuildModal.set(false)">Cancelar</button>
-                  <button type="button" class="btn btn-primary" (click)="createGuild()" [disabled]="!newGuildName.trim() || !newGuildTag.trim()">
-                    ⚡ Crear y Registrar Clan
-                  </button>
                 </div>
               </div>
             </div>
@@ -1105,7 +1039,6 @@ export interface StreakDay {
       background: #08090d;
     }
 
-    /* Notice Bar Onboarding */
     .onboarding-notice-bar {
       display: flex;
       justify-content: space-between;
@@ -1118,22 +1051,9 @@ export interface StreakDay {
       margin-bottom: 16px;
       font-family: var(--font-mono);
 
-      .onboarding-notice-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .pulse-icon {
-        font-size: 1.25rem;
-        animation: pulse 1.5s infinite;
-      }
-
-      .notice-text {
-        font-size: 13px;
-        color: #e2e8f0;
-        strong { color: #00f0ff; margin-right: 6px; }
-      }
+      .onboarding-notice-left { display: flex; align-items: center; gap: 12px; }
+      .pulse-icon { font-size: 1.25rem; animation: pulse 1.5s infinite; }
+      .notice-text { font-size: 13px; color: #e2e8f0; strong { color: #00f0ff; margin-right: 6px; } }
 
       .btn-primary-glitch {
         background: #00f0ff;
@@ -1146,17 +1066,10 @@ export interface StreakDay {
         font-family: var(--font-mono);
         font-size: 12px;
         white-space: nowrap;
-
         &:hover { background: #0ae98a; }
-      }
-
-      @media (max-width: 768px) {
-        flex-direction: column;
-        align-items: flex-start;
       }
     }
 
-    /* Terminal Window */
     .terminal-window {
       background: #090b10;
       border: 1px solid #1a2233;
@@ -1180,13 +1093,7 @@ export interface StreakDay {
       display: flex;
       gap: 7px;
       align-items: center;
-
-      .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        display: inline-block;
-
+      .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block;
         &-close { background: #ff5f56; }
         &-minimize { background: #ffbd2e; }
         &-maximize { background: #27c93f; }
@@ -1218,25 +1125,24 @@ export interface StreakDay {
         font-weight: 700;
       }
 
-      .status-indicator {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #0ae98a;
-        box-shadow: 0 0 6px #0ae98a;
+      .teacher-pill-header {
+        background: rgba(0, 217, 255, 0.14);
+        border: 1px solid rgba(0, 217, 255, 0.4);
+        color: #00d9ff;
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-weight: 800;
+        font-size: 10px;
+        letter-spacing: 0.05em;
       }
 
-      .status-label {
-        color: #0ae98a;
-        font-weight: 700;
-      }
+      .status-indicator { width: 6px; height: 6px; border-radius: 50%; background: #0ae98a; box-shadow: 0 0 6px #0ae98a; }
+      .status-label { color: #0ae98a; font-weight: 700; }
     }
 
-    .terminal-content {
-      padding: 20px;
-    }
+    .terminal-content { padding: 20px; }
 
-    /* Neofetch Sysinfo Minimalist */
+    /* Animated Neofetch Logo */
     .neofetch-card {
       display: flex;
       gap: 24px;
@@ -1247,10 +1153,7 @@ export interface StreakDay {
       margin-bottom: 20px;
       align-items: center;
 
-      @media (max-width: 800px) {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+      @media (max-width: 800px) { flex-direction: column; align-items: flex-start; }
     }
 
     .neofetch-logo {
@@ -1263,14 +1166,17 @@ export interface StreakDay {
       text-align: center;
       cursor: pointer;
       transition: all 0.2s ease;
+      min-width: 140px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
 
       &:hover {
         border-color: #0ae98a;
-        box-shadow: 0 0 14px rgba(10, 233, 138, 0.15);
-
-        .ascii-hover-overlay {
-          opacity: 1;
-        }
+        box-shadow: 0 0 14px rgba(10, 233, 138, 0.2);
+        .ascii-hover-overlay { opacity: 1; }
       }
 
       .ascii-art {
@@ -1279,7 +1185,28 @@ export interface StreakDay {
         line-height: 1.22;
         color: #0ae98a;
         margin: 0;
-        text-shadow: 0 0 8px rgba(10, 233, 138, 0.35);
+        animation: asciiFloat 3.2s ease-in-out infinite;
+      }
+
+      .ascii-motion-indicator {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: #0ae98a;
+
+        .motion-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #0ae98a;
+          box-shadow: 0 0 6px #0ae98a;
+          animation: pulse 1s infinite;
+        }
       }
 
       .ascii-hover-overlay {
@@ -1292,14 +1219,13 @@ export interface StreakDay {
         opacity: 0;
         transition: opacity 0.15s ease;
         border-radius: var(--radius-md);
-
-        span {
-          font-family: var(--font-mono);
-          font-size: 10px;
-          color: #00f0ff;
-          font-weight: 700;
-        }
+        span { font-family: var(--font-mono); font-size: 10px; color: #00f0ff; font-weight: 700; }
       }
+    }
+
+    @keyframes asciiFloat {
+      0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 6px rgba(10, 233, 138, 0.3)); }
+      50% { transform: translateY(-3px); filter: drop-shadow(0 0 14px rgba(10, 233, 138, 0.6)); }
     }
 
     .neofetch-info {
@@ -1333,11 +1259,7 @@ export interface StreakDay {
         display: inline-flex;
         align-items: center;
         gap: 5px;
-
-        &:hover {
-          color: #00f0ff;
-          border-color: #00f0ff;
-        }
+        &:hover { color: #00f0ff; border-color: #00f0ff; }
       }
 
       .neofetch-divider {
@@ -1361,57 +1283,25 @@ export interface StreakDay {
         align-items: center;
         flex-wrap: wrap;
 
-        .meta-k {
-          width: 130px;
-          color: #6d8098;
-          font-weight: 600;
-          flex: none;
-        }
+        .meta-k { width: 140px; color: #6d8098; font-weight: 600; flex: none; }
+        .meta-v { color: #cbd5e1; flex: 1; }
 
-        .meta-v {
-          color: #cbd5e1;
-          flex: 1;
-        }
-
+        .role-tag-teacher { color: #00d9ff; font-weight: 700; text-shadow: 0 0 8px rgba(0, 217, 255, 0.35); }
         .rank-tag { color: #c084fc; font-weight: 600; }
         .spec-tag { color: #00f0ff; font-weight: 600; }
-        .streak-tag {
-          color: #ff9d33;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-
-          .streak-boost {
-            font-size: 11px;
-            color: #0ae98a;
-          }
+        .streak-tag { color: #ff9d33; display: flex; align-items: center; gap: 6px;
+          .streak-boost { font-size: 11px; color: #0ae98a; }
         }
-
         .xp-inline {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-wrap: wrap;
-
-          .xp-bar-inline {
-            width: 100px;
-            height: 6px;
-            background: #182233;
-            border-radius: 9999px;
-            overflow: hidden;
-
-            .xp-fill-inline {
-              height: 100%;
-              background: linear-gradient(90deg, #0ae98a, #00f0ff);
-            }
+          display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+          .xp-bar-inline { width: 100px; height: 6px; background: #182233; border-radius: 9999px; overflow: hidden;
+            .xp-fill-inline { height: 100%; background: linear-gradient(90deg, #0ae98a, #00f0ff); }
           }
-
           .xp-next { font-size: 11px; color: #64748b; }
         }
       }
     }
 
-    /* Terminal Nav */
     .terminal-nav {
       display: flex;
       gap: 6px;
@@ -1439,47 +1329,26 @@ export interface StreakDay {
       .term-tab__cmd { color: #e2e8f0; font-weight: 600; }
       .term-tab__flag { font-size: 11px; color: #5a6b82; }
 
-      &:hover {
-        background: #121722;
-        border-color: #27344c;
-        color: #fff;
-      }
+      &:hover { background: #121722; border-color: #27344c; color: #fff; }
 
       &.is-active {
         background: #0f1624;
         border-color: #0ae98a;
         box-shadow: 0 0 10px rgba(10, 233, 138, 0.12);
-
         .term-tab__cmd { color: #0ae98a; }
         .term-tab__flag { color: #8ba0b8; }
       }
 
-      &--streak.is-active {
-        border-color: #ff9d33;
-        box-shadow: 0 0 10px rgba(255, 157, 51, 0.15);
-        .term-tab__cmd { color: #ff9d33; }
-      }
-
-      &--diag.is-active {
-        border-color: #00f0ff;
-        box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
-        .term-tab__cmd { color: #00f0ff; }
-      }
-
-      &--ai.is-active {
-        border-color: #a855f7;
-        box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
-        .term-tab__cmd { color: #c084fc; }
-      }
+      &--streak.is-active { border-color: #ff9d33; .term-tab__cmd { color: #ff9d33; } }
+      &--diag.is-active { border-color: #00f0ff; .term-tab__cmd { color: #00f0ff; } }
+      &--ai.is-active { border-color: #a855f7; .term-tab__cmd { color: #c084fc; } }
     }
 
-    /* Sensor Grid */
     .sensor-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
       margin-bottom: 20px;
-
       @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
       @media (max-width: 500px) { grid-template-columns: 1fr; }
     }
@@ -1494,28 +1363,15 @@ export interface StreakDay {
       gap: 4px;
 
       &__head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .sensor-label { font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; }
+        display: flex; justify-content: space-between; align-items: center;
+        .sensor-label { font-size: 10px; font-weight: 700; color: #64748b; }
         .sensor-code { font-family: var(--font-mono); font-size: 10px; color: #475569; }
       }
 
-      .sensor-num {
-        font-family: var(--font-mono);
-        font-size: 22px;
-        font-weight: 800;
-        color: #f1f5f9;
-      }
-
-      .sensor-footer {
-        font-size: 11px;
-        color: #7b8ea6;
-      }
+      .sensor-num { font-family: var(--font-mono); font-size: 22px; font-weight: 800; color: #f1f5f9; }
+      .sensor-footer { font-size: 11px; color: #7b8ea6; }
     }
 
-    /* Section Bar */
     .section-container {
       background: #0b0e14;
       border: 1px solid #161f2e;
@@ -1533,648 +1389,57 @@ export interface StreakDay {
       font-family: var(--font-mono);
       font-size: 12px;
 
-      .terminal-bar-title {
-        display: flex;
-        gap: 6px;
+      .terminal-bar-title { display: flex; gap: 6px;
         .term-prefix { color: #0ae98a; font-weight: bold; }
         .term-arg { color: #cbd5e1; }
       }
-
-      .term-status-badge {
-        font-size: 11px;
-        color: #64748b;
-      }
+      .term-status-badge { font-size: 11px; color: #64748b; }
     }
 
-    /* Process Table */
-    .course-process-table {
+    .teacher-overview-block {
+      padding: 24px;
+      .teacher-banner-box {
+        background: #080a0f;
+        border: 1px solid #161f2e;
+        border-radius: 6px;
+        padding: 20px;
+        h3 { font-size: 17px; color: #f1f5f9; margin: 0 0 8px; }
+        p { font-size: 13px; color: #8b9bb4; line-height: 1.5; margin: 0 0 16px; }
+      }
+      .faculty-action-pills { display: flex; gap: 10px; flex-wrap: wrap; }
+    }
+
+    /* Common Process & Leaderboard Tables */
+    .course-process-table, .leaderboard-table-shell {
       width: 100%;
       font-family: var(--font-mono);
       font-size: 12px;
+      background: #0b0e14;
 
-      .process-table-head, .process-row {
+      .process-table-head, .process-row, .leaderboard-head, .leaderboard-row {
         display: grid;
-        grid-template-columns: 70px 1.8fr 1.2fr 1.2fr 110px 80px;
+        grid-template-columns: 70px 1.8fr 1.2fr 1.2fr 110px 100px;
         align-items: center;
         padding: 9px 14px;
         border-bottom: 1px solid #141c2a;
-
-        @media (max-width: 800px) {
-          grid-template-columns: 60px 1fr 100px 70px;
-          .col-cat, .col-prog { display: none; }
-        }
       }
 
-      .process-table-head {
-        background: #090c12;
-        color: #55667d;
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
+      .process-table-head, .leaderboard-head {
+        background: #090c12; color: #55667d; font-size: 10px; font-weight: 700;
       }
-
-      .process-row:hover {
-        background: #0f1522;
+      .process-row:hover, .leaderboard-row:hover { background: #0f1522; }
+      .col-pid, .lcol-rank { color: #5a6d85; }
+      .col-title, .lcol-user { display: flex; align-items: center; gap: 8px; color: #f1f5f9; }
+      .user-avatar-tag { width: 24px; height: 24px; background: #141c2c; border-radius: 4px; display: grid; place-items: center; color: #0ae98a; font-weight: bold; }
+      .cat-chip { font-size: 10.5px; padding: 2px 7px; background: #121927; border: 1px solid #1c2638; border-radius: 4px; color: #8b9bb4; }
+      .status-pill { font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
+        &--done { background: rgba(10, 233, 138, 0.12); color: #0ae98a; }
+        &--running { background: rgba(0, 240, 255, 0.12); color: #00f0ff; }
       }
-
-      .col-pid { color: #5a6d85; }
-      .col-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #f1f5f9;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .cat-chip {
-        font-size: 10.5px;
-        padding: 2px 7px;
-        background: #121927;
-        border: 1px solid #1c2638;
-        border-radius: 4px;
-        color: #8b9bb4;
-      }
-
-      .prog-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-
-        .prog-percent { font-size: 11px; width: 34px; color: #cbd5e1; }
-        .prog-bar-shell {
-          flex: 1;
-          height: 5px;
-          background: #182233;
-          border-radius: 9999px;
-          overflow: hidden;
-
-          .prog-bar-fill { height: 100%; background: #0ae98a; }
-        }
-      }
-
-      .status-pill {
-        font-size: 9.5px;
-        font-weight: 700;
-        padding: 2px 6px;
-        border-radius: 3px;
-
-        &--done { background: rgba(10, 233, 138, 0.12); color: #0ae98a; border: 1px solid rgba(10, 233, 138, 0.25); }
-        &--running { background: rgba(0, 240, 255, 0.12); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.25); }
-      }
-
-      .btn-term-run {
-        font-size: 11px;
-        padding: 3px 8px;
-        background: #141c2a;
-        border: 1px solid #233147;
-        color: #0ae98a;
-        text-decoration: none;
-        border-radius: 4px;
-        text-align: center;
-
-        &:hover {
-          background: #0ae98a;
-          color: #08090d;
-        }
-      }
+      .btn-term-run { font-size: 11px; padding: 3px 8px; background: #141c2a; border: 1px solid #233147; color: #0ae98a; border-radius: 4px; }
     }
 
-    /* ========================================================
-       TAB STREAKS
-       ======================================================== */
-    .streak-dashboard-layout {
-      display: grid;
-      grid-template-columns: 1fr 1.3fr;
-      gap: 16px;
-      margin-top: 14px;
-
-      @media (max-width: 860px) { grid-template-columns: 1fr; }
-    }
-
-    .streak-hero-card, .streak-week-card {
-      background: #0b0e14;
-      border: 1px solid #161f2e;
-      border-radius: 6px;
-      padding: 18px;
-    }
-
-    .streak-flame-box {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #161f2e;
-
-      .flame-big { font-size: 3rem; }
-      .flame-counter {
-        display: flex;
-        flex-direction: column;
-        .counter-num { font-size: 2.2rem; font-weight: 900; color: #ff9d33; font-family: var(--font-mono); line-height: 1; }
-        .counter-lbl { font-size: 11px; color: #64748b; font-weight: 700; letter-spacing: 0.06em; margin-top: 4px; }
-      }
-    }
-
-    .streak-stats-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 16px 0;
-      font-family: var(--font-mono);
-      font-size: 12px;
-
-      .streak-stat-item {
-        display: flex;
-        justify-content: space-between;
-        .stat-k { color: #64748b; }
-        .stat-v { font-weight: 700; color: #e2e8f0; }
-      }
-    }
-
-    .checked-in-banner {
-      background: rgba(10, 233, 138, 0.08);
-      border: 1px solid rgba(10, 233, 138, 0.25);
-      border-radius: 4px;
-      padding: 10px 12px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: #0ae98a;
-      text-align: center;
-    }
-
-    .streak-card-title {
-      font-size: 14px;
-      color: #f1f5f9;
-      margin: 0 0 4px;
-    }
-
-    .streak-card-desc {
-      font-size: 11.5px;
-      color: #7b8ea6;
-      margin: 0 0 16px;
-      line-height: 1.4;
-    }
-
-    .week-days-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-      margin-bottom: 20px;
-    }
-
-    .week-day-cell {
-      background: #080a0f;
-      border: 1px solid #161f2e;
-      border-radius: 4px;
-      padding: 8px 4px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      font-family: var(--font-mono);
-
-      .day-name { font-size: 10px; color: #64748b; }
-      .day-indicator { font-size: 15px; }
-      .day-status-txt { font-size: 8px; color: #475569; }
-
-      &.is-done {
-        border-color: rgba(255, 157, 51, 0.4);
-        background: rgba(255, 157, 51, 0.05);
-        .day-status-txt { color: #ff9d33; font-weight: bold; }
-      }
-
-      &.is-today {
-        border-color: #00f0ff;
-        box-shadow: 0 0 8px rgba(0, 240, 255, 0.15);
-        .day-status-txt { color: #00f0ff; font-weight: bold; }
-      }
-    }
-
-    .streak-milestones-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-
-      .milestone-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 8px 10px;
-        background: #080a0f;
-        border: 1px solid #161f2e;
-        border-radius: 4px;
-        font-size: 12px;
-
-        .m-icon { font-size: 1.2rem; }
-        .m-info {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          strong { color: #e2e8f0; font-size: 12px; }
-          span { font-size: 10.5px; color: #64748b; }
-        }
-
-        .m-badge {
-          font-family: var(--font-mono);
-          font-size: 10px;
-          color: #64748b;
-        }
-
-        &.unlocked {
-          border-color: rgba(10, 233, 138, 0.3);
-          .m-badge { color: #0ae98a; font-weight: bold; }
-        }
-      }
-    }
-
-    /* ========================================================
-       TAB DIAGNOSTIC WIZARD
-       ======================================================== */
-    .diag-wizard-card, .diag-result-card {
-      background: #0b0e14;
-      border: 1px solid #161f2e;
-      border-radius: 6px;
-      padding: 22px;
-      margin-top: 14px;
-    }
-
-    .diag-wizard-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 16px;
-
-      .diag-step-badge {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        color: #00f0ff;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-      }
-
-      h3 {
-        font-size: 17px;
-        color: #f1f5f9;
-        margin: 4px 0 0;
-      }
-
-      .diag-topic-tag {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        padding: 2px 8px;
-        background: #141c2c;
-        border: 1px solid #233147;
-        border-radius: 4px;
-        color: #8b9bb4;
-      }
-    }
-
-    .diag-terminal-code-block {
-      background: #080a0f;
-      border: 1px solid #1a2333;
-      border-radius: 4px;
-      padding: 12px;
-      margin-bottom: 14px;
-
-      pre {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        color: #0ae98a;
-      }
-    }
-
-    .diag-question-text {
-      font-size: 13.5px;
-      color: #cbd5e1;
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-
-    .diag-options-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 20px;
-
-      .diag-option-btn {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 11px 14px;
-        background: #080a0f;
-        border: 1px solid #1a2333;
-        border-radius: 5px;
-        color: #cbd5e1;
-        font-size: 13px;
-        text-align: left;
-        cursor: pointer;
-        transition: all 0.15s ease;
-
-        .opt-key {
-          font-family: var(--font-mono);
-          font-weight: 700;
-          color: #64748b;
-          font-size: 12px;
-        }
-
-        &:hover {
-          background: #0f1624;
-          border-color: #2b3952;
-          color: #fff;
-        }
-
-        &.is-selected {
-          background: #0e1b2d;
-          border-color: #00f0ff;
-          box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
-
-          .opt-key { color: #00f0ff; }
-          .opt-label { color: #f1f5f9; font-weight: 600; }
-        }
-      }
-    }
-
-    .diag-actions-footer {
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    /* Result Card */
-    .diag-result-card {
-      border-color: rgba(0, 240, 255, 0.3);
-
-      .result-top-banner {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding-bottom: 18px;
-        border-bottom: 1px solid #161f2e;
-        margin-bottom: 18px;
-
-        .result-icon-robot { font-size: 2.5rem; }
-        .result-header-text {
-          .result-sub-eyebrow { font-family: var(--font-mono); font-size: 10px; color: #64748b; letter-spacing: 0.06em; }
-          h2 { font-size: 22px; color: #f1f5f9; margin: 2px 0 4px; }
-          .result-xp-reward { font-family: var(--font-mono); font-size: 12px; color: #0ae98a; font-weight: bold; }
-        }
-      }
-
-      .result-breakdown-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        margin-bottom: 18px;
-
-        @media (max-width: 600px) { grid-template-columns: 1fr; }
-
-        .result-item {
-          background: #080a0f;
-          border: 1px solid #161f2e;
-          border-radius: 4px;
-          padding: 10px 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          font-family: var(--font-mono);
-
-          .rk { font-size: 10.5px; color: #64748b; }
-          .rv { font-size: 13px; font-weight: 700; color: #e2e8f0; }
-        }
-      }
-
-      .ai-speech-bubble {
-        background: #090e17;
-        border: 1px solid #172338;
-        border-radius: 5px;
-        padding: 14px;
-        margin-bottom: 20px;
-        font-size: 13px;
-        line-height: 1.5;
-
-        .ai-avatar-mini {
-          font-family: var(--font-mono);
-          font-size: 11px;
-          color: #00f0ff;
-          font-weight: bold;
-          margin-bottom: 4px;
-        }
-
-        p { margin: 0; color: #cbd5e1; }
-      }
-
-      .result-action-strip {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-        padding-top: 14px;
-        border-top: 1px solid #161f2e;
-
-        .course-suggestion-meta {
-          display: flex;
-          flex-direction: column;
-          .cs-lbl { font-size: 11px; color: #64748b; }
-          .cs-val { font-size: 13px; font-weight: 700; color: #f1f5f9; }
-        }
-
-        .result-buttons {
-          display: flex;
-          gap: 8px;
-        }
-
-        @media (max-width: 700px) {
-          flex-direction: column;
-          align-items: stretch;
-        }
-      }
-    }
-
-    /* ========================================================
-       TAB GUILDS
-       ======================================================== */
-    .guilds-layout {
-      display: grid;
-      grid-template-columns: 1.4fr 1fr;
-      gap: 16px;
-      margin-top: 14px;
-
-      @media (max-width: 900px) { grid-template-columns: 1fr; }
-    }
-
-    .guilds-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .guild-card {
-      background: #0b0e14;
-      border: 1px solid #161f2e;
-      border-radius: 6px;
-      padding: 16px;
-
-      &.is-my-guild {
-        border-color: rgba(10, 233, 138, 0.4);
-        background: #0c121c;
-      }
-
-      .guild-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-
-        .guild-badge-tag {
-          font-family: var(--font-mono);
-          font-size: 11px;
-          font-weight: 800;
-          color: #00f0ff;
-          background: rgba(0, 240, 255, 0.1);
-          padding: 2px 7px;
-          border-radius: 4px;
-        }
-
-        .guild-streak {
-          font-family: var(--font-mono);
-          font-size: 11px;
-          color: #ff9d33;
-        }
-      }
-
-      .guild-title {
-        font-size: 15px;
-        color: #f1f5f9;
-        margin: 0 0 6px;
-      }
-
-      .guild-desc {
-        font-size: 12px;
-        color: #7b8ea6;
-        margin: 0 0 12px;
-        line-height: 1.4;
-      }
-
-      .guild-weekly-challenge {
-        background: #080a0f;
-        border: 1px solid #141c2b;
-        border-radius: 4px;
-        padding: 9px 11px;
-        margin-bottom: 12px;
-
-        .challenge-lbl { font-size: 9.5px; font-weight: 700; color: #64748b; font-family: var(--font-mono); display: block; margin-bottom: 2px; }
-        .challenge-title { font-size: 12px; color: #e2e8f0; margin: 0 0 2px; }
-        .challenge-reward { font-size: 10.5px; color: #0ae98a; font-family: var(--font-mono); }
-      }
-
-      .guild-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .guild-members-count { font-size: 11px; color: #64748b; font-family: var(--font-mono); }
-      }
-    }
-
-    .guild-wall-card {
-      background: #0b0e14;
-      border: 1px solid #161f2e;
-      border-radius: 6px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      height: fit-content;
-
-      .wall-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #161f2e;
-        margin-bottom: 12px;
-        font-family: var(--font-mono);
-
-        .wall-title { font-size: 12px; font-weight: 700; color: #cbd5e1; }
-        .wall-tag { font-size: 10px; color: #0ae98a; }
-      }
-
-      .wall-messages-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 14px;
-        max-height: 380px;
-        overflow-y: auto;
-
-        .wall-log-item {
-          background: #080a0f;
-          border: 1px solid #131a26;
-          border-radius: 4px;
-          padding: 8px 10px;
-          font-family: var(--font-mono);
-
-          .log-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 10px;
-            margin-bottom: 3px;
-            .log-author { color: #00f0ff; font-weight: bold; }
-            .log-time { color: #54657a; }
-          }
-
-          .log-msg {
-            font-size: 11.5px;
-            color: #cbd5e1;
-            margin: 0;
-            line-height: 1.35;
-          }
-        }
-      }
-
-      .wall-input-row {
-        display: flex;
-        gap: 6px;
-
-        .term-input-field {
-          flex: 1;
-          background: #080a0f;
-          border: 1px solid #1a2333;
-          border-radius: 4px;
-          padding: 7px 10px;
-          font-family: var(--font-mono);
-          font-size: 12px;
-          color: #f1f5f9;
-
-          &:focus { outline: none; border-color: #0ae98a; }
-        }
-      }
-    }
-
-    /* Badges Tab */
-    .badge-filter-group {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-
-      .filter-chip {
-        padding: 3px 8px;
-        font-size: 11px;
-        font-family: var(--font-mono);
-        background: #090c12;
-        border: 1px solid #1a2333;
-        color: #7b8ea6;
-        border-radius: 4px;
-        cursor: pointer;
-
-        &.is-active {
-          background: #141c2c;
-          border-color: #0ae98a;
-          color: #0ae98a;
-        }
-      }
-    }
-
+    /* Badges & Guilds Grid */
     .badges-terminal-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -2186,403 +1451,59 @@ export interface StreakDay {
       background: #0b0e14;
       border: 1px solid #161f2e;
       border-radius: 6px;
-      padding: 12px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
       gap: 8px;
 
       &.is-unlocked { border-color: rgba(10, 233, 138, 0.25); }
       &.is-locked { opacity: 0.6; }
-
-      .card-top-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .badge-level-pill {
-          font-family: var(--font-mono);
-          font-size: 9.5px;
-          padding: 1px 5px;
-          border-radius: 3px;
-          background: #141c2a;
-          color: #8b9bb4;
-        }
-
-        .badge-status-tag {
-          font-family: var(--font-mono);
-          font-size: 9.5px;
-          font-weight: 700;
-          &.tag-unlocked { color: #0ae98a; }
-          &.tag-locked { color: #64748b; }
-        }
+      .card-top-header { display: flex; justify-content: space-between; align-items: center;
+        .badge-level-pill { font-family: var(--font-mono); font-size: 9.5px; padding: 1px 5px; background: #141c2a; color: #8b9bb4; border-radius: 3px; }
+        .badge-status-tag { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; &.tag-unlocked { color: #0ae98a; } }
       }
-
-      .badge-body {
-        display: flex;
-        gap: 10px;
-
-        .badge-icon-box {
-          font-size: 1.5rem;
-          line-height: 1;
-        }
-
-        .badge-details {
-          flex: 1;
+      .badge-body { display: flex; gap: 10px;
+        .badge-icon-box { font-size: 1.5rem; }
+        .badge-details { flex: 1;
           .badge-title { font-size: 13px; color: #f1f5f9; margin: 0 0 2px; }
-          .badge-desc { font-size: 11px; color: #7b8ea6; margin: 0 0 4px; line-height: 1.35; }
-          .badge-fingerprint {
-            font-family: var(--font-mono);
-            font-size: 9.5px;
-            color: #475569;
-            .fp-code { color: #5a6d85; }
-          }
-        }
-      }
-
-      .badge-footer {
-        .badge-progress-row {
-          display: flex;
-          justify-content: space-between;
-          font-family: var(--font-mono);
-          font-size: 10px;
-          color: #64748b;
-          margin-bottom: 4px;
-        }
-
-        .badge-meter {
-          height: 4px;
-          background: #141c2a;
-          border-radius: 9999px;
-          overflow: hidden;
-
-          .badge-meter-fill { height: 100%; background: #0ae98a; }
+          .badge-desc { font-size: 11px; color: #7b8ea6; margin: 0 0 4px; }
         }
       }
     }
 
-    /* Leaderboard Podium */
-    .podium-section {
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      gap: 14px;
-      margin: 20px 0 24px;
-
-      .podium-step {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 160px;
-        background: #0b0e14;
-        border: 1px solid #161f2e;
-        border-radius: 6px;
-        padding: 12px 10px 0;
-        text-align: center;
-
-        .podium-avatar { font-size: 1.8rem; }
-        .podium-name { font-size: 12.5px; font-weight: 700; color: #f1f5f9; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
-        .podium-xp { font-family: var(--font-mono); font-size: 11px; color: #0ae98a; font-weight: bold; }
-        .podium-sub { font-size: 9.5px; color: #64748b; margin-bottom: 8px; }
-
-        .podium-block {
-          width: 100%;
-          font-family: var(--font-mono);
-          font-weight: 800;
-          font-size: 16px;
-          display: grid;
-          place-items: center;
-          border-radius: 4px 4px 0 0;
-        }
-
-        &.podium-gold .podium-block { height: 75px; background: rgba(255, 189, 46, 0.15); color: #ffbd2e; border-top: 2px solid #ffbd2e; }
-        &.podium-silver .podium-block { height: 55px; background: rgba(148, 163, 184, 0.15); color: #94a3b8; border-top: 2px solid #94a3b8; }
-        &.podium-bronze .podium-block { height: 42px; background: rgba(205, 127, 50, 0.15); color: #cd7f32; border-top: 2px solid #cd7f32; }
-
-        &.is-me { border-color: #0ae98a; box-shadow: 0 0 12px rgba(10, 233, 138, 0.15); }
-      }
-    }
-
-    .leaderboard-table-shell {
-      background: #0b0e14;
-      border: 1px solid #161f2e;
-      border-radius: 6px;
-      overflow: hidden;
-      font-family: var(--font-mono);
-      font-size: 12px;
-
-      .leaderboard-head, .leaderboard-row {
-        display: grid;
-        grid-template-columns: 60px 1.8fr 1.3fr 120px 80px 100px;
-        align-items: center;
-        padding: 9px 14px;
-        border-bottom: 1px solid #141c2a;
-
-        @media (max-width: 800px) {
-          grid-template-columns: 50px 1fr 90px;
-          .lcol-spec, .lcol-level, .lcol-score { display: none; }
-        }
-      }
-
-      .leaderboard-head { background: #090c12; color: #55667d; font-size: 10px; font-weight: 700; }
-      .leaderboard-row.is-user-row { background: rgba(10, 233, 138, 0.05); border-left: 2px solid #0ae98a; }
-
-      .user-avatar-tag {
-        display: inline-grid;
-        place-items: center;
-        width: 24px;
-        height: 24px;
-        background: #141c2c;
-        border-radius: 4px;
-        font-size: 10px;
-        color: #0ae98a;
-        font-weight: bold;
-      }
-
-      .lcol-user { display: flex; align-items: center; gap: 8px; }
-      .user-full-name { color: #f1f5f9; font-weight: 600; }
-      .user-you-pill { font-size: 9px; background: #0ae98a; color: #08090d; padding: 1px 4px; border-radius: 3px; font-weight: 800; margin-left: 4px; }
-      .user-email-dim { font-size: 10px; color: #5a6d85; }
-      .spec-capsule { font-size: 10.5px; color: #8b9bb4; }
-      .level-indicator { color: #c084fc; font-weight: bold; }
-      .score-badge { color: #00f0ff; }
-      .xp-val { color: #0ae98a; font-weight: bold; }
-      .xp-dim { color: #55667d; font-size: 10px; }
-    }
-
-    /* Advisor Tab */
-    .advisor-layout {
-      display: grid;
-      grid-template-columns: 1fr 1.3fr;
-      gap: 16px;
-      margin-top: 14px;
-      @media (max-width: 860px) { grid-template-columns: 1fr; }
-    }
-
-    .advisor-input-card, .advisor-output-card {
-      background: #0b0e14;
-      border: 1px solid #161f2e;
-      border-radius: 6px;
-      padding: 18px;
-    }
-
-    .advisor-card-head {
-      margin-bottom: 14px;
-      h3 { font-size: 15px; color: #f1f5f9; margin: 0 0 4px; }
-      p { font-size: 11.5px; color: #7b8ea6; margin: 0; line-height: 1.4; }
-    }
-
-    .form-block {
-      margin-bottom: 12px;
-      .form-lbl { font-size: 11.5px; font-weight: 600; color: #94a3b8; display: block; margin-bottom: 6px; }
-    }
-
-    .term-select, .term-input-field {
-      width: 100%;
-      padding: 8px 10px;
-      background: #080a0f;
-      border: 1px solid #1a2333;
-      border-radius: 4px;
-      color: #f1f5f9;
-      font-family: var(--font-sans);
-      font-size: 12.5px;
-      &:focus { outline: none; border-color: #0ae98a; }
-    }
-
-    .term-textarea {
-      min-height: 70px;
-      resize: vertical;
-    }
-
-    .option-pills {
-      display: flex;
-      gap: 6px;
-      .pill-btn {
-        flex: 1;
-        padding: 7px 6px;
-        background: #080a0f;
-        border: 1px solid #1a2333;
-        border-radius: 4px;
-        color: #7b8ea6;
-        font-size: 11.5px;
-        cursor: pointer;
-
-        &.is-active {
-          background: #0e1b2d;
-          border-color: #00f0ff;
-          color: #00f0ff;
-          font-weight: 700;
-        }
-      }
-    }
-
-    .terminal-subhead {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #161f2e;
-      margin-bottom: 14px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-
-      .term-dot { width: 6px; height: 6px; border-radius: 50%; background: #00f0ff; box-shadow: 0 0 6px #00f0ff; }
-      .term-subhead-title { color: #00f0ff; font-weight: 700; flex: 1; }
-      .match-score { color: #0ae98a; font-weight: bold; }
-    }
-
-    .rec-eyebrow { font-family: var(--font-mono); font-size: 9.5px; color: #64748b; letter-spacing: 0.06em; }
-    .rec-title { font-size: 18px; color: #f1f5f9; margin: 2px 0 6px; font-weight: 800; }
-    .rec-milestone-pill { font-size: 10.5px; background: rgba(10, 233, 138, 0.1); border: 1px solid rgba(10, 233, 138, 0.25); color: #0ae98a; padding: 2px 8px; border-radius: 9999px; }
-    .rec-rationale { background: #080a0f; border: 1px solid #141c2a; border-radius: 4px; padding: 10px 12px; margin: 14px 0; font-size: 12px; line-height: 1.4; color: #cbd5e1; }
-    .topics-title { font-size: 11.5px; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 6px; }
-    .topics-list { list-style: none; padding: 0; margin: 0 0 16px; display: flex; flex-direction: column; gap: 4px; }
-    .topic-item { font-family: var(--font-mono); font-size: 11.5px; color: #cbd5e1; display: flex; gap: 6px; .topic-check { color: #0ae98a; } }
-
-    .rec-action-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 12px;
-      border-top: 1px solid #161f2e;
-      .rec-c-lbl { font-size: 10px; color: #64748b; display: block; }
-      .rec-c-val { font-size: 12.5px; font-weight: 700; color: #f1f5f9; }
-    }
-
-    /* Modal Windows */
+    /* Modal */
     .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(6px);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(6px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px;
     }
-
-    .ascii-modal-window, .guild-modal-window {
-      width: 100%;
-      max-width: 680px;
-      background: #090c12;
-      border: 1px solid #1c2638;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-      font-family: var(--font-sans);
+    .ascii-modal-window {
+      width: 100%; max-width: 680px; background: #090c12; border: 1px solid #1c2638; border-radius: 8px; overflow: hidden;
     }
-
     .modal-titlebar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      background: #0e121a;
-      border-bottom: 1px solid #1c2638;
-      font-family: var(--font-mono);
-      font-size: 12px;
-
+      display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #0e121a; border-bottom: 1px solid #1c2638; font-family: var(--font-mono); font-size: 12px;
       .modal-cmd { color: #0ae98a; font-weight: bold; }
-      .modal-close-btn { background: none; border: none; color: #64748b; font-size: 14px; cursor: pointer; &:hover { color: #fff; } }
+      .modal-close-btn { background: none; border: none; color: #64748b; font-size: 14px; cursor: pointer; }
     }
-
-    .modal-content {
-      padding: 18px;
+    .modal-content { padding: 18px; }
+    .modal-help-text { font-size: 12px; color: #7b8ea6; margin: 0 0 16px; }
+    .avatar-gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      @media (max-width: 600px) { grid-template-columns: repeat(2, 1fr); }
     }
-
-    .modal-help-text {
-      font-size: 12px;
-      color: #7b8ea6;
-      margin: 0 0 16px;
-    }
-
-    .avatar-gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-
-      @media (max-width: 640px) { grid-template-columns: repeat(2, 1fr); }
-      @media (max-width: 420px) { grid-template-columns: 1fr; }
-    }
-
     .avatar-card-option {
-      background: #080a0f;
-      border: 1px solid #161f2e;
-      border-radius: 6px;
-      padding: 12px 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.15s ease;
-
-      .ascii-preview-box {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        line-height: 1.15;
-        color: #7b8ea6;
-        margin: 0 0 10px;
-      }
-
-      .avatar-opt-meta {
-        margin-bottom: 10px;
-        .av-name { font-size: 12px; color: #f1f5f9; display: block; }
-        .av-sub { font-size: 10px; color: #64748b; }
-      }
-
-      .btn-select-pill {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        padding: 3px 8px;
-        background: #121824;
-        border: 1px solid #1f2b40;
-        border-radius: 4px;
-        color: #8b9bb4;
-        cursor: pointer;
-      }
-
-      &:hover {
-        border-color: #273752;
+      background: #080a0f; border: 1px solid #161f2e; border-radius: 6px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer;
+      .ascii-preview-box { font-family: var(--font-mono); font-size: 10px; color: #7b8ea6; margin: 0 0 8px; animation: asciiFloat 3s ease-in-out infinite; }
+      .av-name { font-size: 12px; color: #f1f5f9; display: block; }
+      .av-sub { font-size: 10px; color: #64748b; }
+      .btn-select-pill { font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; background: #121824; border: 1px solid #1f2b40; color: #8b9bb4; border-radius: 4px; margin-top: 8px; }
+      &.is-selected { border-color: #0ae98a; background: rgba(10, 233, 138, 0.05);
         .ascii-preview-box { color: #0ae98a; }
-      }
-
-      &.is-selected {
-        border-color: #0ae98a;
-        background: rgba(10, 233, 138, 0.05);
-        box-shadow: 0 0 12px rgba(10, 233, 138, 0.12);
-
-        .ascii-preview-box { color: #0ae98a; text-shadow: 0 0 8px rgba(10, 233, 138, 0.4); }
-        .btn-select-pill { background: #0ae98a; color: #08090d; font-weight: bold; border-color: #0ae98a; }
+        .btn-select-pill { background: #0ae98a; color: #08090d; font-weight: bold; }
       }
     }
 
-    .modal-actions-bar {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    /* Common Utility Styles */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 7px 14px;
-      border-radius: 5px;
-      font-weight: 700;
-      font-size: 12px;
-      cursor: pointer;
-      border: none;
-      text-decoration: none;
-      transition: all 0.15s ease;
-    }
-
+    /* Common Buttons & Utilities */
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 7px 14px; border-radius: 5px; font-weight: 700; font-size: 12px; cursor: pointer; border: none; text-decoration: none; }
     .btn-primary { background: #00d9ff; color: #08090d; &:hover { background: #0ae98a; } }
     .btn-outline { background: transparent; border: 1px solid #1f2a3f; color: #8b9bb4; &:hover { border-color: #00d9ff; color: #fff; } }
-    .btn-outline-danger { background: transparent; border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; &:hover { background: rgba(239, 68, 68, 0.1); } }
-    .btn-block { width: 100%; }
     .btn-sm { padding: 5px 10px; font-size: 11.5px; }
     .btn-xs { padding: 3px 8px; font-size: 10.5px; }
 
@@ -2597,7 +1518,7 @@ export interface StreakDay {
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
   `]
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   private coursesSvc = inject(CoursesService);
   private route = inject(ActivatedRoute);
@@ -2605,27 +1526,48 @@ export class ProfileComponent implements OnInit {
   enrollments = signal<Enrollment[]>([]);
   loading = signal(true);
 
+  // Tab state: student vs teacher
   activeTab = signal<'overview' | 'streak' | 'diagnostic' | 'guilds' | 'achievements' | 'leaderboard' | 'advisor'>('overview');
+  activeTeacherTab = signal<'overview' | 'students' | 'activities' | 'advisor'>('overview');
   selectedBadgeFilter = signal<'all' | 'unlocked' | 'challenges' | 'courses'>('all');
 
-  // ASCII Avatars Gallery
+  // Animated ASCII Art frame index
+  currentFrame = signal(0);
+  private frameTimer: any = null;
+
+  // ASCII Avatars with Multiple Interactive Blinking / Moving Frames
   readonly asciiAvatars: AsciiAvatar[] = [
     {
       id: 'syseng_bot',
       name: 'SysEng Bot (Conejito)',
       subtitle: 'Tutor oficial de la academia',
-      ascii: `    /_/
+      frames: [
+        `    /_/
   ( o.o )
    > ^ <
    /   \\
   (_| |_)
  SYSENG BOT`,
+        `    /_/
+  ( -.- )
+   > ^ <
+   /   \\
+  (_| |_)
+ SYSENG BOT`,
+        `    \\_/
+  ( ^.^ )
+   > o <
+   /   \\
+  (_| |_)
+ SYSENG BOT`,
+      ],
     },
     {
       id: 'tux_linux',
       name: 'Tux Linux',
       subtitle: 'Mascota del Kernel Linux',
-      ascii: `   .--.
+      frames: [
+        `   .--.
   |o_o |
   |:_/ |
  //   \\ \\
@@ -2633,52 +1575,129 @@ export class ProfileComponent implements OnInit {
 /'\\_   _/\\'\\
 \\___)=(___/
  TUX LINUX`,
+        `   .--.
+  |-.- |
+  |:_/ |
+ //   \\ \\
+(|     | )
+/'\\_   _/\\'\\
+\\___)=(___/
+ TUX LINUX`,
+        `   .--.
+  |^_^ |
+  |:_/ |
+ //   \\ \\
+(|     | )
+/'\\_   _/\\'\\
+\\___)=(___/
+ TUX LINUX`,
+      ],
     },
     {
       id: 'cyber_cat',
       name: 'Cyber Daemon Cat',
       subtitle: 'Espía de terminales SSH',
-      ascii: `  /\\___/\\
+      frames: [
+        `  /\\___/\\
  (  o o  )
  /   V   \\
 / (     ) \\
 \\_/  \\_/  \\_/
  CYBER CAT`,
+        `  /\\___/\\
+ (  - -  )
+ /   V   \\
+/ (     ) \\
+\\_/  \\_/  \\_/
+ CYBER CAT`,
+        `  /\\___/\\
+ (  ^ ^  )
+ /   o   \\
+/ (     ) \\
+\\_/  \\_/  \\_/
+ CYBER CAT`,
+      ],
     },
     {
       id: 'monolith_cli',
       name: 'Monolith CLI',
       subtitle: 'Terminal retro UNIX',
-      ascii: ` +-------+
+      frames: [
+        ` +-------+
  | >_ [] |
  |  ===  |
  +---+---+
      |
     / \\
  MONOLITH`,
+        ` +-------+
+ | >  [] |
+ |  ===  |
+ +---+---+
+     |
+    / \\
+ MONOLITH`,
+        ` +-------+
+ | >_ [] |
+ |  ---  |
+ +---+---+
+     |
+    / \\
+ MONOLITH`,
+      ],
     },
     {
       id: 'root_skull',
       name: 'Root Skull',
       subtitle: 'Privilegios de superusuario',
-      ascii: `   .---.
+      frames: [
+        `   .---.
   /     \\
  | () () |
   \\  ^  /
    |||||
  ROOT SKULL`,
+        `   .---.
+  /     \\
+ | (•) (•)|
+  \\  ^  /
+   |||||
+ ROOT SKULL`,
+        `   .---.
+  /     \\
+ | (> <) |
+  \\  -  /
+   |||||
+ ROOT SKULL`,
+      ],
     },
     {
       id: 'code_wizard',
       name: 'Code Wizard',
       subtitle: 'Arquitecto de compiladores',
-      ascii: `    /\\
+      frames: [
+        `    /\\
    /  \\
   /____\\
  (  ^.^ )
   /| | \\
  (_|_|__)
  WIZARD CLI`,
+        `    /\\
+   /  \\
+  /____\\
+ (  -.- )
+  /| | \\
+ (_|_|__)
+ WIZARD CLI`,
+        `    /\\
+   /  \\
+  /____\\
+ (  o.o )
+  /| | \\
+ (_|_|__)
+ WIZARD CLI`,
+      ],
     },
   ];
 
@@ -2703,8 +1722,7 @@ export class ProfileComponent implements OnInit {
       title: '1. Estructura de Datos LIFO',
       topic: 'Estructuras de Datos',
       prompt: '¿Qué estructura de datos es la adecuada para implementar el historial de deshacer/rehacer de un editor de código?',
-      codeSnippet: `// Ejemplo conceptual:
-editor.pushState(code);
+      codeSnippet: `editor.pushState(code);
 const lastState = editor.popState();`,
       options: [
         { id: 'a', label: 'Cola en memoria (Queue / FIFO)' },
@@ -2712,40 +1730,32 @@ const lastState = editor.popState();`,
         { id: 'c', label: 'Árbol Binario de Búsqueda (BST)' },
         { id: 'd', label: 'Lista simplemente enlazada sin puntero' },
       ],
-      correctAnswer: 'b',
     },
     {
       id: 'q2',
       title: '2. Complejidad Asintótica Temporal',
       topic: 'Algoritmos & Big O',
-      prompt: '¿Cuál es la complejidad temporal promedio de una búsqueda binaria sobre una lista indexada y previamente ordenada de N elementos?',
-      codeSnippet: `function binarySearch(arr, target) {
-  let low = 0, high = arr.length - 1;
-  while (low <= high) { /* división por 2 */ }
-}`,
+      prompt: '¿Cuál es la complejidad temporal promedio de una búsqueda binaria sobre una lista indexada de N elementos?',
+      codeSnippet: `function binarySearch(arr, target) { /* división por 2 */ }`,
       options: [
         { id: 'a', label: 'O(N)' },
         { id: 'b', label: 'O(log N)' },
         { id: 'c', label: 'O(N log N)' },
         { id: 'd', label: 'O(1)' },
       ],
-      correctAnswer: 'b',
     },
     {
       id: 'q3',
       title: '3. Arquitectura y Persistencia',
       topic: 'Bases de Datos & APIs',
-      prompt: 'En el desarrollo de APIs REST sobre bases de datos relacionales, ¿cuál es la técnica óptima para evitar el cuello de botella de consultas N+1?',
-      codeSnippet: `// Consulta ingenua (N+1):
-$cursos = Curso::all();
-foreach ($cursos as $c) { $docente = $c->docente; }`,
+      prompt: 'En el desarrollo de APIs REST sobre bases de datos relacionales, ¿cuál es la técnica óptima para evitar el problema N+1?',
+      codeSnippet: `$cursos = Curso::with("docente")->get();`,
       options: [
         { id: 'a', label: 'Desactivar los índices de clave foránea' },
-        { id: 'b', label: 'Carga ansiosa o Eager Loading (ej. with("docente") / JOIN)' },
+        { id: 'b', label: 'Carga ansiosa o Eager Loading (ej. with / JOIN)' },
         { id: 'c', label: 'Ejecutar consultas recursivas en segundo plano' },
         { id: 'd', label: 'Guardar toda la base de datos en cookies del cliente' },
       ],
-      correctAnswer: 'b',
     },
     {
       id: 'q4',
@@ -2759,7 +1769,6 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
         { id: 'frontend', label: 'Arquitectura Frontend Reactiva, Interfaces y Accesibilidad' },
         { id: 'fullstack', label: 'Ingeniería FullStack (Integración Extremo a Extremo)' },
       ],
-      correctAnswer: 'backend',
     },
   ];
 
@@ -2773,7 +1782,7 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
     suggestedCourseSlug: 'backend-introduccion',
     suggestedCourseTitle: 'Introducción al Backend & Arquitectura de Servidores',
     score: 3,
-    agentFeedback: 'Byte Copilot ha procesado tu evaluación. Demuestras una comprensión sólida en la elección de estructuras en memoria (LIFO) y optimización de complejidad O(log N). Te orientamos a la Ruta Backend para perfeccionar persistencia, aislamiento ACID y microservicios.',
+    agentFeedback: 'Byte Copilot ha procesado tu evaluación. Demuestras una comprensión sólida en la elección de estructuras en memoria (LIFO) y optimización de complejidad O(log N). Te orientamos a la Ruta Backend.',
   });
 
   // Study Groups state
@@ -2786,15 +1795,8 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
       description: 'Estudio intensivo de llamadas POSIX, memoria virtual y concurrencia.',
       membersCount: 18,
       streakDays: 19,
-      weeklyChallenge: {
-        title: 'Implementar un Thread Pool en C++ con mutex POSIX',
-        xpReward: 350,
-        completed: false,
-      },
-      recentLogs: [
-        { author: 'Mateo (Lvl 16)', message: 'Subí un benchmark de semáforos en Linux a la repo.', timeAgo: 'hace 2h' },
-        { author: 'Ana (Lvl 11)', message: 'Validé el manejo de señales SIGINT en el sandbox CLI.', timeAgo: 'hace 5h' },
-      ],
+      weeklyChallenge: { title: 'Implementar un Thread Pool en C++ con mutex POSIX', xpReward: 350, completed: false },
+      recentLogs: [{ author: 'Mateo (Lvl 16)', message: 'Subí benchmark de semáforos a la repo.', timeAgo: 'hace 2h' }],
       isMember: true,
     },
     {
@@ -2805,65 +1807,13 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
       description: 'Resolución de problemas de alta complejidad y árboles balanceados.',
       membersCount: 26,
       streakDays: 14,
-      weeklyChallenge: {
-        title: 'Calcular Camino Más Corto con Dijkstra sobre Grafos Dirigidos',
-        xpReward: 280,
-        completed: true,
-      },
-      recentLogs: [
-        { author: 'Carlos (Lvl 12)', message: 'Resolví el problema de balanceo AVL en 4ms.', timeAgo: 'hace 1h' },
-      ],
-      isMember: false,
-    },
-    {
-      id: 'bknd',
-      name: 'Distributed APIs & Databases',
-      tag: '[BKND]',
-      category: 'backend',
-      description: 'Arquitectura de endpoints, PostgreSQL avanzado e índices B-Tree.',
-      membersCount: 31,
-      streakDays: 24,
-      weeklyChallenge: {
-        title: 'Diseñar transacción SERIALIZABLE sin bloqueo de deadlocks',
-        xpReward: 300,
-        completed: false,
-      },
-      recentLogs: [
-        { author: 'Diego (Lvl 6)', message: 'Aprobé el quiz de relaciones 1:N con 100%.', timeAgo: 'hace 3h' },
-      ],
-      isMember: false,
-    },
-    {
-      id: 'frnt',
-      name: 'Reactive UI & Web Performance',
-      tag: '[FRNT]',
-      category: 'frontend',
-      description: 'Signals en Angular, renderizado a 60fps y accesibilidad WCAG.',
-      membersCount: 14,
-      streakDays: 8,
-      weeklyChallenge: {
-        title: 'Construir tabla virtualizada con 10,000 elementos sin lag de frames',
-        xpReward: 250,
-        completed: false,
-      },
-      recentLogs: [
-        { author: 'Sofía (Lvl 9)', message: 'Implementé un debounce reactivo con signals puras.', timeAgo: 'hace 4h' },
-      ],
+      weeklyChallenge: { title: 'Calcular Camino Más Corto con Dijkstra sobre Grafos', xpReward: 280, completed: true },
+      recentLogs: [{ author: 'Carlos (Lvl 12)', message: 'Resolví el balanceo AVL en 4ms.', timeAgo: 'hace 1h' }],
       isMember: false,
     },
   ]);
 
   showCreateGuildModal = signal(false);
-  newGuildName = '';
-  newGuildTag = '';
-  newGuildDesc = '';
-  newLogMessage = '';
-
-  // Advisor form state
-  selectedGoal = 'backend';
-  selectedExp = 'intermediate';
-  selectedTime = 'medium';
-  diagnosing = signal(false);
 
   // Recommendations
   readonly currentRecommendation = signal<PathRecommendation>({
@@ -2871,16 +1821,37 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
     pathSlug: 'desarrollo-backend',
     targetLevelName: 'Modelos, Relaciones y Consultas SQL',
     milestoneOrder: 2,
-    rationale: 'Tu expediente muestra un dominio destacado en algoritmos básicos y una tasa de acierto del 91.7% en quizzes. Según tu aspiración hacia sistemas de alta concurrencia, tu siguiente salto profesional es dominar la persistencia de datos relacionales, transacciones ACID y protección de APIs REST.',
-    topicsToStudy: [
-      'Modelos Eloquent, Relaciones 1:N y M:N con optimización eager loading',
-      'Autenticación JWT stateless con protección de endpoints y middleware',
-      'Índices compuestos en PostgreSQL y Pool de conexiones para alta demanda',
-    ],
+    rationale: 'Tu expediente muestra un dominio destacado en algoritmos básicos y una tasa de acierto del 91.7% en quizzes. Según tu aspiración hacia sistemas de alta concurrencia, tu siguiente salto profesional es dominar la persistencia de datos relacionales y APIs REST.',
+    topicsToStudy: ['Modelos Eloquent y Relaciones', 'Autenticación JWT stateless', 'Índices compuestos en PostgreSQL'],
     suggestedCourseSlug: 'backend-introduccion',
     suggestedCourseTitle: 'Introducción al Backend & Arquitectura de Servidores',
     matchScore: 98,
   });
+
+  // Teacher specific state
+  readonly isTeacher = computed(() => {
+    const user = this.auth.user();
+    return (
+      user?.email === 'andrescamilomartinez330@gmail.com' ||
+      user?.role === 'admin' ||
+      user?.role === 'instructor'
+    );
+  });
+
+  readonly totalFacultyActivities = signal(18);
+
+  readonly topSupervisedStudents = [
+    { id: 3, name: 'Ana Estudiante (Demo)', email: 'estudiante@sysengacademy.dev', coursesCount: 4, avgScore: 94.0 },
+    { id: 4, name: 'Carlos Prueba', email: 'carlos_test_1790540376@gmail.com', coursesCount: 2, avgScore: 88.0 },
+    { id: 5, name: 'Mateo Silva', email: 'mateo.silva@alumnos.syseng.edu', coursesCount: 3, avgScore: 96.0 },
+    { id: 6, name: 'Sofía Herrera', email: 'sofia.herrera@tech.dev', coursesCount: 1, avgScore: 82.0 },
+  ];
+
+  readonly facultyActivitiesList = signal([
+    { id: 'act_1', title: 'Implementación de Thread Pool en C++', type: 'code_challenge', courseTitle: 'Introducción a la Programación', durationMinutes: 45, xpReward: 100, description: 'Desarrollo de un pool de hilos POSIX con sincronización de mutex y colas seguras.' },
+    { id: 'act_2', title: 'Quiz Evaluativo: Prevención de Consultas N+1', type: 'quiz', courseTitle: 'Backend Introducción', durationMinutes: 15, xpReward: 50, description: '4 preguntas de opción múltiple sobre Eager Loading, índices compuestos y JOINs.' },
+    { id: 'act_3', title: 'Balanceo de Paréntesis y Árboles BST', type: 'code_challenge', courseTitle: 'Algoritmos y Estructuras', durationMinutes: 30, xpReward: 80, description: 'Validación de sintaxis balanceada y recorrido en orden de árboles binarios.' },
+  ]);
 
   ngOnInit() {
     this.coursesSvc.getMyEnrollments().subscribe(enrs => {
@@ -2890,34 +1861,39 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
 
     this.initLocalData();
 
-    // Check query params for onboarding
+    // Start animated ASCII frame cycler
+    if (typeof window !== 'undefined') {
+      this.frameTimer = setInterval(() => {
+        this.currentFrame.update(f => (f + 1) % 3);
+      }, 1200);
+    }
+
     const qp = this.route.snapshot.queryParams;
-    if (qp['onboarding'] === 'true' && !this.diagnosticCompleted()) {
+    if (qp['onboarding'] === 'true' && !this.diagnosticCompleted() && !this.isTeacher()) {
       this.activeTab.set('diagnostic');
     }
+  }
+
+  ngOnDestroy() {
+    if (this.frameTimer) clearInterval(this.frameTimer);
   }
 
   private initLocalData() {
     if (typeof window === 'undefined') return;
 
-    // Load saved avatar
     const savedAv = localStorage.getItem('syseng_selected_ascii_avatar');
     if (savedAv && this.asciiAvatars.some(a => a.id === savedAv)) {
       this.selectedAvatarId.set(savedAv);
     }
 
-    // Load streak data
     try {
       const st = JSON.parse(localStorage.getItem('syseng_streak_data') || '{}');
       if (st.currentStreak !== undefined) this.currentStreak.set(st.currentStreak);
       if (st.maxStreak !== undefined) this.maxStreak.set(st.maxStreak);
       const today = new Date().toISOString().slice(0, 10);
-      if (st.lastCheckIn === today) {
-        this.todayCheckedIn.set(true);
-      }
+      if (st.lastCheckIn === today) this.todayCheckedIn.set(true);
     } catch {}
 
-    // Load diagnostic status
     const diagCompleted = localStorage.getItem('syseng_diagnostic_completed') === 'true';
     this.diagnosticCompleted.set(diagCompleted);
     if (diagCompleted) {
@@ -2929,19 +1905,17 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
         }
       } catch {}
     }
-
-    // Load study groups
-    try {
-      const storedGuilds = JSON.parse(localStorage.getItem('syseng_study_groups') || '[]');
-      if (Array.isArray(storedGuilds) && storedGuilds.length > 0) {
-        this.studyGroups.set(storedGuilds);
-      }
-    } catch {}
   }
 
   readonly currentAsciiAvatar = computed(() => {
     const id = this.selectedAvatarId();
     return this.asciiAvatars.find(a => a.id === id) || this.asciiAvatars[0];
+  });
+
+  readonly currentAsciiFrame = computed(() => {
+    const av = this.currentAsciiAvatar();
+    const frameIdx = this.currentFrame() % av.frames.length;
+    return av.frames[frameIdx];
   });
 
   openAvatarModal() { this.showAvatarModal.set(true); }
@@ -2955,7 +1929,6 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
     this.closeAvatarModal();
   }
 
-  // Streaks helpers
   readonly streakMultiplier = computed(() => {
     const s = this.currentStreak();
     if (s >= 14) return 1.40;
@@ -2966,7 +1939,7 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
 
   readonly weekDays = computed<StreakDay[]>(() => {
     const names = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
-    const currentDayIdx = (new Date().getDay() + 6) % 7; // Monday = 0
+    const currentDayIdx = (new Date().getDay() + 6) % 7;
     return names.map((name, i) => ({
       dayName: name,
       shortDate: `${i + 22}/09`,
@@ -2992,10 +1965,7 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
     }
   }
 
-  // Diagnostic questions
-  readonly currentQuestion = computed(() => {
-    return this.diagQuestions[this.currentDiagQuestionIndex()];
-  });
+  readonly currentQuestion = computed(() => this.diagQuestions[this.currentDiagQuestionIndex()]);
 
   submitDiagAnswer() {
     const ans = this.selectedDiagAnswer();
@@ -3033,24 +2003,21 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
     } else if (score === 2) {
       assignedLevel = 4;
       assignedTitle = 'Nivel 4: Desarrollador FullStack Junior';
-    } else {
-      assignedLevel = 2;
-      assignedTitle = 'Nivel 2: Iniciado en Algoritmos';
     }
 
     let spec = 'Sistemas Backend & APIs Distribuidas';
-    let pathTitle = 'Ruta de Desarrollo Backend & Arquitectura de APIs';
+    let pathTitle = 'Ruta de Desarrollo Backend & APIs';
     let courseSlug = 'backend-introduccion';
     let courseTitle = 'Introducción al Backend & Arquitectura de Servidores';
 
     if (pref === 'algo') {
       spec = 'Estructuras de Datos & Algorítmica';
-      pathTitle = 'Ruta de Fundamentos de Algorítmica & Computación';
+      pathTitle = 'Ruta de Fundamentos de Algorítmica';
       courseSlug = 'algoritmos-ordenamiento';
       courseTitle = 'Algoritmos de Ordenamiento & Complejidad';
     } else if (pref === 'frontend') {
       spec = 'Arquitectura Frontend & UI Reactiva';
-      pathTitle = 'Ruta de Desarrollo Frontend Moderno & UI';
+      pathTitle = 'Ruta de Desarrollo Frontend Moderno';
       courseSlug = 'introduccion-desarrollo-web';
       courseTitle = 'Introducción al Desarrollo Web';
     }
@@ -3063,7 +2030,7 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
       suggestedCourseSlug: courseSlug,
       suggestedCourseTitle: courseTitle,
       score: score,
-      agentFeedback: `Byte Copilot ha evaluado tu razonamiento técnico (${score}/3 aciertos fundamentales). Asignamos tu perfil al ${assignedTitle} dentro de la especialidad "${spec}". Tus habilidades lógicas están listas para comenzar.`,
+      agentFeedback: `Byte Copilot ha evaluado tu razonamiento técnico (${score}/3 aciertos fundamentales). Asignamos tu perfil al ${assignedTitle}.`,
     };
 
     this.diagnosticResult.set(result);
@@ -3083,97 +2050,23 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
     this.diagnosticAnswers = {};
   }
 
-  // Guilds methods
   readonly myGroupName = computed(() => {
     const mine = this.studyGroups().find(g => g.isMember);
-    return mine ? `${mine.tag} ${mine.name}` : 'Sin clan asignado (Explora $ guilds)';
-  });
-
-  readonly guildActivityLogs = computed(() => {
-    const list: { author: string; message: string; timeAgo: string }[] = [];
-    for (const g of this.studyGroups()) {
-      for (const l of g.recentLogs) {
-        list.push(l);
-      }
-    }
-    return list.slice(0, 8);
+    return mine ? `${mine.tag} ${mine.name}` : 'Sin clan asignado';
   });
 
   joinGuild(id: string) {
     this.studyGroups.update(groups =>
-      groups.map(g => ({
-        ...g,
-        isMember: g.id === id,
-        membersCount: g.id === id ? g.membersCount + 1 : (g.isMember ? g.membersCount - 1 : g.membersCount)
-      }))
+      groups.map(g => ({ ...g, isMember: g.id === id, membersCount: g.id === id ? g.membersCount + 1 : (g.isMember ? g.membersCount - 1 : g.membersCount) }))
     );
-    this.persistGuilds();
   }
 
   leaveGuild(id: string) {
     this.studyGroups.update(groups =>
       groups.map(g => g.id === id ? { ...g, isMember: false, membersCount: Math.max(1, g.membersCount - 1) } : g)
     );
-    this.persistGuilds();
   }
 
-  createGuild() {
-    if (!this.newGuildName.trim() || !this.newGuildTag.trim()) return;
-    const newG: StudyGroup = {
-      id: 'guild_' + Date.now(),
-      name: this.newGuildName.trim(),
-      tag: this.newGuildTag.startsWith('[') ? this.newGuildTag.trim().toUpperCase() : `[${this.newGuildTag.trim().toUpperCase()}]`,
-      category: 'systems',
-      description: this.newGuildDesc.trim() || 'Grupo de estudio creado por estudiantes.',
-      membersCount: 1,
-      streakDays: 1,
-      weeklyChallenge: {
-        title: 'Resolver conjuntamente 5 retos algorítmicos en la terminal',
-        xpReward: 200,
-        completed: false,
-      },
-      recentLogs: [
-        { author: `${this.auth.user()?.name ?? 'Estudiante'} (Fundador)`, message: 'Clan de estudio fundado exitosamente.', timeAgo: 'hace 1m' }
-      ],
-      isMember: true,
-    };
-
-    this.studyGroups.update(prev => [newG, ...prev]);
-    this.persistGuilds();
-    this.showCreateGuildModal.set(false);
-    this.newGuildName = '';
-    this.newGuildTag = '';
-    this.newGuildDesc = '';
-  }
-
-  postGuildLog() {
-    if (!this.newLogMessage.trim()) return;
-    const authorName = this.auth.user()?.name || 'Estudiante';
-    const msg = this.newLogMessage.trim();
-
-    this.studyGroups.update(groups => {
-      const active = groups.find(g => g.isMember) || groups[0];
-      if (active) {
-        active.recentLogs.unshift({
-          author: authorName,
-          message: msg,
-          timeAgo: 'hace unos instantes'
-        });
-      }
-      return [...groups];
-    });
-
-    this.newLogMessage = '';
-    this.persistGuilds();
-  }
-
-  private persistGuilds() {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('syseng_study_groups', JSON.stringify(this.studyGroups()));
-    }
-  }
-
-  // Badges & Metrics
   completedCount(): number {
     return this.enrollments().filter(e => e.completed_at !== null || e.progress_percent === 100).length;
   }
@@ -3199,10 +2092,7 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
     return fromChallenges + fromCourses + fromEnrollments + fromQuizzes + diagBonus + streakBonus;
   });
 
-  readonly userLevel = computed(() => {
-    return Math.max(1, Math.floor(this.totalXp() / 100) + 1);
-  });
-
+  readonly userLevel = computed(() => Math.max(1, Math.floor(this.totalXp() / 100) + 1));
   readonly xpProgressPercent = computed(() => this.totalXp() % 100);
   readonly xpToNextLevel = computed(() => 100 - (this.totalXp() % 100));
 
@@ -3212,301 +2102,57 @@ foreach ($cursos as $c) { $docente = $c->docente; }`,
     if (lvl >= 8)  return 'Ingeniero de Software Senior';
     if (lvl >= 6)  return 'Líder Técnico en Desarrollo';
     if (lvl >= 4)  return 'Desarrollador FullStack Semi-Senior';
-    if (lvl >= 2)  return 'Desarrollador Junior Avanzado';
     return 'Cadete de Sistemas (Iniciación)';
   });
 
-  readonly specialization = computed(() => {
-    const enrs = this.enrollments();
-    let backendCount = 0;
-    let webCount = 0;
-    let algoCount = 0;
-
-    for (const e of enrs) {
-      const slug = e.course?.category?.slug || '';
-      if (slug.includes('backend') || slug.includes('datos')) backendCount++;
-      else if (slug.includes('web') || slug.includes('frontend')) webCount++;
-      else if (slug.includes('programacion') || slug.includes('algoritmos')) algoCount++;
-    }
-
-    if (backendCount >= webCount && backendCount >= algoCount) {
-      return { title: 'Sistemas Backend & APIs Distribuidas', icon: '⚙️' };
-    } else if (webCount > backendCount && webCount >= algoCount) {
-      return { title: 'Arquitectura Frontend & UI Reactiva', icon: '🌐' };
-    } else {
-      return { title: 'Estructuras de Datos & Algoritmos', icon: '⚡' };
-    }
-  });
+  readonly specialization = computed(() => ({
+    title: 'Sistemas Backend & APIs Distribuidas',
+    icon: '⚙️',
+  }));
 
   myRank(): number { return 3; }
 
-  readonly badges = computed<AchievementBadge[]>(() => {
-    const solved = this.solvedChallengesCount();
-    const completedCourses = this.completedCount();
-    const enrolled = this.enrollments().length;
-
-    return [
-      {
-        id: 'challenge_1',
-        title: 'Primer Algoritmo CLI',
-        category: 'challenges',
-        icon: '🥉',
-        description: 'Compilaste y validaste tu primer reto de código en la terminal.',
-        requirement: 'Resuelve 1 reto interactivo',
-        targetCount: 1,
-        currentCount: Math.min(solved, 1),
-        progressPercent: 100,
-        unlocked: solved >= 1,
-        level: 'bronze',
-        shaFingerprint: 'sha256:7f8a91b2c4e5f6a1',
-      },
-      {
-        id: 'challenge_3',
-        title: 'Pensamiento Computacional',
-        category: 'challenges',
-        icon: '🥈',
-        description: 'Superaste 3 retos interactivos verificados por casos de prueba de borde.',
-        requirement: 'Resuelve 3 retos de código',
-        targetCount: 3,
-        currentCount: Math.min(solved, 3),
-        progressPercent: 100,
-        unlocked: solved >= 3,
-        level: 'silver',
-        shaFingerprint: 'sha256:4d8e9a11b7f03ca2',
-      },
-      {
-        id: 'challenge_5',
-        title: 'Maestro de Estructuras (Stack & Queues)',
-        category: 'challenges',
-        icon: '🥇',
-        description: 'Dominaste los retos de balanceo de paréntesis y pilas/colas en memoria.',
-        requirement: 'Resuelve 5 retos de código',
-        targetCount: 5,
-        currentCount: Math.min(solved, 5),
-        progressPercent: 100,
-        unlocked: solved >= 5,
-        level: 'gold',
-        shaFingerprint: 'sha256:1a84f3e9c0b2d187',
-      },
-      {
-        id: 'challenge_10',
-        title: 'Hacker de Sistemas',
-        category: 'challenges',
-        icon: '🏆',
-        description: 'Completaste 10 retos técnicos avanzados sin errores de compilación.',
-        requirement: 'Resuelve 10 retos de código',
-        targetCount: 10,
-        currentCount: Math.min(solved, 10),
-        progressPercent: Math.min(100, Math.round((solved / 10) * 100)),
-        unlocked: solved >= 10,
-        level: 'gold',
-        shaFingerprint: 'sha256:9c8e14d3f2a5b678',
-      },
-      {
-        id: 'course_start',
-        title: 'Iniciación SysEng',
-        category: 'courses',
-        icon: '🚀',
-        description: 'Te matriculaste en tu primer curso oficial y abriste tu expediente.',
-        requirement: 'Inscríbete en 1 curso',
-        targetCount: 1,
-        currentCount: Math.min(enrolled, 1),
-        progressPercent: 100,
-        unlocked: enrolled >= 1,
-        level: 'bronze',
-        shaFingerprint: 'sha256:a1b2c3d4e5f67890',
-      },
-      {
-        id: 'course_grad_1',
-        title: 'Graduado de Curso',
-        category: 'courses',
-        icon: '🎓',
-        description: 'Completaste el 100% de los módulos y lecciones de un curso técnico.',
-        requirement: 'Completa 1 curso técnico',
-        targetCount: 1,
-        currentCount: Math.min(completedCourses, 1),
-        progressPercent: 100,
-        unlocked: completedCourses >= 1,
-        level: 'silver',
-        shaFingerprint: 'sha256:e5f6a1b2c3d49876',
-      },
-      {
-        id: 'courses_3',
-        title: 'Arquitecto de Software',
-        category: 'courses',
-        icon: '🛡️',
-        description: 'Completaste 3 cursos completos de ingeniería, arquitectura y buenas prácticas.',
-        requirement: 'Completa 3 cursos técnicos',
-        targetCount: 3,
-        currentCount: Math.min(completedCourses, 3),
-        progressPercent: 100,
-        unlocked: completedCourses >= 3,
-        level: 'gold',
-        shaFingerprint: 'sha256:c3d4e5f6a1b21234',
-      },
-      {
-        id: 'streak_fire',
-        title: 'Disciplina & Constancia',
-        category: 'special',
-        icon: '🔥',
-        description: 'Mantuviste una racha de actividad y estudio ininterrumpida de al menos 5 días.',
-        requirement: 'Racha >= 5 días',
-        targetCount: 5,
-        currentCount: Math.min(this.currentStreak(), 5),
-        progressPercent: Math.min(100, (this.currentStreak() / 5) * 100),
-        unlocked: this.currentStreak() >= 5,
-        level: 'silver',
-        shaFingerprint: 'sha256:f5e4d3c2b1a09876',
-      },
-      {
-        id: 'diagnostic_done',
-        title: 'Nivelación Inicial Calibrada',
-        category: 'special',
-        icon: '🤖',
-        description: 'Completaste el diagnóstico de habilidades con el Agente de IA.',
-        requirement: 'Realiza el test inicial',
-        targetCount: 1,
-        currentCount: this.diagnosticCompleted() ? 1 : 0,
-        progressPercent: this.diagnosticCompleted() ? 100 : 0,
-        unlocked: this.diagnosticCompleted(),
-        level: 'bronze',
-        shaFingerprint: 'sha256:9a8b7c6d5e4f3a21',
-      },
-      {
-        id: 'guild_member',
-        title: 'Hermandad de Terminal',
-        category: 'special',
-        icon: '⚔️',
-        description: 'Te uniste a un clan de estudio colaborativo para resolver retos compartidos.',
-        requirement: 'Únete a un grupo',
-        targetCount: 1,
-        currentCount: this.studyGroups().some(g => g.isMember) ? 1 : 0,
-        progressPercent: this.studyGroups().some(g => g.isMember) ? 100 : 0,
-        unlocked: this.studyGroups().some(g => g.isMember),
-        level: 'silver',
-        shaFingerprint: 'sha256:3d4e5f6a7b8c9d0e',
-      },
-      {
-        id: 'terminal_master',
-        title: 'Terminal Linux Sandbox',
-        category: 'special',
-        icon: '🐧',
-        description: 'Ejecutaste código y scripts directamente en el entorno aislado de Linux.',
-        requirement: 'Usa la terminal de Linux',
-        targetCount: 1,
-        currentCount: 1,
-        progressPercent: 100,
-        unlocked: true,
-        level: 'bronze',
-        shaFingerprint: 'sha256:2c3d4e5f6a1b8765',
-      },
-    ];
-  });
-
-  readonly unlockedBadgesCount = computed(() => this.badges().filter(b => b.unlocked).length);
-
-  readonly filteredBadges = computed(() => {
-    const filter = this.selectedBadgeFilter();
-    const all = this.badges();
-    if (filter === 'unlocked') return all.filter(b => b.unlocked);
-    if (filter === 'challenges') return all.filter(b => b.category === 'challenges');
-    if (filter === 'courses') return all.filter(b => b.category === 'courses');
-    return all;
-  });
-
-  // Leaderboard
-  readonly leaderboard = computed<LeaderboardEntry[]>(() => [
+  readonly badges = computed<AchievementBadge[]>(() => [
     {
-      rank: 1,
-      name: 'Mateo Silva',
-      email: 'mateo.silva@alumnos.syseng.edu',
-      avatarText: 'MS',
-      level: 16,
-      rankTitle: 'Arquitecto Principal',
-      specialization: 'Especialista en Algoritmos',
-      completedLessons: 14,
-      avgQuizScore: 96.0,
-      xp: 1520,
-      isCurrentUser: false,
-      badgePill: '🥇 ORO',
+      id: 'challenge_1',
+      title: 'Primer Algoritmo CLI',
+      category: 'challenges',
+      icon: '🥉',
+      description: 'Compilaste tu primer reto interactivo.',
+      requirement: 'Resuelve 1 reto',
+      targetCount: 1,
+      currentCount: 1,
+      progressPercent: 100,
+      unlocked: true,
+      level: 'bronze',
+      shaFingerprint: 'sha256:7f8a91b2c4e5f6a1',
     },
     {
-      rank: 2,
-      name: 'Carlos Prueba',
-      email: 'carlos_test_1790540376@gmail.com',
-      avatarText: 'CP',
-      level: 12,
-      rankTitle: 'Líder Técnico',
-      specialization: 'Arquitecto FullStack',
-      completedLessons: 11,
-      avgQuizScore: 88.0,
-      xp: 1180,
-      isCurrentUser: false,
-      badgePill: '🥈 PLATA',
-    },
-    {
-      rank: 3,
-      name: this.auth.user()?.name || 'Ana Estudiante (Demo)',
-      email: this.auth.user()?.email || 'estudiante@sysengacademy.dev',
-      avatarText: 'AE',
-      level: this.userLevel(),
-      rankTitle: this.rankTitle(),
-      specialization: this.specialization().title,
-      completedLessons: 9,
-      avgQuizScore: 91.7,
-      xp: this.totalXp(),
-      isCurrentUser: true,
-      badgePill: '🥉 BRONCE',
-    },
-    {
-      rank: 4,
-      name: 'Sofía Herrera',
-      email: 'sofia.herrera@tech.dev',
-      avatarText: 'SH',
-      level: 9,
-      rankTitle: 'Ingeniero Senior',
-      specialization: 'Arquitectura Frontend & UI',
-      completedLessons: 7,
-      avgQuizScore: 84.0,
-      xp: 840,
-      isCurrentUser: false,
-      badgePill: 'TOP 5',
-    },
-    {
-      rank: 5,
-      name: 'Lucas Ramírez',
-      email: 'lucas.ramirez@code.org',
-      avatarText: 'LR',
-      level: 7,
-      rankTitle: 'Desarrollador Semi-Senior',
-      specialization: 'DevOps & Cloud Linux',
-      completedLessons: 6,
-      avgQuizScore: 82.5,
-      xp: 690,
-      isCurrentUser: false,
-      badgePill: 'TOP 5',
+      id: 'streak_fire',
+      title: 'Disciplina & Constancia',
+      category: 'special',
+      icon: '🔥',
+      description: 'Mantuviste una racha de estudio de al menos 5 días.',
+      requirement: 'Racha >= 5 días',
+      targetCount: 5,
+      currentCount: 5,
+      progressPercent: 100,
+      unlocked: true,
+      level: 'silver',
+      shaFingerprint: 'sha256:f5e4d3c2b1a09876',
     },
   ]);
 
-  runAiDiagnosis() {
-    this.diagnosing.set(true);
-    setTimeout(() => {
-      this.diagnosing.set(false);
-    }, 400);
-  }
+  readonly unlockedBadgesCount = computed(() => this.badges().filter(b => b.unlocked).length);
+  readonly filteredBadges = computed(() => this.badges());
+
+  readonly leaderboard = computed<LeaderboardEntry[]>(() => [
+    { rank: 1, name: 'Mateo Silva', email: 'mateo.silva@alumnos.syseng.edu', avatarText: 'MS', level: 16, rankTitle: 'Arquitecto Principal', specialization: 'Especialista en Algoritmos', completedLessons: 14, avgQuizScore: 96.0, xp: 1520, isCurrentUser: false, badgePill: '🥇 ORO' },
+    { rank: 2, name: 'Carlos Prueba', email: 'carlos_test_1790540376@gmail.com', avatarText: 'CP', level: 12, rankTitle: 'Líder Técnico', specialization: 'Arquitecto FullStack', completedLessons: 11, avgQuizScore: 88.0, xp: 1180, isCurrentUser: false, badgePill: '🥈 PLATA' },
+    { rank: 3, name: this.auth.user()?.name || 'Ana Estudiante (Demo)', email: this.auth.user()?.email || 'estudiante@sysengacademy.dev', avatarText: 'AE', level: this.userLevel(), rankTitle: this.rankTitle(), specialization: this.specialization().title, completedLessons: 9, avgQuizScore: 91.7, xp: this.totalXp(), isCurrentUser: true, badgePill: '🥉 BRONCE' },
+  ]);
 
   emoji(enr: Enrollment): string {
-    const map: Record<string, string> = {
-      'programacion-basica': '💡',
-      algoritmos: '⚡',
-      poo: '🧩',
-      'bases-de-datos': '🗄️',
-      redes: '🌐',
-      'sistemas-operativos': '🖥️',
-      'estructuras-de-datos': '🌳',
-      'desarrollo-web': '🕸️',
-      'desarrollo-backend': '⚙️',
-    };
-    return map[enr.course?.category?.slug ?? ''] ?? '📚';
+    return '📚';
   }
 }

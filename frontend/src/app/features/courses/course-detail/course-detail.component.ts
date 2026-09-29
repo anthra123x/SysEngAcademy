@@ -184,12 +184,16 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                       @if (isModuleOpen(mod.id)) {
                         <div class="syllabus-lessons">
                           @for (lesson of mod.lessons ?? []; track lesson.id; let lIdx = $index) {
-                            <a [routerLink]="['/cursos', course()!.slug, 'leccion', lesson.slug]"
+                            <a [routerLink]="auth.isAuthenticated() ? ['/cursos', course()!.slug, 'leccion', lesson.slug] : null"
+                               (click)="onLessonClick($event, lesson)"
                                class="syllabus-lesson"
-                               [class.is-completed]="lesson.completed">
+                               [class.is-completed]="lesson.completed"
+                               [class.is-locked-guest]="!auth.isAuthenticated()">
                               <div class="sl-left">
                                 <span class="sl-num" [class.is-completed]="lesson.completed">
-                                  @if (lesson.completed) {
+                                  @if (!auth.isAuthenticated()) {
+                                    🔒
+                                  } @else if (lesson.completed) {
                                     ✓
                                   } @else {
                                     {{ lIdx + 1 }}
@@ -201,7 +205,9 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                                     <span class="sl-type-badge" [class]="'type--' + lesson.type">
                                       {{ lessonTypeBadge(lesson.type) }}
                                     </span>
-                                    @if (lesson.is_preview) {
+                                    @if (!auth.isAuthenticated()) {
+                                      <span class="sl-free-tag sl-lock-tag">Requiere Cuenta</span>
+                                    } @else if (lesson.is_preview) {
                                       <span class="sl-free-tag">Acceso libre</span>
                                     }
                                   </div>
@@ -210,7 +216,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
 
                               <div class="sl-right">
                                 <span class="sl-duration">⏱ {{ lesson.duration_minutes || 10 }} min</span>
-                                <span class="sl-arrow">→</span>
+                                <span class="sl-arrow">{{ auth.isAuthenticated() ? '→' : '🔒' }}</span>
                               </div>
                             </a>
                           }
@@ -234,7 +240,21 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
             <div class="sidebar-sticky-wrapper">
               <!-- Primary Action / Access Card -->
               <div class="action-card">
-                @if (course()!.enrolled) {
+                @if (!auth.isAuthenticated()) {
+                  <div class="auth-gate-box">
+                    <div class="gate-icon-wrap">🔒</div>
+                    <h3 class="gate-title">Contenido Exclusivo</h3>
+                    <p class="gate-desc">
+                      Inicia sesión o regístrate para acceder al reproductor interactivo, terminal Linux en la nube y retos de código.
+                    </p>
+                    <a routerLink="/auth/registro" class="btn btn-primary btn-block btn-lg">
+                      Crear Cuenta Gratuita →
+                    </a>
+                    <a routerLink="/auth/login" class="btn btn-outline btn-block" style="margin-top: 8px;">
+                      Iniciar Sesión
+                    </a>
+                  </div>
+                } @else if (course()!.enrolled) {
                   <div class="enrolled-progress">
                     <div class="progress-label">
                       <span class="progress-title">Tu progreso en el curso</span>
@@ -329,6 +349,28 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
           </aside>
         </div>
       </div>
+
+      <!-- Auth Gate Modal -->
+      @if (showAuthModal()) {
+        <div class="modal-backdrop" (click)="showAuthModal.set(false)">
+          <div class="auth-gate-modal" (click)="$event.stopPropagation()">
+            <button type="button" class="modal-close-btn" (click)="showAuthModal.set(false)">✕</button>
+            <div class="gate-modal-icon">🔐</div>
+            <h2>Acceso exclusivo para estudiantes</h2>
+            <p>
+              Para acceder a las lecciones prácticas, terminal interactiva en la nube, retos de código con evaluación automática y guardar tu progreso con insignias, necesitas una cuenta en <strong>SysEng Academy</strong>.
+            </p>
+            <div class="modal-gate-actions">
+              <a routerLink="/auth/registro" class="btn btn-primary btn-block btn-lg" (click)="showAuthModal.set(false)">
+                Crear Cuenta Gratuita →
+              </a>
+              <a routerLink="/auth/login" class="btn btn-outline btn-block" (click)="showAuthModal.set(false)">
+                Ya tengo cuenta, Iniciar Sesión
+              </a>
+            </div>
+          </div>
+        </div>
+      }
     } @else {
       <div class="container" style="padding: var(--sp-20) var(--sp-4); text-align: center; min-height: 60vh; display: flex; align-items: center; justify-content: center;">
         <div class="empty-state-card" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: var(--sp-12); max-width: 520px; width: 100%; box-shadow: var(--shadow-xl);">
@@ -1192,6 +1234,108 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
       font-size: 0.85rem;
       transition: transform var(--transition-fast), color var(--transition-fast);
     }
+
+    .is-locked-guest {
+      opacity: 0.75;
+      cursor: pointer;
+      &:hover {
+        border-color: rgba(239, 68, 68, 0.4);
+      }
+    }
+
+    .sl-lock-tag {
+      background: rgba(239, 68, 68, 0.15) !important;
+      color: #f87171 !important;
+      border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    }
+
+    /* Auth Gate Box in Sidebar */
+    .auth-gate-box {
+      text-align: center;
+      padding: var(--sp-2) 0;
+
+      .gate-icon-wrap {
+        font-size: 2.2rem;
+        margin-bottom: var(--sp-2);
+      }
+
+      .gate-title {
+        font-size: var(--text-lg);
+        font-weight: var(--font-bold);
+        color: var(--text-primary);
+        margin-bottom: var(--sp-2);
+      }
+
+      .gate-desc {
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin-bottom: var(--sp-4);
+      }
+    }
+
+    /* Auth Gate Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--sp-4);
+    }
+
+    .auth-gate-modal {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      background: #0f141f;
+      border: 1px solid rgba(0, 217, 255, 0.3);
+      border-radius: var(--radius-xl);
+      padding: var(--sp-8);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 217, 255, 0.1);
+      text-align: center;
+
+      .modal-close-btn {
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        background: transparent;
+        border: none;
+        color: #64748b;
+        font-size: 1.1rem;
+        cursor: pointer;
+        &:hover { color: #fff; }
+      }
+
+      .gate-modal-icon {
+        font-size: 3rem;
+        margin-bottom: var(--sp-3);
+      }
+
+      h2 {
+        font-size: var(--text-xl);
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: var(--sp-2);
+      }
+
+      p {
+        font-size: var(--text-sm);
+        color: #94a3b8;
+        line-height: 1.55;
+        margin-bottom: var(--sp-6);
+        strong { color: #00d9ff; }
+      }
+
+      .modal-gate-actions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-2);
+      }
+    }
   `]
 })
 export class CourseDetailComponent implements OnInit {
@@ -1206,6 +1350,7 @@ export class CourseDetailComponent implements OnInit {
   openModules   = signal<Set<number>>(new Set());
   activeTab     = signal<'curriculum' | 'forum'>('curriculum');
   forumModuleId = signal<number | undefined>(undefined);
+  showAuthModal = signal(false);
 
   allExpanded = computed(() => {
     const c = this.course();
@@ -1380,9 +1525,21 @@ export class CourseDetailComponent implements OnInit {
   }
 
   goToFirstLesson() {
+    if (!this.auth.isAuthenticated()) {
+      this.showAuthModal.set(true);
+      return;
+    }
     const firstLesson = this.course()?.modules?.[0]?.lessons?.[0];
     if (firstLesson) {
       this.router.navigate(['/cursos', this.course()!.slug, 'leccion', firstLesson.slug]);
+    }
+  }
+
+  onLessonClick(event: Event, lesson: Lesson) {
+    if (!this.auth.isAuthenticated()) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.showAuthModal.set(true);
     }
   }
 }

@@ -24,13 +24,21 @@ import { AuthService } from '../../core/services/auth.service';
         <!-- Desktop Navigation Pills (Centered) -->
         <nav class="navbar__nav" aria-label="Navegación principal">
           @if (isDocenteRoute()) {
-            <a routerLink="/docente" routerLinkActive="active" class="nav-pill nav-pill--docente">
-              <span class="nav-pill__icon">🎓</span>
-              <span class="nav-pill__text">Panel Docente</span>
+            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" class="nav-pill nav-pill--docente" [class.active]="currentTeacherTab() === 'students'">
+              <span class="nav-pill__icon">👥</span>
+              <span class="nav-pill__text">Alumnos</span>
             </a>
-            <a routerLink="/cursos" routerLinkActive="active" class="nav-pill">
-              <span class="nav-pill__icon">📚</span>
-              <span class="nav-pill__text">Catálogo Cursos</span>
+            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" class="nav-pill nav-pill--docente" [class.active]="currentTeacherTab() === 'activities'">
+              <span class="nav-pill__icon">📝</span>
+              <span class="nav-pill__text">Crear Actividades &amp; Quizzes</span>
+            </a>
+            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" class="nav-pill nav-pill--docente" [class.active]="currentTeacherTab() === 'activity'">
+              <span class="nav-pill__icon">📊</span>
+              <span class="nav-pill__text">Rendimiento</span>
+            </a>
+            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" class="nav-pill nav-pill--docente nav-pill--ai-docente" [class.active]="currentTeacherTab() === 'ai'">
+              <span class="nav-pill__icon">🤖</span>
+              <span class="nav-pill__text">Byte Asistente IA</span>
             </a>
             <a routerLink="/" class="nav-pill nav-pill--switch" title="Explorar la plataforma como estudiante">
               <span class="nav-pill__icon">👁️</span>
@@ -133,12 +141,20 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
 
           <nav class="mobile-nav-links">
-            @if (isTeacher()) {
-              <a routerLink="/docente" (click)="mobileOpen.set(false)" style="color: #00d9ff; font-weight: 700;">🎓 Panel Docente</a>
+            @if (isDocenteRoute()) {
+              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" (click)="mobileOpen.set(false)">👥 Directorio de Alumnos</a>
+              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" (click)="mobileOpen.set(false)">📝 Actividades y Quizzes</a>
+              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" (click)="mobileOpen.set(false)">📊 Rendimiento &amp; Métricas</a>
+              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" (click)="mobileOpen.set(false)">🤖 Byte Asistente IA</a>
+              <a routerLink="/" (click)="mobileOpen.set(false)" style="color: #00d9ff; font-weight: 700;">👁️ Vista Estudiante</a>
+            } @else {
+              @if (isTeacher()) {
+                <a routerLink="/docente" (click)="mobileOpen.set(false)" style="color: #00d9ff; font-weight: 700;">🎓 Panel Docente</a>
+              }
+              <a routerLink="/" (click)="mobileOpen.set(false)">🏠 Inicio</a>
+              <a routerLink="/rutas" (click)="mobileOpen.set(false)">🗺️ Rutas de Aprendizaje</a>
+              <a routerLink="/cursos" (click)="mobileOpen.set(false)">📚 Catálogo de Cursos</a>
             }
-            <a routerLink="/" (click)="mobileOpen.set(false)">🏠 Inicio</a>
-            <a routerLink="/rutas" (click)="mobileOpen.set(false)">🗺️ Rutas de Aprendizaje</a>
-            <a routerLink="/cursos" (click)="mobileOpen.set(false)">📚 Catálogo de Cursos</a>
           </nav>
 
           <div class="mobile-auth-section">
@@ -696,6 +712,14 @@ export class NavbarComponent {
   readonly isDocenteRoute = computed(() => {
     const url = this.router.url;
     return url.startsWith('/docente') || url.startsWith('/admin');
+  });
+
+  readonly currentTeacherTab = computed(() => {
+    const url = this.router.url;
+    if (url.includes('tab=activities')) return 'activities';
+    if (url.includes('tab=activity')) return 'activity';
+    if (url.includes('tab=ai')) return 'ai';
+    return 'students';
   });
 
   readonly roleLabel = computed(() => {

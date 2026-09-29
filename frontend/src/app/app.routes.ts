@@ -24,7 +24,8 @@ export const routes: Routes = [
   },
   {
     path: 'cursos/:slug/leccion/:lessonSlug',
-    loadComponent: () => import('./features/courses/lesson-player/lesson-player.component').then(m => m.LessonPlayerComponent)
+    loadComponent: () => import('./features/courses/lesson-player/lesson-player.component').then(m => m.LessonPlayerComponent),
+    canActivate: [authGuard]
   },
   {
     path: 'asistente',
