@@ -89,22 +89,20 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
             <span class="progress-mini-text">{{ completedLessonsCount() }}/{{ totalLessonsCount() }} ({{ courseProgressPercent() }}%)</span>
           </div>
 
-          <!-- Temario Drawer Toggle (Sin recuadro, icono vectorial profesional) -->
-          <button
-            type="button"
+          <!-- Enlace al Temario Completo del Curso -->
+          <a
+            [routerLink]="['/cursos', courseSlug()]"
+            [queryParams]="{ tab: 'curriculum' }"
             class="btn-curriculum-pill"
-            (click)="sidebarOpen.set(!sidebarOpen())"
-            [class.is-active]="sidebarOpen()"
-            [attr.aria-expanded]="sidebarOpen()"
-            title="Mostrar u ocultar temario del curso"
+            title="Ir al temario completo del curso"
           >
             <svg class="curriculum-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
               <path d="M8 7h8"/>
               <path d="M8 11h6"/>
             </svg>
-            <span>{{ sidebarOpen() ? 'Cerrar' : 'Temario' }}</span>
-          </button>
+            <span>Temario</span>
+          </a>
 
           <!-- User Avatar or Login (Avatar ASCII en miniatura animado sin recuadro de iniciales) -->
           @if (auth.isAuthenticated()) {
@@ -130,6 +128,24 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
           <div class="player-layout">
             <!-- Main Content -->
             <main class="player-main">
+              <!-- Mobile Lessons Drawer Trigger -->
+              <button
+                type="button"
+                class="mobile-curriculum-trigger"
+                (click)="sidebarOpen.set(true)"
+                aria-label="Ver todas las lecciones del curso"
+              >
+                <div class="trigger-left">
+                  <svg class="curriculum-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                    <path d="M8 7h8"/>
+                    <path d="M8 11h6"/>
+                  </svg>
+                  <span>Lecciones del curso</span>
+                </div>
+                <span class="trigger-badge">{{ completedLessonsCount() }}/{{ totalLessonsCount() }}</span>
+              </button>
+
               <!-- Lesson Header inside content -->
               <div class="lesson-header-card">
                 <div class="lesson-meta-row">
@@ -593,7 +609,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       @media (max-width: 768px) { display: none; }
     }
 
-    /* Temario Button - Clean, Borderless & Sleek */
+    /* Temario Button - Clean, Borderless & Sleek Link */
     .btn-curriculum-pill {
       display: inline-flex;
       align-items: center;
@@ -605,6 +621,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       color: #94A3B8;
       font-size: var(--text-xs);
       font-weight: 500;
+      text-decoration: none;
       cursor: pointer;
       transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -867,6 +884,52 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       @media (max-width: 1024px) {
         grid-template-columns: 1fr;
         gap: var(--sp-5);
+      }
+    }
+
+    .mobile-curriculum-trigger {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: var(--sp-4);
+      padding: 10px 14px;
+      background: #0D1019;
+      border: 1px solid #1E2436;
+      border-radius: var(--radius-md, 8px);
+      color: #F8FAFC;
+      font-size: var(--text-xs);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      .trigger-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .curriculum-icon {
+        color: #38BDF8;
+      }
+
+      .trigger-badge {
+        font-family: var(--font-mono, monospace);
+        font-size: 11px;
+        color: #0AE98A;
+        background: rgba(10, 233, 138, 0.1);
+        border: 1px solid rgba(10, 233, 138, 0.25);
+        padding: 2px 7px;
+        border-radius: 9999px;
+      }
+
+      &:hover {
+        background: #141926;
+        border-color: #2D3748;
+      }
+
+      @media (max-width: 1024px) {
+        display: flex;
       }
     }
 
