@@ -233,7 +233,29 @@ export class TeacherService {
 
   getOverview(): Observable<TeacherOverviewResponse> {
     return this.api.get<TeacherOverviewResponse>('/teacher/overview').pipe(
-      catchError(() => of(FALLBACK_TEACHER_OVERVIEW))
+      catchError(() => {
+        const students = this.getLocalStudents();
+        const totalStudents = students.length;
+        const totalCompletions = students.reduce((sum, s) => sum + (s.completed_lessons_count || 0), 0);
+        const totalEnrollments = students.reduce((sum, s) => sum + (s.enrollments_count || 0), 0);
+        const scoredStudents = students.filter(s => s.average_quiz_score !== null && s.average_quiz_score > 0);
+        const avgScore = scoredStudents.length
+          ? Math.round((scoredStudents.reduce((sum, s) => sum + (s.average_quiz_score || 0), 0) / scoredStudents.length) * 10) / 10
+          : 89.1;
+
+        const overview: TeacherOverviewResponse = {
+          stats: {
+            total_students: totalStudents,
+            total_courses: 43,
+            total_completions: totalCompletions,
+            total_enrollments: totalEnrollments,
+            average_score: avgScore,
+          },
+          recent_activity: FALLBACK_TEACHER_OVERVIEW.recent_activity,
+          popular_courses: FALLBACK_TEACHER_OVERVIEW.popular_courses,
+        };
+        return of(overview);
+      })
     );
   }
 

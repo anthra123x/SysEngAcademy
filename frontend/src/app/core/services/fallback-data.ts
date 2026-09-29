@@ -6429,13 +6429,54 @@ export const FALLBACK_HOME_DATA: HomeData = {
 
 export const FALLBACK_TEACHER_OVERVIEW: TeacherOverviewResponse = {
     stats: {
-        total_students: 1248,
+        total_students: 5,
         total_courses: 43,
-        total_completions: 3412,
-        total_enrollments: 2540,
-        average_score: 94.5
+        total_completions: 54,
+        total_enrollments: 12,
+        average_score: 89.1
     },
-    recent_activity: [],
+    recent_activity: [
+        {
+            id: 1,
+            user_name: 'Ana Estudiante (Demo)',
+            user_email: 'estudiante@sysengacademy.dev',
+            lesson_title: 'Git Avanzado: Rebase y Conflictos Complejos',
+            lesson_type: 'practice',
+            score: 95,
+            passed: true,
+            completed_at: '2026-09-28T20:15:00.000Z'
+        },
+        {
+            id: 2,
+            user_name: 'Mateo Silva',
+            user_email: 'mateo.silva@alumnos.syseng.edu',
+            lesson_title: 'Algoritmos de Ordenamiento: QuickSort & MergeSort',
+            lesson_type: 'quiz',
+            score: 100,
+            passed: true,
+            completed_at: '2026-09-28T19:30:00.000Z'
+        },
+        {
+            id: 3,
+            user_name: 'Carlos Prueba',
+            user_email: 'carlos_test_1790540376@gmail.com',
+            lesson_title: 'Introducción a la Programación',
+            lesson_type: 'practice',
+            score: 88,
+            passed: true,
+            completed_at: '2026-09-28T18:00:00.000Z'
+        },
+        {
+            id: 4,
+            user_name: 'Lucas Ramírez',
+            user_email: 'lucas.ramirez@code.org',
+            lesson_title: 'Fundamentos de requerimientos',
+            lesson_type: 'quiz',
+            score: 85,
+            passed: true,
+            completed_at: '2026-09-28T14:45:00.000Z'
+        }
+    ],
     popular_courses: [
     {
         "id": 20,

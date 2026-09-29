@@ -4,6 +4,7 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { CoursesService } from '../../core/services/courses.service';
+import { TeacherService, TeacherStudent, TeacherActivity, TeacherOverviewResponse } from '../../core/services/teacher.service';
 import { Enrollment } from '../../core/models';
 
 export interface AsciiAvatar {
@@ -182,7 +183,7 @@ export interface StreakDay {
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Alumnos a Cargo:</span>
-                      <span class="meta-v"><strong>1,248 estudiantes</strong> en supervisión activa</span>
+                      <span class="meta-v"><strong>{{ facultyStudentsCount() }} estudiantes</strong> en supervisión activa</span>
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Cursos en Catálogo:</span>
@@ -190,11 +191,11 @@ export interface StreakDay {
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Actividades &amp; Quizzes:</span>
-                      <span class="meta-v"><strong>{{ totalFacultyActivities() }} retos y evaluaciones</strong> publicados</span>
+                      <span class="meta-v"><strong>{{ facultyActivitiesCount() }} retos y evaluaciones</strong> publicados</span>
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Aprobación Global:</span>
-                      <span class="meta-v"><strong>94.5% de efectividad</strong> en cohortes</span>
+                      <span class="meta-v"><strong>{{ facultyAvgScore() }}% de efectividad</strong> en cohortes</span>
                     </div>
                   } @else {
                     <!-- MÉTRICAS PARA EL ESTUDIANTE -->
@@ -377,7 +378,7 @@ export interface StreakDay {
                       <span class="sensor-label">ALUMNOS MATRICULADOS</span>
                       <span class="sensor-code">[FAC_STU]</span>
                     </div>
-                    <div class="sensor-num">1,248</div>
+                    <div class="sensor-num">{{ facultyStudentsCount() }}</div>
                     <div class="sensor-footer"><span class="sensor-sub">Supervisión en tiempo real</span></div>
                   </div>
 
@@ -395,7 +396,7 @@ export interface StreakDay {
                       <span class="sensor-label">PROMEDIO EVALUATIVO</span>
                       <span class="sensor-code">[FAC_AVG]</span>
                     </div>
-                    <div class="sensor-num">94.5%</div>
+                    <div class="sensor-num">{{ facultyAvgScore() }}%</div>
                     <div class="sensor-footer"><span class="sensor-sub">Rendimiento en quizzes</span></div>
                   </div>
 
@@ -404,7 +405,7 @@ export interface StreakDay {
                       <span class="sensor-label">ACTIVIDADES &amp; QUIZZES</span>
                       <span class="sensor-code">[FAC_ACT]</span>
                     </div>
-                    <div class="sensor-num">{{ totalFacultyActivities() }}</div>
+                    <div class="sensor-num">{{ facultyActivitiesCount() }}</div>
                     <div class="sensor-footer"><span class="sensor-sub">Creados por la cátedra</span></div>
                   </div>
                 </div>
@@ -460,7 +461,7 @@ export interface StreakDay {
                     <span class="lcol-xp">ACCIONES</span>
                   </div>
 
-                  @for (st of topSupervisedStudents; track st.id) {
+                  @for (st of facultyStudents(); track st.id) {
                     <div class="leaderboard-row">
                       <span class="lcol-rank"><span class="rank-number">#{{ st.id }}</span></span>
                       <span class="lcol-user">
@@ -471,13 +472,15 @@ export interface StreakDay {
                         </div>
                       </span>
                       <span class="lcol-spec">
-                        <span class="cat-chip" style="color: #0ae98a;">✓ Verificado</span>
+                        <span class="cat-chip" [style.color]="st.email_verified ? '#0ae98a' : '#ff9d33'">
+                          {{ st.email_verified ? '✓ Verificado' : '⏳ Pendiente' }}
+                        </span>
                       </span>
                       <span class="lcol-level">
-                        <span class="level-indicator">{{ st.coursesCount }} cursos</span>
+                        <span class="level-indicator">{{ st.enrollments_count }} cursos</span>
                       </span>
                       <span class="lcol-score">
-                        <span class="score-badge">{{ st.avgScore }}%</span>
+                        <span class="score-badge">{{ st.average_quiz_score !== null ? st.average_quiz_score + '%' : '—' }}</span>
                       </span>
                       <span class="lcol-xp">
                         <a routerLink="/docente" [queryParams]="{ tab: 'students' }" class="btn-term-run" style="text-decoration:none;">
@@ -502,7 +505,7 @@ export interface StreakDay {
                 </div>
 
                 <div class="badges-terminal-grid">
-                  @for (act of facultyActivitiesList(); track act.id) {
+                  @for (act of facultyActivities(); track act.id) {
                     <div class="badge-terminal-card is-unlocked card-gold">
                       <div class="card-top-header">
                         <span class="badge-level-pill">{{ act.type | uppercase }}</span>
@@ -510,21 +513,21 @@ export interface StreakDay {
                       </div>
                       <div class="badge-body">
                         <div class="badge-icon-box">
-                          <span class="badge-icon-char">📝</span>
+                          <span class="badge-icon-char">{{ act.type === 'quiz' ? '📝' : (act.type === 'terminal' ? '💻' : '⚡') }}</span>
                         </div>
                         <div class="badge-details">
                           <h4 class="badge-title">{{ act.title }}</h4>
                           <p class="badge-desc">{{ act.description }}</p>
                           <div class="badge-fingerprint">
                             <span class="fp-label">CURSO:</span>
-                            <span class="fp-code">{{ act.courseTitle }}</span>
+                            <span class="fp-code">{{ act.course_name }}</span>
                           </div>
                         </div>
                       </div>
                       <div class="badge-footer">
                         <div class="badge-progress-row">
-                          <span class="badge-req">Recompensa: +{{ act.xpReward }} XP</span>
-                          <span class="badge-count">⏱ {{ act.durationMinutes }} min</span>
+                          <span class="badge-req">Recompensa: +{{ act.xp_reward }} XP</span>
+                          <span class="badge-count">Dificultad: {{ act.difficulty }}</span>
                         </div>
                       </div>
                     </div>
@@ -562,7 +565,7 @@ export interface StreakDay {
                     <div class="rec-rationale">
                       <p><strong>Observación de Byte Copilot:</strong></p>
                       <p class="rationale-text">
-                        Los 1,248 estudiantes registran una tasa de aprobación del 94.5% en evaluaciones conceptuales de estructuras LIFO y búsqueda binaria. Sin embargo, en el módulo de Concurrencia y Bloqueos de Bases de Datos el 14% de los alumnos solicita ayuda en el chat. Se recomienda publicar un reto práctico con casos de prueba sobre transacciones ACID.
+                        Los {{ facultyStudentsCount() }} estudiantes registran una tasa evaluativa global del {{ facultyAvgScore() }}% en evaluaciones técnicas de algoritmos y sistemas. Se recomienda mantener actualizada la suite de actividades prácticas en terminal.
                       </p>
                     </div>
 
@@ -2140,26 +2143,35 @@ const lastState = editor.popState();`,
     );
   });
 
-  readonly totalFacultyActivities = signal(18);
+  private teacherSvc = inject(TeacherService);
 
-  readonly topSupervisedStudents = [
-    { id: 3, name: 'Ana Estudiante (Demo)', email: 'estudiante@sysengacademy.dev', coursesCount: 4, avgScore: 94.0 },
-    { id: 4, name: 'Carlos Prueba', email: 'carlos_test_1790540376@gmail.com', coursesCount: 2, avgScore: 88.0 },
-    { id: 5, name: 'Mateo Silva', email: 'mateo.silva@alumnos.syseng.edu', coursesCount: 3, avgScore: 96.0 },
-    { id: 6, name: 'Sofía Herrera', email: 'sofia.herrera@tech.dev', coursesCount: 1, avgScore: 82.0 },
-  ];
+  readonly facultyStudents = signal<TeacherStudent[]>([]);
+  readonly facultyActivities = signal<TeacherActivity[]>([]);
+  readonly facultyOverview = signal<TeacherOverviewResponse | null>(null);
 
-  readonly facultyActivitiesList = signal([
-    { id: 'act_1', title: 'Implementación de Thread Pool en C++', type: 'code_challenge', courseTitle: 'Introducción a la Programación', durationMinutes: 45, xpReward: 100, description: 'Desarrollo de un pool de hilos POSIX con sincronización de mutex y colas seguras.' },
-    { id: 'act_2', title: 'Quiz Evaluativo: Prevención de Consultas N+1', type: 'quiz', courseTitle: 'Backend Introducción', durationMinutes: 15, xpReward: 50, description: '4 preguntas de opción múltiple sobre Eager Loading, índices compuestos y JOINs.' },
-    { id: 'act_3', title: 'Balanceo de Paréntesis y Árboles BST', type: 'code_challenge', courseTitle: 'Algoritmos y Estructuras', durationMinutes: 30, xpReward: 80, description: 'Validación de sintaxis balanceada y recorrido en orden de árboles binarios.' },
-  ]);
+  readonly facultyStudentsCount = computed(() => {
+    return this.facultyStudents().length || this.facultyOverview()?.stats.total_students || 5;
+  });
+
+  readonly facultyAvgScore = computed(() => {
+    return this.facultyOverview()?.stats.average_score ?? 89.1;
+  });
+
+  readonly facultyActivitiesCount = computed(() => {
+    return this.facultyActivities().length || 3;
+  });
 
   ngOnInit() {
     this.coursesSvc.getMyEnrollments().subscribe(enrs => {
       this.enrollments.set(enrs);
       this.loading.set(false);
     });
+
+    if (this.isTeacher()) {
+      this.teacherSvc.getStudents().subscribe(st => this.facultyStudents.set(st));
+      this.teacherSvc.getActivities().subscribe(acts => this.facultyActivities.set(acts));
+      this.teacherSvc.getOverview().subscribe(ov => this.facultyOverview.set(ov));
+    }
 
     this.initLocalData();
 

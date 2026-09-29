@@ -50,7 +50,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="kpi-grid">
             <div class="kpi-card">
               <span class="kpi-label">Estudiantes Registrados</span>
-              <span class="kpi-value">{{ overview()!.stats.total_students }}</span>
+              <span class="kpi-value">{{ totalStudentsCount() }}</span>
               <span class="kpi-meta">Alumnos en catálogo docente</span>
             </div>
 
@@ -62,13 +62,13 @@ import { AuthService } from '../../core/services/auth.service';
 
             <div class="kpi-card">
               <span class="kpi-label">Lecciones Completadas</span>
-              <span class="kpi-value">{{ overview()!.stats.total_completions }}</span>
+              <span class="kpi-value">{{ totalLessonsCompleted() }}</span>
               <span class="kpi-meta">Superadas por alumnos</span>
             </div>
 
             <div class="kpi-card">
               <span class="kpi-label">Promedio de Quizzes</span>
-              <span class="kpi-value">{{ overview()!.stats.average_score }}%</span>
+              <span class="kpi-value">{{ averageQuizScore() }}%</span>
               <span class="kpi-meta">Rendimiento evaluativo global</span>
             </div>
           </div>
@@ -1920,6 +1920,24 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     return list;
   });
 
+  readonly totalStudentsCount = computed(() => {
+    return this.students().length || this.overview()?.stats.total_students || 0;
+  });
+
+  readonly totalLessonsCompleted = computed(() => {
+    const fromStudents = this.students().reduce((acc, s) => acc + (s.completed_lessons_count || 0), 0);
+    return fromStudents || this.overview()?.stats.total_completions || 0;
+  });
+
+  readonly averageQuizScore = computed(() => {
+    const scored = this.students().filter(s => s.average_quiz_score !== null && s.average_quiz_score > 0);
+    if (scored.length > 0) {
+      const avg = scored.reduce((acc, s) => acc + (s.average_quiz_score || 0), 0) / scored.length;
+      return Math.round(avg * 10) / 10;
+    }
+    return this.overview()?.stats.average_score ?? 89.1;
+  });
+
   viewStudentDossier(id: number) {
     this.teacherSvc.getStudentDetail(id).subscribe({
       next: detail => this.selectedStudentDetail.set(detail),
@@ -1943,6 +1961,16 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     this.teacherSvc.deleteStudent(st.id).subscribe({
       next: () => {
         this.students.update(all => all.filter(item => item.id !== st.id));
+        this.overview.update(ov => {
+          if (!ov) return null;
+          return {
+            ...ov,
+            stats: {
+              ...ov.stats,
+              total_students: Math.max(0, (ov.stats.total_students || 1) - 1),
+            },
+          };
+        });
       },
     });
   }
