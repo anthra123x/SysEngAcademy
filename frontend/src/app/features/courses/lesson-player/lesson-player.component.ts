@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -183,6 +183,31 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
 
             <!-- INTERACTIVE CODE PRACTICE (Only shown in lessons/modules where practice is required) -->
             @if (hasPractice()) {
+              <div class="exercise-validation-banner" [class.is-done]="completed()">
+                @if (!completed()) {
+                  <div class="evb-content">
+                    <span class="evb-icon">🎯</span>
+                    <div class="evb-text">
+                      <h4>Condición de Desbloqueo de este Módulo</h4>
+                      <p>
+                        Para completar este módulo y acceder al siguiente, debes <strong>resolver correctamente este ejercicio</strong>.
+                        El <strong>propio sistema</strong> (mediante los tests automatizados) o el <strong>agente Byte IA</strong> (mediante evaluación socrática) validarán tu solución.
+                      </p>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="evb-content is-success">
+                    <span class="evb-icon">🎉</span>
+                    <div class="evb-text">
+                      <h4>¡Ejercicio Aprobado con Éxito!</h4>
+                      <p>
+                        Tu solución fue validada correctamente. El progreso de este módulo ha sido acreditado y los siguientes módulos están desbloqueados.
+                      </p>
+                    </div>
+                  </div>
+                }
+              </div>
+
               <section class="practice-section" aria-label="Zona de práctica de programación">
                 <div class="practice-header">
                   <div class="practice-header__info">
@@ -197,6 +222,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                 </div>
 
                 <app-interactive-ide
+                  #interactiveIde
                   [initialCode]="l.starter_code || code()"
                   [language]="l.language || 'python'"
                   [testCases]="l.test_cases || []"
@@ -204,6 +230,8 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                   [lessonTitle]="l.title"
                   [lessonId]="l.id"
                   [isChallenge]="isCodeChallenge()"
+                  [isCompleted]="completed()"
+                  (challengeSolved)="onChallengeSolved($event)"
                 />
               </section>
             }
@@ -306,15 +334,55 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
 
               <div class="player-actions__right">
                 @if (!completed()) {
-                  <button
-                    class="btn btn-primary"
-                    (click)="markComplete()"
-                    [disabled]="completing() || !canComplete()"
-                  >
-                    {{ completing() ? 'Guardando…' : '✓ Marcar como completada' }}
-                  </button>
+                  @if (hasPractice()) {
+                    <div class="exercise-approval-bar">
+                      <div class="exercise-lock-indicator">
+                        <span class="lock-icon">🔒</span>
+                        <div class="lock-text">
+                          <strong>Ejercicio Práctico</strong>
+                          <span>Requiere aprobación del Sistema o de Byte IA</span>
+                        </div>
+                      </div>
+                      <div class="exercise-action-btns">
+                        <button
+                          type="button"
+                          class="btn btn-ai-eval"
+                          (click)="requestAiEvaluation()"
+                          [disabled]="completing()"
+                          title="El agente Byte IA revisará tu solución y la aprobará si cumple los requisitos"
+                        >
+                          🤖 Evaluar con Byte IA
+                        </button>
+                        @if (hasTestCases()) {
+                          <button
+                            type="button"
+                            class="btn btn-test-eval"
+                            (click)="requestRunTests()"
+                            [disabled]="completing()"
+                            title="Ejecutar la suite de pruebas del sistema"
+                          >
+                            🧪 Probar Tests
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  } @else {
+                    <button
+                      class="btn btn-primary"
+                      (click)="markComplete()"
+                      [disabled]="completing() || !canComplete()"
+                    >
+                      {{ completing() ? 'Guardando…' : '✓ Marcar como completada' }}
+                    </button>
+                  }
                 } @else {
-                  <span class="done-chip">✓ Lección completada</span>
+                  <span class="done-chip">
+                    @if (hasPractice()) {
+                      🏆 Ejercicio Aprobado y Completado
+                    } @else {
+                      ✓ Lección completada
+                    }
+                  </span>
                   @if (nextLesson()) {
                     <a class="btn btn-primary" [routerLink]="['/cursos', courseSlug(), 'leccion', nextLesson()!.slug]">
                       Siguiente lección →
@@ -1337,6 +1405,136 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       &__right { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
     }
 
+    .exercise-approval-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-4);
+      flex-wrap: wrap;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+      }
+    }
+
+    .exercise-lock-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: var(--radius-md);
+
+      .lock-icon { font-size: 1.1rem; }
+      .lock-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.25;
+
+        strong { font-size: var(--text-xs); color: #f87171; }
+        span { font-size: 0.72rem; color: var(--text-muted); }
+      }
+    }
+
+    .exercise-action-btns {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      flex-wrap: wrap;
+    }
+
+    .btn-ai-eval {
+      background: linear-gradient(135deg, #7c3aed, #6366f1);
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--transition-fast);
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(124, 58, 237, 0.5);
+      }
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .btn-test-eval {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--transition-fast);
+
+      &:hover:not(:disabled) {
+        background: rgba(16, 185, 129, 0.25);
+        border-color: #34d399;
+        color: #ffffff;
+      }
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .exercise-validation-banner {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: var(--radius-lg);
+      padding: var(--sp-4) var(--sp-5);
+      margin: var(--sp-6) 0 var(--sp-4);
+
+      &.is-done {
+        background: rgba(16, 185, 129, 0.08);
+        border-color: rgba(16, 185, 129, 0.3);
+      }
+
+      .evb-content {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--sp-3);
+
+        .evb-icon { font-size: 1.5rem; line-height: 1; }
+        .evb-text {
+          h4 {
+            margin: 0 0 4px;
+            font-size: var(--text-sm);
+            font-weight: 700;
+            color: #38bdf8;
+          }
+          p {
+            margin: 0;
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            line-height: 1.5;
+            strong { color: var(--text-primary); }
+          }
+        }
+
+        &.is-success {
+          .evb-text h4 { color: #34d399; }
+        }
+      }
+    }
+
     .done-chip {
       display: inline-flex;
       align-items: center;
@@ -1709,9 +1907,11 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   quizResult     = signal<QuizAttemptResult | null>(null);
 
   // --- Code challenge & Interactive Practice ---
+  @ViewChild('interactiveIde') ideComponent?: InteractiveIdeComponent;
   code            = signal('');
   aiReviewing     = signal(false);
   aiReply         = signal<string | null>(null);
+  exerciseApprovedMethod = signal<'tests' | 'ai' | null>(null);
 
   // --- UI misc & Navigation Slide Bar ---
   sidebarOpen   = signal(false);
@@ -2045,6 +2245,32 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
       (Array.isArray(l.test_cases) && l.test_cases.length > 0)
     );
   });
+
+  readonly hasTestCases = computed<boolean>(() => {
+    const l = this.lesson();
+    return Array.isArray(l?.test_cases) && l.test_cases.length > 0;
+  });
+
+  requestAiEvaluation(): void {
+    if (this.ideComponent) {
+      this.ideComponent.evaluateSolutionWithAi();
+    }
+  }
+
+  requestRunTests(): void {
+    if (this.ideComponent) {
+      this.ideComponent.runTests();
+    }
+  }
+
+  onChallengeSolved(event: { passed: boolean; method: 'tests' | 'ai'; score?: number; message?: string }): void {
+    if (!event.passed) return;
+    const lesson = this.lesson();
+    if (!lesson) return;
+    this.exerciseApprovedMethod.set(event.method);
+    const score = event.score ?? 100;
+    this.markComplete(score);
+  }
 
   readonly canComplete = computed(() => this.course()?.enrolled !== false);
 

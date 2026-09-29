@@ -7,6 +7,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -174,6 +175,25 @@ export interface TerminalAiMessage {
               <span class="cli-icon">{{ testing() ? '⏳' : '✓' }}</span>
               <span>{{ testing() ? 'testing...' : 'test' }}</span>
             </button>
+          }
+
+          <!-- Smart AI Evaluation Button -->
+          <button
+            type="button"
+            class="cli-btn btn-eval-ai"
+            [class.is-loading]="aiLoading()"
+            (click)="evaluateSolutionWithAi()"
+            [disabled]="running() || testing() || aiLoading() || !code().trim()"
+            title="Solicitar validación a Byte IA para aprobar y completar el ejercicio"
+          >
+            <span class="cli-icon">{{ aiLoading() ? '⏳' : '⚡' }}</span>
+            <span>{{ aiLoading() ? 'evaluando...' : 'Evaluar con IA' }}</span>
+          </button>
+
+          @if (isCompleted() || challengeStatus() === 'passed_tests' || challengeStatus() === 'passed_ai') {
+            <span class="badge-challenge-done" title="Ejercicio aprobado">
+              ✓ Superado
+            </span>
           }
 
           <!-- Run Code Button -->
@@ -515,6 +535,16 @@ export interface TerminalAiMessage {
                     [disabled]="aiLoading()"
                   >
                     $ byte --pseudocode
+                  </button>
+
+                  <button
+                    type="button"
+                    class="cli-chip chip-eval"
+                    (click)="evaluateSolutionWithAi()"
+                    [disabled]="aiLoading()"
+                    title="Solicitar a Byte AI la validación y aprobación de tu solución"
+                  >
+                    ⚡ byte --evaluate-solution
                   </button>
 
                   <button
@@ -916,6 +946,51 @@ export interface TerminalAiMessage {
         &:hover:not(:disabled) {
           background: rgba(52, 211, 153, 0.15);
         }
+      }
+
+      .btn-eval-ai {
+        color: #facc15;
+        border-color: rgba(250, 204, 21, 0.45);
+        background: rgba(250, 204, 21, 0.1);
+        font-weight: 600;
+
+        &:hover:not(:disabled) {
+          background: rgba(250, 204, 21, 0.25);
+          border-color: #facc15;
+          color: #ffffff;
+        }
+
+        &.is-loading {
+          opacity: 0.8;
+          cursor: wait;
+        }
+      }
+
+      .chip-eval {
+        color: #facc15;
+        border-color: rgba(250, 204, 21, 0.35);
+        background: rgba(250, 204, 21, 0.08);
+
+        &:hover:not(:disabled) {
+          border-color: #facc15;
+          background: rgba(250, 204, 21, 0.2);
+          color: #ffffff;
+        }
+      }
+
+      .badge-challenge-done {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
       }
 
       .cli-kbd {
@@ -1883,6 +1958,17 @@ export class InteractiveIdeComponent {
   readonly lessonTitle = input<string>('');
   readonly lessonId = input<number | undefined>(undefined);
   readonly isChallenge = input<boolean>(false);
+  readonly isCompleted = input<boolean>(false);
+
+  // Output event emitted when code is solved via system tests or AI evaluation
+  readonly challengeSolved = output<{
+    passed: boolean;
+    method: 'tests' | 'ai';
+    score?: number;
+    message?: string;
+  }>();
+
+  readonly challengeStatus = signal<'pending' | 'evaluating' | 'passed_tests' | 'passed_ai' | 'needs_work'>('pending');
 
   // Supported languages list
   readonly languages: SupportedLanguage[] = SUPPORTED_LANGUAGES;
@@ -2150,9 +2236,19 @@ export class InteractiveIdeComponent {
         next: res => {
           this.executionResult.set(res);
           this.testing.set(false);
-          // If all test cases passed, register solved challenge for badges/profile!
+          // If all test cases passed, register solved challenge for badges/profile and notify parent!
           if (res.tests && res.tests.length > 0 && res.tests.every(t => t.passed)) {
+            this.challengeStatus.set('passed_tests');
             this.recordChallengeCompleted();
+            this.showToast('🏆 ¡Todas las pruebas del sistema pasaron! Ejercicio aprobado.');
+            this.challengeSolved.emit({
+              passed: true,
+              method: 'tests',
+              score: 100,
+              message: 'Todas las pruebas automatizadas del sistema pasaron exitosamente.',
+            });
+          } else if (res.tests && res.tests.some(t => !t.passed)) {
+            this.challengeStatus.set('needs_work');
           }
         },
         error: err => {
@@ -2179,6 +2275,251 @@ export class InteractiveIdeComponent {
         this.showToast('🏆 ¡Reto completado! Has desbloqueado progreso para tus insignias');
       }
     } catch {}
+  }
+
+  async evaluateSolutionWithAi(): Promise<void> {
+    if (this.aiLoading() || !this.code().trim()) {
+      if (!this.code().trim()) {
+        this.showToast('⚠️ Escribe tu solución antes de solicitar la evaluación.');
+      }
+      return;
+    }
+
+    this.activeTerminalTab.set('ai');
+    this.mobileActivePane.set('terminal');
+
+    const promptText = `🤖 Solicito evaluación formal de mi solución para el ejercicio "${this.lessonTitle()}". ¿Cumple los requerimientos para ser aprobado?`;
+    const userMsg: TerminalAiMessage = {
+      id: String(Date.now()),
+      sender: 'user',
+      text: promptText,
+      timestamp: new Date(),
+    };
+    this.copilotMessages.update(msgs => [...msgs, userMsg]);
+    this.scrollCopilotToBottom();
+    this.aiLoading.set(true);
+
+    const context = {
+      lesson: this.lessonTitle() || 'Reto de Programación',
+      language: this.currentLanguage(),
+      code: this.code(),
+      testCases: this.activeTestCases(),
+      lastExecution: this.executionResult(),
+      hint: this.hint(),
+    };
+
+    try {
+      const evaluation = await this.callAiEvaluator(context);
+
+      const isApproved = !!evaluation.approved;
+      const score = evaluation.score ?? (isApproved ? 100 : 40);
+
+      const statusTag = isApproved ? '🏆 ¡APROBADO POR BYTE IA!' : '❌ NECESITA MEJORAS';
+      const aiReplyText = `### ${statusTag} (Calificación: ${score}/100)\n\n` +
+        `**Veredicto:** ${evaluation.verdict || (isApproved ? 'Aprobado' : 'Rechazado')}\n\n` +
+        `**Resumen:** ${evaluation.summary}\n\n` +
+        (evaluation.feedback ? `**Diagnóstico:**\n${evaluation.feedback}\n\n` : '') +
+        (isApproved
+          ? `> ✅ **¡Excelente trabajo!** Has cumplido satisfactoriamente con los requerimientos pedagógicos del ejercicio. Tu progreso ha sido registrado y el siguiente contenido está habilitado.`
+          : `> 💡 **Guía:** Revisa las observaciones anteriores, ajusta tu código en el editor y vuelve a presionar *Evaluar con IA* o ejecuta los *Tests*.`);
+
+      const aiMsg: TerminalAiMessage = {
+        id: String(Date.now() + 1),
+        sender: 'assistant',
+        text: aiReplyText,
+        timestamp: new Date(),
+      };
+      this.copilotMessages.update(msgs => [...msgs, aiMsg]);
+
+      if (isApproved) {
+        this.challengeStatus.set('passed_ai');
+        this.recordChallengeCompleted();
+        this.showToast('🎉 ¡Ejercicio aprobado por Byte IA! Lección completada.');
+        this.challengeSolved.emit({
+          passed: true,
+          method: 'ai',
+          score,
+          message: evaluation.summary,
+        });
+      } else {
+        this.challengeStatus.set('needs_work');
+        this.showToast('⚠️ Tu solución aún necesita ajustes. Consulta el diagnóstico en Byte Copilot.');
+      }
+    } catch (_err) {
+      // Fallback socrático local
+      const localEval = this.evaluateLocally(context);
+      const isApproved = localEval.approved;
+      const score = isApproved ? 100 : 50;
+
+      const aiReplyText = `### ${isApproved ? '🏆 ¡APROBADO POR EL SISTEMA Y BYTE IA!' : '⚠️ REVISIÓN DEL EJERCICIO'}\n\n` +
+        `**Resumen:** ${localEval.summary}\n\n` +
+        `**Observaciones:**\n${localEval.feedback}\n\n` +
+        (isApproved
+          ? `> ✅ **Objetivo completado.** El código cumple la estructura y métodos requeridos.`
+          : `> 💡 Ajusta tu solución según lo pedido y prueba de nuevo.`);
+
+      const aiMsg: TerminalAiMessage = {
+        id: String(Date.now() + 1),
+        sender: 'assistant',
+        text: aiReplyText,
+        timestamp: new Date(),
+      };
+      this.copilotMessages.update(msgs => [...msgs, aiMsg]);
+
+      if (isApproved) {
+        this.challengeStatus.set('passed_ai');
+        this.recordChallengeCompleted();
+        this.showToast('🎉 ¡Ejercicio aprobado con éxito!');
+        this.challengeSolved.emit({
+          passed: true,
+          method: 'ai',
+          score,
+          message: localEval.summary,
+        });
+      } else {
+        this.challengeStatus.set('needs_work');
+        this.showToast('⚠️ Ajusta tu código antes de aprobar.');
+      }
+    } finally {
+      this.aiLoading.set(false);
+      this.scrollCopilotToBottom();
+    }
+  }
+
+  private async callAiEvaluator(ctx: any): Promise<{
+    approved: boolean;
+    score: number;
+    verdict: string;
+    summary: string;
+    feedback: string;
+  }> {
+    const systemPrompt = `Eres Byte AI, evaluador técnico estricto y tutor pedagógico de SysEngAcademy.
+Tu tarea es evaluar objetivamente si el código del estudiante resuelve el ejercicio "${ctx.lesson}" en ${ctx.language}.
+
+Reglas de evaluación:
+1. Revisa si implementó la clase, atributos, métodos o algoritmo pedido en el enunciado y la pista: "${ctx.hint || ''}".
+2. Si el código está vacío, o es idéntico a las instrucciones iniciales sin implementar nada, DEBES responder approved: false.
+3. Si los métodos principales requeridos existen y retornan/hacen lo especificado, responde approved: true.
+4. Responde EXCLUSIVAMENTE un objeto JSON válido con las claves:
+   - "approved": boolean (true si pasa, false si no)
+   - "score": number entre 0 y 100
+   - "verdict": "APROBADO" | "NECESITA MEJORAS"
+   - "summary": string breve (1-2 oraciones)
+   - "feedback": string con detalles de aciertos o qué falta`;
+
+    let userPrompt = `Reto: ${ctx.lesson}\nLenguaje: ${ctx.language}\nPista / Requerimientos: ${ctx.hint || 'No disponible'}\n`;
+    if (ctx.lastExecution?.tests?.length) {
+      userPrompt += `Resultados de tests previos: ${JSON.stringify(ctx.lastExecution.tests)}\n`;
+    }
+    userPrompt += `\nCódigo del estudiante:\n\`\`\`${ctx.language}\n${ctx.code}\n\`\`\``;
+
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.getOpenRouterKey()}`,
+        'Content-Type': 'application/json',
+        'X-Title': 'SysEngAcademy Code Evaluator',
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 600,
+        response_format: { type: 'json_object' },
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`OpenRouter HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const rawContent = data.choices?.[0]?.message?.content || '{}';
+    try {
+      const parsed = JSON.parse(rawContent);
+      return {
+        approved: !!parsed.approved,
+        score: typeof parsed.score === 'number' ? parsed.score : (parsed.approved ? 100 : 40),
+        verdict: parsed.verdict || (parsed.approved ? 'APROBADO' : 'NECESITA MEJORAS'),
+        summary: parsed.summary || (parsed.approved ? 'Solución correcta y funcional.' : 'Faltan requerimientos.'),
+        feedback: parsed.feedback || '',
+      };
+    } catch {
+      const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          approved: !!parsed.approved,
+          score: typeof parsed.score === 'number' ? parsed.score : (parsed.approved ? 100 : 40),
+          verdict: parsed.verdict || (parsed.approved ? 'APROBADO' : 'NECESITA MEJORAS'),
+          summary: parsed.summary || '',
+          feedback: parsed.feedback || '',
+        };
+      }
+      throw new Error('Respuesta no parseable');
+    }
+  }
+
+  private evaluateLocally(ctx: any): { approved: boolean; summary: string; feedback: string } {
+    const code = ctx.code || '';
+    const cleanCode = code.replace(/#.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
+
+    if (!cleanCode || cleanCode.length < 15) {
+      return {
+        approved: false,
+        summary: 'El código está prácticamente vacío.',
+        feedback: 'Debes escribir la implementación requerida para el reto.',
+      };
+    }
+
+    if (ctx.lastExecution?.tests?.length > 0 && ctx.lastExecution.tests.every((t: any) => t.passed)) {
+      return {
+        approved: true,
+        summary: 'Todas las pruebas unitarias fueron validadas y superadas.',
+        feedback: 'La estructura y comportamiento cumplen con todas las especificaciones.',
+      };
+    }
+
+    const lTitle = (ctx.lesson || '').toLowerCase();
+    if (lTitle.includes('clase') || lTitle.includes('libro')) {
+      const hasClass = /class\s+Libro\b/i.test(code);
+      const hasInit = /def\s+__init__\s*\(\s*self/i.test(code);
+      const hasMostrar = /def\s+mostrar\s*\(\s*self/i.test(code);
+      if (hasClass && hasInit && hasMostrar) {
+        return {
+          approved: true,
+          summary: 'La clase Libro y sus métodos __init__ y mostrar() están correctamente estructurados.',
+          feedback: 'Se identificó la declaración de la clase, el constructor con self y el método de representación.',
+        };
+      } else {
+        const missing: string[] = [];
+        if (!hasClass) missing.push('Declarar la clase Libro');
+        if (!hasInit) missing.push('Definir el constructor __init__(self, titulo, autor)');
+        if (!hasMostrar) missing.push('Definir el método mostrar(self)');
+        return {
+          approved: false,
+          summary: 'La implementación está incompleta.',
+          feedback: `Falta: ${missing.join(', ')}.`,
+        };
+      }
+    }
+
+    if (ctx.lastExecution && ctx.lastExecution.exit_code === 0 && !ctx.lastExecution.stderr) {
+      return {
+        approved: true,
+        summary: 'El código compila y ejecuta limpiamente sin errores de consola.',
+        feedback: 'Ejecución exitosa en el entorno de ejecución.',
+      };
+    }
+
+    return {
+      approved: false,
+      summary: 'El código requiere revisión para satisfacer el problema.',
+      feedback: 'Ejecuta ./test.sh o revisa la salida en terminal para verificar tus resultados.',
+    };
   }
 
   /* ============================================================

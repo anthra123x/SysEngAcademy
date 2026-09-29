@@ -95,7 +95,7 @@ class Libro:
 PY,
                         'hint'     => 'Recuerda que self se escribe como primer parametro de cada metodo (self, ...).',
                         'tests'    => [
-                            ['Clase("El principito", "Saint-Exupery").mostrar()', 'El principito - Saint-Exupery'],
+                            ['Libro("El principito", "Saint-Exupery").mostrar()', 'El principito - Saint-Exupery'],
                             ['Libro("Dune", "Herbert").mostrar()', 'Dune - Herbert'],
                         ],
                     ],

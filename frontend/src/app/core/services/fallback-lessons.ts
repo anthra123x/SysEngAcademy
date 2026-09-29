@@ -9896,7 +9896,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "solution": "class Libro:\n    def __init__(self, titulo, autor):\n        self.titulo = titulo\n        self.autor = autor\n\n    def mostrar(self):\n        return f\"{self.titulo} - {self.autor}\"",
         "test_cases": [
             [
-                "Clase(\"El principito\", \"Saint-Exupery\").mostrar()",
+                "Libro(\"El principito\", \"Saint-Exupery\").mostrar()",
                 "El principito - Saint-Exupery"
             ],
             [
