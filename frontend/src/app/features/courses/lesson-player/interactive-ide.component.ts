@@ -198,6 +198,9 @@ export interface TerminalAiMessage {
         >
           <span class="m-tab-glyph ai-spark">✨</span>
           <span>Byte AI</span>
+          @if (hasUnreadAiAdvice()) {
+            <span class="m-badge badge-unread">nuevo</span>
+          }
         </button>
       </div>
 
@@ -313,6 +316,9 @@ export interface TerminalAiMessage {
               >
                 <span class="ai-spark">✨</span>
                 <span>Byte Copilot</span>
+                @if (hasUnreadAiAdvice()) {
+                  <span class="ai-unread-badge" title="Nuevas recomendaciones disponibles">nuevo</span>
+                }
                 @if (aiLoading()) {
                   <span class="ai-pulse">●</span>
                 }
@@ -1165,6 +1171,24 @@ export interface TerminalAiMessage {
         animation: pulseBlink 1s infinite alternate;
       }
 
+      .ai-unread-badge {
+        background: #7c3aed;
+        color: #ffffff;
+        font-size: 0.58rem;
+        font-weight: 700;
+        padding: 0.05rem 0.35rem;
+        border-radius: 9999px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        animation: pulseBlink 1.2s infinite alternate;
+        box-shadow: 0 0 6px rgba(168, 85, 247, 0.6);
+      }
+
+      .badge-unread {
+        background: #7c3aed !important;
+        color: #ffffff !important;
+      }
+
       .terminal-meta-controls {
         display: flex;
         align-items: center;
@@ -1905,6 +1929,7 @@ export class InteractiveIdeComponent {
 
   // AI Copilot state
   readonly copilotMessages = signal<TerminalAiMessage[]>([]);
+  readonly hasUnreadAiAdvice = signal<boolean>(false);
   readonly aiInputText = signal<string>('');
   readonly toastMessage = signal<string | null>(null);
 
@@ -1966,6 +1991,7 @@ export class InteractiveIdeComponent {
   }
 
   openCopilotTab() {
+    this.hasUnreadAiAdvice.set(false);
     this.activeTerminalTab.set('ai');
     this.mobileActivePane.set('ai');
     setTimeout(() => this.scrollCopilotToBottom(), 80);
@@ -2118,10 +2144,10 @@ export class InteractiveIdeComponent {
           this.executionResult.set(res);
           this.running.set(false);
 
-          // Evaluación automática continua del Agente y del Sistema:
-          if (res.exit_code === 0 && !this.isApproved()) {
+          // Evaluación continua y recomendaciones activas del Agente:
+          if (res.exit_code === 0) {
             if (this.activeTestCases().length > 0) {
-              // Si el ejercicio tiene tests, los verificamos silenciosamente en segundo plano
+              // Si el ejercicio tiene tests, los corremos en segundo plano
               this.codeRunner
                 .execute(this.currentLanguage(), this.code(), '', this.activeTestCases())
                 .subscribe({
@@ -2132,6 +2158,11 @@ export class InteractiveIdeComponent {
                         100,
                         'Todas las pruebas automatizadas del sistema pasaron exitosamente.'
                       );
+                      // El agente además aporta recomendaciones de buenas prácticas y calidad
+                      this.runBackgroundAiEvaluation(testRes);
+                    } else {
+                      // Pruebas no pasaron: el agente analiza qué falló y aporta recomendaciones
+                      this.runBackgroundAiEvaluation(testRes);
                     }
                   },
                 });
@@ -2139,17 +2170,23 @@ export class InteractiveIdeComponent {
               // Si no hay tests unitarios (ejercicio abierto / POO), el agente evalúa en segundo plano
               this.runBackgroundAiEvaluation(res);
             }
+          } else {
+            // El código falló con error de compilación o excepción en consola (stderr)
+            // El agente analiza el error y le da recomendaciones al estudiante sobre qué estuvo mal
+            this.runBackgroundAiEvaluation(res);
           }
         },
         error: err => {
           this.running.set(false);
-          this.executionResult.set({
+          const errRes: CodeExecutionResponse = {
             stdout: '',
             stderr: err?.error?.message || err?.message || 'Error de conexión con el motor de ejecución.',
             exit_code: 1,
             execution_time_ms: 0,
             language: this.currentLanguage(),
-          });
+          };
+          this.executionResult.set(errRes);
+          this.runBackgroundAiEvaluation(errRes);
         },
       });
   }
@@ -2176,21 +2213,25 @@ export class InteractiveIdeComponent {
               100,
               'Todas las pruebas automatizadas del sistema pasaron exitosamente.'
             );
+            // El agente analiza la solución para aportar recomendaciones de buenas prácticas
+            this.runBackgroundAiEvaluation(res);
           } else if (res.tests && res.tests.some(t => !t.passed)) {
             this.challengeStatus.set('needs_work');
-            // El agente analiza el fallo en segundo plano para tener el diagnóstico listo
+            // El agente analiza el fallo en segundo plano y deja las recomendaciones listas
             this.runBackgroundAiEvaluation(res);
           }
         },
         error: err => {
           this.testing.set(false);
-          this.executionResult.set({
+          const errRes: CodeExecutionResponse = {
             stdout: '',
             stderr: err?.error?.message || err?.message || 'Error al ejecutar las pruebas.',
             exit_code: 1,
             execution_time_ms: 0,
             language: this.currentLanguage(),
-          });
+          };
+          this.executionResult.set(errRes);
+          this.runBackgroundAiEvaluation(errRes);
         },
       });
   }
@@ -2227,10 +2268,10 @@ export class InteractiveIdeComponent {
   }
 
   /**
-   * Evaluación automática continua del Agente en segundo plano (sin intervención ni botones manuales)
+   * Evaluación automática continua del Agente en segundo plano con diagnóstico y recomendaciones activas
    */
   async runBackgroundAiEvaluation(lastExec: CodeExecutionResponse): Promise<void> {
-    if (this.isApproved() || this.aiLoading()) return;
+    if (this.aiLoading()) return;
 
     this.aiLoading.set(true);
     const context = {
@@ -2245,35 +2286,73 @@ export class InteractiveIdeComponent {
     try {
       const evaluation = await this.callAiEvaluator(context);
 
+      let aiReplyText = '';
       if (evaluation.approved) {
         this.markApprovedAutomatically('ai', evaluation.score ?? 100, evaluation.summary);
 
-        const aiMsg: TerminalAiMessage = {
-          id: String(Date.now()),
-          sender: 'assistant',
-          text: `### 🏆 ¡Solución Validada y Aprobada por el Agente!\n\n` +
-            `**Resumen:** ${evaluation.summary}\n\n` +
-            (evaluation.feedback ? `**Diagnóstico:**\n${evaluation.feedback}\n\n` : '') +
-            `> ✅ **Objetivo completado.** El avance ha sido registrado automáticamente y el siguiente módulo está habilitado.`,
-          timestamp: new Date(),
-        };
-        this.copilotMessages.update(msgs => [...msgs, aiMsg]);
+        aiReplyText = `### 🏆 ¡Solución Validada y Aprobada! (${evaluation.score}/100)\n\n` +
+          `**Resumen:** ${evaluation.summary}\n\n` +
+          (evaluation.recommendations
+            ? `**💡 Recomendaciones de Calidad y Buenas Prácticas:**\n${evaluation.recommendations}\n\n`
+            : '') +
+          `> ✅ **Objetivo completado.** El avance ha sido registrado automáticamente y el siguiente módulo está habilitado.`;
       } else {
-        const diagMsg: TerminalAiMessage = {
-          id: String(Date.now()),
-          sender: 'assistant',
-          text: `### 🤖 Diagnóstico en Vivo del Agente\n\n` +
-            `**Resumen:** ${evaluation.summary}\n\n` +
-            (evaluation.feedback ? `**Observaciones:**\n${evaluation.feedback}\n\n` : '') +
-            `> 💡 *El agente continúa evaluando tus ejecuciones en segundo plano.*`,
-          timestamp: new Date(),
-        };
-        this.copilotMessages.update(msgs => [...msgs, diagMsg]);
+        aiReplyText = `### 🤖 Revisión en Vivo del Agente (${evaluation.score}/100)\n\n` +
+          `**Resumen:** ${evaluation.summary}\n\n` +
+          (evaluation.what_was_wrong
+            ? `**⚠️ En qué estuvo mal o qué faltó:**\n${evaluation.what_was_wrong}\n\n`
+            : (evaluation.feedback ? `**⚠️ Observaciones:**\n${evaluation.feedback}\n\n` : '')) +
+          (evaluation.recommendations
+            ? `**💡 Recomendaciones para mejorar:**\n${evaluation.recommendations}\n\n`
+            : '') +
+          (evaluation.next_step
+            ? `**🚀 Siguiente paso sugerido:**\n${evaluation.next_step}\n\n`
+            : '') +
+          `> 💡 *Ajusta tu código en el editor y presiona [▶ run] para revalidar automáticamente.*`;
+      }
+
+      const aiMsg: TerminalAiMessage = {
+        id: String(Date.now()),
+        sender: 'assistant',
+        text: aiReplyText,
+        timestamp: new Date(),
+      };
+      this.copilotMessages.update(msgs => [...msgs, aiMsg]);
+
+      if (this.activeTerminalTab() !== 'ai') {
+        this.hasUnreadAiAdvice.set(true);
+        if (!evaluation.approved) {
+          this.showToast('🤖 Byte IA analizó tu código y dejó recomendaciones en Copilot.');
+        }
       }
     } catch (_err) {
       const localEval = this.evaluateLocally(context);
+      let aiReplyText = '';
       if (localEval.approved) {
-        this.markApprovedAutomatically('ai', 100, localEval.summary);
+        this.markApprovedAutomatically('ai', localEval.score || 100, localEval.summary);
+        aiReplyText = `### 🏆 ¡Solución Aprobada por el Sistema y el Agente! (100/100)\n\n` +
+          `**Resumen:** ${localEval.summary}\n\n` +
+          (localEval.recommendations ? `**💡 Recomendaciones:**\n${localEval.recommendations}\n\n` : '') +
+          `> ✅ **Excelente trabajo.** Continúa con la siguiente lección.`;
+      } else {
+        aiReplyText = `### 🤖 Revisión del Agente — Ajustes Requeridos (${localEval.score || 40}/100)\n\n` +
+          `**Resumen:** ${localEval.summary}\n\n` +
+          (localEval.what_was_wrong ? `**⚠️ En qué estuvo mal:**\n${localEval.what_was_wrong}\n\n` : '') +
+          (localEval.recommendations ? `**💡 Recomendaciones:**\n${localEval.recommendations}\n\n` : '') +
+          (localEval.next_step ? `**🚀 Siguiente paso:**\n${localEval.next_step}\n\n` : '') +
+          `> 💡 *Ajusta tu código y presiona [▶ run] para revalidar.*`;
+      }
+
+      const aiMsg: TerminalAiMessage = {
+        id: String(Date.now()),
+        sender: 'assistant',
+        text: aiReplyText,
+        timestamp: new Date(),
+      };
+      this.copilotMessages.update(msgs => [...msgs, aiMsg]);
+
+      if (this.activeTerminalTab() !== 'ai') {
+        this.hasUnreadAiAdvice.set(true);
       }
     } finally {
       this.aiLoading.set(false);
@@ -2297,25 +2376,56 @@ export class InteractiveIdeComponent {
     score: number;
     verdict: string;
     summary: string;
+    what_was_wrong: string;
+    recommendations: string;
+    next_step: string;
     feedback: string;
   }> {
     const systemPrompt = `Eres Byte AI, evaluador técnico estricto y tutor pedagógico de SysEngAcademy.
-Tu tarea es evaluar objetivamente si el código del estudiante resuelve el ejercicio "${ctx.lesson}" en ${ctx.language}.
+Tu misión no es solo validar si el código pasa o no, sino FORMAR al estudiante con explicaciones claras sobre qué estuvo mal, qué faltó, y recomendaciones de buenas prácticas y calidad de código.
 
-Reglas de evaluación:
-1. Revisa si implementó la clase, atributos, métodos o algoritmo pedido en el enunciado y la pista: "${ctx.hint || ''}".
-2. Si el código está vacío, o es idéntico a las instrucciones iniciales sin implementar nada, DEBES responder approved: false.
-3. Si los métodos principales requeridos existen y retornan/hacen lo especificado, responde approved: true.
-4. Responde EXCLUSIVAMENTE un objeto JSON válido con las claves:
-   - "approved": boolean (true si pasa, false si no)
-   - "score": number entre 0 y 100
-   - "verdict": "APROBADO" | "NECESITA MEJORAS"
-   - "summary": string breve (1-2 oraciones)
-   - "feedback": string con detalles de aciertos o qué falta`;
+Instrucciones pedagógicas:
+1. Revisa si implementó el algoritmo, clase, atributos o métodos requeridos en: "${ctx.lesson}".
+2. Si hay errores (sintaxis, excepciones en stderr, tests fallidos, requerimientos ausentes o código incompleto):
+   - "approved": false
+   - "score": número entre 0 y 60
+   - "verdict": "NECESITA MEJORAS"
+   - "summary": frase resumen concisa del estado del código
+   - "what_was_wrong": Explica con claridad qué estuvo mal (error de sintaxis, excepción en stderr, por qué falló la lógica o qué método/atributo faltó).
+   - "recommendations": 2 o 3 recomendaciones concretas (legibilidad, buenas prácticas, estándares del lenguaje, cómo enfocar la lógica).
+   - "next_step": Pista socrática para que el estudiante resuelva el problema sin darle el código copiado.
+3. Si la solución es correcta y cumple los requerimientos:
+   - "approved": true
+   - "score": número entre 90 y 100
+   - "verdict": "APROBADO"
+   - "summary": felicitación y resumen de aciertos
+   - "what_was_wrong": ""
+   - "recommendations": Recomendaciones de optimización (complejidad Big-O, limpieza de código, estándares de la industria, tipado).
+   - "next_step": Sugerencia de pasar a la siguiente lección.
+
+Responde EXCLUSIVAMENTE un JSON válido con estas claves:
+{
+  "approved": boolean,
+  "score": number,
+  "verdict": string,
+  "summary": string,
+  "what_was_wrong": string,
+  "recommendations": string,
+  "next_step": string
+}`;
 
     let userPrompt = `Reto: ${ctx.lesson}\nLenguaje: ${ctx.language}\nPista / Requerimientos: ${ctx.hint || 'No disponible'}\n`;
+    if (ctx.lastExecution?.exit_code !== undefined) {
+      userPrompt += `Exit Code: ${ctx.lastExecution.exit_code}\n`;
+    }
+    if (ctx.lastExecution?.stderr) {
+      userPrompt += `Error en consola (stderr):\n${ctx.lastExecution.stderr}\n`;
+    }
+    if (ctx.lastExecution?.stdout) {
+      userPrompt += `Salida estándar (stdout):\n${ctx.lastExecution.stdout}\n`;
+    }
     if (ctx.lastExecution?.tests?.length) {
-      userPrompt += `Resultados de tests previos: ${JSON.stringify(ctx.lastExecution.tests)}\n`;
+      userPrompt += `Resultados de tests unitarios: ${JSON.stringify(ctx.lastExecution.tests)}\n`;
     }
     userPrompt += `\nCódigo del estudiante:\n\`\`\`${ctx.language}\n${ctx.code}\n\`\`\``;
 
@@ -2333,7 +2443,7 @@ Reglas de evaluación:
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.2,
-        max_tokens: 600,
+        max_tokens: 700,
         response_format: { type: 'json_object' },
       }),
     });
@@ -2344,49 +2454,100 @@ Reglas de evaluación:
 
     const data = await res.json();
     const rawContent = data.choices?.[0]?.message?.content || '{}';
+    let parsed: any = {};
     try {
-      const parsed = JSON.parse(rawContent);
-      return {
-        approved: !!parsed.approved,
-        score: typeof parsed.score === 'number' ? parsed.score : (parsed.approved ? 100 : 40),
-        verdict: parsed.verdict || (parsed.approved ? 'APROBADO' : 'NECESITA MEJORAS'),
-        summary: parsed.summary || (parsed.approved ? 'Solución correcta y funcional.' : 'Faltan requerimientos.'),
-        feedback: parsed.feedback || '',
-      };
+      parsed = JSON.parse(rawContent);
     } catch {
       const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          approved: !!parsed.approved,
-          score: typeof parsed.score === 'number' ? parsed.score : (parsed.approved ? 100 : 40),
-          verdict: parsed.verdict || (parsed.approved ? 'APROBADO' : 'NECESITA MEJORAS'),
-          summary: parsed.summary || '',
-          feedback: parsed.feedback || '',
-        };
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('Respuesta no parseable');
       }
-      throw new Error('Respuesta no parseable');
     }
+
+    return {
+      approved: !!parsed.approved,
+      score: typeof parsed.score === 'number' ? parsed.score : (parsed.approved ? 100 : 40),
+      verdict: parsed.verdict || (parsed.approved ? 'APROBADO' : 'NECESITA MEJORAS'),
+      summary: parsed.summary || (parsed.approved ? 'Solución correcta y funcional.' : 'El código requiere ajustes.'),
+      what_was_wrong: parsed.what_was_wrong || parsed.feedback || '',
+      recommendations: parsed.recommendations || '',
+      next_step: parsed.next_step || '',
+      feedback: parsed.feedback || parsed.what_was_wrong || '',
+    };
   }
 
-  private evaluateLocally(ctx: any): { approved: boolean; summary: string; feedback: string } {
+  private evaluateLocally(ctx: any): {
+    approved: boolean;
+    score: number;
+    summary: string;
+    what_was_wrong: string;
+    recommendations: string;
+    next_step: string;
+    feedback: string;
+  } {
     const code = ctx.code || '';
     const cleanCode = code.replace(/#.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
 
     if (!cleanCode || cleanCode.length < 15) {
       return {
         approved: false,
+        score: 10,
         summary: 'El código está prácticamente vacío.',
+        what_was_wrong: 'Aún no has escrito la lógica para resolver el ejercicio planteado.',
+        recommendations: 'Lee con atención la pista técnica y la descripción del reto. Comienza declarando las variables, funciones o clases pedidas.',
+        next_step: 'Escribe la estructura base en el editor y presiona [▶ run].',
         feedback: 'Debes escribir la implementación requerida para el reto.',
       };
     }
 
-    if (ctx.lastExecution?.tests?.length > 0 && ctx.lastExecution.tests.every((t: any) => t.passed)) {
+    // Si hubo error de compilación o ejecución en terminal
+    if (ctx.lastExecution && ctx.lastExecution.exit_code !== 0 && ctx.lastExecution.stderr) {
+      const stderr = ctx.lastExecution.stderr;
+      let errorHint = 'El intérprete reportó una excepción al ejecutar tu programa.';
+      if (stderr.includes('SyntaxError')) {
+        errorHint = 'Error de sintaxis: verifica paréntesis sin cerrar, comillas o dos puntos (:) faltantes.';
+      } else if (stderr.includes('NameError')) {
+        errorHint = 'Variable o función no definida: revisa que los identificadores estén bien escritos antes de usarlos.';
+      } else if (stderr.includes('IndentationError')) {
+        errorHint = 'Error de indentación: Python requiere exactamente 4 espacios uniformes en cada bloque.';
+      }
       return {
-        approved: true,
-        summary: 'Todas las pruebas unitarias fueron validadas y superadas.',
-        feedback: 'La estructura y comportamiento cumplen con todas las especificaciones.',
+        approved: false,
+        score: 30,
+        summary: 'Error durante la ejecución del programa en la consola.',
+        what_was_wrong: `Excepción en terminal: ${stderr.slice(0, 180)}`,
+        recommendations: errorHint,
+        next_step: 'Revisa la línea señalada en la consola, corrige el error y vuelve a compilar con [▶ run].',
+        feedback: stderr,
       };
+    }
+
+    if (ctx.lastExecution?.tests?.length > 0) {
+      const allPassed = ctx.lastExecution.tests.every((t: any) => t.passed);
+      if (allPassed) {
+        return {
+          approved: true,
+          score: 100,
+          summary: 'Todas las pruebas unitarias fueron validadas y superadas.',
+          what_was_wrong: '',
+          recommendations: 'Tu algoritmo maneja correctamente todos los casos de prueba provistos. Como buena práctica, piensa en casos borde extremos y eficiencia Big-O.',
+          next_step: 'Avanza a la siguiente lección del curso.',
+          feedback: 'La estructura y comportamiento cumplen con todas las especificaciones.',
+        };
+      } else {
+        const failed = ctx.lastExecution.tests.find((t: any) => !t.passed);
+        return {
+          approved: false,
+          score: 50,
+          summary: 'Uno o más casos de prueba fallaron al validar la salida.',
+          what_was_wrong: failed ? `Con entrada "${failed.input || 'por defecto'}", se esperaba "${failed.expected}" pero se obtuvo "${failed.actual || '(vacío)'}".` : 'Divergencia entre la salida esperada y la real.',
+          recommendations: 'Compara la salida producida con el formato exacto requerido (revisa espacios, saltos de línea o tipos de retorno).',
+          next_step: 'Consulta la pestaña de Pruebas para ver el detalle de cada caso y ajusta tu lógica.',
+          feedback: 'Revisa los casos fallidos en la pestaña de Pruebas.',
+        };
+      }
     }
 
     const lTitle = (ctx.lesson || '').toLowerCase();
@@ -2397,7 +2558,11 @@ Reglas de evaluación:
       if (hasClass && hasInit && hasMostrar) {
         return {
           approved: true,
+          score: 100,
           summary: 'La clase Libro y sus métodos __init__ y mostrar() están correctamente estructurados.',
+          what_was_wrong: '',
+          recommendations: 'Excelente aplicación del paradigma orientado a objetos. Para código profesional, puedes añadir type hints: def __init__(self, titulo: str, autor: str) -> None.',
+          next_step: 'Avanza a la siguiente lección.',
           feedback: 'Se identificó la declaración de la clase, el constructor con self y el método de representación.',
         };
       } else {
@@ -2407,7 +2572,11 @@ Reglas de evaluación:
         if (!hasMostrar) missing.push('Definir el método mostrar(self)');
         return {
           approved: false,
-          summary: 'La implementación está incompleta.',
+          score: 45,
+          summary: 'La implementación de la clase está incompleta.',
+          what_was_wrong: `Falta implementar: ${missing.join(', ')}.`,
+          recommendations: 'En Python, todo método dentro de una clase debe recibir self como primer parámetro para acceder a las propiedades de la instancia.',
+          next_step: 'Añade los métodos faltantes según la pista y presiona [▶ run].',
           feedback: `Falta: ${missing.join(', ')}.`,
         };
       }
@@ -2416,14 +2585,22 @@ Reglas de evaluación:
     if (ctx.lastExecution && ctx.lastExecution.exit_code === 0 && !ctx.lastExecution.stderr) {
       return {
         approved: true,
+        score: 95,
         summary: 'El código compila y ejecuta limpiamente sin errores de consola.',
+        what_was_wrong: '',
+        recommendations: 'El programa finalizó con código 0. Recuerda mantener nombres descriptivos de variables y comentarios donde aporten valor.',
+        next_step: 'Continúa con el siguiente módulo.',
         feedback: 'Ejecución exitosa en el entorno de ejecución.',
       };
     }
 
     return {
       approved: false,
+      score: 40,
       summary: 'El código requiere revisión para satisfacer el problema.',
+      what_was_wrong: 'La solución actual no produce la salida o estructura esperada para este reto.',
+      recommendations: 'Revisa la pista técnica proporcionada en la pestaña 💡 Pista y asegúrate de imprimir o retornar el valor solicitado.',
+      next_step: 'Haz los cambios necesarios en el editor y presiona [▶ run].',
       feedback: 'Ejecuta ./test.sh o revisa la salida en terminal para verificar tus resultados.',
     };
   }
