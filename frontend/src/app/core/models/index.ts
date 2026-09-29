@@ -4,6 +4,7 @@ export interface User {
   email: string;
   avatar?: string;
   role: 'student' | 'instructor' | 'admin';
+  email_verified_at?: string;
 }
 
 export interface Category {

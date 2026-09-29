@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        \App\Modules\Performance\Commands\SimulateTrafficCommand::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         // API pura: sin ruta web "login". Los invitados no autenticados
         // lanzan AuthenticationException en vez de redirigir a una ruta

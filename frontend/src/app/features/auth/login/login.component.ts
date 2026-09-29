@@ -41,6 +41,19 @@ import { AuthService } from '../../../core/services/auth.service';
           </button>
         </form>
 
+        <!-- Accesos rápidos de prueba para Docente y Estudiante -->
+        <div class="test-accounts-section">
+          <span class="test-accounts-label">Accesos rápidos de prueba:</span>
+          <div class="test-accounts-buttons">
+            <button type="button" class="btn-account-pill" (click)="fillDocente()">
+              👨‍🏫 Docente Principal
+            </button>
+            <button type="button" class="btn-account-pill" (click)="fillEstudiante()">
+              🎓 Estudiante Demo
+            </button>
+          </div>
+        </div>
+
         <p class="auth-link">
           ¿No tienes cuenta?
           <a routerLink="/auth/registro">Regístrate</a>
@@ -115,6 +128,54 @@ import { AuthService } from '../../../core/services/auth.service';
 
     form { display: flex; flex-direction: column; gap: var(--sp-4); }
 
+    .test-accounts-section {
+      margin-top: var(--sp-4);
+      padding: var(--sp-3);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .test-accounts-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+    }
+
+    .test-accounts-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-account-pill {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        background: var(--bg-surface);
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+    }
+
     .auth-link {
       text-align: center;
       margin-top: var(--sp-5);
@@ -133,6 +194,18 @@ export class LoginComponent {
   loading  = signal(false);
   error    = signal('');
 
+  fillDocente() {
+    this.email = 'andrescamilomartinez330@gmail.com';
+    this.password = 'kimetsunoyaiBa1';
+    this.error.set('');
+  }
+
+  fillEstudiante() {
+    this.email = 'estudiante@sysengacademy.dev';
+    this.password = 'estudiante1234';
+    this.error.set('');
+  }
+
   submit() {
     if (this.loading()) return;
     this.loading.set(true);
@@ -148,7 +221,7 @@ export class LoginComponent {
         ) {
           this.router.navigate(['/docente']);
         } else {
-          this.router.navigate(['/']);
+          this.router.navigate(['/perfil']);
         }
       },
       error: (err) => {

@@ -191,7 +191,7 @@ class CodeExecutionTest extends TestCase
             'language' => 'python',
             'code' => 'a = int(input()); print(a * a)',
             'tests' => [
-                ['input' => '2', 'expected' => '4'],
+                ['input' => '2', 'expected' => '5'],
             ],
         ]);
 
@@ -199,7 +199,7 @@ class CodeExecutionTest extends TestCase
 
         $data = $response->json();
         $this->assertCount(1, $data['tests']);
-        $this->assertEquals('5', $data['tests'][0]['actual']);
+        $this->assertEquals('4', $data['tests'][0]['actual']);
         $this->assertFalse($data['tests'][0]['passed']);
     }
 
@@ -261,50 +261,30 @@ class CodeExecutionTest extends TestCase
             ->assertJsonValidationErrors(['tests.0.expected']);
     }
 
-    public function test_execute_handles_piston_connection_error(): void
+    public function test_execute_handles_execution_runtime_error(): void
     {
-        Http::fake([
-            'https://emkc.org/api/v2/piston/execute' => Http::response([], 503),
-        ]);
-
         $response = $this->postJson('/api/code/execute', [
             'language' => 'python',
-            'code' => 'print("test")',
+            'code' => 'raise ValueError("Error en ejecucion simulada")',
         ]);
 
-        $response->assertStatus(502)
-            ->assertJsonStructure(['message', 'error', 'details', 'execution_time_ms']);
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertNotEquals(0, $data['exit_code']);
+        $this->assertStringContainsString('ValueError', $data['stderr']);
     }
 
-    public function test_execute_handles_piston_400_error(): void
+    public function test_execute_handles_syntax_error(): void
     {
-        Http::fake([
-            'https://emkc.org/api/v2/piston/execute' => Http::response([
-                'message' => 'Invalid language',
-            ], 400),
-        ]);
-
         $response = $this->postJson('/api/code/execute', [
             'language' => 'python',
-            'code' => 'print("test")',
+            'code' => 'def invalid syntax (():',
         ]);
 
-        $response->assertStatus(502)
-            ->assertJsonStructure(['message', 'error', 'details', 'execution_time_ms']);
-    }
-
-    public function test_execute_handles_piston_timeout(): void
-    {
-        Http::fake([
-            'https://emkc.org/api/v2/piston/execute' => Http::response([], 504),
-        ]);
-
-        $response = $this->postJson('/api/code/execute', [
-            'language' => 'python',
-            'code' => 'print("test")',
-        ]);
-
-        $response->assertStatus(502);
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertNotEquals(0, $data['exit_code']);
+        $this->assertStringContainsString('SyntaxError', $data['stderr']);
     }
 
     public function test_rate_limiter_blocks_after_max_requests(): void
