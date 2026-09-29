@@ -2806,9 +2806,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   showAvatarModal = signal(false);
 
   // Streak state
-  currentStreak = signal(5);
-  maxStreak = signal(12);
-  todayCheckedIn = signal(false);
+  currentStreak = signal(1);
+  maxStreak = signal(1);
+  todayCheckedIn = signal(true);
 
   // Diagnostic state
   diagnosticCompleted = signal(false);
@@ -2887,14 +2887,14 @@ for (let paso = 1; paso <= 3; paso++) {
   diagnosticAnswers: Record<string, string> = {};
 
   diagnosticResult = signal({
-    assignedLevelNumber: 6,
-    assignedLevelTitle: 'Nivel 6: Desarrollador Backend Semi-Senior',
-    recommendedSpecialty: 'Sistemas Backend & APIs Distribuidas',
-    recommendedPathTitle: 'Ruta de Desarrollo Backend & Arquitectura de APIs',
-    suggestedCourseSlug: 'backend-introduccion',
-    suggestedCourseTitle: 'Introducción al Backend & Arquitectura de Servidores',
-    score: 3,
-    agentFeedback: 'Byte Copilot ha procesado tu evaluación. Demuestras una comprensión sólida en la elección de estructuras en memoria (LIFO) y optimización de complejidad O(log N). Te orientamos a la Ruta Backend.',
+    assignedLevelNumber: 1,
+    assignedLevelTitle: 'Nivel 1: Cadete en Formación',
+    recommendedSpecialty: 'Por definir (Prueba Diagnóstica Pendiente)',
+    recommendedPathTitle: 'Ruta Inicial de Formación Técnica',
+    suggestedCourseSlug: 'introduccion-programacion',
+    suggestedCourseTitle: 'Introducción a la Programación',
+    score: 0,
+    agentFeedback: 'Presenta tu examen diagnóstico para calibrar tu nivel y definir tu ruta de aprendizaje recomendada.',
   });
 
   // Study Groups state
@@ -2909,7 +2909,7 @@ for (let paso = 1; paso <= 3; paso++) {
       streakDays: 19,
       weeklyChallenge: { title: 'Implementar un Thread Pool en C++ con mutex POSIX', xpReward: 350, completed: false },
       recentLogs: [{ author: 'Mateo (Lvl 16)', message: 'Subí benchmark de semáforos a la repo.', timeAgo: 'hace 2h' }],
-      isMember: true,
+      isMember: false,
     },
     {
       id: 'algo',
@@ -2924,6 +2924,18 @@ for (let paso = 1; paso <= 3; paso++) {
       isMember: false,
     },
   ]);
+
+  readonly currentStudentEmail = computed(() => {
+    return this.auth.user()?.email?.toLowerCase().trim() || 'guest';
+  });
+
+  readonly isDemoStudent = computed(() => {
+    return this.currentStudentEmail() === 'estudiante@sysengacademy.dev';
+  });
+
+  private getUserStorageKey(suffix: string): string {
+    return `syseng_${this.currentStudentEmail()}_${suffix}`;
+  }
 
   showCreateGuildModal = signal(false);
 
@@ -3013,25 +3025,94 @@ for (let paso = 1; paso <= 3; paso++) {
       this.selectedAvatarId.set(pool[0].id);
     }
 
-    try {
-      const st = JSON.parse(localStorage.getItem('syseng_streak_data') || '{}');
-      if (st.currentStreak !== undefined) this.currentStreak.set(st.currentStreak);
-      if (st.maxStreak !== undefined) this.maxStreak.set(st.maxStreak);
-      const today = new Date().toISOString().slice(0, 10);
-      if (st.lastCheckIn === today) this.todayCheckedIn.set(true);
-    } catch {}
-
-    const diagCompleted = localStorage.getItem('syseng_diagnostic_completed') === 'true';
-    this.diagnosticCompleted.set(diagCompleted);
-    if (diagCompleted) {
+    if (this.isDemoStudent()) {
       try {
-        const savedRes = JSON.parse(localStorage.getItem('syseng_diagnostic_result') || '{}');
-        if (savedRes.assignedLevelTitle) {
-          this.diagnosticResult.set(savedRes);
+        const st = JSON.parse(localStorage.getItem('syseng_streak_data') || '{}');
+        this.currentStreak.set(st.currentStreak !== undefined ? st.currentStreak : 5);
+        this.maxStreak.set(st.maxStreak !== undefined ? st.maxStreak : 12);
+        const today = new Date().toISOString().slice(0, 10);
+        if (st.lastCheckIn === today) this.todayCheckedIn.set(true);
+      } catch {
+        this.currentStreak.set(5);
+        this.maxStreak.set(12);
+      }
+
+      this.diagnosticCompleted.set(true);
+      this.diagnosticFinished.set(true);
+      this.diagnosticResult.set({
+        assignedLevelNumber: 6,
+        assignedLevelTitle: 'Nivel 6: Desarrollador Backend Semi-Senior',
+        recommendedSpecialty: 'Sistemas Backend & APIs Distribuidas',
+        recommendedPathTitle: 'Ruta de Desarrollo Backend & Arquitectura de APIs',
+        suggestedCourseSlug: 'backend-introduccion',
+        suggestedCourseTitle: 'Introducción al Backend & Arquitectura de Servidores',
+        score: 3,
+        agentFeedback: 'Byte Copilot ha evaluado tu perfil demostrativo.',
+      });
+
+      this.studyGroups.update(groups =>
+        groups.map(g => ({ ...g, isMember: g.id === 'krnl' }))
+      );
+      return;
+    }
+
+    // Alumno real (nuevo usuario): Cargar datos limpios asociados exclusivamente a su cuenta
+    const userKeyStreak = this.getUserStorageKey('streak_data');
+    const userKeyDiag = this.getUserStorageKey('diagnostic_completed');
+    const userKeyDiagRes = this.getUserStorageKey('diagnostic_result');
+    const userKeyGroups = this.getUserStorageKey('study_groups');
+
+    try {
+      const streakRaw = localStorage.getItem(userKeyStreak);
+      if (streakRaw) {
+        const st = JSON.parse(streakRaw);
+        this.currentStreak.set(st.currentStreak || 1);
+        this.maxStreak.set(st.maxStreak || 1);
+        const today = new Date().toISOString().slice(0, 10);
+        this.todayCheckedIn.set(st.lastCheckIn === today);
+      } else {
+        this.currentStreak.set(1);
+        this.maxStreak.set(1);
+        this.todayCheckedIn.set(true);
+      }
+    } catch {
+      this.currentStreak.set(1);
+      this.maxStreak.set(1);
+      this.todayCheckedIn.set(true);
+    }
+
+    const diagDone = localStorage.getItem(userKeyDiag) === 'true';
+    this.diagnosticCompleted.set(diagDone);
+    if (diagDone) {
+      try {
+        const res = JSON.parse(localStorage.getItem(userKeyDiagRes) || '{}');
+        if (res.assignedLevelTitle) {
+          this.diagnosticResult.set(res);
           this.diagnosticFinished.set(true);
         }
       } catch {}
+    } else {
+      this.diagnosticFinished.set(false);
+      this.diagnosticResult.set({
+        assignedLevelNumber: 1,
+        assignedLevelTitle: 'Nivel 1: Cadete en Formación',
+        recommendedSpecialty: 'Por definir (Prueba Diagnóstica Pendiente)',
+        recommendedPathTitle: 'Ruta Inicial de Formación Técnica',
+        suggestedCourseSlug: 'introduccion-programacion',
+        suggestedCourseTitle: 'Introducción a la Programación',
+        score: 0,
+        agentFeedback: 'Presenta tu examen diagnóstico de 3 preguntas de lógica básica para calibrar tu nivel y definir tu ruta de aprendizaje.',
+      });
     }
+
+    try {
+      const groupsRaw = localStorage.getItem(userKeyGroups);
+      if (groupsRaw) {
+        this.studyGroups.set(JSON.parse(groupsRaw));
+      } else {
+        this.studyGroups.update(groups => groups.map(g => ({ ...g, isMember: false })));
+      }
+    } catch {}
   }
 
   readonly currentAsciiAvatar = computed(() => {
@@ -3087,11 +3168,16 @@ for (let paso = 1; paso <= 3; paso++) {
 
     if (typeof window !== 'undefined') {
       const today = new Date().toISOString().slice(0, 10);
-      localStorage.setItem('syseng_streak_data', JSON.stringify({
+      const data = {
         currentStreak: newStreak,
         maxStreak: this.maxStreak(),
         lastCheckIn: today,
-      }));
+      };
+      if (this.isDemoStudent()) {
+        localStorage.setItem('syseng_streak_data', JSON.stringify(data));
+      } else {
+        localStorage.setItem(this.getUserStorageKey('streak_data'), JSON.stringify(data));
+      }
     }
   }
 
@@ -3173,8 +3259,38 @@ for (let paso = 1; paso <= 3; paso++) {
     this.diagnosticCompleted.set(true);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('syseng_diagnostic_completed', 'true');
-      localStorage.setItem('syseng_diagnostic_result', JSON.stringify(result));
+      const email = this.currentStudentEmail();
+      if (this.isDemoStudent()) {
+        localStorage.setItem('syseng_diagnostic_completed', 'true');
+        localStorage.setItem('syseng_diagnostic_result', JSON.stringify(result));
+      } else {
+        localStorage.setItem(this.getUserStorageKey('diagnostic_completed'), 'true');
+        localStorage.setItem(this.getUserStorageKey('diagnostic_result'), JSON.stringify(result));
+      }
+
+      // Asignar el curso inicial recomendado automáticamente a las inscripciones del usuario
+      const starterEnrollment: Enrollment = {
+        id: Date.now(),
+        user_id: this.auth.user()?.id || Date.now(),
+        course_id: 1,
+        enrolled_at: new Date().toISOString(),
+        completed_at: undefined,
+        progress_percent: 0,
+        course: {
+          id: 1,
+          title: courseTitle,
+          slug: courseSlug,
+          description: 'Ruta inicial asignada según tu evaluación diagnóstica de lógica y preferencias.',
+          duration_hours: 12,
+          difficulty: 'beginner',
+          is_free: true,
+          category: { id: 1, name: 'Fundamentos', slug: 'programacion-basica' },
+        } as any,
+      };
+
+      this.enrollments.set([starterEnrollment]);
+      const enrKey = 'syseng_user_enrollments_' + email;
+      localStorage.setItem(enrKey, JSON.stringify([starterEnrollment]));
 
       // Sincronizar en tiempo real el progreso de la actividad con el Panel Docente
       try {
@@ -3187,9 +3303,7 @@ for (let paso = 1; paso <= 3; paso++) {
             cache[idx].quizzes_taken_count = Math.max(cache[idx].quizzes_taken_count || 0, 1);
             cache[idx].average_quiz_score = quizPct;
             cache[idx].completed_lessons_count = Math.max(cache[idx].completed_lessons_count || 0, 1);
-            if (!cache[idx].courses || cache[idx].courses.length === 0) {
-              cache[idx].courses = [{ id: 1, title: courseTitle, progress_percent: 25 }];
-            }
+            cache[idx].courses = [{ id: 1, title: courseTitle, progress_percent: 10 }];
           }
           localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(cache));
           window.dispatchEvent(new CustomEvent('teacher:students-updated', { detail: currentUser }));
@@ -3206,20 +3320,27 @@ for (let paso = 1; paso <= 3; paso++) {
   }
 
   readonly myGroupName = computed(() => {
+    if (this.isDemoStudent()) return '[KRNL] Kernel & C++ Systems Hackers';
     const mine = this.studyGroups().find(g => g.isMember);
-    return mine ? `${mine.tag} ${mine.name}` : 'Sin clan asignado';
+    return mine ? `${mine.tag} ${mine.name}` : 'Sin clan asignado (Explorador Independiente)';
   });
 
   joinGuild(id: string) {
     this.studyGroups.update(groups =>
       groups.map(g => ({ ...g, isMember: g.id === id, membersCount: g.id === id ? g.membersCount + 1 : (g.isMember ? g.membersCount - 1 : g.membersCount) }))
     );
+    if (typeof window !== 'undefined' && !this.isDemoStudent()) {
+      localStorage.setItem(this.getUserStorageKey('study_groups'), JSON.stringify(this.studyGroups()));
+    }
   }
 
   leaveGuild(id: string) {
     this.studyGroups.update(groups =>
       groups.map(g => g.id === id ? { ...g, isMember: false, membersCount: Math.max(1, g.membersCount - 1) } : g)
     );
+    if (typeof window !== 'undefined' && !this.isDemoStudent()) {
+      localStorage.setItem(this.getUserStorageKey('study_groups'), JSON.stringify(this.studyGroups()));
+    }
   }
 
   completedCount(): number {
@@ -3227,85 +3348,229 @@ for (let paso = 1; paso <= 3; paso++) {
   }
 
   readonly solvedChallengesCount = computed(() => {
+    if (this.isDemoStudent()) return 8;
     let count = 0;
     if (typeof window !== 'undefined') {
       try {
-        const stored = JSON.parse(localStorage.getItem('syseng_solved_challenges') || '[]');
+        const stored = JSON.parse(localStorage.getItem(this.getUserStorageKey('solved_challenges')) || '[]');
         if (Array.isArray(stored)) count += stored.length;
       } catch {}
     }
-    return Math.max(count, 8);
+    return count;
   });
 
   readonly totalXp = computed(() => {
+    if (this.isDemoStudent()) return 1685;
+
     const fromChallenges = this.solvedChallengesCount() * 50;
     const fromCourses = this.completedCount() * 150;
     const fromEnrollments = this.enrollments().length * 30;
-    const fromQuizzes = 6 * 40;
-    const diagBonus = this.diagnosticCompleted() ? 200 : 0;
-    const streakBonus = this.currentStreak() * 25;
-    return fromChallenges + fromCourses + fromEnrollments + fromQuizzes + diagBonus + streakBonus;
+    const diagBonus = this.diagnosticCompleted() ? 100 : 0;
+    const streakBonus = Math.max(0, this.currentStreak() - 1) * 25;
+    const welcomeBonus = 50;
+
+    return welcomeBonus + fromChallenges + fromCourses + fromEnrollments + diagBonus + streakBonus;
   });
 
-  readonly userLevel = computed(() => Math.max(1, Math.floor(this.totalXp() / 100) + 1));
-  readonly xpProgressPercent = computed(() => this.totalXp() % 100);
-  readonly xpToNextLevel = computed(() => 100 - (this.totalXp() % 100));
+  readonly userLevel = computed(() => {
+    if (this.isDemoStudent()) return 17;
+    if (this.diagnosticCompleted()) {
+      return this.diagnosticResult().assignedLevelNumber || 2;
+    }
+    return 1;
+  });
+
+  readonly xpProgressPercent = computed(() => {
+    if (this.isDemoStudent()) return 85;
+    return this.totalXp() % 100;
+  });
+
+  readonly xpToNextLevel = computed(() => {
+    if (this.isDemoStudent()) return 15;
+    return 100 - (this.totalXp() % 100);
+  });
 
   readonly rankTitle = computed(() => {
+    if (this.isDemoStudent()) return 'Arquitecto Principal de Sistemas';
     const lvl = this.userLevel();
-    if (lvl >= 11) return 'Arquitecto Principal de Sistemas';
-    if (lvl >= 8)  return 'Ingeniero de Software Senior';
-    if (lvl >= 6)  return 'Líder Técnico en Desarrollo';
-    if (lvl >= 4)  return 'Desarrollador FullStack Semi-Senior';
+    if (!this.diagnosticCompleted()) return 'Cadete de Sistemas (Nivel 1)';
+    if (lvl >= 7)  return 'Ingeniero de Sistemas Semi-Senior';
+    if (lvl >= 4)  return 'Desarrollador Junior Avanzado';
+    if (lvl >= 3)  return 'Desarrollador en Formación';
+    if (lvl >= 2)  return 'Iniciación a la Programación';
     return 'Cadete de Sistemas (Iniciación)';
   });
 
-  readonly specialization = computed(() => ({
-    title: 'Sistemas Backend & APIs Distribuidas',
-    icon: '⚙️',
-  }));
+  readonly specialization = computed(() => {
+    if (this.isDemoStudent()) {
+      return { title: 'Sistemas Backend & APIs Distribuidas', icon: '⚙️' };
+    }
+    if (this.diagnosticCompleted()) {
+      const spec = this.diagnosticResult().recommendedSpecialty || 'Fundamentos de Programación';
+      let icon = '🚀';
+      const s = spec.toLowerCase();
+      if (s.includes('backend') || s.includes('servidor')) icon = '⚙️';
+      else if (s.includes('frontend') || s.includes('web')) icon = '🎨';
+      else if (s.includes('algo') || s.includes('lógica')) icon = '🧩';
+      return { title: spec, icon };
+    }
+    return { title: 'Por definir (Prueba Diagnóstica Pendiente)', icon: '📝' };
+  });
 
-  myRank(): number { return 3; }
+  myRank(): number {
+    if (this.isDemoStudent()) return 3;
+    return this.diagnosticCompleted() ? 4 : 8;
+  }
 
-  readonly badges = computed<AchievementBadge[]>(() => [
-    {
-      id: 'challenge_1',
-      title: 'Primer Algoritmo CLI',
-      category: 'challenges',
-      icon: '🥉',
-      description: 'Compilaste tu primer reto interactivo.',
-      requirement: 'Resuelve 1 reto',
-      targetCount: 1,
-      currentCount: 1,
-      progressPercent: 100,
-      unlocked: true,
-      level: 'bronze',
-      shaFingerprint: 'sha256:7f8a91b2c4e5f6a1',
-    },
-    {
-      id: 'streak_fire',
-      title: 'Disciplina & Constancia',
-      category: 'special',
-      icon: '🔥',
-      description: 'Mantuviste una racha de estudio de al menos 5 días.',
-      requirement: 'Racha >= 5 días',
-      targetCount: 5,
-      currentCount: 5,
-      progressPercent: 100,
-      unlocked: true,
-      level: 'silver',
-      shaFingerprint: 'sha256:f5e4d3c2b1a09876',
-    },
-  ]);
+  readonly badges = computed<AchievementBadge[]>(() => {
+    if (this.isDemoStudent()) {
+      return [
+        {
+          id: 'welcome_cadet',
+          title: 'Bienvenido a la Academia',
+          category: 'special',
+          icon: '🎓',
+          description: 'Creaste y activaste tu cuenta de estudiante.',
+          requirement: 'Cuenta verificada',
+          targetCount: 1,
+          currentCount: 1,
+          progressPercent: 100,
+          unlocked: true,
+          level: 'bronze',
+          shaFingerprint: 'sha256:01a9b2c3d4e5f6',
+        },
+        {
+          id: 'challenge_1',
+          title: 'Primer Algoritmo CLI',
+          category: 'challenges',
+          icon: '🥉',
+          description: 'Compilaste tu primer reto interactivo.',
+          requirement: 'Resuelve 1 reto',
+          targetCount: 1,
+          currentCount: 1,
+          progressPercent: 100,
+          unlocked: true,
+          level: 'bronze',
+          shaFingerprint: 'sha256:7f8a91b2c4e5f6a1',
+        },
+        {
+          id: 'streak_fire',
+          title: 'Disciplina & Constancia',
+          category: 'special',
+          icon: '🔥',
+          description: 'Mantuviste una racha de estudio de al menos 5 días.',
+          requirement: 'Racha >= 5 días',
+          targetCount: 5,
+          currentCount: 5,
+          progressPercent: 100,
+          unlocked: true,
+          level: 'silver',
+          shaFingerprint: 'sha256:f5e4d3c2b1a09876',
+        },
+      ];
+    }
+
+    const hasDiag = this.diagnosticCompleted();
+    const challenges = this.solvedChallengesCount();
+    const streak = this.currentStreak();
+
+    return [
+      {
+        id: 'welcome_cadet',
+        title: 'Bienvenido a la Academia',
+        category: 'special',
+        icon: '🎓',
+        description: 'Creaste y activaste tu cuenta de estudiante en SysEng.',
+        requirement: 'Registro y activación',
+        targetCount: 1,
+        currentCount: 1,
+        progressPercent: 100,
+        unlocked: true,
+        level: 'bronze',
+        shaFingerprint: 'sha256:01a9b2c3d4e5f6',
+      },
+      {
+        id: 'diagnostic_done',
+        title: 'Calibración de Nivel',
+        category: 'special',
+        icon: '⚡',
+        description: 'Completaste la prueba diagnóstica y definiste tu ruta inicial.',
+        requirement: 'Completar examen inicial',
+        targetCount: 1,
+        currentCount: hasDiag ? 1 : 0,
+        progressPercent: hasDiag ? 100 : 0,
+        unlocked: hasDiag,
+        level: 'silver',
+        shaFingerprint: 'sha256:c7d8e9f0a1b2c3',
+      },
+      {
+        id: 'challenge_1',
+        title: 'Primer Algoritmo CLI',
+        category: 'challenges',
+        icon: '🥉',
+        description: 'Compilaste tu primer reto interactivo en la terminal.',
+        requirement: 'Resuelve 1 reto',
+        targetCount: 1,
+        currentCount: challenges >= 1 ? 1 : 0,
+        progressPercent: Math.min(100, challenges * 100),
+        unlocked: challenges >= 1,
+        level: 'bronze',
+        shaFingerprint: 'sha256:7f8a91b2c4e5f6a1',
+      },
+      {
+        id: 'streak_fire',
+        title: 'Disciplina & Constancia',
+        category: 'special',
+        icon: '🔥',
+        description: 'Mantuviste una racha de estudio de al menos 5 días.',
+        requirement: 'Racha >= 5 días',
+        targetCount: 5,
+        currentCount: streak,
+        progressPercent: Math.min(100, Math.round((streak / 5) * 100)),
+        unlocked: streak >= 5,
+        level: 'silver',
+        shaFingerprint: 'sha256:f5e4d3c2b1a09876',
+      },
+    ];
+  });
 
   readonly unlockedBadgesCount = computed(() => this.badges().filter(b => b.unlocked).length);
   readonly filteredBadges = computed(() => this.badges());
 
-  readonly leaderboard = computed<LeaderboardEntry[]>(() => [
-    { rank: 1, name: 'Mateo Silva', email: 'mateo.silva@alumnos.syseng.edu', avatarText: 'MS', level: 16, rankTitle: 'Arquitecto Principal', specialization: 'Especialista en Algoritmos', completedLessons: 14, avgQuizScore: 96.0, xp: 1520, isCurrentUser: false, badgePill: '🥇 ORO' },
-    { rank: 2, name: 'Carlos Prueba', email: 'carlos_test_1790540376@gmail.com', avatarText: 'CP', level: 12, rankTitle: 'Líder Técnico', specialization: 'Arquitecto FullStack', completedLessons: 11, avgQuizScore: 88.0, xp: 1180, isCurrentUser: false, badgePill: '🥈 PLATA' },
-    { rank: 3, name: this.auth.user()?.name || 'Ana Estudiante (Demo)', email: this.auth.user()?.email || 'estudiante@sysengacademy.dev', avatarText: 'AE', level: this.userLevel(), rankTitle: this.rankTitle(), specialization: this.specialization().title, completedLessons: 9, avgQuizScore: 91.7, xp: this.totalXp(), isCurrentUser: true, badgePill: '🥉 BRONCE' },
-  ]);
+  readonly leaderboard = computed<LeaderboardEntry[]>(() => {
+    const user = this.auth.user();
+    const isDemo = this.isDemoStudent();
+    const score = this.diagnosticCompleted() ? Math.round((this.diagnosticResult().score / 3) * 100) : 0;
+    const lessons = this.completedCount();
+
+    if (isDemo) {
+      return [
+        { rank: 1, name: 'Mateo Silva', email: 'mateo.silva@alumnos.syseng.edu', avatarText: 'MS', level: 16, rankTitle: 'Arquitecto Principal', specialization: 'Especialista en Algoritmos', completedLessons: 14, avgQuizScore: 96.0, xp: 1520, isCurrentUser: false, badgePill: '🥇 ORO' },
+        { rank: 2, name: 'Carlos Prueba', email: 'carlos_test_1790540376@gmail.com', avatarText: 'CP', level: 12, rankTitle: 'Líder Técnico', specialization: 'Arquitecto FullStack', completedLessons: 11, avgQuizScore: 88.0, xp: 1180, isCurrentUser: false, badgePill: '🥈 PLATA' },
+        { rank: 3, name: user?.name || 'Ana Estudiante (Demo)', email: user?.email || 'estudiante@sysengacademy.dev', avatarText: 'AE', level: 17, rankTitle: 'Arquitecto Principal de Sistemas', specialization: 'Sistemas Backend & APIs Distribuidas', completedLessons: 9, avgQuizScore: 91.7, xp: 1685, isCurrentUser: true, badgePill: '🥉 BRONCE' },
+      ];
+    }
+
+    return [
+      { rank: 1, name: 'Mateo Silva', email: 'mateo.silva@alumnos.syseng.edu', avatarText: 'MS', level: 16, rankTitle: 'Arquitecto Principal', specialization: 'Especialista en Algoritmos', completedLessons: 14, avgQuizScore: 96.0, xp: 1520, isCurrentUser: false, badgePill: '🥇 ORO' },
+      { rank: 2, name: 'Carlos Prueba', email: 'carlos_test_1790540376@gmail.com', avatarText: 'CP', level: 12, rankTitle: 'Líder Técnico', specialization: 'Arquitecto FullStack', completedLessons: 11, avgQuizScore: 88.0, xp: 1180, isCurrentUser: false, badgePill: '🥈 PLATA' },
+      { rank: 3, name: 'Valeria Silva', email: 'valeria.silva@universidad.edu.co', avatarText: 'VS', level: 3, rankTitle: 'Desarrolladora en Formación', specialization: 'Fundamentos de Algorítmica', completedLessons: 2, avgQuizScore: 100.0, xp: 350, isCurrentUser: false, badgePill: '🥉 BRONCE' },
+      {
+        rank: this.myRank(),
+        name: user?.name || 'Estudiante',
+        email: user?.email || '',
+        avatarText: (user?.name || 'ES').slice(0, 2).toUpperCase(),
+        level: this.userLevel(),
+        rankTitle: this.rankTitle(),
+        specialization: this.specialization().title,
+        completedLessons: lessons,
+        avgQuizScore: score,
+        xp: this.totalXp(),
+        isCurrentUser: true,
+        badgePill: this.diagnosticCompleted() ? '⚡ ACTIVO' : '🆕 NUEVO',
+      },
+    ];
+  });
 
   emoji(enr: Enrollment): string {
     return '📚';

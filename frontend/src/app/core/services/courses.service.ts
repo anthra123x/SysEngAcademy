@@ -129,84 +129,104 @@ export class CoursesService {
   getMyEnrollments(): Observable<Enrollment[]> {
     return this.api.get<Enrollment[]>('/enrollments').pipe(
       catchError(() => {
-        // Fallback enrollments para el perfil de estudiante en producción / standalone
-        const demoEnrollments: Enrollment[] = [
-          {
-            id: 1,
-            user_id: 3,
-            course_id: 1,
-            enrolled_at: '2026-09-15T10:00:00.000Z',
-            completed_at: '2026-09-20T18:30:00.000Z',
-            progress_percent: 100,
-            course: {
-              id: 1,
-              title: 'Introducción a la Programación',
-              slug: 'introduccion-programacion',
-              description: 'Fundamentos de algoritmos, variables, estructuras de control y lógica computacional.',
-              duration_hours: 12,
-              difficulty: 'beginner',
-              is_free: true,
-              category: { id: 1, name: 'Fundamentos', slug: 'programacion-basica' },
-            } as any,
-          },
-          {
-            id: 2,
-            user_id: 3,
-            course_id: 2,
-            enrolled_at: '2026-09-18T14:00:00.000Z',
-            completed_at: undefined,
-            progress_percent: 65,
-            course: {
-              id: 2,
-              title: 'Algoritmos de Ordenamiento',
-              slug: 'algoritmos-ordenamiento',
-              description: 'BubbleSort, InsertionSort, MergeSort y QuickSort con análisis de complejidad.',
-              duration_hours: 15,
-              difficulty: 'intermediate',
-              is_free: false,
-              category: { id: 2, name: 'Algoritmos', slug: 'algoritmos' },
-            } as any,
-          },
-          {
-            id: 3,
-            user_id: 3,
-            course_id: 3,
-            enrolled_at: '2026-09-22T09:00:00.000Z',
-            completed_at: undefined,
-            progress_percent: 40,
-            course: {
-              id: 3,
-              title: 'Introducción al Desarrollo Web',
-              slug: 'introduccion-desarrollo-web',
-              description: 'HTML semántico, arquitectura cliente-servidor y estilos CSS modernos.',
-              duration_hours: 18,
-              difficulty: 'beginner',
-              is_free: true,
-              category: { id: 3, name: 'Web', slug: 'desarrollo-web' },
-            } as any,
-          },
-          {
-            id: 4,
-            user_id: 3,
-            course_id: 106,
-            enrolled_at: '2026-09-23T11:00:00.000Z',
-            completed_at: '2026-09-26T16:00:00.000Z',
-            progress_percent: 100,
-            course: {
-              id: 106,
-              title: 'Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos',
-              slug: 'git-avanzado-rebase-cherry-pick-conflictos-complejos',
-              description: 'Flujos profesionales en equipo, ramas efímeras y resolución quirúrgica de merge conflicts.',
-              duration_hours: 10,
-              difficulty: 'intermediate',
-              is_free: false,
-              category: { id: 4, name: 'Herramientas', slug: 'programacion-basica' },
-            } as any,
-          },
-        ];
-        return of(demoEnrollments);
+        // En entornos sin backend o fallback, verificar si es el alumno demo o un nuevo usuario
+        if (typeof window !== 'undefined') {
+          try {
+            const userStr = localStorage.getItem('syseng_user');
+            if (userStr) {
+              const u = JSON.parse(userStr);
+              if (u.email?.toLowerCase() === 'estudiante@sysengacademy.dev') {
+                return of(this.getDemoEnrollments());
+              }
+              const userKey = 'syseng_user_enrollments_' + (u.email?.toLowerCase().trim() || u.id);
+              const stored = localStorage.getItem(userKey);
+              if (stored) {
+                return of(JSON.parse(stored));
+              }
+              return of([]);
+            }
+          } catch {}
+        }
+        return of([]);
       })
     );
+  }
+
+  private getDemoEnrollments(): Enrollment[] {
+    return [
+      {
+        id: 1,
+        user_id: 3,
+        course_id: 1,
+        enrolled_at: '2026-09-15T10:00:00.000Z',
+        completed_at: '2026-09-20T18:30:00.000Z',
+        progress_percent: 100,
+        course: {
+          id: 1,
+          title: 'Introducción a la Programación',
+          slug: 'introduccion-programacion',
+          description: 'Fundamentos de algoritmos, variables, estructuras de control y lógica computacional.',
+          duration_hours: 12,
+          difficulty: 'beginner',
+          is_free: true,
+          category: { id: 1, name: 'Fundamentos', slug: 'programacion-basica' },
+        } as any,
+      },
+      {
+        id: 2,
+        user_id: 3,
+        course_id: 2,
+        enrolled_at: '2026-09-18T14:00:00.000Z',
+        completed_at: undefined,
+        progress_percent: 65,
+        course: {
+          id: 2,
+          title: 'Algoritmos de Ordenamiento',
+          slug: 'algoritmos-ordenamiento',
+          description: 'BubbleSort, InsertionSort, MergeSort y QuickSort con análisis de complejidad.',
+          duration_hours: 15,
+          difficulty: 'intermediate',
+          is_free: false,
+          category: { id: 2, name: 'Algoritmos', slug: 'algoritmos' },
+        } as any,
+      },
+      {
+        id: 3,
+        user_id: 3,
+        course_id: 3,
+        enrolled_at: '2026-09-22T09:00:00.000Z',
+        completed_at: undefined,
+        progress_percent: 40,
+        course: {
+          id: 3,
+          title: 'Introducción al Desarrollo Web',
+          slug: 'introduccion-desarrollo-web',
+          description: 'HTML semántico, arquitectura cliente-servidor y estilos CSS modernos.',
+          duration_hours: 18,
+          difficulty: 'beginner',
+          is_free: true,
+          category: { id: 3, name: 'Web', slug: 'desarrollo-web' },
+        } as any,
+      },
+      {
+        id: 4,
+        user_id: 3,
+        course_id: 106,
+        enrolled_at: '2026-09-23T11:00:00.000Z',
+        completed_at: '2026-09-26T16:00:00.000Z',
+        progress_percent: 100,
+        course: {
+          id: 106,
+          title: 'Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos',
+          slug: 'git-avanzado-rebase-cherry-pick-conflictos-complejos',
+          description: 'Flujos profesionales en equipo, ramas efímeras y resolución quirúrgica de merge conflicts.',
+          duration_hours: 10,
+          difficulty: 'intermediate',
+          is_free: false,
+          category: { id: 4, name: 'Herramientas', slug: 'programacion-basica' },
+        } as any,
+      },
+    ];
   }
 
   completeLesson(lessonId: number, score?: number): Observable<{ progress_percent: number }> {
