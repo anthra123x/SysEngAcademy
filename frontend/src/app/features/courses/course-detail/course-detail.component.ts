@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { CoursesService } from '../../../core/services/courses.service';
+import { CoursesService, isModuleFullyCompleted, isModuleUnlockedForStudent } from '../../../core/services/courses.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Course, CourseModule, Lesson } from '../../../core/models';
 import { CourseForumComponent } from '../course-forum/course-forum.component';
@@ -156,19 +156,33 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                   </div>
                 </div>
 
+                @if (lockedToast()) {
+                  <div class="lock-toast-banner" role="alert">
+                    <span class="toast-icon">🔒</span>
+                    <span class="toast-text">{{ lockedToast() }}</span>
+                    <button type="button" class="toast-close" (click)="lockedToast.set(null)">×</button>
+                  </div>
+                }
+
                 <!-- Syllabus Modules List -->
                 <div class="syllabus-modules">
                   @for (mod of course()!.modules ?? []; track mod.id; let idx = $index) {
-                    <div class="syllabus-module" [class.is-open]="isModuleOpen(mod.id)">
+                    <div class="syllabus-module" [class.is-open]="isModuleOpen(mod.id)" [class.is-locked]="isModuleLocked(idx)">
                       <!-- Module Head -->
                       <header class="syllabus-module__head" (click)="toggleModule(mod.id)">
                         <div class="sm-head__left">
-                          <span class="sm-index-badge">Módulo {{ idx + 1 }}</span>
+                          <span class="sm-index-badge" [class.is-completed]="isModuleCompleted(mod)" [class.is-locked]="isModuleLocked(idx)">
+                            @if (isModuleLocked(idx)) { 🔒 }
+                            @else if (isModuleCompleted(mod)) { ✓ }
+                            @else { Módulo {{ idx + 1 }} }
+                          </span>
                           <div class="sm-title-group">
                             <h3 class="sm-title">{{ mod.title }}</h3>
                             <span class="sm-meta">
                               {{ mod.lessons?.length ?? 0 }} clases · {{ moduleDuration(mod) }} min de práctica
-                              @if (isModuleCompleted(mod)) {
+                              @if (isModuleLocked(idx)) {
+                                <span class="sm-locked-tag">· 🔒 Bloqueado (Completa el Módulo {{ idx }})</span>
+                              } @else if (isModuleCompleted(mod)) {
                                 <span class="sm-completed-tag">· Completado ✓</span>
                               }
                             </span>
@@ -184,14 +198,17 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                       @if (isModuleOpen(mod.id)) {
                         <div class="syllabus-lessons">
                           @for (lesson of mod.lessons ?? []; track lesson.id; let lIdx = $index) {
-                            <a [routerLink]="auth.isAuthenticated() ? ['/cursos', course()!.slug, 'leccion', lesson.slug] : null"
-                               (click)="onLessonClick($event, lesson)"
+                            <a [routerLink]="(!isModuleLocked(idx) && auth.isAuthenticated()) ? ['/cursos', course()!.slug, 'leccion', lesson.slug] : null"
+                               (click)="onLessonClick($event, lesson, idx)"
                                class="syllabus-lesson"
                                [class.is-completed]="lesson.completed"
+                               [class.is-locked-module]="isModuleLocked(idx)"
                                [class.is-locked-guest]="!auth.isAuthenticated()">
                               <div class="sl-left">
-                                <span class="sl-num" [class.is-completed]="lesson.completed">
+                                <span class="sl-num" [class.is-completed]="lesson.completed" [class.is-locked]="isModuleLocked(idx)">
                                   @if (!auth.isAuthenticated()) {
+                                    🔒
+                                  } @else if (isModuleLocked(idx)) {
                                     🔒
                                   } @else if (lesson.completed) {
                                     ✓
@@ -207,6 +224,8 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                                     </span>
                                     @if (!auth.isAuthenticated()) {
                                       <span class="sl-free-tag sl-lock-tag">Requiere Cuenta</span>
+                                    } @else if (isModuleLocked(idx)) {
+                                      <span class="sl-free-tag sl-lock-tag">🔒 Módulo Bloqueado</span>
                                     } @else if (lesson.is_preview) {
                                       <span class="sl-free-tag">Acceso libre</span>
                                     }
@@ -216,7 +235,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
 
                               <div class="sl-right">
                                 <span class="sl-duration">⏱ {{ lesson.duration_minutes || 10 }} min</span>
-                                <span class="sl-arrow">{{ auth.isAuthenticated() ? '→' : '🔒' }}</span>
+                                <span class="sl-arrow">{{ (!isModuleLocked(idx) && auth.isAuthenticated()) ? '→' : '🔒' }}</span>
                               </div>
                             </a>
                           }
@@ -1249,6 +1268,68 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
       border: 1px solid rgba(239, 68, 68, 0.3) !important;
     }
 
+    .lock-toast-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 18px;
+      margin-bottom: var(--sp-4);
+      background: rgba(255, 82, 82, 0.12);
+      border: 1px solid rgba(255, 82, 82, 0.35);
+      border-radius: var(--radius-md);
+      color: #ff7676;
+      font-size: var(--text-sm);
+      line-height: 1.4;
+      animation: fadeIn 0.2s ease;
+
+      .toast-text { flex: 1; }
+      .toast-close {
+        background: transparent;
+        border: none;
+        color: #ff7676;
+        cursor: pointer;
+        font-size: 1.2rem;
+        line-height: 1;
+        padding: 0 4px;
+      }
+    }
+
+    .syllabus-module.is-locked {
+      border-color: rgba(255, 82, 82, 0.2);
+      background: rgba(255, 82, 82, 0.02);
+
+      .syllabus-module__head:hover {
+        background: rgba(255, 82, 82, 0.05);
+      }
+    }
+
+    .sm-index-badge.is-locked {
+      background: rgba(255, 82, 82, 0.15) !important;
+      color: #ff5252 !important;
+      border-color: rgba(255, 82, 82, 0.3) !important;
+    }
+
+    .sm-locked-tag {
+      color: #ff5252 !important;
+      font-weight: 600;
+    }
+
+    .syllabus-lesson.is-locked-module {
+      cursor: not-allowed;
+      opacity: 0.6;
+      background: rgba(0, 0, 0, 0.15);
+
+      &:hover {
+        background: rgba(255, 82, 82, 0.06);
+        border-color: rgba(255, 82, 82, 0.3);
+      }
+
+      .sl-num.is-locked {
+        background: rgba(255, 82, 82, 0.15);
+        color: #ff5252;
+      }
+    }
+
     /* Auth Gate Box in Sidebar */
     .auth-gate-box {
       text-align: center;
@@ -1351,6 +1432,7 @@ export class CourseDetailComponent implements OnInit {
   activeTab     = signal<'curriculum' | 'forum'>('curriculum');
   forumModuleId = signal<number | undefined>(undefined);
   showAuthModal = signal(false);
+  readonly lockedToast = signal<string | null>(null);
 
   allExpanded = computed(() => {
     const c = this.course();
@@ -1499,8 +1581,16 @@ export class CourseDetailComponent implements OnInit {
   }
 
   isModuleCompleted(mod: CourseModule): boolean {
-    if (!mod.lessons || mod.lessons.length === 0) return false;
-    return mod.lessons.every(l => l.completed);
+    return isModuleFullyCompleted(mod);
+  }
+
+  isModuleUnlocked(idx: number): boolean {
+    const modules = this.course()?.modules ?? [];
+    return isModuleUnlockedForStudent(idx, modules, this.auth.isInstructor() || this.auth.isAdmin());
+  }
+
+  isModuleLocked(idx: number): boolean {
+    return !this.isModuleUnlocked(idx);
   }
 
   completedCountInModule(mod: CourseModule): number {
@@ -1529,17 +1619,32 @@ export class CourseDetailComponent implements OnInit {
       this.showAuthModal.set(true);
       return;
     }
-    const firstLesson = this.course()?.modules?.[0]?.lessons?.[0];
-    if (firstLesson) {
-      this.router.navigate(['/cursos', this.course()!.slug, 'leccion', firstLesson.slug]);
+    const slug = this.continueLessonSlug();
+    if (slug) {
+      this.router.navigate(['/cursos', this.course()!.slug, 'leccion', slug]);
+    } else {
+      const firstLesson = this.course()?.modules?.[0]?.lessons?.[0];
+      if (firstLesson) {
+        this.router.navigate(['/cursos', this.course()!.slug, 'leccion', firstLesson.slug]);
+      }
     }
   }
 
-  onLessonClick(event: Event, lesson: Lesson) {
+  onLessonClick(event: Event, lesson: Lesson, moduleIndex: number) {
     if (!this.auth.isAuthenticated()) {
       event.preventDefault();
       event.stopPropagation();
       this.showAuthModal.set(true);
+      return;
+    }
+
+    if (this.isModuleLocked(moduleIndex)) {
+      event.preventDefault();
+      event.stopPropagation();
+      const prevIdx = moduleIndex > 0 ? moduleIndex - 1 : 0;
+      const prevTitle = this.course()?.modules?.[prevIdx]?.title ? `«${this.course()!.modules![prevIdx].title}»` : `Módulo ${prevIdx + 1}`;
+      this.lockedToast.set(`🔒 Módulo Bloqueado: Para acceder al Módulo ${moduleIndex + 1} («${this.course()?.modules?.[moduleIndex]?.title || ''}»), debes completar primero todas las clases del Módulo ${prevIdx + 1}: ${prevTitle}.`);
+      setTimeout(() => this.lockedToast.set(null), 5500);
     }
   }
 }

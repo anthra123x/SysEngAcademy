@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { RouterLink } from '@angular/router';
 import { CourseModule, Lesson } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
+import { isModuleFullyCompleted, isModuleUnlockedForStudent } from '../../../core/services/courses.service';
 
 /** Forma mínima que el panel necesita del curso (el detalle del player es parcial). */
 export interface CurriculumCourse {
@@ -12,7 +13,7 @@ export interface CurriculumCourse {
 }
 
 /**
- * Panel de contenido del curso, estilo "currriculum" de las plataformas de
+ * Panel de contenido del curso, estilo "curriculum" de las plataformas de
  * cursos: cabecera fija con el curso, barra de progreso real y Sections
  * plegables con las lecciones, su tipo, su duración y su estado.
  */
@@ -54,17 +55,29 @@ export interface CurriculumCourse {
 
       <div class="panel__body">
         @for (section of sections(); track section.id; let si = $index) {
-          <section class="section" [class.is-open]="isOpen(section.id)">
+          <section class="section" [class.is-open]="isOpen(section.id)" [class.is-locked-module]="!isSectionUnlocked(si)">
             <button
               type="button"
               class="section__head"
               (click)="toggle(section.id)"
               [attr.aria-expanded]="isOpen(section.id)"
             >
-              <span class="section__index">{{ si + 1 }}</span>
+              <span class="section__index" [class.is-done]="isSectionCompleted(section)" [class.is-locked]="!isSectionUnlocked(si)">
+                @if (!isSectionUnlocked(si)) { 🔒 }
+                @else if (isSectionCompleted(section)) { ✓ }
+                @else { {{ si + 1 }} }
+              </span>
               <span class="section__titles">
                 <span class="section__name">{{ section.title }}</span>
-                <span class="section__meta">{{ lessonCount(section) }} lecciones · {{ sectionDone(section) }}/{{ lessonCount(section) }}</span>
+                <span class="section__meta">
+                  @if (!isSectionUnlocked(si)) {
+                    <span class="lock-pill-text">🔒 Bloqueado · Completa Módulo {{ si }}</span>
+                  } @else if (isSectionCompleted(section)) {
+                    <span class="done-pill-text">✓ Completado ({{ lessonCount(section) }} lecciones)</span>
+                  } @else {
+                    <span>{{ lessonCount(section) }} lecciones · {{ sectionDone(section) }}/{{ lessonCount(section) }}</span>
+                  }
+                </span>
               </span>
               <span class="section__chevron" [class.is-open]="isOpen(section.id)" aria-hidden="true">▾</span>
             </button>
@@ -73,7 +86,7 @@ export interface CurriculumCourse {
               <ul class="lessons">
                 @for (lesson of section.lessons; track lesson.id) {
                   <li>
-                    @if (!isLocked(lesson)) {
+                    @if (!isLessonLocked(si, lesson)) {
                       <a
                         class="lesson"
                         [class.is-active]="lesson.id === currentLessonId()"
@@ -92,14 +105,14 @@ export interface CurriculumCourse {
                     } @else {
                       <div
                         class="lesson is-locked"
-                        (click)="showLockedNotice(lesson)"
+                        (click)="showLockedNotice(si, lesson)"
                         role="button"
                         tabindex="0"
-                        title="Lección bloqueada: completa la anterior para avanzar"
+                        [title]="'Módulo ' + (si + 1) + ' bloqueado: completa primero el módulo anterior para acceder'"
                       >
                         <span class="lesson__state is-lock" aria-hidden="true">🔒</span>
                         <span class="lesson__title">{{ lesson.title }}</span>
-                        <span class="lesson__lock-pill">Bloqueada</span>
+                        <span class="lesson__lock-pill">Bloqueado</span>
                       </div>
                     }
                   </li>
@@ -164,6 +177,33 @@ export interface CurriculumCourse {
       width: 1.5rem; height: 1.5rem; border-radius: 50%;
       font-size: .72rem; font-weight: var(--font-bold);
       color: var(--primary); background: color-mix(in srgb, var(--primary) 13%, transparent);
+      transition: background var(--transition-fast), color var(--transition-fast);
+
+      &.is-done {
+        color: #0ae98a;
+        background: rgba(10, 233, 138, 0.15);
+      }
+
+      &.is-locked {
+        color: #ff5252;
+        background: rgba(255, 82, 82, 0.14);
+        font-size: 0.65rem;
+      }
+    }
+    .section.is-locked-module {
+      .section__head {
+        opacity: 0.8;
+      }
+    }
+    .lock-pill-text {
+      color: #ff7676;
+      font-weight: 600;
+      font-size: 0.7rem;
+    }
+    .done-pill-text {
+      color: #0ae98a;
+      font-weight: 600;
+      font-size: 0.7rem;
     }
     .section__titles { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
     .section__name { font-size: .875rem; font-weight: var(--font-semibold); color: var(--text-primary); line-height: 1.3; }
@@ -295,23 +335,28 @@ export class CourseCurriculumComponent {
     return total === 0 ? 0 : Math.round((this.doneCount() / total) * 100);
   });
 
-  isLocked(lesson: Lesson): boolean {
-    if (this.auth.isInstructor() || this.auth.isAdmin()) return false;
-    const list = this.allLessons();
-    const idx = list.findIndex(l => l.id === lesson.id);
-    if (idx <= 0) return false; // La primera lección del curso siempre está disponible
-    if (lesson.completed) return false; // Ya completada, se puede repasar libremente
-    // Para desbloquear esta lección, la inmediatamente anterior debe estar completada
-    return !list[idx - 1]?.completed;
+  isSectionCompleted(section: CourseModule): boolean {
+    return isModuleFullyCompleted(section);
   }
 
-  showLockedNotice(lesson: Lesson): void {
-    const list = this.allLessons();
-    const idx = list.findIndex(l => l.id === lesson.id);
-    const prev = idx > 0 ? list[idx - 1] : null;
-    const prevTitle = prev?.title ? `«${prev.title}»` : 'la lección anterior';
-    this.lockedMessage.set(`Debes completar primero ${prevTitle} para desbloquear este módulo.`);
-    setTimeout(() => this.lockedMessage.set(null), 4500);
+  isSectionUnlocked(si: number): boolean {
+    return isModuleUnlockedForStudent(si, this.sections(), this.auth.isInstructor() || this.auth.isAdmin());
+  }
+
+  isLessonLocked(si: number, lesson: Lesson): boolean {
+    if (this.auth.isInstructor() || this.auth.isAdmin()) return false;
+    // Si el módulo está bloqueado, todas sus lecciones quedan bloqueadas
+    return !this.isSectionUnlocked(si);
+  }
+
+  showLockedNotice(si: number, lesson: Lesson): void {
+    const sections = this.sections();
+    const prevIdx = si > 0 ? si - 1 : 0;
+    const prevTitle = sections[prevIdx]?.title ? `«${sections[prevIdx].title}»` : `Módulo ${prevIdx + 1}`;
+    this.lockedMessage.set(
+      `🔒 Módulo Bloqueado: Para acceder al Módulo ${si + 1} («${sections[si]?.title || 'este módulo'}»), primero debes completar todas las clases del Módulo ${prevIdx + 1}: ${prevTitle}.`
+    );
+    setTimeout(() => this.lockedMessage.set(null), 5500);
   }
 
   isOpen(id: number): boolean {

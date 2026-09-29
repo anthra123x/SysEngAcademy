@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subscription } from 'rxjs';
-import { CoursesService } from '../../../core/services/courses.service';
+import { CoursesService, isModuleFullyCompleted, isModuleUnlockedForStudent } from '../../../core/services/courses.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { LessonContentComponent } from './lesson-content.component';
 import { CourseCurriculumComponent } from './course-curriculum.component';
@@ -160,6 +160,22 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                 </div>
                 <h1 class="lesson-headline">{{ l.title }}</h1>
               </div>
+
+              @if (isCurrentModuleLocked()) {
+                <div class="module-lock-banner" role="alert">
+                  <div class="lock-shield-icon">🔒</div>
+                  <div class="lock-body">
+                    <h3>Módulo {{ currentModuleIndex() + 1 }} Bloqueado: {{ currentModule()?.title }}</h3>
+                    <p>
+                      Para acceder a este contenido y realizar sus prácticas, debes completar primero todas las clases del
+                      <strong>Módulo {{ currentModuleIndex() }}: «{{ previousModule()?.title }}»</strong>.
+                    </p>
+                    <button type="button" class="btn btn-primary btn-sm" (click)="goToActiveModuleLesson()">
+                      ← Continuar con el Módulo {{ currentModuleIndex() }}
+                    </button>
+                  </div>
+                </div>
+              }
 
               @if (contentBlocks().length > 0) {
                 <app-lesson-content class="lesson-content" [blocks]="contentBlocks()" />
@@ -325,7 +341,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                 <span class="lesson-nav__spacer"></span>
               }
               @if (nextLesson()) {
-                @if (completed() || auth.isInstructor() || auth.isAdmin()) {
+                @if (isNextLessonAccessible()) {
                   <a class="lesson-nav__item lesson-nav__item--next" [routerLink]="['/cursos', courseSlug(), 'leccion', nextLesson()!.slug]">
                     <span class="lesson-nav__dir">Siguiente →</span>
                     <span class="lesson-nav__title">{{ nextLesson()!.title ?? 'Próxima lección' }}</span>
@@ -333,7 +349,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                 } @else {
                   <div class="lesson-nav__item lesson-nav__item--next is-locked-nav" (click)="triggerLockedNotice()" role="button" tabindex="0">
                     <span class="lesson-nav__dir">🔒 Siguiente (Bloqueada)</span>
-                    <span class="lesson-nav__title">Completa la lección actual para avanzar</span>
+                    <span class="lesson-nav__title">{{ nextLessonLockedReason() }}</span>
                   </div>
                 }
               } @else {
@@ -952,6 +968,56 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
 
     // === Contenido ===
     .player-main { min-width: 0; max-width: 780px; }
+
+    /* Module Lock Notice Banner */
+    .module-lock-banner {
+      display: flex;
+      gap: var(--sp-4);
+      align-items: flex-start;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.05));
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-5);
+      margin-bottom: var(--sp-6);
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.08);
+
+      .lock-banner__icon {
+        font-size: 2rem;
+        line-height: 1;
+        flex-shrink: 0;
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: var(--radius-md);
+        padding: var(--sp-2) var(--sp-3);
+      }
+
+      .lock-banner__body {
+        flex: 1;
+
+        h3 {
+          margin: 0 0 var(--sp-1);
+          font-size: var(--text-base);
+          font-weight: 700;
+          color: #f87171;
+        }
+
+        p {
+          margin: 0 0 var(--sp-4);
+          font-size: var(--text-sm);
+          color: var(--text-secondary);
+          line-height: 1.5;
+
+          strong {
+            color: var(--text-primary);
+          }
+        }
+
+        .btn {
+          font-size: var(--text-xs);
+          padding: 8px 16px;
+        }
+      }
+    }
 
     .lesson-content {
       .content-h {
@@ -1996,6 +2062,83 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     return out;
   });
 
+  // --- Módulos y desbloqueo secuencial ---
+  readonly currentModuleIndex = computed<number>(() => {
+    const l = this.lesson();
+    const modules = this.course()?.modules ?? [];
+    if (!l || modules.length === 0) return 0;
+    const idx = modules.findIndex(m => (m.lessons ?? []).some(less => less.id === l.id || less.slug === l.slug));
+    return idx >= 0 ? idx : 0;
+  });
+
+  readonly currentModule = computed<CourseModule | null>(() => {
+    const modules = this.course()?.modules ?? [];
+    const idx = this.currentModuleIndex();
+    return modules[idx] ?? null;
+  });
+
+  readonly previousModule = computed<CourseModule | null>(() => {
+    const modules = this.course()?.modules ?? [];
+    const idx = this.currentModuleIndex();
+    return idx > 0 ? modules[idx - 1] : null;
+  });
+
+  readonly isCurrentModuleLocked = computed<boolean>(() => {
+    const modules = this.course()?.modules ?? [];
+    if (modules.length === 0) return false;
+    const isPrivileged = this.isTeacher() || this.auth.isInstructor() || this.auth.isAdmin();
+    return !isModuleUnlockedForStudent(this.currentModuleIndex(), modules, isPrivileged);
+  });
+
+  readonly isNextLessonAccessible = computed<boolean>(() => {
+    const next = this.nextLesson();
+    if (!next) return false;
+    const modules = this.course()?.modules ?? [];
+    if (modules.length === 0) return true;
+    const isPrivileged = this.isTeacher() || this.auth.isInstructor() || this.auth.isAdmin();
+    if (isPrivileged) return true;
+
+    // Buscar en qué módulo se encuentra la siguiente lección
+    const nextModIndex = modules.findIndex(m => (m.lessons ?? []).some(l => l.slug === next.slug));
+    if (nextModIndex === -1) return true;
+
+    return isModuleUnlockedForStudent(nextModIndex, modules, isPrivileged);
+  });
+
+  readonly nextLessonLockedReason = computed<string>(() => {
+    const next = this.nextLesson();
+    if (!next) return '';
+    const modules = this.course()?.modules ?? [];
+    const nextModIndex = modules.findIndex(m => (m.lessons ?? []).some(l => l.slug === next.slug));
+    if (nextModIndex > 0) {
+      const prevMod = modules[nextModIndex - 1];
+      return `Completa todas las clases del Módulo ${nextModIndex} («${prevMod?.title ?? ''}») para desbloquear.`;
+    }
+    return 'Completa el módulo previo para continuar.';
+  });
+
+  goToActiveModuleLesson(): void {
+    const modules = this.course()?.modules ?? [];
+    const slug = this.courseSlug();
+    if (modules.length === 0 || !slug) return;
+
+    // Buscar el primer módulo desbloqueado que tenga alguna lección incompleta
+    for (let i = 0; i < modules.length; i++) {
+      const mod = modules[i];
+      if (isModuleUnlockedForStudent(i, modules, false)) {
+        const pending = (mod.lessons ?? []).find(l => !l.completed);
+        if (pending) {
+          this.router.navigate(['/cursos', slug, 'leccion', pending.slug]);
+          return;
+        }
+      }
+    }
+    const firstLesson = modules[0]?.lessons?.[0];
+    if (firstLesson) {
+      this.router.navigate(['/cursos', slug, 'leccion', firstLesson.slug]);
+    }
+  }
+
   readonly prevLesson = computed<LessonRef | null>(() => {
     const current = this.lesson();
     if (!current) return null;
@@ -2015,7 +2158,8 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   });
 
   triggerLockedNotice(): void {
-    alert('🔒 Lección Bloqueada: Para mantener un aprendizaje secuencial y efectivo, debes completar la lección actual o superar el reto interactivo antes de avanzar a la siguiente lección.');
+    const reason = this.nextLessonLockedReason();
+    alert(`🔒 Módulo Bloqueado: ${reason}`);
   }
 
   // ===== Lifecycle =====
@@ -2117,7 +2261,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     const lesson = this.lesson();
     if (!lesson || this.completing()) return;
     this.completing.set(true);
-    this.coursesSvc.completeLesson(lesson.id, score).subscribe({
+    this.coursesSvc.completeLesson(lesson.id, score, lesson.slug, this.courseSlug()).subscribe({
       next: () => {
         this.completed.set(true);
         this.completing.set(false);
