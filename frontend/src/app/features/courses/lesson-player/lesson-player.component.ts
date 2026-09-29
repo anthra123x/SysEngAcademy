@@ -299,10 +299,17 @@ import {
                 <span class="lesson-nav__spacer"></span>
               }
               @if (nextLesson()) {
-                <a class="lesson-nav__item lesson-nav__item--next" [routerLink]="['/cursos', courseSlug(), 'leccion', nextLesson()!.slug]">
-                  <span class="lesson-nav__dir">Siguiente →</span>
-                  <span class="lesson-nav__title">{{ nextLesson()!.title ?? 'Próxima lección' }}</span>
-                </a>
+                @if (completed() || auth.isInstructor() || auth.isAdmin()) {
+                  <a class="lesson-nav__item lesson-nav__item--next" [routerLink]="['/cursos', courseSlug(), 'leccion', nextLesson()!.slug]">
+                    <span class="lesson-nav__dir">Siguiente →</span>
+                    <span class="lesson-nav__title">{{ nextLesson()!.title ?? 'Próxima lección' }}</span>
+                  </a>
+                } @else {
+                  <div class="lesson-nav__item lesson-nav__item--next is-locked-nav" (click)="triggerLockedNotice()" role="button" tabindex="0">
+                    <span class="lesson-nav__dir">🔒 Siguiente (Bloqueada)</span>
+                    <span class="lesson-nav__title">Completa la lección actual para avanzar</span>
+                  </div>
+                }
               } @else {
                 <span class="lesson-nav__spacer"></span>
               }
@@ -1190,9 +1197,25 @@ import {
           background: var(--bg-surface-2);
           box-shadow: var(--shadow-primary);
         }
-        &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-
         &--next { text-align: right; }
+
+        &.is-locked-nav {
+          cursor: not-allowed;
+          opacity: 0.65;
+          border-color: rgba(255, 82, 82, 0.35);
+          background: rgba(255, 82, 82, 0.04);
+
+          &:hover {
+            border-color: #ff5252;
+            background: rgba(255, 82, 82, 0.08);
+            box-shadow: none;
+          }
+
+          .lesson-nav__dir {
+            color: #ff5252;
+            font-weight: 600;
+          }
+        }
 
         .lesson-nav__dir { font-size: var(--text-xs); color: var(--text-muted); }
         .lesson-nav__title {
@@ -1833,6 +1856,10 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     if (idx !== -1 && idx < list.length - 1) return list[idx + 1];
     return current.next_lesson ?? null;
   });
+
+  triggerLockedNotice(): void {
+    alert('🔒 Lección Bloqueada: Para mantener un aprendizaje secuencial y efectivo, debes completar la lección actual o superar el reto interactivo antes de avanzar a la siguiente lección.');
+  }
 
   // ===== Lifecycle =====
 

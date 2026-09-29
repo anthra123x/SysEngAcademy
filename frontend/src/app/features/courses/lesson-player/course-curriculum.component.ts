@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CourseModule, Lesson } from '../../../core/models';
+import { AuthService } from '../../../core/services/auth.service';
 
 /** Forma mínima que el panel necesita del curso (el detalle del player es parcial). */
 export interface CurriculumCourse {
@@ -43,6 +44,14 @@ export interface CurriculumCourse {
         </div>
       </header>
 
+      @if (lockedMessage()) {
+        <div class="lock-toast" role="alert">
+          <span class="toast-icon">🔒</span>
+          <span class="toast-text">{{ lockedMessage() }}</span>
+          <button type="button" class="toast-close" (click)="lockedMessage.set(null)">×</button>
+        </div>
+      }
+
       <div class="panel__body">
         @for (section of sections(); track section.id; let si = $index) {
           <section class="section" [class.is-open]="isOpen(section.id)">
@@ -64,21 +73,35 @@ export interface CurriculumCourse {
               <ul class="lessons">
                 @for (lesson of section.lessons; track lesson.id) {
                   <li>
-                    <a
-                      class="lesson"
-                      [class.is-active]="lesson.id === currentLessonId()"
-                      [class.is-done]="lesson.completed"
-                      [routerLink]="['/cursos', course()?.slug, 'leccion', lesson.slug]"
-                    >
-                      <span class="lesson__state" aria-hidden="true">
-                        @if (lesson.completed) { ✓ }
-                        @else { {{ typeIcon(lesson.type) }} }
-                      </span>
-                      <span class="lesson__title">{{ lesson.title }}</span>
-                      @if (lesson.duration_minutes) {
-                        <span class="lesson__time">{{ lesson.duration_minutes }} min</span>
-                      }
-                    </a>
+                    @if (!isLocked(lesson)) {
+                      <a
+                        class="lesson"
+                        [class.is-active]="lesson.id === currentLessonId()"
+                        [class.is-done]="lesson.completed"
+                        [routerLink]="['/cursos', course()?.slug, 'leccion', lesson.slug]"
+                      >
+                        <span class="lesson__state" aria-hidden="true">
+                          @if (lesson.completed) { ✓ }
+                          @else { {{ typeIcon(lesson.type) }} }
+                        </span>
+                        <span class="lesson__title">{{ lesson.title }}</span>
+                        @if (lesson.duration_minutes) {
+                          <span class="lesson__time">{{ lesson.duration_minutes }} min</span>
+                        }
+                      </a>
+                    } @else {
+                      <div
+                        class="lesson is-locked"
+                        (click)="showLockedNotice(lesson)"
+                        role="button"
+                        tabindex="0"
+                        title="Lección bloqueada: completa la anterior para avanzar"
+                      >
+                        <span class="lesson__state is-lock" aria-hidden="true">🔒</span>
+                        <span class="lesson__title">{{ lesson.title }}</span>
+                        <span class="lesson__lock-pill">Bloqueada</span>
+                      </div>
+                    }
                   </li>
                 }
               </ul>
@@ -174,18 +197,87 @@ export interface CurriculumCourse {
     .lesson__title { font-size: .82rem; line-height: 1.35; flex: 1; min-width: 0; }
     .lesson__time { font-size: .7rem; color: var(--text-muted); flex: none; }
 
+    /* Lección Bloqueada */
+    .lesson.is-locked {
+      cursor: not-allowed;
+      opacity: 0.55;
+      background: rgba(0, 0, 0, 0.15);
+      border-left-color: rgba(255, 82, 82, 0.4);
+
+      &:hover {
+        background: rgba(255, 82, 82, 0.08);
+      }
+
+      .is-lock {
+        font-size: 0.72rem;
+        background: rgba(255, 82, 82, 0.15);
+        color: #ff5252;
+      }
+
+      .lesson__lock-pill {
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #ff5252;
+        background: rgba(255, 82, 82, 0.12);
+        border: 1px solid rgba(255, 82, 82, 0.25);
+        padding: 1px 6px;
+        border-radius: 4px;
+        flex: none;
+      }
+    }
+
+    /* Lock Toast */
+    .lock-toast {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 12px;
+      padding: 8px 12px;
+      background: rgba(255, 82, 82, 0.12);
+      border: 1px solid rgba(255, 82, 82, 0.35);
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      color: #ff7676;
+      animation: fadeIn 0.2s ease;
+
+      .toast-text { flex: 1; line-height: 1.3; }
+      .toast-close {
+        background: transparent;
+        border: none;
+        color: #ff7676;
+        cursor: pointer;
+        font-size: 1rem;
+        line-height: 1;
+        padding: 0 4px;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     @media (max-width: 1024px) {
       .panel { position: static; max-height: none; }
     }
   `],
 })
 export class CourseCurriculumComponent {
+  private readonly auth = inject(AuthService);
+
   readonly course = input<CurriculumCourse | null>(null);
   readonly currentLessonId = input<number | null>(null);
 
   private readonly collapsed = signal<Set<number>>(new Set());
+  readonly lockedMessage = signal<string | null>(null);
 
   readonly sections = computed<CourseModule[]>(() => this.course()?.modules ?? []);
+
+  readonly allLessons = computed<Lesson[]>(() => {
+    return this.sections().flatMap(m => m.lessons ?? []);
+  });
 
   readonly totalCount = computed(() =>
     this.sections().reduce((acc, m) => acc + (m.lessons?.length ?? 0), 0),
@@ -202,6 +294,25 @@ export class CourseCurriculumComponent {
     const total = this.totalCount();
     return total === 0 ? 0 : Math.round((this.doneCount() / total) * 100);
   });
+
+  isLocked(lesson: Lesson): boolean {
+    if (this.auth.isInstructor() || this.auth.isAdmin()) return false;
+    const list = this.allLessons();
+    const idx = list.findIndex(l => l.id === lesson.id);
+    if (idx <= 0) return false; // La primera lección del curso siempre está disponible
+    if (lesson.completed) return false; // Ya completada, se puede repasar libremente
+    // Para desbloquear esta lección, la inmediatamente anterior debe estar completada
+    return !list[idx - 1]?.completed;
+  }
+
+  showLockedNotice(lesson: Lesson): void {
+    const list = this.allLessons();
+    const idx = list.findIndex(l => l.id === lesson.id);
+    const prev = idx > 0 ? list[idx - 1] : null;
+    const prevTitle = prev?.title ? `«${prev.title}»` : 'la lección anterior';
+    this.lockedMessage.set(`Debes completar primero ${prevTitle} para desbloquear este módulo.`);
+    setTimeout(() => this.lockedMessage.set(null), 4500);
+  }
 
   isOpen(id: number): boolean {
     // La sección que contiene la lección actual siempre queda abierta.
