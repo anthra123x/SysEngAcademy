@@ -19,208 +19,170 @@ import { AuthService } from '../../core/services/auth.service';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="teacher-page">
-      <!-- HEADER CONSOLA DOCENTE -->
-      <header class="teacher-header">
-        <div class="container header-container">
-          <div class="header-left">
-            <div class="role-badge">
-              <span class="pulse-dot"></span>
-              <span>🎓 PANEL DOCENTE & CÁTEDRA</span>
-            </div>
-            <h1 class="header-title">Consola de Gestión y Creación Académica</h1>
-            <p class="header-subtitle">
-              Profesor <strong>{{ auth.user()?.name || 'Andrés' }}</strong> · Supervisa el progreso del alumnado, diseña nuevos retos evaluativos y potencia tus cursos con Byte IA.
+      <!-- CABECERA PRINCIPAL DOCENTE -->
+      <div class="page-head">
+        <div class="container head-layout">
+          <div>
+            <div class="sub-badge">CÁTEDRA &amp; SUPERVISIÓN</div>
+            <h1 class="page-title">Panel de Control Docente</h1>
+            <p class="page-subtitle">
+              Profesor <strong>{{ auth.user()?.name || 'Docente' }}</strong> — Supervisión académica, diseño de actividades evaluativas y analíticas de cohorte.
             </p>
           </div>
-          
-          <div class="header-actions">
-            <button type="button" class="btn btn-outline" (click)="loadAllData()" [disabled]="loading()">
-              <span class="btn-icon">{{ loading() ? '⏳' : '🔄' }}</span>
-              <span>Sincronizar Datos</span>
+
+          <div class="head-actions">
+            <button type="button" class="btn btn-ghost" (click)="loadAllData()" [disabled]="loading()">
+              <span>{{ loading() ? 'Sincronizando…' : 'Sincronizar' }}</span>
             </button>
-            <button type="button" class="btn btn-primary" (click)="openCreateModal('challenge')">
-              <span>➕ Crear Reto Práctico</span>
+            <button type="button" class="btn btn-outline" (click)="openCreateModal('challenge')">
+              <span>➕ Nuevo Reto</span>
             </button>
-            <button type="button" class="btn btn-accent" (click)="openCreateModal('quiz')">
+            <button type="button" class="btn btn-primary" (click)="openCreateModal('quiz')">
               <span>📝 Crear Quiz</span>
             </button>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div class="container main-content">
-        <!-- KPI METRICS SUMMARY -->
+      <div class="container dashboard-container">
+        <!-- KPIS MÉTRICAS NEUTRAS -->
         @if (overview()) {
           <div class="kpi-grid">
-            <div class="kpi-card kpi-cyan">
-              <div class="kpi-header">
-                <span class="kpi-icon">👥</span>
-                <span class="kpi-pill">Estudiantes</span>
-              </div>
-              <div class="kpi-body">
-                <span class="kpi-value">{{ overview()!.stats.total_students }}</span>
-                <span class="kpi-label">Alumnos activos en plataforma</span>
-              </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Estudiantes Registrados</span>
+              <span class="kpi-value">{{ overview()!.stats.total_students }}</span>
+              <span class="kpi-meta">Alumnos en catálogo docente</span>
             </div>
 
-            <div class="kpi-card kpi-purple">
-              <div class="kpi-header">
-                <span class="kpi-icon">📝</span>
-                <span class="kpi-pill">Cátedra</span>
-              </div>
-              <div class="kpi-body">
-                <span class="kpi-value">{{ activities().length }}</span>
-                <span class="kpi-label">Actividades & Quizzes creados</span>
-              </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Actividades &amp; Quizzes</span>
+              <span class="kpi-value">{{ activities().length }}</span>
+              <span class="kpi-meta">Creados por la cátedra</span>
             </div>
 
-            <div class="kpi-card kpi-green">
-              <div class="kpi-header">
-                <span class="kpi-icon">✅</span>
-                <span class="kpi-pill">Entregas</span>
-              </div>
-              <div class="kpi-body">
-                <span class="kpi-value">{{ overview()!.stats.total_completions }}</span>
-                <span class="kpi-label">Lecciones y retos superados</span>
-              </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Lecciones Completadas</span>
+              <span class="kpi-value">{{ overview()!.stats.total_completions }}</span>
+              <span class="kpi-meta">Superadas por alumnos</span>
             </div>
 
-            <div class="kpi-card kpi-amber">
-              <div class="kpi-header">
-                <span class="kpi-icon">🎯</span>
-                <span class="kpi-pill">Evaluación</span>
-              </div>
-              <div class="kpi-body">
-                <span class="kpi-value">{{ overview()!.stats.average_score }}%</span>
-                <span class="kpi-label">Promedio general de cohorte</span>
-              </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Promedio de Quizzes</span>
+              <span class="kpi-value">{{ overview()!.stats.average_score }}%</span>
+              <span class="kpi-meta">Rendimiento evaluativo global</span>
             </div>
           </div>
         }
 
-        <!-- PANELES DE NAVEGACIÓN -->
-        <nav class="dashboard-nav" aria-label="Secciones del panel docente">
+        <!-- SUB-NAVEGACIÓN DE PESTAÑAS (ESTILO GITHUB/LINEAR) -->
+        <div class="tab-bar" role="tablist">
           <button
             type="button"
-            class="nav-tab-btn"
+            class="tab-link"
             [class.is-active]="activeTab() === 'students'"
             (click)="setTab('students')"
           >
-            <span class="tab-icon">👥</span>
-            <span>Directorio de Estudiantes</span>
-            <span class="tab-badge">{{ filteredStudents().length }}</span>
+            <span>Alumnos Registrados</span>
+            <span class="tab-pill">{{ filteredStudents().length }}</span>
           </button>
 
           <button
             type="button"
-            class="nav-tab-btn"
+            class="tab-link"
             [class.is-active]="activeTab() === 'activities'"
             (click)="setTab('activities')"
           >
-            <span class="tab-icon">📝</span>
-            <span>Gestor de Actividades & Quizzes</span>
-            <span class="tab-badge">{{ activities().length }}</span>
+            <span>Gestor de Actividades &amp; Quizzes</span>
+            <span class="tab-pill">{{ activities().length }}</span>
           </button>
 
           <button
             type="button"
-            class="nav-tab-btn"
+            class="tab-link"
             [class.is-active]="activeTab() === 'activity'"
             (click)="setTab('activity')"
           >
-            <span class="tab-icon">📊</span>
-            <span>Rendimiento & Métricas</span>
+            <span>Rendimiento de Cohorte</span>
           </button>
 
           <button
             type="button"
-            class="nav-tab-btn nav-tab-ai"
+            class="tab-link"
             [class.is-active]="activeTab() === 'ai'"
             (click)="setTab('ai')"
           >
-            <span class="tab-icon">🤖</span>
-            <span>Byte Asistente Docente IA</span>
-            <span class="tab-badge pulse-badge">IA</span>
+            <span>Asistente Byte IA</span>
+            <span class="tab-pill-ia">IA</span>
           </button>
-        </nav>
+        </div>
 
-        <!-- SECCIÓN 1: DIRECTORIO DE ESTUDIANTES -->
+        <!-- PESTAÑA 1: DIRECTORIO DE ESTUDIANTES -->
         @if (activeTab() === 'students') {
-          <div class="panel-card">
-            <div class="panel-header">
-              <div class="panel-title-wrap">
-                <h2 class="panel-title">👥 Directorio y Seguimiento del Alumnado</h2>
-                <p class="panel-desc">Visualiza expedientes, progreso en tiempo real y gestiona accesos de estudiantes.</p>
+          <div class="surface-panel">
+            <div class="panel-toolbar">
+              <div class="search-input-group">
+                <span class="search-icon">🔍</span>
+                <input
+                  type="text"
+                  class="search-box"
+                  placeholder="Buscar alumno por nombre o correo…"
+                  [ngModel]="searchQuery()"
+                  (ngModelChange)="onSearchChange($event)"
+                />
+                @if (searchQuery()) {
+                  <button type="button" class="btn-clear" (click)="onSearchChange('')">✕</button>
+                }
               </div>
 
-              <!-- Search & Filter Controls -->
-              <div class="toolbar-controls">
-                <div class="search-input-wrap">
-                  <span class="search-icon">🔍</span>
-                  <input
-                    type="text"
-                    class="search-input"
-                    placeholder="Buscar estudiante por nombre o correo..."
-                    [ngModel]="searchQuery()"
-                    (ngModelChange)="onSearchChange($event)"
-                  />
-                  @if (searchQuery()) {
-                    <button type="button" class="btn-clear" (click)="onSearchChange('')">✕</button>
-                  }
-                </div>
-
-                <div class="filter-group">
-                  <button
-                    type="button"
-                    class="filter-btn"
-                    [class.active]="statusFilter() === 'all'"
-                    (click)="statusFilter.set('all')"
-                  >
-                    Todos
-                  </button>
-                  <button
-                    type="button"
-                    class="filter-btn"
-                    [class.active]="statusFilter() === 'verified'"
-                    (click)="statusFilter.set('verified')"
-                  >
-                    Verificados
-                  </button>
-                  <button
-                    type="button"
-                    class="filter-btn"
-                    [class.active]="statusFilter() === 'unverified'"
-                    (click)="statusFilter.set('unverified')"
-                  >
-                    Pendientes
-                  </button>
-                </div>
+              <div class="filter-pills">
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="statusFilter() === 'all'"
+                  (click)="statusFilter.set('all')"
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="statusFilter() === 'verified'"
+                  (click)="statusFilter.set('verified')"
+                >
+                  Verificados
+                </button>
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="statusFilter() === 'unverified'"
+                  (click)="statusFilter.set('unverified')"
+                >
+                  Pendientes
+                </button>
               </div>
             </div>
 
-            <!-- Tabla de Estudiantes -->
             @if (loading()) {
-              <div class="loading-box">
-                <div class="spinner"></div>
-                <p>Cargando información académica de los estudiantes…</p>
+              <div class="state-block">
+                <div class="loading-spinner"></div>
+                <p>Cargando información de estudiantes…</p>
               </div>
             } @else if (filteredStudents().length === 0) {
-              <div class="empty-box">
-                <span class="empty-emoji">👥</span>
-                <h3>No se encontraron estudiantes</h3>
-                <p class="text-muted">Ajusta los términos de búsqueda o filtros para encontrar estudiantes registrados.</p>
+              <div class="state-block">
+                <p class="state-title">No se encontraron estudiantes</p>
+                <p class="state-desc">Prueba ajustando los filtros o la búsqueda.</p>
               </div>
             } @else {
-              <div class="table-responsive">
-                <table class="academic-table">
+              <div class="table-wrap">
+                <table class="data-table">
                   <thead>
                     <tr>
                       <th>Estudiante</th>
-                      <th>Estado Cuenta</th>
-                      <th>Cursos Matriculados</th>
+                      <th>Estado</th>
+                      <th>Cursos</th>
                       <th>Lecciones</th>
-                      <th>Promedio Quizzes</th>
-                      <th>Registro</th>
+                      <th>Promedio</th>
+                      <th>Fecha Registro</th>
                       <th class="text-right">Acciones</th>
                     </tr>
                   </thead>
@@ -229,70 +191,67 @@ import { AuthService } from '../../core/services/auth.service';
                       <tr>
                         <td>
                           <div class="student-cell">
-                            <div class="avatar-badge">{{ getInitials(st.name) }}</div>
-                            <div class="student-meta">
-                              <span class="student-name">{{ st.name }}</span>
-                              <span class="student-email">{{ st.email }}</span>
+                            <div class="avatar-box">{{ getInitials(st.name) }}</div>
+                            <div>
+                              <div class="cell-name">{{ st.name }}</div>
+                              <div class="cell-meta">{{ st.email }}</div>
                             </div>
                           </div>
                         </td>
                         <td>
                           @if (st.email_verified) {
-                            <span class="status-pill status-verified">✓ Verificado</span>
+                            <span class="badge badge-success">Verificado</span>
                           } @else {
-                            <span class="status-pill status-pending">⏳ Pendiente</span>
+                            <span class="badge badge-warning">Pendiente</span>
                           }
                         </td>
                         <td>
-                          <div class="courses-cell">
-                            <span class="courses-count">{{ st.enrollments_count }} cursos</span>
-                            @if (st.courses.length > 0) {
-                              <small class="courses-snippet">{{ st.courses[0].title }}</small>
-                            }
-                          </div>
+                          <span class="cell-primary">{{ st.enrollments_count }} cursos</span>
+                          @if (st.courses.length > 0) {
+                            <small class="cell-sub">{{ st.courses[0].title }}</small>
+                          }
                         </td>
                         <td>
-                          <span class="lessons-count">{{ st.completed_lessons_count }} completadas</span>
+                          <span class="mono-value">{{ st.completed_lessons_count }}</span>
                         </td>
                         <td>
                           @if (st.average_quiz_score !== null) {
-                            <div class="score-badge" [class.score-high]="st.average_quiz_score >= 80" [class.score-mid]="st.average_quiz_score < 80 && st.average_quiz_score >= 60" [class.score-low]="st.average_quiz_score < 60">
-                              {{ st.average_quiz_score }}% ({{ st.quizzes_taken_count }})
-                            </div>
+                            <span class="mono-value">{{ st.average_quiz_score }}%</span>
+                            <small class="cell-sub">({{ st.quizzes_taken_count }} evaluados)</small>
                           } @else {
-                            <span class="text-muted">Sin evaluaciones</span>
+                            <span class="cell-muted">—</span>
                           }
                         </td>
                         <td>
-                          <span class="date-text">{{ formatDate(st.created_at) }}</span>
+                          <span class="cell-muted">{{ formatDate(st.created_at) }}</span>
                         </td>
                         <td>
-                          <div class="actions-cell">
+                          <div class="action-btn-group">
                             <button
                               type="button"
-                              class="btn-row-action btn-view"
+                              class="action-btn"
                               (click)="viewStudentDossier(st.id)"
-                              title="Ver expediente académico completo"
+                              title="Ver expediente académico"
                             >
-                              👁️ Ver
+                              Ver
                             </button>
                             @if (!st.email_verified) {
                               <button
                                 type="button"
-                                class="btn-row-action btn-activate"
+                                class="action-btn action-btn--success"
                                 (click)="verifyStudentAccount(st)"
                                 title="Verificar correo manualmente"
                               >
-                                ✓ Activar
+                                Activar
                               </button>
                             }
                             <button
                               type="button"
-                              class="btn-row-action btn-delete"
+                              class="action-btn action-btn--danger"
                               (click)="deleteStudentAccount(st)"
-                              title="Eliminar cuenta de estudiante"
+                              title="Eliminar cuenta"
                             >
-                              🗑️
+                              Eliminar
                             </button>
                           </div>
                         </td>
@@ -305,88 +264,72 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
         }
 
-        <!-- SECCIÓN 2: GESTOR DE ACTIVIDADES & QUIZZES -->
+        <!-- PESTAÑA 2: GESTOR DE ACTIVIDADES & QUIZZES -->
         @if (activeTab() === 'activities') {
-          <div class="panel-card">
-            <div class="panel-header">
-              <div class="panel-title-wrap">
-                <h2 class="panel-title">📝 Gestor de Actividades Prácticas y Quizzes</h2>
-                <p class="panel-desc">Crea y asigna ejercicios interactivos de terminal, retos de código y evaluaciones de opción múltiple.</p>
+          <div class="surface-panel">
+            <div class="panel-head-row">
+              <div>
+                <h2 class="panel-heading">Actividades y Evaluaciones de Cátedra</h2>
+                <p class="panel-subtext">Diseña retos prácticos de código y evaluaciones teóricas de opción múltiple.</p>
               </div>
 
-              <div class="header-action-group">
-                <button type="button" class="btn btn-primary" (click)="openCreateModal('challenge')">
-                  <span>➕ Nuevo Reto de Código</span>
-                </button>
-                <button type="button" class="btn btn-accent" (click)="openCreateModal('quiz')">
-                  <span>📝 Nuevo Quiz</span>
-                </button>
-                <button type="button" class="btn btn-outline" (click)="setTab('ai')">
-                  <span>🤖 Generar con IA</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Filtro de Tipo de Actividad -->
-            <div class="activity-filter-bar">
-              <div class="filter-group">
+              <div class="filter-pills">
                 <button
                   type="button"
-                  class="filter-btn"
-                  [class.active]="activityTypeFilter() === 'all'"
+                  class="filter-tab"
+                  [class.is-active]="activityTypeFilter() === 'all'"
                   (click)="activityTypeFilter.set('all')"
                 >
                   Todas ({{ activities().length }})
                 </button>
                 <button
                   type="button"
-                  class="filter-btn"
-                  [class.active]="activityTypeFilter() === 'challenge'"
+                  class="filter-tab"
+                  [class.is-active]="activityTypeFilter() === 'challenge'"
                   (click)="activityTypeFilter.set('challenge')"
                 >
-                  Retos de Código
+                  Retos Código
                 </button>
                 <button
                   type="button"
-                  class="filter-btn"
-                  [class.active]="activityTypeFilter() === 'quiz'"
+                  class="filter-tab"
+                  [class.is-active]="activityTypeFilter() === 'quiz'"
                   (click)="activityTypeFilter.set('quiz')"
                 >
-                  Quizzes Evaluativos
+                  Quizzes
                 </button>
                 <button
                   type="button"
-                  class="filter-btn"
-                  [class.active]="activityTypeFilter() === 'terminal'"
+                  class="filter-tab"
+                  [class.is-active]="activityTypeFilter() === 'terminal'"
                   (click)="activityTypeFilter.set('terminal')"
                 >
-                  Terminal & Linux
+                  Terminal
                 </button>
               </div>
             </div>
 
-            <!-- Grid de Actividades -->
-            <div class="activities-grid">
+            <div class="card-grid">
               @for (act of filteredActivities(); track act.id) {
-                <div class="activity-card" [class.card-quiz]="act.type === 'quiz'" [class.card-challenge]="act.type === 'challenge'">
-                  <div class="act-card-head">
-                    <div class="act-badges">
-                      <span class="act-type-pill" [class.pill-quiz]="act.type === 'quiz'" [class.pill-challenge]="act.type === 'challenge'" [class.pill-terminal]="act.type === 'terminal'">
-                        {{ act.type === 'quiz' ? '📝 Quiz' : act.type === 'terminal' ? '💻 Terminal' : '⚡ Reto Código' }}
+                <div class="item-card">
+                  <div class="item-card__head">
+                    <div class="badge-group">
+                      <span class="badge badge-neutral">
+                        {{ act.type === 'quiz' ? 'Quiz Evaluativo' : act.type === 'terminal' ? 'Terminal Linux' : 'Reto Código' }}
                       </span>
-                      <span class="act-diff-pill">{{ act.difficulty }}</span>
+                      <span class="badge badge-subtle">{{ act.difficulty }}</span>
                     </div>
-                    <span class="act-xp-pill">+{{ act.xp_reward }} XP</span>
+                    <span class="item-xp">+{{ act.xp_reward }} XP</span>
                   </div>
 
-                  <h3 class="act-card-title">{{ act.title }}</h3>
-                  <p class="act-course-tag">📚 {{ act.course_name }}</p>
-                  <p class="act-card-desc">{{ act.description }}</p>
+                  <h3 class="item-card__title">{{ act.title }}</h3>
+                  <div class="item-card__course">📚 {{ act.course_name }}</div>
+                  <p class="item-card__desc">{{ act.description }}</p>
 
                   @if (act.quiz_questions && act.quiz_questions.length > 0) {
-                    <div class="act-quiz-preview">
-                      <span class="quiz-q-count">❓ {{ act.quiz_questions.length }} preguntas evaluativas</span>
-                      <ul class="quiz-sample-list">
+                    <div class="quiz-info-box">
+                      <span class="quiz-count">{{ act.quiz_questions.length }} preguntas evaluativas</span>
+                      <ul class="quiz-preview-list">
                         @for (q of act.quiz_questions.slice(0, 2); track q.question) {
                           <li>• {{ q.question }}</li>
                         }
@@ -395,24 +338,22 @@ import { AuthService } from '../../core/services/auth.service';
                   }
 
                   @if (act.expected_output) {
-                    <div class="act-terminal-preview">
-                      <span class="term-lbl">Output esperado:</span>
+                    <div class="terminal-preview-box">
+                      <span class="term-tag">Salida esperada:</span>
                       <code>{{ act.expected_output }}</code>
                     </div>
                   }
 
-                  <div class="act-card-footer">
-                    <div class="act-meta">
-                      <span>👤 {{ act.author_name }}</span>
-                      <span>• 👥 {{ act.submissions_count }} entregas</span>
-                      <span>• 🎯 {{ act.pass_rate }}% éxito</span>
+                  <div class="item-card__footer">
+                    <div class="meta-row">
+                      <span>{{ act.author_name }}</span>
+                      <span>· {{ act.submissions_count }} entregas</span>
+                      <span>· {{ act.pass_rate }}% éxito</span>
                     </div>
 
-                    <div class="act-actions">
-                      <button type="button" class="btn-icon-danger" (click)="deleteActivity(act.id)" title="Eliminar actividad">
-                        🗑️
-                      </button>
-                    </div>
+                    <button type="button" class="btn-delete-item" (click)="deleteActivity(act.id)" title="Eliminar actividad">
+                      Eliminar
+                    </button>
                   </div>
                 </div>
               }
@@ -420,39 +361,31 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
         }
 
-        <!-- SECCIÓN 3: RENDIMIENTO & MÉTRICAS -->
+        <!-- PESTAÑA 3: RENDIMIENTO & ANALÍTICAS -->
         @if (activeTab() === 'activity' && overview()) {
-          <div class="metrics-grid">
-            <!-- Timeline de Actividad Reciente -->
-            <div class="panel-card timeline-card">
-              <div class="panel-header">
-                <div>
-                  <h2 class="panel-title">⚡ Resoluciones de Estudiantes en Tiempo Real</h2>
-                  <p class="panel-desc">Monitoreo continuo de lecciones, quizzes y retos resueltos.</p>
-                </div>
-              </div>
+          <div class="grid-two-cols">
+            <!-- Feed de Actividad Reciente -->
+            <div class="surface-panel">
+              <h2 class="panel-heading">Resoluciones Recientes</h2>
+              <p class="panel-subtext">Historial de actividades entregadas en tiempo real.</p>
 
               @if (overview()!.recent_activity.length === 0) {
-                <div class="empty-box">
-                  <p class="text-muted">No se registran actividades recientes en este momento.</p>
-                </div>
+                <p class="cell-muted" style="padding: 1.5rem 0;">No hay actividad registrada en las últimas horas.</p>
               } @else {
-                <div class="timeline-stream">
+                <div class="activity-feed">
                   @for (act of overview()!.recent_activity; track act.id) {
-                    <div class="stream-item">
-                      <div class="stream-dot" [class.dot-pass]="act.passed" [class.dot-fail]="!act.passed">
-                        {{ act.passed ? '✓' : '✗' }}
-                      </div>
-                      <div class="stream-content">
-                        <div class="stream-header">
-                          <span class="stream-user">{{ act.user_name }}</span>
-                          <span class="stream-time">{{ formatTime(act.completed_at) }}</span>
+                    <div class="feed-item">
+                      <div class="feed-dot" [class.dot-success]="act.passed" [class.dot-danger]="!act.passed"></div>
+                      <div class="feed-body">
+                        <div class="feed-head">
+                          <span class="cell-primary">{{ act.user_name }}</span>
+                          <span class="cell-muted">{{ formatTime(act.completed_at) }}</span>
                         </div>
-                        <div class="stream-body">
-                          <span>Completó <em>{{ act.lesson_title }}</em></span>
+                        <div class="feed-meta">
+                          <span>Completó: <em>{{ act.lesson_title }}</em></span>
                           @if (act.score !== null) {
-                            <span class="stream-score" [class.score-ok]="act.passed" [class.score-bad]="!act.passed">
-                              Nota: {{ act.score }}%
+                            <span class="mono-value" [class.text-success]="act.passed" [class.text-danger]="!act.passed">
+                              {{ act.score }}%
                             </span>
                           }
                         </div>
@@ -463,27 +396,23 @@ import { AuthService } from '../../core/services/auth.service';
               }
             </div>
 
-            <!-- Cursos con Mayor Demanda & Retención -->
-            <div class="panel-card demand-card">
-              <div class="panel-header">
-                <div>
-                  <h2 class="panel-title">🔥 Demanda y Retención de Cursos</h2>
-                  <p class="panel-desc">Estudiantes activos matriculados por asignatura.</p>
-                </div>
-              </div>
+            <!-- Cursos con Mayor Demanda -->
+            <div class="surface-panel">
+              <h2 class="panel-heading">Demanda de Asignaturas</h2>
+              <p class="panel-subtext">Distribución de estudiantes inscritos.</p>
 
-              <div class="demand-list">
+              <div class="demand-table">
                 @for (c of overview()!.popular_courses; track c.id) {
-                  <div class="demand-item">
+                  <div class="demand-row">
                     <div class="demand-info">
-                      <span class="demand-name">{{ c.title }}</span>
-                      <span class="demand-diff">{{ c.difficulty }}</span>
+                      <span class="cell-primary">{{ c.title }}</span>
+                      <span class="badge badge-subtle">{{ c.difficulty }}</span>
                     </div>
-                    <div class="demand-stat">
-                      <span class="demand-count">{{ c.enrollments_count }} estudiantes</span>
-                      <div class="demand-bar-bg">
-                        <div class="demand-bar-fill" [style.width.%]="(c.enrollments_count / 1500) * 100"></div>
+                    <div class="demand-bar-wrap">
+                      <div class="demand-progress-bg">
+                        <div class="demand-progress-fill" [style.width.%]="(c.enrollments_count / 1500) * 100"></div>
                       </div>
+                      <span class="mono-value">{{ c.enrollments_count }} alumnos</span>
                     </div>
                   </div>
                 }
@@ -492,169 +421,138 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
         }
 
-        <!-- SECCIÓN 4: BYTE ASISTENTE DOCENTE IA -->
+        <!-- PESTAÑA 4: ASISTENTE BYTE DOCENTE IA -->
         @if (activeTab() === 'ai') {
-          <div class="ai-panel">
-            <!-- Header Byte Docente -->
-            <div class="ai-copilot-banner">
-              <div class="ai-banner-content">
-                <div class="ai-badge">
-                  <span class="sparkle">✨</span>
-                  <span>BYTE TEACHER COPILOT v2.5</span>
-                </div>
-                <h2>Generador Asistido de Quizzes y Diagnóstico Pedagógico</h2>
-                <p>
-                  Aprovecha el modelo pedagógico de SysEngAcademy para redactar evaluaciones rigurosas en segundos o generar intervenciones personalizadas para alumnos con dificultades.
-                </p>
+          <div class="grid-two-cols">
+            <!-- Creador de Quizzes con IA -->
+            <div class="surface-panel">
+              <div class="panel-heading-group">
+                <span class="badge badge-neutral">BYTE TEACHER IA</span>
+                <h2 class="panel-heading">Generador Técnico de Evaluaciones</h2>
+                <p class="panel-subtext">Ingresa un tema técnico y la IA generará preguntas con opciones y justificación.</p>
               </div>
-              <div class="ai-bot-avatar">🤖</div>
+
+              <div class="form-layout">
+                <div class="field-group">
+                  <label class="field-label">Tema de Evaluación</label>
+                  <div class="quick-topics">
+                    <button type="button" class="topic-chip" (click)="aiTopic.set('Docker y Contenedores')">Docker</button>
+                    <button type="button" class="topic-chip" (click)="aiTopic.set('Linux Shell y Bash')">Linux Shell</button>
+                    <button type="button" class="topic-chip" (click)="aiTopic.set('Git y Control de Versiones')">Git</button>
+                    <button type="button" class="topic-chip" (click)="aiTopic.set('Punteros y Memoria en C')">Punteros C</button>
+                    <button type="button" class="topic-chip" (click)="aiTopic.set('SQL y Normalización')">SQL</button>
+                  </div>
+                  <input
+                    type="text"
+                    class="field-input"
+                    placeholder="Ej. Algoritmos de Grafos, Concurrencia en Go…"
+                    [ngModel]="aiTopic()"
+                    (ngModelChange)="aiTopic.set($event)"
+                  />
+                </div>
+
+                <div class="field-row">
+                  <div class="field-group">
+                    <label class="field-label">Dificultad</label>
+                    <select class="field-select" [ngModel]="aiDifficulty()" (ngModelChange)="aiDifficulty.set($event)">
+                      <option value="Principiante">Principiante</option>
+                      <option value="Intermedio">Intermedio</option>
+                      <option value="Avanzado">Avanzado</option>
+                    </select>
+                  </div>
+
+                  <div class="field-group">
+                    <label class="field-label">Curso Destino</label>
+                    <select class="field-select" [ngModel]="aiTargetCourse()" (ngModelChange)="aiTargetCourse.set($event)">
+                      <option value="Introducción a la Programación">Introducción a la Programación</option>
+                      <option value="Estructuras de Datos y Algoritmos">Estructuras de Datos y Algoritmos</option>
+                      <option value="Sistemas Operativos y Linux">Sistemas Operativos y Linux</option>
+                      <option value="Bases de Datos Relacionales">Bases de Datos Relacionales</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn btn-primary btn-block"
+                  (click)="generateQuizWithAi()"
+                  [disabled]="aiGenerating() || !aiTopic().trim()"
+                >
+                  <span>{{ aiGenerating() ? 'Generando Preguntas con IA…' : 'Generar Quiz con Byte IA' }}</span>
+                </button>
+              </div>
+
+              <!-- Resultados Generados -->
+              @if (aiGeneratedQuestions().length > 0) {
+                <div class="generated-results">
+                  <div class="results-head">
+                    <span class="cell-primary">Preguntas generadas: {{ aiTopic() }}</span>
+                    <button type="button" class="btn btn-outline btn-sm" (click)="saveAiQuizToActivities()">
+                      Guardar en Catálogo
+                    </button>
+                  </div>
+
+                  <div class="questions-stack">
+                    @for (q of aiGeneratedQuestions(); track q.question; let idx = $index) {
+                      <div class="q-card">
+                        <span class="q-label">Pregunta #{{ idx + 1 }}</span>
+                        <p class="q-text">{{ q.question }}</p>
+
+                        <div class="options-list">
+                          @for (opt of q.options; track opt; let optIdx = $index) {
+                            <div class="option-row" [class.is-correct]="optIdx === q.correct_index">
+                              <span class="opt-letter">{{ ['A', 'B', 'C', 'D'][optIdx] }}</span>
+                              <span>{{ opt }}</span>
+                              @if (optIdx === q.correct_index) {
+                                <span class="badge badge-success" style="margin-left: auto;">Correcta</span>
+                              }
+                            </div>
+                          }
+                        </div>
+
+                        <div class="explanation-box">
+                          <strong>Justificación:</strong> {{ q.explanation }}
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             </div>
 
-            <div class="ai-workspace-grid">
-              <!-- Creador Asistido de Quizzes con IA -->
-              <div class="panel-card ai-generator-card">
-                <div class="panel-header">
-                  <div>
-                    <h3 class="panel-title">⚡ Generar Evaluación Técnica con IA</h3>
-                    <p class="panel-desc">Escribe un tema de ingeniería y la IA redactará preguntas técnicas con opciones y justificación.</p>
-                  </div>
-                </div>
-
-                <div class="ai-form">
-                  <div class="form-group">
-                    <label class="form-label">Tema o Tecnología</label>
-                    <div class="topic-presets">
-                      <button type="button" class="preset-pill" (click)="aiTopic.set('Docker y Contenedores')">Docker</button>
-                      <button type="button" class="preset-pill" (click)="aiTopic.set('Linux Shell y Bash')">Linux / Bash</button>
-                      <button type="button" class="preset-pill" (click)="aiTopic.set('Git y Control de Versiones')">Git</button>
-                      <button type="button" class="preset-pill" (click)="aiTopic.set('Punteros y Memoria en C')">Punteros C</button>
-                      <button type="button" class="preset-pill" (click)="aiTopic.set('SQL y Consultas Avanzadas')">SQL Relacional</button>
-                    </div>
-                    <input
-                      type="text"
-                      class="form-input"
-                      placeholder="Ej. Concurrencia en Go, Algoritmos de Grafos..."
-                      [ngModel]="aiTopic()"
-                      (ngModelChange)="aiTopic.set($event)"
-                    />
-                  </div>
-
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Nivel de Dificultad</label>
-                      <select class="form-select" [ngModel]="aiDifficulty()" (ngModelChange)="aiDifficulty.set($event)">
-                        <option value="Principiante">Principiante</option>
-                        <option value="Intermedio">Intermedio</option>
-                        <option value="Avanzado">Avanzado</option>
-                      </select>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label">Curso Destino</label>
-                      <select class="form-select" [ngModel]="aiTargetCourse()" (ngModelChange)="aiTargetCourse.set($event)">
-                        <option value="Introducción a la Programación">Introducción a la Programación</option>
-                        <option value="Estructuras de Datos y Algoritmos">Estructuras de Datos y Algoritmos</option>
-                        <option value="Sistemas Operativos y Linux">Sistemas Operativos y Linux</option>
-                        <option value="Bases de Datos Relacionales">Bases de Datos Relacionales</option>
-                        <option value="Arquitectura de Software">Arquitectura de Software</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-generate"
-                    (click)="generateQuizWithAi()"
-                    [disabled]="aiGenerating() || !aiTopic().trim()"
-                  >
-                    <span>{{ aiGenerating() ? '⏳ Generando Preguntas con Byte IA…' : '✨ Generar Quiz Técnico' }}</span>
-                  </button>
-                </div>
-
-                <!-- Preview de Preguntas Generadas -->
-                @if (aiGeneratedQuestions().length > 0) {
-                  <div class="ai-generated-results">
-                    <div class="results-header">
-                      <h4>📋 Preguntas Generadas para: <em>{{ aiTopic() }}</em></h4>
-                      <button type="button" class="btn btn-accent btn-sm" (click)="saveAiQuizToActivities()">
-                        💾 Guardar como Actividad de Cátedra
-                      </button>
-                    </div>
-
-                    <div class="questions-list">
-                      @for (q of aiGeneratedQuestions(); track q.question; let idx = $index) {
-                        <div class="q-item">
-                          <span class="q-number">Pregunta #{{ idx + 1 }}</span>
-                          <p class="q-text">{{ q.question }}</p>
-                          <div class="q-options">
-                            @for (opt of q.options; track opt; let optIdx = $index) {
-                              <div class="q-opt" [class.q-correct]="optIdx === q.correct_index">
-                                <span class="opt-letter">{{ ['A', 'B', 'C', 'D'][optIdx] }}</span>
-                                <span>{{ opt }}</span>
-                                @if (optIdx === q.correct_index) {
-                                  <span class="correct-badge">✓ Correcta</span>
-                                }
-                              </div>
-                            }
-                          </div>
-                          <div class="q-explanation">
-                            💡 <strong>Justificación Técnica:</strong> {{ q.explanation }}
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
+            <!-- Diagnóstico Pedagógico de Cohorte -->
+            <div class="surface-panel">
+              <div class="panel-heading-group">
+                <span class="badge badge-neutral">ANÁLISIS DE COHORTE</span>
+                <h2 class="panel-heading">Estudiantes que Requieren Refuerzo</h2>
+                <p class="panel-subtext">Seguimiento pedagógico para prevenir deserción temprana.</p>
               </div>
 
-              <!-- Diagnóstico Pedagógico de Alumnos en Riesgo -->
-              <div class="panel-card ai-cohort-card">
-                <div class="panel-header">
-                  <div>
-                    <h3 class="panel-title">🎯 Diagnóstico Pedagógico de Cohorte</h3>
-                    <p class="panel-desc">Estudiantes que requieren refuerzo o tutoría activa según su promedio evaluativo.</p>
+              <div class="risk-stack">
+                <div class="risk-card">
+                  <div class="risk-header">
+                    <div class="avatar-box">LR</div>
+                    <div>
+                      <div class="cell-name">Lucas Ramírez</div>
+                      <div class="cell-meta">lucas.ramirez@code.org · Pendiente de activación</div>
+                    </div>
                   </div>
+                  <p class="risk-note">
+                    <strong>Recomendación Byte:</strong> Enviar recordatorio para activación de cuenta institucional y asignar el reto de terminal para afianzar conceptos prácticos.
+                  </p>
                 </div>
 
-                <div class="at-risk-list">
-                  <div class="risk-item">
-                    <div class="risk-user">
-                      <div class="risk-avatar">LR</div>
-                      <div>
-                        <strong>Lucas Ramírez</strong>
-                        <small>lucas.ramirez@code.org</small>
-                      </div>
+                <div class="risk-card">
+                  <div class="risk-header">
+                    <div class="avatar-box">SH</div>
+                    <div>
+                      <div class="cell-name">Sofía Herrera</div>
+                      <div class="cell-meta">sofia.herrera@tech.dev · 1 curso inscrito</div>
                     </div>
-                    <div class="risk-badge">Promedio: 85.5% · Email Pendiente</div>
-                    <p class="risk-advice">
-                      Byte recomienda: Enviar recordatorio de activación de credenciales y asignar el reto de automatización en Bash para consolidar conceptos de Linux.
-                    </p>
                   </div>
-
-                  <div class="risk-item">
-                    <div class="risk-user">
-                      <div class="risk-avatar">SH</div>
-                      <div>
-                        <strong>Sofía Herrera</strong>
-                        <small>sofia.herrera@tech.dev</small>
-                      </div>
-                    </div>
-                    <div class="risk-badge">Promedio: 82% · 1 Curso Activo</div>
-                    <p class="risk-advice">
-                      Byte recomienda: Buen ritmo en JavaScript pero bajo volumen de entregas prácticas. Sugerirle unirse a un grupo de estudio de estructuras de datos.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="ai-assistant-chat-box">
-                  <h4>💬 Consulta Directa a Byte Copilot Docente</h4>
-                  <div class="mini-chat-bubble">
-                    <strong>Byte:</strong> "Profesor, ¿deseas que prepare una rúbrica de evaluación para la entrega de proyectos finales o prefieres generar un simulador de parcial?"
-                  </div>
-                  <div class="chat-input-row">
-                    <input type="text" class="chat-input" placeholder="Pregunta algo sobre diseño curricular o actividades…" />
-                    <button type="button" class="btn btn-primary btn-sm">Enviar</button>
-                  </div>
+                  <p class="risk-note">
+                    <strong>Recomendación Byte:</strong> Buen desempeño evaluativo pero bajo ritmo de ejercicios de código. Invitarla a participar en retos guiados de cátedra.
+                  </p>
                 </div>
               </div>
             </div>
@@ -662,140 +560,134 @@ import { AuthService } from '../../core/services/auth.service';
         }
       </div>
 
-      <!-- MODAL CREACIÓN DE ACTIVIDAD / QUIZ -->
+      <!-- MODAL CREACIÓN ACTIVIDAD / QUIZ -->
       @if (showCreateModal()) {
-        <div class="modal-backdrop" (click)="closeCreateModal()" role="dialog" aria-modal="true">
-          <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-backdrop" (click)="closeCreateModal()">
+          <div class="modal-dialog" (click)="$event.stopPropagation()">
             <div class="modal-header">
-              <div class="modal-title-wrap">
-                <span class="modal-badge">{{ modalType() === 'quiz' ? '📝 EVALUACIÓN' : '⚡ RETO PRÁCTICO' }}</span>
-                <h3 class="modal-title">
-                  {{ modalType() === 'quiz' ? 'Crear Nuevo Quiz Evaluativo' : 'Crear Reto Práctico / CLI' }}
-                </h3>
-              </div>
-              <button type="button" class="modal-close" (click)="closeCreateModal()">✕</button>
+              <h3 class="modal-title">
+                {{ modalType() === 'quiz' ? 'Crear Nuevo Quiz' : 'Crear Reto de Código' }}
+              </h3>
+              <button type="button" class="btn-close" (click)="closeCreateModal()">✕</button>
             </div>
 
             <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Título de la Actividad *</label>
+              <div class="field-group">
+                <label class="field-label">Título de la Actividad *</label>
                 <input
                   type="text"
-                  class="form-input"
-                  placeholder="Ej. Implementación de Cola con Prioridad en C++"
+                  class="field-input"
+                  placeholder="Ej. Implementación de Árbol AVL en C++"
                   [ngModel]="newActivityTitle()"
                   (ngModelChange)="newActivityTitle.set($event)"
                 />
               </div>
 
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Curso de Cátedra *</label>
-                  <select class="form-select" [ngModel]="newActivityCourse()" (ngModelChange)="newActivityCourse.set($event)">
+              <div class="field-row">
+                <div class="field-group">
+                  <label class="field-label">Curso Destino</label>
+                  <select class="field-select" [ngModel]="newActivityCourse()" (ngModelChange)="newActivityCourse.set($event)">
                     <option value="Introducción a la Programación">Introducción a la Programación</option>
                     <option value="Estructuras de Datos y Algoritmos">Estructuras de Datos y Algoritmos</option>
                     <option value="Sistemas Operativos y Linux">Sistemas Operativos y Linux</option>
                     <option value="Bases de Datos Relacionales">Bases de Datos Relacionales</option>
-                    <option value="Arquitectura de Software">Arquitectura de Software</option>
                   </select>
                 </div>
 
-                <div class="form-group">
-                  <label class="form-label">Dificultad</label>
-                  <select class="form-select" [ngModel]="newActivityDifficulty()" (ngModelChange)="newActivityDifficulty.set($event)">
+                <div class="field-group">
+                  <label class="field-label">Dificultad</label>
+                  <select class="field-select" [ngModel]="newActivityDifficulty()" (ngModelChange)="newActivityDifficulty.set($event)">
                     <option value="Principiante">Principiante</option>
                     <option value="Intermedio">Intermedio</option>
                     <option value="Avanzado">Avanzado</option>
                   </select>
                 </div>
 
-                <div class="form-group">
-                  <label class="form-label">Recompensa XP</label>
+                <div class="field-group">
+                  <label class="field-label">Recompensa XP</label>
                   <input
                     type="number"
-                    class="form-input"
+                    class="field-input"
                     [ngModel]="newActivityXp()"
                     (ngModelChange)="newActivityXp.set($event)"
                   />
                 </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Descripción Pedagógica / Enunciado *</label>
+              <div class="field-group">
+                <label class="field-label">Descripción / Instrucciones *</label>
                 <textarea
-                  class="form-textarea"
+                  class="field-textarea"
                   rows="3"
-                  placeholder="Describe el reto, objetivos y especificaciones técnicas..."
+                  placeholder="Objetivos pedagógicos y pautas técnicas para el estudiante…"
                   [ngModel]="newActivityDescription()"
                   (ngModelChange)="newActivityDescription.set($event)"
                 ></textarea>
               </div>
 
-              <!-- Campos específicos para Reto Práctico -->
               @if (modalType() === 'challenge') {
-                <div class="form-group">
-                  <label class="form-label">Código Inicial Starter (opcional)</label>
+                <div class="field-group">
+                  <label class="field-label">Código Inicial Starter</label>
                   <textarea
-                    class="form-textarea code-font"
+                    class="field-textarea mono-font"
                     rows="3"
-                    placeholder="// Código base con el que iniciará el estudiante..."
+                    placeholder="// Código base que verá el estudiante al iniciar..."
                     [ngModel]="newActivityStarterCode()"
                     (ngModelChange)="newActivityStarterCode.set($event)"
                   ></textarea>
                 </div>
 
-                <div class="form-group">
-                  <label class="form-label">Salida Esperada / Casos de Prueba (CLI)</label>
+                <div class="field-group">
+                  <label class="field-label">Salida Esperada / Test Case</label>
                   <input
                     type="text"
-                    class="form-input code-font"
-                    placeholder="Ej. Recorrido in-order: 10 20 30 40 50"
+                    class="field-input mono-font"
+                    placeholder="Ej. 10 20 30 40 50"
                     [ngModel]="newActivityExpectedOutput()"
                     (ngModelChange)="newActivityExpectedOutput.set($event)"
                   />
                 </div>
               }
 
-              <!-- Campos específicos para Quiz Evaluativo -->
               @if (modalType() === 'quiz') {
-                <div class="quiz-builder-section">
-                  <div class="quiz-builder-head">
-                    <label class="form-label">Preguntas de Opción Múltiple ({{ quizQuestionsList().length }})</label>
-                    <button type="button" class="btn btn-outline btn-sm" (click)="addQuestionToDraft()">
+                <div class="quiz-builder">
+                  <div class="quiz-builder__head">
+                    <label class="field-label">Preguntas del Quiz ({{ quizQuestionsList().length }})</label>
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="addQuestionToDraft()">
                       ➕ Añadir Pregunta
                     </button>
                   </div>
 
                   @for (q of quizQuestionsList(); track $index; let qIdx = $index) {
-                    <div class="draft-question-box">
-                      <div class="draft-q-head">
-                        <strong>Pregunta #{{ qIdx + 1 }}</strong>
+                    <div class="draft-box">
+                      <div class="draft-head">
+                        <span class="mono-value">Pregunta #{{ qIdx + 1 }}</span>
                         @if (quizQuestionsList().length > 1) {
-                          <button type="button" class="btn-remove-q" (click)="removeQuestionFromDraft(qIdx)">✕ Eliminar</button>
+                          <button type="button" class="btn-delete-q" (click)="removeQuestionFromDraft(qIdx)">Eliminar</button>
                         }
                       </div>
 
                       <input
                         type="text"
-                        class="form-input mb-2"
-                        placeholder="Enunciado de la pregunta evaluativa..."
+                        class="field-input"
+                        placeholder="Enunciado de la pregunta…"
                         [(ngModel)]="q.question"
                       />
 
-                      <div class="draft-options-grid">
+                      <div class="draft-options">
                         @for (opt of q.options; track $index; let optIdx = $index) {
                           <div class="draft-opt-row">
                             <input
                               type="radio"
-                              [name]="'correct_' + qIdx"
+                              [name]="'radio_q_' + qIdx"
                               [checked]="q.correct_index === optIdx"
                               (change)="q.correct_index = optIdx"
                             />
                             <span class="opt-label">{{ ['A', 'B', 'C', 'D'][optIdx] }}</span>
                             <input
                               type="text"
-                              class="form-input"
-                              placeholder="Opción de respuesta..."
+                              class="field-input"
+                              placeholder="Opción de respuesta…"
                               [(ngModel)]="q.options[optIdx]"
                             />
                           </div>
@@ -804,9 +696,10 @@ import { AuthService } from '../../core/services/auth.service';
 
                       <input
                         type="text"
-                        class="form-input mt-2"
-                        placeholder="Explicación técnica del porqué es correcta..."
+                        class="field-input"
+                        placeholder="Explicación técnica de la respuesta correcta…"
                         [(ngModel)]="q.explanation"
+                        style="margin-top: 0.5rem;"
                       />
                     </div>
                   }
@@ -815,14 +708,14 @@ import { AuthService } from '../../core/services/auth.service';
             </div>
 
             <div class="modal-footer">
-              <button type="button" class="btn btn-outline" (click)="closeCreateModal()">Cancelar</button>
+              <button type="button" class="btn btn-ghost" (click)="closeCreateModal()">Cancelar</button>
               <button
                 type="button"
                 class="btn btn-primary"
                 (click)="saveNewActivity()"
                 [disabled]="!newActivityTitle().trim() || !newActivityDescription().trim()"
               >
-                💾 Publicar Actividad en Cátedra
+                Publicar Actividad
               </button>
             </div>
           </div>
@@ -832,100 +725,92 @@ import { AuthService } from '../../core/services/auth.service';
       <!-- MODAL DOSSIER ESTUDIANTE -->
       @if (selectedStudentDetail()) {
         @let d = selectedStudentDetail()!;
-        <div class="modal-backdrop" (click)="selectedStudentDetail.set(null)" role="dialog" aria-modal="true">
-          <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-backdrop" (click)="selectedStudentDetail.set(null)">
+          <div class="modal-dialog" (click)="$event.stopPropagation()">
             <div class="modal-header">
-              <div class="dossier-head">
-                <div class="dossier-avatar">{{ getInitials(d.student.name) }}</div>
+              <div class="dossier-user">
+                <div class="avatar-box avatar-lg">{{ getInitials(d.student.name) }}</div>
                 <div>
                   <h3 class="modal-title">{{ d.student.name }}</h3>
-                  <span class="dossier-email">{{ d.student.email }}</span>
-                  <div class="dossier-tags">
-                    <span class="status-pill" [class.status-verified]="d.student.email_verified" [class.status-pending]="!d.student.email_verified">
-                      {{ d.student.email_verified ? '✓ Correo Verificado' : '⏳ Pendiente de Activación' }}
+                  <div class="cell-meta">{{ d.student.email }}</div>
+                  <div style="margin-top: 4px;">
+                    <span class="badge" [class.badge-success]="d.student.email_verified" [class.badge-warning]="!d.student.email_verified">
+                      {{ d.student.email_verified ? 'Verificado' : 'Pendiente' }}
                     </span>
-                    <span class="role-pill">Rol: {{ d.student.role }}</span>
                   </div>
                 </div>
               </div>
-              <button type="button" class="modal-close" (click)="selectedStudentDetail.set(null)">✕</button>
+              <button type="button" class="btn-close" (click)="selectedStudentDetail.set(null)">✕</button>
             </div>
 
             <div class="modal-body">
-              <!-- KPI Summary del Alumno -->
-              <div class="dossier-kpis">
-                <div class="d-kpi">
-                  <span class="d-kpi-num">{{ d.academic_summary.total_enrolled }}</span>
-                  <span class="d-kpi-lbl">Cursos Matriculados</span>
+              <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                <div class="kpi-card">
+                  <span class="kpi-label">Cursos Matriculados</span>
+                  <span class="kpi-value">{{ d.academic_summary.total_enrolled }}</span>
                 </div>
-                <div class="d-kpi">
-                  <span class="d-kpi-num">{{ d.academic_summary.total_completed }}</span>
-                  <span class="d-kpi-lbl">Lecciones Superadas</span>
+                <div class="kpi-card">
+                  <span class="kpi-label">Lecciones Superadas</span>
+                  <span class="kpi-value">{{ d.academic_summary.total_completed }}</span>
                 </div>
-                <div class="d-kpi">
-                  <span class="d-kpi-num">{{ d.academic_summary.average_score ?? 0 }}%</span>
-                  <span class="d-kpi-lbl">Promedio Evaluativo</span>
+                <div class="kpi-card">
+                  <span class="kpi-label">Promedio Quizzes</span>
+                  <span class="kpi-value">{{ d.academic_summary.average_score ?? 0 }}%</span>
                 </div>
               </div>
 
-              <!-- Cursos Inscritos -->
-              <h4 class="section-title">📚 Cursos Inscritos</h4>
-              <div class="dossier-courses">
+              <h4 class="section-title">Cursos Inscritos</h4>
+              <div class="dossier-list">
                 @for (c of d.courses; track c.id) {
-                  <div class="d-course-card">
-                    <div class="d-course-info">
-                      <strong>{{ c.title }}</strong>
-                      <span class="text-muted">Progreso: {{ c.progress_percent }}%</span>
+                  <div class="dossier-course-item">
+                    <div class="feed-head">
+                      <span class="cell-primary">{{ c.title }}</span>
+                      <span class="mono-value">{{ c.progress_percent }}%</span>
                     </div>
-                    <div class="progress-bar-bg">
-                      <div class="progress-bar-fill" [style.width.%]="c.progress_percent"></div>
+                    <div class="demand-progress-bg">
+                      <div class="demand-progress-fill" [style.width.%]="c.progress_percent"></div>
                     </div>
                   </div>
                 }
               </div>
 
-              <!-- Historial de Lecciones y Evaluaciones -->
-              <h4 class="section-title mt-4">✅ Evaluaciones y Entregas Registradas</h4>
+              <h4 class="section-title" style="margin-top: 1.5rem;">Historial Evaluativo</h4>
               @if (d.completed_lessons.length === 0) {
-                <p class="text-muted">Sin evaluaciones completadas hasta el momento.</p>
+                <p class="cell-muted">Sin evaluaciones registradas.</p>
               } @else {
-                <div class="table-responsive">
-                  <table class="academic-table table-sm">
-                    <thead>
+                <table class="data-table" style="font-size: 0.8rem;">
+                  <thead>
+                    <tr>
+                      <th>Lección</th>
+                      <th>Tipo</th>
+                      <th>Puntaje</th>
+                      <th>Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (l of d.completed_lessons; track l.id) {
                       <tr>
-                        <th>Lección / Actividad</th>
-                        <th>Curso</th>
-                        <th>Tipo</th>
-                        <th>Puntaje</th>
-                        <th>Fecha</th>
+                        <td><strong>{{ l.lesson_title }}</strong></td>
+                        <td><span class="badge badge-subtle">{{ l.lesson_type }}</span></td>
+                        <td>
+                          @if (l.score !== null) {
+                            <span [class.text-success]="l.passed" [class.text-danger]="!l.passed">
+                              {{ l.score }}%
+                            </span>
+                          } @else {
+                            <span class="cell-muted">—</span>
+                          }
+                        </td>
+                        <td><span class="cell-muted">{{ formatDate(l.completed_at) }}</span></td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      @for (l of d.completed_lessons; track l.id) {
-                        <tr>
-                          <td><strong>{{ l.lesson_title }}</strong></td>
-                          <td><span class="text-muted">{{ l.course_title }}</span></td>
-                          <td><span class="status-pill status-type">{{ l.lesson_type }}</span></td>
-                          <td>
-                            @if (l.score !== null) {
-                              <span [class.text-success]="l.passed" [class.text-danger]="!l.passed">
-                                {{ l.score }}% {{ l.passed ? '✓' : '✗' }}
-                              </span>
-                            } @else {
-                              <span class="text-muted">Completada</span>
-                            }
-                          </td>
-                          <td><small class="text-muted">{{ formatDate(l.completed_at) }}</small></td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
+                    }
+                  </tbody>
+                </table>
               }
             </div>
 
             <div class="modal-footer">
-              <button type="button" class="btn btn-outline" (click)="selectedStudentDetail.set(null)">Cerrar Expediente</button>
+              <button type="button" class="btn btn-ghost" (click)="selectedStudentDetail.set(null)">Cerrar Expediente</button>
             </div>
           </div>
         </div>
@@ -934,29 +819,33 @@ import { AuthService } from '../../core/services/auth.service';
   `,
   styles: [
     `
-      /* ESTILOS GLOBALES DEL PANEL DOCENTE */
+      /* ESTILOS NEUTROS — PALETA COHERENTE CON SYSENGACADEMY */
+      :host {
+        display: block;
+      }
+
       .teacher-page {
-        min-height: calc(100vh - 75px);
-        background: #080b14;
-        color: #f1f5f9;
-        font-family: inherit;
-        padding-bottom: 5rem;
+        min-height: calc(100vh - 64px);
+        background: #08090D;
+        color: #F8FAFC;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        padding-bottom: 4rem;
       }
 
       .container {
-        max-width: 1380px;
+        max-width: 1400px;
         margin: 0 auto;
         padding: 0 1.5rem;
       }
 
-      /* HEADER CÁTEDRA */
-      .teacher-header {
-        background: linear-gradient(180deg, #0d1322 0%, #080b14 100%);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 2.2rem 0;
+      /* CABECERA */
+      .page-head {
+        background: #08090D;
+        border-bottom: 1px solid #202436;
+        padding: 2rem 0 1.5rem;
       }
 
-      .header-container {
+      .head-layout {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -964,56 +853,39 @@ import { AuthService } from '../../core/services/auth.service';
         gap: 1.5rem;
       }
 
-      .role-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.72rem;
+      .sub-badge {
+        display: inline-block;
+        font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        background: rgba(0, 217, 255, 0.12);
-        color: #00d9ff;
-        padding: 0.25rem 0.85rem;
-        border-radius: 9999px;
-        border: 1px solid rgba(0, 217, 255, 0.3);
-        margin-bottom: 0.6rem;
+        letter-spacing: 0.06em;
+        color: #94A3B8;
+        background: #161926;
+        border: 1px solid #202436;
+        padding: 2px 8px;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
       }
 
-      .pulse-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: #00d9ff;
-        box-shadow: 0 0 8px #00d9ff;
-        animation: pulseDot 2s infinite ease-in-out;
-      }
-
-      @keyframes pulseDot {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.4); opacity: 0.6; }
-      }
-
-      .header-title {
-        font-size: 1.9rem;
-        font-weight: 800;
-        color: #ffffff;
-        margin: 0 0 0.4rem 0;
+      .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #F8FAFC;
+        margin: 0 0 0.35rem 0;
         letter-spacing: -0.02em;
       }
 
-      .header-subtitle {
-        color: #94a3b8;
-        font-size: 0.95rem;
+      .page-subtitle {
+        font-size: 0.9rem;
+        color: #94A3B8;
         margin: 0;
-        max-width: 680px;
+        max-width: 650px;
         line-height: 1.5;
       }
 
-      .header-actions {
+      .head-actions {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.6rem;
         flex-wrap: wrap;
       }
 
@@ -1021,234 +893,197 @@ import { AuthService } from '../../core/services/auth.service';
       .btn {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.55rem 1.15rem;
-        border-radius: 8px;
+        gap: 0.4rem;
+        padding: 7px 14px;
+        border-radius: 6px;
         font-size: 0.85rem;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         text-decoration: none;
+        transition: all 0.15s ease;
         border: none;
       }
 
-      .btn:hover {
-        transform: translateY(-1px);
-      }
-
-      .btn:active {
-        transform: translateY(0);
-      }
-
       .btn-primary {
-        background: linear-gradient(135deg, #00d9ff 0%, #0099ff 100%);
-        color: #030712;
-        box-shadow: 0 0 16px rgba(0, 217, 255, 0.25);
+        background: #0AE98A;
+        color: #08090D;
       }
-
       .btn-primary:hover {
-        box-shadow: 0 0 24px rgba(0, 217, 255, 0.4);
-      }
-
-      .btn-accent {
-        background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
-        color: #ffffff;
-        box-shadow: 0 0 16px rgba(168, 85, 247, 0.25);
-      }
-
-      .btn-accent:hover {
-        box-shadow: 0 0 24px rgba(168, 85, 247, 0.4);
+        background: #1FFFB0;
       }
 
       .btn-outline {
-        background: rgba(255, 255, 255, 0.04);
-        color: #cbd5e1;
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: #10121C;
+        color: #F8FAFC;
+        border: 1px solid #202436;
+      }
+      .btn-outline:hover {
+        background: #161926;
+        border-color: #2E344E;
       }
 
-      .btn-outline:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.25);
-        color: #ffffff;
+      .btn-ghost {
+        background: transparent;
+        color: #94A3B8;
+        border: 1px solid transparent;
+      }
+      .btn-ghost:hover {
+        background: #10121C;
+        color: #F8FAFC;
       }
 
       .btn-sm {
-        padding: 0.4rem 0.85rem;
-        font-size: 0.8rem;
+        padding: 5px 10px;
+        font-size: 0.78rem;
       }
 
-      /* KPI CARDS */
+      .btn-block {
+        width: 100%;
+        justify-content: center;
+        padding: 8px;
+      }
+
+      /* KPIS NEUTROS */
       .kpi-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 1.25rem;
-        margin: 2rem 0;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
       }
 
       .kpi-card {
-        background: #0d1322;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 14px;
-        padding: 1.35rem 1.5rem;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.2s, border-color 0.2s;
+        background: #10121C;
+        border: 1px solid #202436;
+        border-radius: 8px;
+        padding: 1.25rem;
+        transition: border-color 0.15s ease;
       }
-
       .kpi-card:hover {
-        transform: translateY(-2px);
+        border-color: #2E344E;
       }
 
-      .kpi-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-      }
-
-      .kpi-cyan::before { background: linear-gradient(90deg, #00d9ff, transparent); }
-      .kpi-purple::before { background: linear-gradient(90deg, #c084fc, transparent); }
-      .kpi-green::before { background: linear-gradient(90deg, #0ae98a, transparent); }
-      .kpi-amber::before { background: linear-gradient(90deg, #f59e0b, transparent); }
-
-      .kpi-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 0.75rem;
-      }
-
-      .kpi-icon {
-        font-size: 1.5rem;
-      }
-
-      .kpi-pill {
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: #94a3b8;
-        background: rgba(255, 255, 255, 0.05);
-        padding: 0.15rem 0.5rem;
-        border-radius: 6px;
+      .kpi-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #94A3B8;
+        margin-bottom: 0.4rem;
       }
 
       .kpi-value {
         display: block;
-        font-size: 2rem;
-        font-weight: 800;
-        color: #ffffff;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
+        font-size: 1.85rem;
+        font-weight: 700;
+        color: #F8FAFC;
         font-family: 'JetBrains Mono', monospace;
+        line-height: 1.1;
       }
 
-      .kpi-label {
-        font-size: 0.8rem;
-        color: #94a3b8;
-        margin-top: 0.35rem;
+      .kpi-meta {
         display: block;
+        font-size: 0.75rem;
+        color: #64748B;
+        margin-top: 0.4rem;
       }
 
-      /* TABS NAVEGACIÓN */
-      .dashboard-nav {
+      /* TAB BAR (GITHUB/LINEAR STYLE) */
+      .tab-bar {
         display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding-bottom: 1rem;
-        margin-bottom: 2rem;
+        gap: 0.5rem;
+        border-bottom: 1px solid #202436;
+        margin-bottom: 1.75rem;
         overflow-x: auto;
       }
 
-      .nav-tab-btn {
+      .tab-link {
         display: inline-flex;
         align-items: center;
-        gap: 0.55rem;
-        padding: 0.65rem 1.15rem;
-        border-radius: 10px;
-        background: transparent;
-        color: #94a3b8;
-        border: 1px solid transparent;
+        gap: 0.5rem;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: #94A3B8;
         font-size: 0.85rem;
-        font-weight: 600;
+        font-weight: 500;
+        padding: 0.75rem 0.5rem;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.15s ease;
         white-space: nowrap;
       }
 
-      .nav-tab-btn:hover {
-        color: #ffffff;
-        background: rgba(255, 255, 255, 0.04);
+      .tab-link:hover {
+        color: #F8FAFC;
       }
 
-      .nav-tab-btn.is-active {
-        color: #00d9ff;
-        background: rgba(0, 217, 255, 0.08);
-        border-color: rgba(0, 217, 255, 0.25);
-        box-shadow: 0 0 16px rgba(0, 217, 255, 0.1);
+      .tab-link.is-active {
+        color: #F8FAFC;
+        font-weight: 600;
+        border-bottom-color: #0AE98A;
       }
 
-      .nav-tab-ai.is-active {
-        color: #c084fc;
-        background: rgba(192, 132, 252, 0.1);
-        border-color: rgba(192, 132, 252, 0.3);
-      }
-
-      .tab-badge {
-        font-size: 0.7rem;
-        background: rgba(255, 255, 255, 0.08);
-        color: #cbd5e1;
-        padding: 0.15rem 0.5rem;
+      .tab-pill {
+        font-size: 11px;
+        padding: 1px 6px;
         border-radius: 9999px;
+        background: #161926;
+        border: 1px solid #202436;
+        color: #94A3B8;
       }
 
-      .pulse-badge {
-        background: #a855f7;
-        color: #ffffff;
-        font-weight: 800;
+      .tab-pill-ia {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: #161926;
+        color: #0AE98A;
+        border: 1px solid rgba(10, 233, 138, 0.3);
       }
 
-      /* PANEL CARD */
-      .panel-card {
-        background: #0d1322;
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        border-radius: 16px;
-        padding: 1.75rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      /* SUPERFICIES Y PANELES */
+      .surface-panel {
+        background: #10121C;
+        border: 1px solid #202436;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
       }
 
-      .panel-header {
+      .panel-heading {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #F8FAFC;
+        margin: 0 0 0.25rem 0;
+      }
+
+      .panel-subtext {
+        font-size: 0.85rem;
+        color: #94A3B8;
+        margin: 0;
+      }
+
+      .panel-head-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: 1.25rem;
-        margin-bottom: 1.5rem;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #202436;
       }
 
-      .panel-title {
-        font-size: 1.35rem;
-        font-weight: 700;
-        color: #ffffff;
-        margin: 0 0 0.3rem 0;
-      }
-
-      .panel-desc {
-        font-size: 0.88rem;
-        color: #94a3b8;
-        margin: 0;
-      }
-
-      .toolbar-controls {
+      /* TOOLBAR */
+      .panel-toolbar {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        justify-content: space-between;
         flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
       }
 
-      .search-input-wrap {
+      .search-input-group {
         position: relative;
         display: flex;
         align-items: center;
@@ -1256,1176 +1091,783 @@ import { AuthService } from '../../core/services/auth.service';
 
       .search-icon {
         position: absolute;
-        left: 0.85rem;
-        font-size: 0.85rem;
+        left: 0.75rem;
+        color: #64748B;
+        font-size: 0.8rem;
         pointer-events: none;
       }
 
-      .search-input {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #ffffff;
-        border-radius: 8px;
-        padding: 0.55rem 2.2rem 0.55rem 2.2rem;
+      .search-box {
+        background: #161926;
+        border: 1px solid #202436;
+        color: #F8FAFC;
         font-size: 0.85rem;
+        padding: 6px 2rem 6px 2.2rem;
+        border-radius: 6px;
         width: 280px;
-        transition: all 0.2s;
+        transition: border-color 0.15s ease;
       }
-
-      .search-input:focus {
+      .search-box:focus {
         outline: none;
-        border-color: #00d9ff;
-        background: rgba(0, 217, 255, 0.03);
-        box-shadow: 0 0 10px rgba(0, 217, 255, 0.15);
+        border-color: #2E344E;
       }
 
       .btn-clear {
         position: absolute;
-        right: 0.75rem;
+        right: 0.6rem;
         background: none;
         border: none;
-        color: #94a3b8;
+        color: #64748B;
         cursor: pointer;
       }
 
-      .filter-group {
+      .filter-pills {
         display: flex;
-        background: rgba(255, 255, 255, 0.03);
-        padding: 0.25rem;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        gap: 4px;
+        background: #161926;
+        padding: 3px;
+        border-radius: 6px;
+        border: 1px solid #202436;
       }
 
-      .filter-btn {
+      .filter-tab {
         background: transparent;
         border: none;
-        color: #94a3b8;
+        color: #94A3B8;
         font-size: 0.78rem;
-        font-weight: 600;
-        padding: 0.35rem 0.75rem;
-        border-radius: 6px;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 4px;
         cursor: pointer;
-        transition: all 0.2s;
+      }
+      .filter-tab:hover {
+        color: #F8FAFC;
+      }
+      .filter-tab.is-active {
+        background: #202436;
+        color: #F8FAFC;
       }
 
-      .filter-btn:hover {
-        color: #ffffff;
-      }
-
-      .filter-btn.active {
-        background: rgba(0, 217, 255, 0.15);
-        color: #00d9ff;
-      }
-
-      /* TABLA ACADÉMICA */
-      .table-responsive {
+      /* TABLAS */
+      .table-wrap {
         overflow-x: auto;
       }
 
-      .academic-table {
+      .data-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.86rem;
+        font-size: 0.85rem;
       }
 
-      .academic-table th {
+      .data-table th {
         text-align: left;
-        padding: 0.85rem 1rem;
+        padding: 0.65rem 0.75rem;
         font-size: 0.72rem;
-        font-weight: 700;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #94a3b8;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        color: #64748B;
+        border-bottom: 1px solid #202436;
       }
 
-      .academic-table td {
-        padding: 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      .data-table td {
+        padding: 0.85rem 0.75rem;
+        border-bottom: 1px solid #161926;
         vertical-align: middle;
       }
 
-      .academic-table tr:hover td {
+      .data-table tr:hover td {
         background: rgba(255, 255, 255, 0.02);
       }
 
       .student-cell {
         display: flex;
         align-items: center;
-        gap: 0.85rem;
+        gap: 0.75rem;
       }
 
-      .avatar-badge {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, #1e293b, #0f172a);
-        color: #00d9ff;
+      .avatar-box {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: #161926;
+        border: 1px solid #202436;
+        color: #F8FAFC;
+        font-size: 11px;
         font-weight: 700;
-        font-size: 0.8rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid rgba(0, 217, 255, 0.3);
+        display: grid;
+        place-items: center;
       }
 
-      .student-meta {
-        display: flex;
-        flex-direction: column;
+      .avatar-lg {
+        width: 44px;
+        height: 44px;
+        font-size: 14px;
       }
 
-      .student-name {
+      .cell-name {
         font-weight: 600;
-        color: #ffffff;
+        color: #F8FAFC;
       }
 
-      .student-email {
+      .cell-meta {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #64748B;
       }
 
-      .status-pill {
-        display: inline-block;
-        font-size: 0.72rem;
+      .cell-primary {
+        font-weight: 500;
+        color: #F8FAFC;
+      }
+
+      .cell-sub {
+        display: block;
+        font-size: 0.75rem;
+        color: #64748B;
+      }
+
+      .cell-muted {
+        color: #64748B;
+        font-size: 0.8rem;
+      }
+
+      .mono-value {
+        font-family: 'JetBrains Mono', monospace;
+        color: #F8FAFC;
         font-weight: 600;
-        padding: 0.2rem 0.65rem;
-        border-radius: 9999px;
       }
 
-      .status-verified {
-        background: rgba(10, 233, 138, 0.12);
-        color: #0ae98a;
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 4px;
+      }
+
+      .badge-success {
+        background: rgba(10, 233, 138, 0.1);
+        color: #0AE98A;
         border: 1px solid rgba(10, 233, 138, 0.3);
       }
 
-      .status-pending {
-        background: rgba(245, 158, 11, 0.12);
-        color: #f59e0b;
+      .badge-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #F59E0B;
         border: 1px solid rgba(245, 158, 11, 0.3);
       }
 
-      .status-type {
-        background: rgba(99, 102, 241, 0.15);
-        color: #818cf8;
+      .badge-neutral {
+        background: #161926;
+        color: #94A3B8;
+        border: 1px solid #202436;
       }
 
-      .courses-cell {
-        display: flex;
-        flex-direction: column;
+      .badge-subtle {
+        background: transparent;
+        color: #64748B;
+        border: 1px solid #202436;
       }
 
-      .courses-count {
-        font-weight: 600;
-        color: #cbd5e1;
-      }
-
-      .courses-snippet {
-        color: #64748b;
-        font-size: 0.72rem;
-      }
-
-      .lessons-count {
-        font-family: 'JetBrains Mono', monospace;
-        color: #00d9ff;
-        font-weight: 600;
-      }
-
-      .score-badge {
-        display: inline-block;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.78rem;
-        font-weight: 700;
-        padding: 0.2rem 0.55rem;
-        border-radius: 6px;
-      }
-
-      .score-high {
-        background: rgba(10, 233, 138, 0.15);
-        color: #0ae98a;
-      }
-
-      .score-mid {
-        background: rgba(245, 158, 11, 0.15);
-        color: #f59e0b;
-      }
-
-      .score-low {
-        background: rgba(244, 63, 94, 0.15);
-        color: #f43f5e;
-      }
-
-      .date-text {
-        font-size: 0.78rem;
-        color: #64748b;
-      }
-
-      .actions-cell {
+      .action-btn-group {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 4px;
         justify-content: flex-end;
       }
 
-      .btn-row-action {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        color: #cbd5e1;
-        padding: 0.35rem 0.65rem;
-        border-radius: 6px;
+      .action-btn {
+        background: #161926;
+        border: 1px solid #202436;
+        color: #94A3B8;
+        padding: 4px 8px;
+        border-radius: 4px;
         font-size: 0.75rem;
-        font-weight: 600;
+        font-weight: 500;
         cursor: pointer;
-        transition: all 0.15s;
+        transition: all 0.15s ease;
+      }
+      .action-btn:hover {
+        background: #202436;
+        color: #F8FAFC;
+      }
+      .action-btn--success {
+        color: #0AE98A;
+      }
+      .action-btn--danger {
+        color: #EF4444;
       }
 
-      .btn-row-action:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #ffffff;
-      }
-
-      .btn-view:hover {
-        border-color: #00d9ff;
-        color: #00d9ff;
-      }
-
-      .btn-activate {
-        background: rgba(10, 233, 138, 0.1);
-        border-color: rgba(10, 233, 138, 0.3);
-        color: #0ae98a;
-      }
-
-      .btn-delete:hover {
-        border-color: #f43f5e;
-        color: #f43f5e;
-      }
-
-      /* ACTIVIDADES GRID */
-      .activities-grid {
+      /* TARJETAS DE ACTIVIDADES */
+      .card-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-        gap: 1.25rem;
-        margin-top: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1rem;
       }
 
-      .activity-card {
-        background: #111827;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 14px;
-        padding: 1.4rem;
+      .item-card {
+        background: #08090D;
+        border: 1px solid #202436;
+        border-radius: 6px;
+        padding: 1.25rem;
         display: flex;
         flex-direction: column;
-        transition: all 0.2s;
+        transition: border-color 0.15s ease;
+      }
+      .item-card:hover {
+        border-color: #2E344E;
       }
 
-      .activity-card:hover {
-        border-color: rgba(0, 217, 255, 0.3);
-        transform: translateY(-2px);
-      }
-
-      .act-card-head {
+      .item-card__head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 0.85rem;
+        margin-bottom: 0.75rem;
       }
 
-      .act-badges {
+      .badge-group {
         display: flex;
-        gap: 0.5rem;
+        gap: 4px;
       }
 
-      .act-type-pill {
-        font-size: 0.7rem;
-        font-weight: 700;
-        padding: 0.2rem 0.55rem;
-        border-radius: 6px;
-      }
-
-      .pill-quiz {
-        background: rgba(168, 85, 247, 0.15);
-        color: #c084fc;
-        border: 1px solid rgba(168, 85, 247, 0.3);
-      }
-
-      .pill-challenge {
-        background: rgba(0, 217, 255, 0.15);
-        color: #00d9ff;
-        border: 1px solid rgba(0, 217, 255, 0.3);
-      }
-
-      .pill-terminal {
-        background: rgba(10, 233, 138, 0.15);
-        color: #0ae98a;
-        border: 1px solid rgba(10, 233, 138, 0.3);
-      }
-
-      .act-diff-pill {
-        font-size: 0.7rem;
-        background: rgba(255, 255, 255, 0.06);
-        color: #94a3b8;
-        padding: 0.2rem 0.55rem;
-        border-radius: 6px;
-      }
-
-      .act-xp-pill {
+      .item-xp {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #f59e0b;
-        background: rgba(245, 158, 11, 0.12);
-        padding: 0.2rem 0.5rem;
-        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #F59E0B;
       }
 
-      .act-card-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #ffffff;
-        margin: 0 0 0.35rem 0;
-        line-height: 1.35;
+      .item-card__title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #F8FAFC;
+        margin: 0 0 0.25rem 0;
       }
 
-      .act-course-tag {
+      .item-card__course {
         font-size: 0.78rem;
-        color: #818cf8;
-        margin: 0 0 0.75rem 0;
+        color: #94A3B8;
+        margin-bottom: 0.6rem;
       }
 
-      .act-card-desc {
-        font-size: 0.84rem;
-        color: #94a3b8;
-        line-height: 1.5;
-        margin: 0 0 1rem 0;
+      .item-card__desc {
+        font-size: 0.82rem;
+        color: #94A3B8;
+        line-height: 1.45;
+        margin-bottom: 1rem;
         flex-grow: 1;
       }
 
-      .act-quiz-preview {
-        background: rgba(0, 0, 0, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 8px;
-        padding: 0.75rem;
-        margin-bottom: 1rem;
+      .quiz-info-box,
+      .terminal-preview-box {
+        background: #10121C;
+        border: 1px solid #202436;
+        border-radius: 4px;
+        padding: 0.65rem;
+        margin-bottom: 0.85rem;
+        font-size: 0.78rem;
       }
 
-      .quiz-q-count {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #c084fc;
+      .quiz-count,
+      .term-tag {
+        color: #64748B;
+        font-size: 0.72rem;
         display: block;
-        margin-bottom: 0.35rem;
+        margin-bottom: 0.25rem;
       }
 
-      .quiz-sample-list {
+      .quiz-preview-list {
         list-style: none;
         padding: 0;
         margin: 0;
-        font-size: 0.75rem;
-        color: #cbd5e1;
+        color: #94A3B8;
       }
-
-      .quiz-sample-list li {
-        margin-bottom: 0.25rem;
+      .quiz-preview-list li {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
-      .act-terminal-preview {
-        background: #05070d;
-        border: 1px solid rgba(0, 217, 255, 0.2);
-        border-radius: 8px;
-        padding: 0.65rem;
-        margin-bottom: 1rem;
-        font-size: 0.75rem;
-      }
-
-      .term-lbl {
-        color: #64748b;
-        display: block;
-        font-size: 0.68rem;
-        margin-bottom: 0.2rem;
-      }
-
-      .act-terminal-preview code {
-        color: #0ae98a;
+      .terminal-preview-box code {
         font-family: 'JetBrains Mono', monospace;
+        color: #0AE98A;
       }
 
-      .act-card-footer {
+      .item-card__footer {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding-top: 0.85rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding-top: 0.75rem;
+        border-top: 1px solid #161926;
         font-size: 0.72rem;
-        color: #64748b;
+        color: #64748B;
       }
 
-      .act-meta {
+      .meta-row {
         display: flex;
-        gap: 0.4rem;
-        flex-wrap: wrap;
+        gap: 4px;
       }
 
-      .btn-icon-danger {
+      .btn-delete-item {
         background: none;
         border: none;
+        color: #EF4444;
+        font-size: 0.75rem;
         cursor: pointer;
-        font-size: 0.95rem;
-        opacity: 0.6;
-        transition: opacity 0.2s;
+      }
+      .btn-delete-item:hover {
+        text-decoration: underline;
       }
 
-      .btn-icon-danger:hover {
-        opacity: 1;
-      }
-
-      /* METRICAS & ACTIVITY */
-      .metrics-grid {
+      /* GRID 2 COLUMNAS */
+      .grid-two-cols {
         display: grid;
-        grid-template-columns: 1.4fr 1fr;
+        grid-template-columns: 1.3fr 1fr;
         gap: 1.5rem;
       }
 
-      @media (max-width: 992px) {
-        .metrics-grid {
+      @media (max-width: 900px) {
+        .grid-two-cols {
           grid-template-columns: 1fr;
         }
       }
 
-      .timeline-stream {
+      /* FEED ACTIVIDAD */
+      .activity-feed {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.85rem;
+        margin-top: 1rem;
       }
 
-      .stream-item {
+      .feed-item {
         display: flex;
-        gap: 1rem;
         align-items: flex-start;
+        gap: 0.75rem;
       }
 
-      .stream-dot {
-        width: 26px;
-        height: 26px;
+      .feed-dot {
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.75rem;
-        flex-shrink: 0;
+        margin-top: 6px;
       }
+      .dot-success { background: #0AE98A; }
+      .dot-danger { background: #EF4444; }
 
-      .dot-pass {
-        background: rgba(10, 233, 138, 0.15);
-        color: #0ae98a;
-        border: 1px solid rgba(10, 233, 138, 0.3);
-      }
-
-      .dot-fail {
-        background: rgba(244, 63, 94, 0.15);
-        color: #f43f5e;
-        border: 1px solid rgba(244, 63, 94, 0.3);
-      }
-
-      .stream-content {
+      .feed-body {
         flex-grow: 1;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
+        background: #08090D;
+        border: 1px solid #202436;
+        border-radius: 6px;
+        padding: 0.65rem 0.85rem;
       }
 
-      .stream-header {
+      .feed-head {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.25rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
       }
 
-      .stream-user {
-        font-weight: 600;
-        color: #ffffff;
-      }
-
-      .stream-time {
-        font-size: 0.72rem;
-        color: #64748b;
-      }
-
-      .stream-body {
-        font-size: 0.82rem;
-        color: #94a3b8;
+      .feed-meta {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-      }
-
-      .stream-score {
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 700;
         font-size: 0.78rem;
+        color: #94A3B8;
       }
 
-      .score-ok { color: #0ae98a; }
-      .score-bad { color: #f43f5e; }
-
-      .demand-list {
+      /* DEMANDA */
+      .demand-table {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
+        margin-top: 1rem;
       }
 
-      .demand-item {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 10px;
-        padding: 1rem;
+      .demand-row {
+        background: #08090D;
+        border: 1px solid #202436;
+        border-radius: 6px;
+        padding: 0.85rem;
       }
 
       .demand-info {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 0.4rem;
+        font-size: 0.85rem;
+      }
+
+      .demand-bar-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .demand-progress-bg {
+        flex-grow: 1;
+        height: 4px;
+        background: #161926;
+        border-radius: 9999px;
+        overflow: hidden;
+      }
+
+      .demand-progress-fill {
+        height: 100%;
+        background: #0AE98A;
+        border-radius: 9999px;
+      }
+
+      /* ASISTENTE IA */
+      .quick-topics {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
         margin-bottom: 0.5rem;
       }
 
-      .demand-name {
-        font-weight: 600;
-        color: #ffffff;
-        font-size: 0.9rem;
+      .topic-chip {
+        background: #161926;
+        border: 1px solid #202436;
+        color: #94A3B8;
+        font-size: 11px;
+        padding: 2px 7px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .topic-chip:hover {
+        color: #F8FAFC;
+        border-color: #2E344E;
       }
 
-      .demand-diff {
-        font-size: 0.7rem;
-        color: #818cf8;
-        background: rgba(99, 102, 241, 0.15);
-        padding: 0.15rem 0.5rem;
-        border-radius: 6px;
+      .form-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1rem;
       }
 
-      .demand-stat {
+      .field-group {
         display: flex;
         flex-direction: column;
         gap: 0.35rem;
       }
 
-      .demand-count {
-        font-size: 0.78rem;
-        color: #64748b;
-      }
-
-      .demand-bar-bg {
-        height: 6px;
-        background: rgba(255, 255, 255, 0.06);
-        border-radius: 9999px;
-        overflow: hidden;
-      }
-
-      .demand-bar-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #00d9ff, #6366f1);
-        border-radius: 9999px;
-      }
-
-      /* AI COPILOT WORKSPACE */
-      .ai-copilot-banner {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
-        border: 1px solid rgba(168, 85, 247, 0.3);
-        border-radius: 16px;
-        padding: 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 2rem;
-        margin-bottom: 2rem;
-      }
-
-      .ai-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 0.72rem;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        color: #c084fc;
-        background: rgba(168, 85, 247, 0.2);
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        margin-bottom: 0.5rem;
-      }
-
-      .ai-copilot-banner h2 {
-        font-size: 1.6rem;
-        font-weight: 800;
-        color: #ffffff;
-        margin: 0 0 0.5rem 0;
-      }
-
-      .ai-copilot-banner p {
-        color: #cbd5e1;
-        font-size: 0.9rem;
-        margin: 0;
-        max-width: 700px;
-        line-height: 1.5;
-      }
-
-      .ai-bot-avatar {
-        font-size: 3.5rem;
-        animation: floatBot 3s infinite ease-in-out;
-      }
-
-      @keyframes floatBot {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-8px); }
-      }
-
-      .ai-workspace-grid {
-        display: grid;
-        grid-template-columns: 1.4fr 1fr;
-        gap: 1.5rem;
-      }
-
-      @media (max-width: 992px) {
-        .ai-workspace-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .topic-presets {
-        display: flex;
-        gap: 0.45rem;
-        flex-wrap: wrap;
-        margin-bottom: 0.6rem;
-      }
-
-      .preset-pill {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #cbd5e1;
-        font-size: 0.74rem;
-        padding: 0.25rem 0.6rem;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-
-      .preset-pill:hover {
-        background: rgba(0, 217, 255, 0.15);
-        color: #00d9ff;
-        border-color: rgba(0, 217, 255, 0.3);
-      }
-
-      .form-group {
-        margin-bottom: 1.15rem;
-      }
-
-      .form-row {
+      .field-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
       }
 
-      .form-label {
-        display: block;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #cbd5e1;
-        margin-bottom: 0.4rem;
+      .field-label {
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: #94A3B8;
       }
 
-      .form-input,
-      .form-select,
-      .form-textarea {
-        width: 100%;
-        background: #080b14;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        color: #ffffff;
-        border-radius: 8px;
-        padding: 0.65rem 0.85rem;
+      .field-input,
+      .field-select,
+      .field-textarea {
+        background: #08090D;
+        border: 1px solid #202436;
+        color: #F8FAFC;
+        border-radius: 6px;
+        padding: 7px 10px;
         font-size: 0.85rem;
-        transition: all 0.2s;
         box-sizing: border-box;
       }
-
-      .form-input:focus,
-      .form-select:focus,
-      .form-textarea:focus {
+      .field-input:focus,
+      .field-select:focus,
+      .field-textarea:focus {
         outline: none;
-        border-color: #00d9ff;
-        box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+        border-color: #2E344E;
       }
 
-      .code-font {
+      .mono-font {
         font-family: 'JetBrains Mono', monospace;
       }
 
-      .btn-generate {
-        width: 100%;
-        justify-content: center;
-        padding: 0.75rem;
-        font-size: 0.9rem;
+      .generated-results {
+        margin-top: 1.5rem;
+        border-top: 1px solid #202436;
+        padding-top: 1.25rem;
       }
 
-      .ai-generated-results {
-        margin-top: 1.75rem;
-        background: #080b14;
-        border: 1px solid rgba(168, 85, 247, 0.3);
-        border-radius: 12px;
-        padding: 1.25rem;
-      }
-
-      .results-header {
+      .results-head {
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        align-items: center;
         margin-bottom: 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding-bottom: 0.75rem;
       }
 
-      .results-header h4 {
-        margin: 0;
-        font-size: 0.95rem;
-        color: #ffffff;
-      }
-
-      .questions-list {
+      .questions-stack {
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
+        gap: 1rem;
       }
 
-      .q-item {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 10px;
+      .q-card {
+        background: #08090D;
+        border: 1px solid #202436;
+        border-radius: 6px;
         padding: 1rem;
       }
 
-      .q-number {
-        font-size: 0.7rem;
+      .q-label {
+        font-size: 10px;
         font-weight: 700;
-        color: #c084fc;
+        color: #64748B;
         text-transform: uppercase;
       }
 
       .q-text {
-        font-weight: 600;
-        color: #ffffff;
         font-size: 0.88rem;
-        margin: 0.35rem 0 0.75rem 0;
+        font-weight: 600;
+        color: #F8FAFC;
+        margin: 0.25rem 0 0.65rem 0;
       }
 
-      .q-options {
+      .options-list {
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
-        margin-bottom: 0.75rem;
+        gap: 4px;
+        margin-bottom: 0.65rem;
       }
 
-      .q-opt {
+      .option-row {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        font-size: 0.82rem;
-        color: #cbd5e1;
-        background: rgba(255, 255, 255, 0.03);
-        padding: 0.45rem 0.75rem;
-        border-radius: 6px;
+        font-size: 0.8rem;
+        color: #94A3B8;
+        background: #10121C;
+        padding: 5px 8px;
+        border-radius: 4px;
       }
-
-      .q-correct {
-        background: rgba(10, 233, 138, 0.1);
-        border: 1px solid rgba(10, 233, 138, 0.3);
-        color: #0ae98a;
+      .option-row.is-correct {
+        color: #0AE98A;
+        border: 1px solid rgba(10, 233, 138, 0.25);
       }
 
       .opt-letter {
         font-weight: 700;
-        color: #94a3b8;
+        color: #64748B;
       }
 
-      .correct-badge {
-        margin-left: auto;
-        font-size: 0.7rem;
-        font-weight: 700;
-      }
-
-      .q-explanation {
+      .explanation-box {
         font-size: 0.75rem;
-        color: #94a3b8;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 0.5rem 0.75rem;
-        border-radius: 6px;
+        color: #94A3B8;
+        background: #10121C;
+        border-left: 2px solid #202436;
+        padding: 0.4rem 0.65rem;
+        border-radius: 0 4px 4px 0;
       }
 
-      /* COHORT RISK ITEMS */
-      .at-risk-list {
+      /* COHORT RISK */
+      .risk-stack {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
+        gap: 0.85rem;
+        margin-top: 1rem;
       }
 
-      .risk-item {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 10px;
+      .risk-card {
+        background: #08090D;
+        border: 1px solid #202436;
+        border-radius: 6px;
         padding: 1rem;
       }
 
-      .risk-user {
+      .risk-header {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.5rem;
       }
 
-      .risk-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        background: #1e293b;
-        color: #f59e0b;
-        font-weight: 700;
-        font-size: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .risk-user small {
-        color: #64748b;
-        display: block;
-      }
-
-      .risk-badge {
-        font-size: 0.72rem;
-        color: #f59e0b;
-        font-weight: 600;
-        margin-bottom: 0.4rem;
-      }
-
-      .risk-advice {
+      .risk-note {
         font-size: 0.8rem;
-        color: #94a3b8;
+        color: #94A3B8;
         margin: 0;
         line-height: 1.45;
-      }
-
-      .ai-assistant-chat-box {
-        background: #080b14;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 1.25rem;
-      }
-
-      .ai-assistant-chat-box h4 {
-        margin: 0 0 0.75rem 0;
-        font-size: 0.9rem;
-        color: #ffffff;
-      }
-
-      .mini-chat-bubble {
-        background: rgba(168, 85, 247, 0.1);
-        border: 1px solid rgba(168, 85, 247, 0.2);
-        padding: 0.75rem;
-        border-radius: 8px;
-        font-size: 0.82rem;
-        color: #cbd5e1;
-        margin-bottom: 0.75rem;
-      }
-
-      .chat-input-row {
-        display: flex;
-        gap: 0.5rem;
-      }
-
-      .chat-input {
-        flex-grow: 1;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #ffffff;
-        border-radius: 6px;
-        padding: 0.45rem 0.75rem;
-        font-size: 0.82rem;
       }
 
       /* MODALES */
       .modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(3, 7, 18, 0.85);
-        backdrop-filter: blur(8px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(4px);
+        display: grid;
+        place-items: center;
         z-index: 1000;
         padding: 1rem;
       }
 
-      .modal-card {
-        background: #0d1322;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 18px;
+      .modal-dialog {
+        background: #10121C;
+        border: 1px solid #202436;
+        border-radius: 8px;
         width: 100%;
-        max-width: 600px;
+        max-width: 680px;
         max-height: 90vh;
         overflow-y: auto;
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
         display: flex;
         flex-direction: column;
-      }
-
-      .modal-lg {
-        max-width: 780px;
       }
 
       .modal-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 1.35rem 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      }
-
-      .modal-badge {
-        font-size: 0.68rem;
-        font-weight: 700;
-        color: #00d9ff;
-        letter-spacing: 0.08em;
+        padding: 1.25rem;
+        border-bottom: 1px solid #202436;
       }
 
       .modal-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #ffffff;
-        margin: 0.2rem 0 0 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #F8FAFC;
+        margin: 0;
       }
 
-      .modal-close {
+      .btn-close {
         background: none;
         border: none;
-        color: #94a3b8;
-        font-size: 1.2rem;
+        color: #64748B;
+        font-size: 1.1rem;
         cursor: pointer;
       }
 
       .modal-body {
-        padding: 1.5rem;
-        overflow-y: auto;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
       }
 
       .modal-footer {
-        padding: 1rem 1.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 1rem 1.25rem;
+        border-top: 1px solid #202436;
         display: flex;
         justify-content: flex-end;
-        gap: 0.75rem;
+        gap: 0.5rem;
       }
 
       /* QUIZ BUILDER EN MODAL */
-      .quiz-builder-section {
-        margin-top: 1.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding-top: 1.25rem;
+      .quiz-builder {
+        border-top: 1px solid #202436;
+        padding-top: 1rem;
       }
 
-      .quiz-builder-head {
+      .quiz-builder__head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
       }
 
-      .draft-question-box {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1rem;
+      .draft-box {
+        background: #08090D;
+        border: 1px solid #202436;
+        border-radius: 6px;
+        padding: 0.85rem;
+        margin-bottom: 0.75rem;
       }
 
-      .draft-q-head {
+      .draft-head {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
-        font-size: 0.82rem;
-        color: #00d9ff;
+        margin-bottom: 0.4rem;
       }
 
-      .btn-remove-q {
+      .btn-delete-q {
         background: none;
         border: none;
-        color: #f43f5e;
+        color: #EF4444;
         font-size: 0.75rem;
         cursor: pointer;
       }
 
-      .draft-options-grid {
+      .draft-options {
         display: flex;
         flex-direction: column;
-        gap: 0.45rem;
+        gap: 4px;
+        margin-top: 0.5rem;
       }
 
       .draft-opt-row {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.4rem;
       }
 
       .opt-label {
+        font-size: 0.78rem;
         font-weight: 700;
-        font-size: 0.8rem;
-        color: #94a3b8;
-        width: 15px;
+        color: #64748B;
+        width: 14px;
       }
 
-      .mb-2 { margin-bottom: 0.5rem; }
-      .mt-2 { margin-top: 0.5rem; }
-      .mt-4 { margin-top: 1.5rem; }
-
-      /* DOSSIER ESTUDIANTE */
-      .dossier-head {
+      /* DOSSIER USER */
+      .dossier-user {
         display: flex;
         align-items: center;
-        gap: 1rem;
-      }
-
-      .dossier-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #00d9ff, #6366f1);
-        color: #030712;
-        font-weight: 800;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .dossier-email {
-        font-size: 0.82rem;
-        color: #94a3b8;
-        display: block;
-      }
-
-      .dossier-tags {
-        display: flex;
-        gap: 0.5rem;
-        margin-top: 0.35rem;
-      }
-
-      .role-pill {
-        font-size: 0.72rem;
-        background: rgba(255, 255, 255, 0.08);
-        color: #cbd5e1;
-        padding: 0.15rem 0.5rem;
-        border-radius: 6px;
-      }
-
-      .dossier-kpis {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-      }
-
-      .d-kpi {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 10px;
-        padding: 0.85rem;
-        text-align: center;
-      }
-
-      .d-kpi-num {
-        display: block;
-        font-size: 1.4rem;
-        font-weight: 800;
-        color: #00d9ff;
-        font-family: 'JetBrains Mono', monospace;
-      }
-
-      .d-kpi-lbl {
-        font-size: 0.72rem;
-        color: #94a3b8;
+        gap: 0.85rem;
       }
 
       .section-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #ffffff;
-        margin: 0 0 0.85rem 0;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #F8FAFC;
+        margin: 0 0 0.5rem 0;
       }
 
-      .dossier-courses {
+      .dossier-list {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.5rem;
       }
 
-      .d-course-card {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
+      .dossier-course-item {
+        background: #08090D;
+        border: 1px solid #202436;
+        border-radius: 6px;
+        padding: 0.65rem 0.85rem;
       }
 
-      .d-course-info {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.85rem;
-        margin-bottom: 0.4rem;
-      }
-
-      .progress-bar-bg {
-        height: 6px;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 9999px;
-        overflow: hidden;
-      }
-
-      .progress-bar-fill {
-        height: 100%;
-        background: #00d9ff;
-        border-radius: 9999px;
-      }
-
-      .table-sm th, .table-sm td {
-        padding: 0.6rem 0.75rem;
-        font-size: 0.8rem;
-      }
-
-      .text-success { color: #0ae98a; }
-      .text-danger { color: #f43f5e; }
-      .text-muted { color: #64748b; }
+      .text-success { color: #0AE98A; }
+      .text-danger { color: #EF4444; }
       .text-right { text-align: right; }
 
-      /* SPINNER & EMPTY */
-      .loading-box,
-      .empty-box {
+      /* ESTADOS */
+      .state-block {
         text-align: center;
-        padding: 3.5rem 1rem;
-        color: #94a3b8;
+        padding: 3rem 1rem;
+        color: #94A3B8;
       }
 
-      .empty-emoji {
-        font-size: 2.8rem;
-        margin-bottom: 0.5rem;
-        display: block;
+      .state-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #F8FAFC;
+        margin-bottom: 0.25rem;
       }
 
-      .spinner {
-        width: 32px;
-        height: 32px;
-        border: 3px solid rgba(0, 217, 255, 0.2);
-        border-top-color: #00d9ff;
+      .state-desc {
+        font-size: 0.85rem;
+        color: #64748B;
+      }
+
+      .loading-spinner {
+        width: 24px;
+        height: 24px;
+        border: 2px solid #202436;
+        border-top-color: #0AE98A;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
-        margin: 0 auto 1rem;
+        margin: 0 auto 0.75rem;
       }
 
       @keyframes spin {
@@ -2523,7 +1965,6 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     this.searchQuery.set(query);
   }
 
-  // Filtrado reactivo de estudiantes
   readonly filteredStudents = computed(() => {
     let list = this.students();
     const query = this.searchQuery().toLowerCase().trim();
@@ -2544,7 +1985,6 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     return list;
   });
 
-  // Filtrado reactivo de actividades
   readonly filteredActivities = computed(() => {
     let list = this.activities();
     const type = this.activityTypeFilter();
@@ -2581,7 +2021,6 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Creación de Actividades y Quizzes
   openCreateModal(type: 'challenge' | 'quiz') {
     this.modalType.set(type);
     this.newActivityTitle.set('');
@@ -2655,7 +2094,6 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Generador Byte IA
   generateQuizWithAi() {
     const topic = this.aiTopic().trim();
     if (!topic) return;

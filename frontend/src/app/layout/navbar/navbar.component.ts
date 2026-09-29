@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, HostListener } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -21,28 +22,21 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
         </a>
 
-        <!-- Desktop Navigation Pills (Centered) -->
+        <!-- Desktop Navigation (Centered) -->
         <nav class="navbar__nav" aria-label="Navegación principal">
           @if (isDocenteRoute()) {
-            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" class="nav-pill nav-pill--docente" [class.active]="currentTeacherTab() === 'students'">
-              <span class="nav-pill__icon">👥</span>
+            <!-- Navbar Docente Exclusivo: Cero rutas genéricas, estilo neutro y sobrio -->
+            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'students'">
               <span class="nav-pill__text">Alumnos</span>
             </a>
-            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" class="nav-pill nav-pill--docente" [class.active]="currentTeacherTab() === 'activities'">
-              <span class="nav-pill__icon">📝</span>
-              <span class="nav-pill__text">Crear Actividades &amp; Quizzes</span>
+            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'activities'">
+              <span class="nav-pill__text">Actividades &amp; Quizzes</span>
             </a>
-            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" class="nav-pill nav-pill--docente" [class.active]="currentTeacherTab() === 'activity'">
-              <span class="nav-pill__icon">📊</span>
+            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'activity'">
               <span class="nav-pill__text">Rendimiento</span>
             </a>
-            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" class="nav-pill nav-pill--docente nav-pill--ai-docente" [class.active]="currentTeacherTab() === 'ai'">
-              <span class="nav-pill__icon">🤖</span>
+            <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'ai'">
               <span class="nav-pill__text">Byte Asistente IA</span>
-            </a>
-            <a routerLink="/" class="nav-pill nav-pill--switch" title="Explorar la plataforma como estudiante">
-              <span class="nav-pill__icon">👁️</span>
-              <span class="nav-pill__text">Vista Estudiante</span>
             </a>
           } @else {
             <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-pill">
@@ -604,65 +598,87 @@ import { AuthService } from '../../core/services/auth.service';
       vertical-align: middle;
     }
 
-    .nav-pill--docente {
-      background: rgba(0, 217, 255, 0.16) !important;
-      border: 1px solid rgba(0, 217, 255, 0.4) !important;
-      color: #00D9FF !important;
-      font-weight: var(--font-semibold) !important;
-      box-shadow: 0 0 14px rgba(0, 217, 255, 0.25);
+    .portal-badge--teacher {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: var(--radius-sm, 4px);
+      background: var(--bg-surface-2, #161926);
+      border: 1px solid var(--border, #202436);
+      color: var(--text-secondary, #94A3B8);
+      margin-left: 8px;
+      vertical-align: middle;
     }
 
-    .nav-pill--teacher-badge {
-      background: rgba(0, 217, 255, 0.1) !important;
-      border: 1px solid rgba(0, 217, 255, 0.3) !important;
-      color: #00D9FF !important;
-    }
+    .nav-pill--doc-neutral {
+      background: transparent !important;
+      border: 1px solid transparent !important;
+      color: var(--text-secondary, #94A3B8) !important;
+      font-weight: 500 !important;
+      box-shadow: none !important;
 
-    .nav-pill--switch {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px dashed rgba(255, 255, 255, 0.22);
-      color: var(--text-secondary);
       &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        border-color: rgba(255, 255, 255, 0.4);
+        color: var(--text-primary, #F8FAFC) !important;
+        background: var(--bg-surface, #10121C) !important;
+      }
+
+      &.active {
+        background: var(--bg-surface-2, #161926) !important;
+        border: 1px solid var(--border, #202436) !important;
+        color: var(--text-primary, #F8FAFC) !important;
+      }
+    }
+
+    .btn-switch-view {
+      font-size: var(--text-xs, 0.75rem);
+      font-weight: 500;
+      color: var(--text-secondary, #94A3B8);
+      background: var(--bg-surface, #10121C);
+      border: 1px solid var(--border, #202436);
+      border-radius: var(--radius-md, 6px);
+      padding: 5px 11px;
+      text-decoration: none;
+      transition: all var(--transition-fast, 150ms ease);
+
+      &:hover {
+        color: var(--text-primary, #F8FAFC);
+        background: var(--bg-surface-2, #161926);
+        border-color: var(--border-hover, #2E344E);
       }
     }
 
     .user-meta__role--teacher {
-      color: #00D9FF !important;
-      font-weight: 700 !important;
-      text-shadow: 0 0 8px rgba(0, 217, 255, 0.35);
+      color: var(--text-muted, #64748B) !important;
+      font-weight: 500 !important;
+      text-shadow: none !important;
     }
 
     .avatar-circle--teacher {
-      background: linear-gradient(135deg, #00D9FF, #6C63FF) !important;
-      box-shadow: 0 0 10px rgba(0, 217, 255, 0.45);
-    }
-
-    .dropdown-user-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
+      background: var(--bg-surface-3, #1E2235) !important;
+      color: var(--text-primary, #F8FAFC) !important;
+      border: 1px solid var(--border, #202436) !important;
+      box-shadow: none !important;
     }
 
     .badge-teacher-tag {
       font-size: 8.5px;
-      font-weight: 800;
+      font-weight: 700;
       letter-spacing: 0.05em;
-      background: rgba(0, 217, 255, 0.2);
-      border: 1px solid rgba(0, 217, 255, 0.5);
-      color: #00D9FF;
+      background: var(--bg-surface-2, #161926);
+      border: 1px solid var(--border, #202436);
+      color: var(--text-secondary, #94A3B8);
       border-radius: 4px;
       padding: 1px 5px;
     }
 
     .dropdown-item--teacher {
-      color: #00D9FF !important;
-      font-weight: 600;
+      color: var(--text-secondary, #94A3B8) !important;
+      font-weight: 500;
       &:hover {
-        background: rgba(0, 217, 255, 0.12) !important;
+        background: var(--bg-surface-2, #161926) !important;
+        color: var(--text-primary, #F8FAFC) !important;
       }
     }
 
@@ -699,6 +715,15 @@ export class NavbarComponent {
 
   dropdownOpen = signal(false);
   mobileOpen   = signal(false);
+  readonly currentUrl = signal<string>(this.router.url);
+
+  constructor() {
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(event => {
+        this.currentUrl.set(event.urlAfterRedirects || event.url);
+      });
+  }
 
   readonly isTeacher = computed(() => {
     const user = this.auth.user();
@@ -710,12 +735,12 @@ export class NavbarComponent {
   });
 
   readonly isDocenteRoute = computed(() => {
-    const url = this.router.url;
+    const url = this.currentUrl();
     return url.startsWith('/docente') || url.startsWith('/admin');
   });
 
   readonly currentTeacherTab = computed(() => {
-    const url = this.router.url;
+    const url = this.currentUrl();
     if (url.includes('tab=activities')) return 'activities';
     if (url.includes('tab=activity')) return 'activity';
     if (url.includes('tab=ai')) return 'ai';
