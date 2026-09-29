@@ -478,9 +478,12 @@ export class LoginComponent {
       this.router.navigate(['/docente']);
     } else {
       // Para estudiantes: si no han completado el diagnóstico inicial, redirigir directamente al test de nivel
+      const email = (user?.email || '').toLowerCase().trim();
+      const isDemo = email === 'estudiante@sysengacademy.dev';
+      const diagKey = isDemo ? 'syseng_diagnostic_completed' : `syseng_${email}_diagnostic_completed`;
       const isDiagDone =
         typeof window !== 'undefined'
-          ? localStorage.getItem('syseng_diagnostic_completed')
+          ? localStorage.getItem(diagKey)
           : 'true';
 
       if (!isDiagDone || isDiagDone !== 'true') {

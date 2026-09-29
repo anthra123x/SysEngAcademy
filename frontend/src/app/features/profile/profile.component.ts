@@ -208,7 +208,7 @@ export interface StreakDay {
                     <div class="meta-row">
                       <span class="meta-k">Racha Activa:</span>
                       <span class="meta-v streak-tag">
-                        <strong>🔥 {{ currentStreak() }} días consecutivos</strong>
+                        <strong>🔥 {{ currentStreak() }} {{ currentStreak() === 1 ? 'día consecutivo' : 'días consecutivos' }}</strong>
                         <span class="streak-boost">({{ streakMultiplier() }}x XP Boost)</span>
                       </span>
                     </div>
@@ -3089,6 +3089,17 @@ for (let paso = 1; paso <= 3; paso++) {
         if (res.assignedLevelTitle) {
           this.diagnosticResult.set(res);
           this.diagnosticFinished.set(true);
+          this.currentRecommendation.set({
+            pathTitle: res.recommendedPathTitle || 'Ruta de Fundamentos de Software',
+            pathSlug: res.suggestedCourseSlug || 'introduccion-programacion',
+            targetLevelName: res.assignedLevelTitle || 'Cadete en Formación',
+            milestoneOrder: 1,
+            rationale: `Byte Copilot ha evaluado tu razonamiento lógico (${res.score}/3 respuestas correctas). Según tu perfil, tu siguiente paso es dominar los conceptos clave de ${res.suggestedCourseTitle || 'Introducción a la Programación'}.`,
+            topicsToStudy: ['Fundamentos de Programación', 'Algoritmos y Lógica', 'Prácticas en Terminal'],
+            suggestedCourseSlug: res.suggestedCourseSlug || 'introduccion-programacion',
+            suggestedCourseTitle: res.suggestedCourseTitle || 'Introducción a la Programación',
+            matchScore: 94,
+          });
         }
       } catch {}
     } else {
@@ -3102,6 +3113,17 @@ for (let paso = 1; paso <= 3; paso++) {
         suggestedCourseTitle: 'Introducción a la Programación',
         score: 0,
         agentFeedback: 'Presenta tu examen diagnóstico de 3 preguntas de lógica básica para calibrar tu nivel y definir tu ruta de aprendizaje.',
+      });
+      this.currentRecommendation.set({
+        pathTitle: 'Evaluación y Calibración Diagnóstica',
+        pathSlug: 'introduccion-programacion',
+        targetLevelName: 'Nivel 1 (Diagnóstico Pendiente)',
+        milestoneOrder: 1,
+        rationale: 'Aún no has completado tu prueba diagnóstica. Preséntala en la pestaña "diagnostic" para que Byte Copilot calibre tus habilidades y recomiende tu primera ruta de formación técnica personalizada.',
+        topicsToStudy: ['Variables y Asignaciones', 'Condicionales Lógicos (if/else)', 'Bucles y Acumuladores'],
+        suggestedCourseSlug: 'introduccion-programacion',
+        suggestedCourseTitle: 'Introducción a la Programación',
+        matchScore: 98,
       });
     }
 
@@ -3145,7 +3167,7 @@ for (let paso = 1; paso <= 3; paso++) {
     if (s >= 14) return 1.40;
     if (s >= 7)  return 1.25;
     if (s >= 3)  return 1.10;
-    return 1.05;
+    return 1.0;
   });
 
   readonly weekDays = computed<StreakDay[]>(() => {
@@ -3257,6 +3279,18 @@ for (let paso = 1; paso <= 3; paso++) {
     this.diagnosticResult.set(result);
     this.diagnosticFinished.set(true);
     this.diagnosticCompleted.set(true);
+
+    this.currentRecommendation.set({
+      pathTitle: pathTitle,
+      pathSlug: courseSlug,
+      targetLevelName: assignedTitle,
+      milestoneOrder: 1,
+      rationale: `Byte Copilot ha evaluado tu razonamiento lógico (${score}/3 respuestas correctas). Asignamos tu perfil al ${assignedTitle} y te sugerimos iniciar con ${courseTitle}.`,
+      topicsToStudy: ['Variables y Flujos', 'Algoritmos y Estructuras', 'Proyectos Prácticos'],
+      suggestedCourseSlug: courseSlug,
+      suggestedCourseTitle: courseTitle,
+      matchScore: 95,
+    });
 
     if (typeof window !== 'undefined') {
       const email = this.currentStudentEmail();

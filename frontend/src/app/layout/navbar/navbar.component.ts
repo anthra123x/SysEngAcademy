@@ -965,12 +965,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
   });
 
   readonly studentStreak = computed(() => {
-    if (typeof window === 'undefined') return 5;
+    if (typeof window === 'undefined') return 1;
+    const email = this.auth.user()?.email?.toLowerCase().trim();
+    if (!email) return 1;
+    const isDemo = email === 'estudiante@sysengacademy.dev';
+    const key = isDemo ? 'syseng_streak_data' : `syseng_${email}_streak_data`;
     try {
-      const st = JSON.parse(localStorage.getItem('syseng_streak_data') || '{}');
-      return st.currentStreak !== undefined ? st.currentStreak : 5;
+      const st = JSON.parse(localStorage.getItem(key) || '{}');
+      if (st.currentStreak !== undefined) return st.currentStreak;
+      return isDemo ? 5 : 1;
     } catch {
-      return 5;
+      return isDemo ? 5 : 1;
     }
   });
 
