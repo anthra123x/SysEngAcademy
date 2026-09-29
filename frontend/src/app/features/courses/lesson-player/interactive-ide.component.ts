@@ -42,36 +42,49 @@ export interface TerminalAiMessage {
       [class.mobile-view-terminal]="mobileActivePane() === 'terminal'"
       [class.mobile-view-ai]="mobileActivePane() === 'ai'"
     >
-      <!-- LINUX TERMINAL TITLE BAR -->
+      <!-- LINUX TERMINAL TITLE BAR (Clean, Minimalist, Unix-style) -->
       <div class="terminal-titlebar">
-        <!-- LEFT: LINUX SHELL PROMPT & TABS -->
+        <!-- LEFT: Unix dots + clean session info -->
         <div class="titlebar-left">
           <div class="terminal-dots" aria-hidden="true">
             <span class="dot dot-red"></span>
             <span class="dot dot-amber"></span>
             <span class="dot dot-green"></span>
           </div>
-
-          <!-- Shell Tab: solution file -->
-          <div class="terminal-tab is-active" title="Buffer de edición de código">
-            <span class="tab-glyph">📁</span>
-            <span class="tab-filename">solution{{ currentLangInfo().extension }}</span>
+          <div class="terminal-session-info">
+            <span class="session-host">syseng@terminal</span>:<span class="session-path">~/solution{{ currentLangInfo().extension }}</span>
             @if (isModified()) {
-              <span class="tab-modified" title="Buffer modificado sin guardar">[*]</span>
+              <span class="session-dirty" title="Cambios sin guardar">●</span>
             }
           </div>
+        </div>
 
-          <!-- Shell Tab: Tests -->
+        <!-- RIGHT: Essential, clean action buttons -->
+        <div class="titlebar-right">
+          <!-- Primary: Run button -->
+          <button
+            type="button"
+            class="cli-btn btn-run"
+            (click)="executeCode()"
+            [disabled]="running() || testing() || !code().trim()"
+            title="Compilar y ejecutar: ./run.sh (Ctrl + Enter)"
+          >
+            <span class="cli-icon">{{ running() ? '⏳' : '▶' }}</span>
+            <span>{{ running() ? 'ejecutando...' : 'run' }}</span>
+            <kbd class="cli-kbd">Ctrl↵</kbd>
+          </button>
+
+          <!-- Tests button (if tests exist) -->
           @if (activeTestCases().length > 0) {
             <button
               type="button"
-              class="terminal-tab tab-btn"
-              [class.is-active]="activeTerminalTab() === 'tests'"
-              (click)="activeTerminalTab.set('tests')"
-              title="Ver batería de pruebas ./test.sh"
+              class="cli-btn btn-test"
+              (click)="runTests()"
+              [disabled]="running() || testing() || !code().trim()"
+              title="Ejecutar pruebas automatizadas: ./test.sh"
             >
-              <span class="tab-glyph">🧪</span>
-              <span>test.spec</span>
+              <span class="cli-icon">{{ testing() ? '⏳' : '🧪' }}</span>
+              <span>{{ testing() ? 'probando...' : 'test' }}</span>
               @if (testStats(); as stats) {
                 <span
                   class="badge-pill"
@@ -84,110 +97,17 @@ export interface TerminalAiMessage {
             </button>
           }
 
-          <!-- Shell Tab: Hint -->
-          @if (hint()) {
-            <button
-              type="button"
-              class="terminal-tab tab-btn tab-hint"
-              [class.is-active]="showHintBar()"
-              (click)="showHintBar.set(!showHintBar())"
-              title="Leer pista: cat hint.txt"
-            >
-              <span class="tab-glyph">💡</span>
-              <span>cat hint.txt</span>
-            </button>
-          }
-        </div>
-
-        <!-- RIGHT: CLI COMMAND TOOLS -->
-        <div class="titlebar-right">
-          <!-- Runtime Language Selector -->
-          <div class="cli-select-wrap">
-            <select
-              class="cli-select"
-              [ngModel]="currentLanguage()"
-              (ngModelChange)="onLanguageChange($event)"
-              [disabled]="running() || testing()"
-              aria-label="Seleccionar entorno de ejecución"
-            >
-              @for (lang of languages; track lang.id) {
-                <option [value]="lang.id">{{ lang.name }} ({{ lang.version }})</option>
-              }
-            </select>
-          </div>
-
-          <!-- Stdin Input Button -->
-          <button
-            type="button"
-            class="cli-btn"
-            [class.is-active]="showStdin()"
-            (click)="showStdin.set(!showStdin())"
-            title="Entrada estándar de consola stdin"
-          >
-            <span class="cli-icon">⌨</span>
-            <span>stdin</span>
-          </button>
-
-          <!-- Reset Code Button -->
-          <button
-            type="button"
-            class="cli-btn"
-            (click)="resetCode()"
-            title="Restablecer buffer: git checkout solution"
-          >
-            <span class="cli-icon">↺</span>
-            <span>reset</span>
-          </button>
-
-          <!-- Layout Switcher: Stacked vs Split -->
-          @if (!isFullscreen()) {
-            <button
-              type="button"
-              class="cli-btn cli-btn-layout"
-              (click)="toggleLayoutMode()"
-              [title]="layoutMode() === 'bottom' ? 'Dividir pantalla verticalmente' : 'Poner terminal abajo (ancho completo)'"
-            >
-              <span>{{ layoutMode() === 'bottom' ? '⬓ split' : '⬒ stack' }}</span>
-            </button>
-          }
-
-          <!-- AI COPILOT CLI BUTTON -->
-          <button
-            type="button"
-            class="cli-btn btn-ai"
-            [class.is-active]="activeTerminalTab() === 'ai'"
-            (click)="openCopilotTab()"
-            title="Lanzar Byte AI CLI Copilot"
-          >
-            <span class="ai-spark">✨</span>
-            <span>byte-ai</span>
-          </button>
-
-          <!-- Validate Tests Button (if tests exist) -->
-          @if (activeTestCases().length > 0) {
-            <button
-              type="button"
-              class="cli-btn btn-test"
-              (click)="runTests()"
-              [disabled]="running() || testing() || !code().trim()"
-              title="Ejecutar ./test.sh"
-            >
-              <span class="cli-icon">{{ testing() ? '⏳' : '✓' }}</span>
-              <span>{{ testing() ? 'testing...' : 'test' }}</span>
-            </button>
-          }
-
-          <!-- Smart AI Evaluation Button -->
+          <!-- Byte AI Evaluator Button -->
           <button
             type="button"
             class="cli-btn btn-eval-ai"
             [class.is-loading]="aiLoading()"
             (click)="evaluateSolutionWithAi()"
             [disabled]="running() || testing() || aiLoading() || !code().trim()"
-            title="Solicitar validación a Byte IA para aprobar y completar el ejercicio"
+            title="Solicitar validación a Byte IA para aprobar el ejercicio"
           >
-            <span class="cli-icon">{{ aiLoading() ? '⏳' : '⚡' }}</span>
-            <span>{{ aiLoading() ? 'evaluando...' : 'Evaluar con IA' }}</span>
+            <span class="cli-icon">{{ aiLoading() ? '⏳' : '🤖' }}</span>
+            <span>{{ aiLoading() ? 'evaluando...' : 'byte-ai' }}</span>
           </button>
 
           @if (isCompleted() || challengeStatus() === 'passed_tests' || challengeStatus() === 'passed_ai') {
@@ -196,29 +116,61 @@ export interface TerminalAiMessage {
             </span>
           }
 
-          <!-- Run Code Button -->
+          <span class="titlebar-vdiv" aria-hidden="true"></span>
+
+          <!-- Tool icons -->
           <button
             type="button"
-            class="cli-btn btn-run"
-            (click)="executeCode()"
-            [disabled]="running() || testing() || !code().trim()"
-            title="Compilar y ejecutar: ./run.sh (Ctrl + Enter)"
+            class="cli-icon-btn"
+            (click)="resetCode()"
+            title="Restablecer código inicial"
           >
-            <span class="cli-icon">{{ running() ? '⏳' : '▶' }}</span>
-            <span>{{ running() ? 'running...' : 'run' }}</span>
-            <kbd class="cli-kbd">Ctrl↵</kbd>
+            ↺
           </button>
 
-          <!-- Fullscreen Toggle -->
           <button
             type="button"
-            class="cli-btn btn-fullscreen"
+            class="cli-icon-btn"
+            [class.is-active]="showStdin()"
+            (click)="showStdin.set(!showStdin())"
+            title="Entrada stdin de consola"
+          >
+            ⌨
+          </button>
+
+          @if (!isFullscreen()) {
+            <button
+              type="button"
+              class="cli-icon-btn"
+              (click)="toggleLayoutMode()"
+              [title]="layoutMode() === 'bottom' ? 'Dividir pantalla en dos columnas' : 'Diseño vertical (stack)'"
+            >
+              {{ layoutMode() === 'bottom' ? '⬓' : '⬒' }}
+            </button>
+          }
+
+          <button
+            type="button"
+            class="cli-icon-btn"
             [class.is-active]="isFullscreen()"
             (click)="toggleFullscreen()"
-            [title]="isFullscreen() ? 'Salir de pantalla completa (Esc)' : 'Terminal a pantalla completa'"
+            [title]="isFullscreen() ? 'Salir de pantalla completa (Esc)' : 'Pantalla completa'"
           >
             {{ isFullscreen() ? '🗗' : '⛶' }}
           </button>
+
+          <!-- Language Selector -->
+          <select
+            class="cli-select-compact"
+            [ngModel]="currentLanguage()"
+            (ngModelChange)="onLanguageChange($event)"
+            [disabled]="running() || testing()"
+            aria-label="Seleccionar lenguaje"
+          >
+            @for (lang of languages; track lang.id) {
+              <option [value]="lang.id">{{ lang.name }}</option>
+            }
+          </select>
         </div>
       </div>
 
@@ -336,7 +288,7 @@ export interface TerminalAiMessage {
                 [class.is-active]="activeTerminalTab() === 'terminal'"
                 (click)="activeTerminalTab.set('terminal')"
               >
-                <span>TERMINAL</span>
+                <span>&gt;_ Consola</span>
                 @if (executionResult()) {
                   <span
                     class="status-indicator-dot"
@@ -353,7 +305,7 @@ export interface TerminalAiMessage {
                   [class.is-active]="activeTerminalTab() === 'tests'"
                   (click)="activeTerminalTab.set('tests')"
                 >
-                  <span>TEST RESULTS</span>
+                  <span>🧪 Pruebas</span>
                   @if (testStats(); as stats) {
                     <span
                       class="test-score-badge"
@@ -373,26 +325,38 @@ export interface TerminalAiMessage {
                 (click)="openCopilotTab()"
               >
                 <span class="ai-spark">✨</span>
-                <span>BYTE COPILOT</span>
+                <span>Byte Copilot</span>
                 @if (aiLoading()) {
                   <span class="ai-pulse">●</span>
                 }
               </button>
+
+              @if (hint()) {
+                <button
+                  type="button"
+                  class="term-strip-tab tab-hint-strip"
+                  [class.is-active]="showHintBar()"
+                  (click)="showHintBar.set(!showHintBar())"
+                  title="Ver pista técnica"
+                >
+                  <span>💡 Pista</span>
+                </button>
+              }
             </div>
 
             <!-- Terminal Controls -->
             <div class="terminal-meta-controls">
               @if (executionResult()?.execution_time_ms !== undefined) {
-                <span class="term-time-stat">{{ executionResult()!.execution_time_ms }}ms</span>
+                <span class="term-time-stat">⚡ {{ executionResult()!.execution_time_ms }}ms</span>
               }
               @if (executionResult()) {
                 <button
                   type="button"
                   class="term-clear-btn"
                   (click)="clearTerminal()"
-                  title="clear / limpiar salida de consola"
+                  title="Limpiar salida de consola"
                 >
-                  clear
+                  limpiar
                 </button>
               }
             </div>
@@ -691,16 +655,16 @@ export interface TerminalAiMessage {
       .linux-terminal-window {
         display: flex;
         flex-direction: column;
-        background: #090d16;
-        border: 1px solid #1f2937;
+        background: #080c14;
+        border: 1px solid #1a2333;
         border-radius: 8px;
         overflow: hidden;
         margin: 1.25rem 0;
-        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        color: #e6edf3;
-        min-height: 520px;
-        height: 550px;
+        color: #e2e8f0;
+        min-height: 580px;
+        height: 640px;
         box-sizing: border-box;
         position: relative;
         transition: box-shadow 0.2s ease;
@@ -726,7 +690,7 @@ export interface TerminalAiMessage {
 
         .terminal-workspace {
           flex: 1 1 0% !important;
-          height: calc(100vh - 36px - 22px) !important;
+          height: calc(100vh - 38px - 24px) !important;
           min-height: 0 !important;
           max-height: none !important;
         }
@@ -745,34 +709,34 @@ export interface TerminalAiMessage {
         }
       }
 
-      /* TITLE BAR */
+      /* ============================================================
+         LINUX TITLE BAR (Authentic Unix Window Style)
+         ============================================================ */
       .terminal-titlebar {
-        height: 36px;
-        background: #0f172a;
+        height: 38px;
+        background: #0c101a;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-bottom: 1px solid #1e293b;
-        padding: 0 0.5rem;
+        border-bottom: 1px solid #161e2e;
+        padding: 0 0.75rem;
         flex-shrink: 0;
         user-select: none;
-        gap: 0.5rem;
+        gap: 0.75rem;
       }
 
       .titlebar-left {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.65rem;
         height: 100%;
         flex-shrink: 0;
-        min-width: 130px;
       }
 
       .terminal-dots {
         display: flex;
         align-items: center;
         gap: 0.35rem;
-        margin-right: 0.35rem;
       }
 
       .dot {
@@ -780,61 +744,118 @@ export interface TerminalAiMessage {
         height: 10px;
         border-radius: 50%;
         display: inline-block;
+        transition: opacity 0.15s;
       }
 
       .dot-red { background: #ef4444; }
       .dot-amber { background: #f59e0b; }
       .dot-green { background: #10b981; }
 
-      .terminal-tab {
+      .terminal-session-info {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        font-size: 0.76rem;
+        color: #94a3b8;
+        letter-spacing: -0.01em;
+      }
+
+      .session-host {
+        color: #10b981;
+        font-weight: 600;
+      }
+
+      .session-path {
+        color: #38bdf8;
+      }
+
+      .session-dirty {
+        color: #f59e0b;
+        font-size: 0.6rem;
+        margin-left: 2px;
+      }
+
+      .titlebar-right {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-shrink: 0;
+      }
+
+      /* ACTION BUTTONS */
+      .cli-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
-        background: #090d16;
-        color: #94a3b8;
-        border: 1px solid #1e293b;
-        border-bottom: none;
-        padding: 0.2rem 0.65rem;
+        padding: 0.25rem 0.65rem;
         font-size: 0.74rem;
         font-family: inherit;
-        border-radius: 4px 4px 0 0;
-        white-space: nowrap;
-
-        &.is-active {
-          background: #090d16;
-          color: #38bdf8;
-          border-top: 2px solid #38bdf8;
-          font-weight: 600;
-        }
-      }
-
-      .tab-filename {
-        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-      }
-
-      .tab-modified {
-        color: #f59e0b;
-        font-weight: bold;
-      }
-
-      .tab-btn {
+        font-weight: 600;
+        border-radius: 4px;
         cursor: pointer;
-        transition: all 0.15s;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+        border: 1px solid transparent;
 
-        &:hover {
-          color: #e2e8f0;
-          background: #1e293b;
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
         }
       }
 
-      .tab-hint {
-        color: #fbbf24;
-        border-color: rgba(245, 158, 11, 0.25);
+      .btn-run {
+        background: #059669;
+        color: #ffffff;
+        border-color: #10b981;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 
-        &.is-active {
-          border-top-color: #fbbf24;
-          color: #fef08a;
+        &:hover:not(:disabled) {
+          background: #047857;
+          border-color: #34d399;
         }
+      }
+
+      .btn-test {
+        background: rgba(56, 189, 248, 0.08);
+        color: #38bdf8;
+        border-color: rgba(56, 189, 248, 0.3);
+
+        &:hover:not(:disabled) {
+          background: rgba(56, 189, 248, 0.18);
+          color: #ffffff;
+        }
+      }
+
+      .btn-eval-ai {
+        background: rgba(168, 85, 247, 0.09);
+        color: #c084fc;
+        border-color: rgba(168, 85, 247, 0.32);
+
+        &:hover:not(:disabled) {
+          background: rgba(168, 85, 247, 0.2);
+          color: #ffffff;
+        }
+
+        &.is-loading {
+          opacity: 0.8;
+          cursor: wait;
+        }
+      }
+
+      .badge-challenge-done {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        padding: 0.18rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
       }
 
       .badge-pill {
@@ -847,176 +868,87 @@ export interface TerminalAiMessage {
         &.badge-err { background: #dc2626; color: #ffffff; }
       }
 
-      .titlebar-right {
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        flex-shrink: 1;
-        overflow-x: auto;
-        justify-content: flex-end;
+      .cli-kbd {
+        background: rgba(0, 0, 0, 0.35);
+        padding: 0.05rem 0.25rem;
+        border-radius: 2px;
+        font-size: 0.6rem;
+        color: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.15);
       }
 
-      .cli-select-wrap {
-        position: relative;
-        flex-shrink: 0;
+      .titlebar-vdiv {
+        width: 1px;
+        height: 18px;
+        background: #1e293b;
+        margin: 0 0.15rem;
       }
 
-      .cli-select {
-        background: #0f172a;
-        color: #94a3b8;
-        border: 1px solid #334155;
-        border-radius: 3px;
-        padding: 0.15rem 0.4rem;
-        font-size: 0.7rem;
-        cursor: pointer;
-        outline: none;
-        font-family: inherit;
-
-        &:focus {
-          border-color: #38bdf8;
-        }
-      }
-
-      .cli-btn {
+      /* MINIMALIST UTILITY ICONS */
+      .cli-icon-btn {
         display: inline-flex;
         align-items: center;
-        gap: 0.25rem;
-        background: #0f172a;
-        color: #94a3b8;
-        border: 1px solid #334155;
-        border-radius: 3px;
-        padding: 0.2rem 0.5rem;
-        font-size: 0.72rem;
-        font-family: inherit;
-        font-weight: 500;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: transparent;
+        border: 1px solid #1e293b;
+        border-radius: 4px;
+        color: #64748b;
+        font-size: 0.8rem;
         cursor: pointer;
-        white-space: nowrap;
-        transition: all 0.15s;
+        transition: all 0.15s ease;
 
-        &:hover:not(:disabled) {
-          color: #ffffff;
-          background: #1e293b;
-          border-color: #475569;
+        &:hover {
+          color: #f1f5f9;
+          background: #161e2e;
+          border-color: #334155;
         }
 
         &.is-active {
           color: #38bdf8;
-          border-color: #38bdf8;
-          background: rgba(56, 189, 248, 0.1);
-        }
-
-        &:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
+          border-color: rgba(56, 189, 248, 0.4);
+          background: rgba(56, 189, 248, 0.08);
         }
       }
 
-      .btn-ai {
-        color: #c084fc;
-        border-color: rgba(168, 85, 247, 0.4);
-        background: rgba(168, 85, 247, 0.1);
-
-        &:hover:not(:disabled) {
-          background: rgba(168, 85, 247, 0.25);
-          color: #ffffff;
-        }
-
-        &.is-active {
-          border-color: #a855f7;
-          background: #7c3aed;
-          color: #ffffff;
-        }
-      }
-
-      .btn-run {
-        background: #059669;
-        color: #ffffff;
-        border-color: #10b981;
-        font-weight: 600;
-
-        &:hover:not(:disabled) {
-          background: #047857;
-        }
-      }
-
-      .btn-test {
-        color: #34d399;
-        border-color: rgba(52, 211, 153, 0.35);
-
-        &:hover:not(:disabled) {
-          background: rgba(52, 211, 153, 0.15);
-        }
-      }
-
-      .btn-eval-ai {
-        color: #facc15;
-        border-color: rgba(250, 204, 21, 0.45);
-        background: rgba(250, 204, 21, 0.1);
-        font-weight: 600;
-
-        &:hover:not(:disabled) {
-          background: rgba(250, 204, 21, 0.25);
-          border-color: #facc15;
-          color: #ffffff;
-        }
-
-        &.is-loading {
-          opacity: 0.8;
-          cursor: wait;
-        }
-      }
-
-      .chip-eval {
-        color: #facc15;
-        border-color: rgba(250, 204, 21, 0.35);
-        background: rgba(250, 204, 21, 0.08);
-
-        &:hover:not(:disabled) {
-          border-color: #facc15;
-          background: rgba(250, 204, 21, 0.2);
-          color: #ffffff;
-        }
-      }
-
-      .badge-challenge-done {
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        background: rgba(16, 185, 129, 0.2);
-        color: #34d399;
-        border: 1px solid rgba(16, 185, 129, 0.4);
-        padding: 0.15rem 0.45rem;
+      /* COMPACT LANGUAGE SELECT */
+      .cli-select-compact {
+        background: #090d16;
+        color: #94a3b8;
+        border: 1px solid #1e293b;
         border-radius: 4px;
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
+        padding: 0.22rem 0.55rem;
+        font-size: 0.72rem;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.15s ease;
+
+        &:focus {
+          border-color: #38bdf8;
+          color: #f1f5f9;
+        }
+
+        &:hover {
+          color: #f1f5f9;
+          border-color: #334155;
+        }
       }
 
-      .cli-kbd {
-        background: rgba(0, 0, 0, 0.3);
-        padding: 0.05rem 0.2rem;
-        border-radius: 2px;
-        font-size: 0.6rem;
-        color: rgba(255, 255, 255, 0.8);
-      }
-
-      .btn-fullscreen {
-        font-size: 0.82rem;
-        padding: 0.2rem 0.35rem;
-      }
-
-      /* HINT PROMPT ROW */
+      /* ============================================================
+         COLLAPSIBLE PROMPT ROWS (HINT & STDIN)
+         ============================================================ */
       .terminal-hint-row {
-        background: #131926;
-        border-bottom: 1px solid #1e293b;
-        padding: 0.35rem 0.75rem;
+        background: #0d131f;
+        border-bottom: 1px solid #161e2e;
+        padding: 0.4rem 0.85rem;
         font-size: 0.74rem;
         flex-shrink: 0;
       }
 
       .hint-line {
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.25rem;
       }
 
       .prompt-user { color: #10b981; font-weight: 600; }
@@ -1026,12 +958,12 @@ export interface TerminalAiMessage {
       .hint-output {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.45rem;
         color: #fef08a;
         background: rgba(245, 158, 11, 0.08);
         border: 1px solid rgba(245, 158, 11, 0.2);
-        border-radius: 3px;
-        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        padding: 0.35rem 0.6rem;
       }
 
       .hint-dismiss-btn {
@@ -1041,13 +973,15 @@ export interface TerminalAiMessage {
         color: #fbbf24;
         cursor: pointer;
         font-size: 0.8rem;
+        padding: 0 0.2rem;
+
+        &:hover { color: #ffffff; }
       }
 
-      /* STDIN PROMPT ROW */
       .terminal-stdin-row {
-        background: #0f172a;
-        border-bottom: 1px solid #1e293b;
-        padding: 0.35rem 0.75rem;
+        background: #0d131f;
+        border-bottom: 1px solid #161e2e;
+        padding: 0.35rem 0.85rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -1056,17 +990,18 @@ export interface TerminalAiMessage {
       }
 
       .stdin-prompt {
-        color: #94a3b8;
+        color: #10b981;
+        font-weight: 600;
       }
 
       .stdin-text-field {
         flex: 1;
-        background: #090d16;
-        border: 1px solid #334155;
-        border-radius: 3px;
+        background: #080c14;
+        border: 1px solid #1e293b;
+        border-radius: 4px;
         color: #f8fafc;
         font-size: 0.74rem;
-        padding: 0.2rem 0.5rem;
+        padding: 0.25rem 0.55rem;
         outline: none;
         font-family: inherit;
 
@@ -1092,41 +1027,43 @@ export interface TerminalAiMessage {
         min-height: 0;
         display: grid;
         overflow: hidden;
-        background: #090d16;
+        background: #080c14;
       }
 
       .layout-stacked .terminal-workspace {
-        grid-template-rows: minmax(260px, 1fr) minmax(220px, 240px);
+        grid-template-rows: minmax(320px, 1.4fr) minmax(220px, 1fr);
         grid-template-columns: 1fr;
       }
 
       .layout-split .terminal-workspace {
-        grid-template-columns: minmax(360px, 1.15fr) minmax(300px, 0.85fr);
+        grid-template-columns: minmax(360px, 1.15fr) minmax(320px, 0.85fr);
         grid-template-rows: 1fr;
       }
 
-      /* EDITOR BUFFER PANE */
+      /* ============================================================
+         EDITOR BUFFER PANE
+         ============================================================ */
       .editor-pane {
         display: flex;
         height: 100%;
         min-height: 0;
-        background: #090d16;
-        border-right: 1px solid #1e293b;
-        border-bottom: 1px solid #1e293b;
+        background: #080c14;
+        border-right: 1px solid #161e2e;
+        border-bottom: 1px solid #161e2e;
         overflow: hidden;
       }
 
       .editor-gutter {
-        width: 42px;
-        padding: 0.65rem 0;
-        background: #090d16;
-        color: #475569;
+        width: 44px;
+        padding: 0.75rem 0;
+        background: #080c14;
+        color: #334155;
         font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-        font-size: 0.82rem;
+        font-size: 0.84rem;
         line-height: 1.6;
         text-align: right;
         user-select: none;
-        border-right: 1px solid #1e293b;
+        border-right: 1px solid #161e2e;
         overflow: hidden;
         flex-shrink: 0;
       }
@@ -1137,6 +1074,7 @@ export interface TerminalAiMessage {
         &.is-active-line {
           color: #38bdf8;
           font-weight: 600;
+          background: rgba(56, 189, 248, 0.05);
         }
       }
 
@@ -1152,77 +1090,88 @@ export interface TerminalAiMessage {
         width: 100%;
         height: 100%;
         min-height: 0;
-        padding: 0.65rem 0.85rem;
+        padding: 0.75rem 1rem;
         background: transparent;
         color: #f1f5f9;
         border: none;
         outline: none;
         resize: none;
-        font-size: 0.85rem;
+        font-size: 0.86rem;
         line-height: 1.6;
         white-space: pre;
         overflow: auto;
         tab-size: 4;
-        caret-color: #38bdf8;
+        caret-color: #10b981;
         box-sizing: border-box;
 
         &::placeholder {
-          color: #475569;
+          color: #334155;
+        }
+
+        &::selection {
+          background: rgba(56, 189, 248, 0.25);
         }
       }
 
-      /* TERMINAL OUTPUT PANE */
+      /* ============================================================
+         TERMINAL OUTPUT PANE
+         ============================================================ */
       .terminal-pane {
         display: flex;
         flex-direction: column;
         height: 100%;
         min-height: 0;
-        background: #0b0f19;
+        background: #05080f;
         overflow: hidden;
       }
 
       .terminal-header-strip {
-        height: 32px;
-        background: #0f172a;
-        border-bottom: 1px solid #1e293b;
+        height: 34px;
+        background: #0a0e17;
+        border-bottom: 1px solid #161e2e;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 0.5rem;
+        padding: 0 0.65rem;
         flex-shrink: 0;
         user-select: none;
       }
 
       .terminal-tabs-group {
         display: flex;
-        gap: 0.25rem;
+        gap: 0.2rem;
       }
 
       .term-strip-tab {
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: 0.35rem;
         background: transparent;
         color: #64748b;
         border: none;
         border-bottom: 2px solid transparent;
-        padding: 0.35rem 0.5rem;
-        font-size: 0.7rem;
+        padding: 0.4rem 0.65rem;
+        font-size: 0.72rem;
         font-weight: 600;
-        letter-spacing: 0.03em;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        letter-spacing: 0.02em;
         cursor: pointer;
-        transition: all 0.15s;
+        transition: all 0.15s ease;
 
-        &:hover { color: #f1f5f9; }
+        &:hover {
+          color: #f1f5f9;
+        }
 
         &.is-active {
-          color: #38bdf8;
-          border-bottom-color: #38bdf8;
+          color: #10b981;
+          border-bottom-color: #10b981;
+          background: rgba(16, 185, 129, 0.04);
         }
 
         &.tab-ai-strip.is-active {
           color: #c084fc;
           border-bottom-color: #a855f7;
+          background: rgba(168, 85, 247, 0.04);
         }
       }
 
@@ -1242,7 +1191,7 @@ export interface TerminalAiMessage {
         font-size: 0.62rem;
         padding: 0.05rem 0.3rem;
         border-radius: 3px;
-        background: #1e293b;
+        background: #161e2e;
         color: #cbd5e1;
 
         &.is-ok { background: #059669; color: #ffffff; }
@@ -1258,28 +1207,29 @@ export interface TerminalAiMessage {
       .terminal-meta-controls {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.6rem;
       }
 
       .term-time-stat {
         font-size: 0.68rem;
         color: #64748b;
-        font-family: inherit;
+        font-family: 'JetBrains Mono', monospace;
       }
 
       .term-clear-btn {
         background: transparent;
-        border: 1px solid #334155;
+        border: 1px solid #1e293b;
         color: #64748b;
         font-size: 0.68rem;
         cursor: pointer;
-        padding: 0.1rem 0.35rem;
-        border-radius: 2px;
+        padding: 0.12rem 0.45rem;
+        border-radius: 3px;
         font-family: inherit;
 
         &:hover {
           color: #f1f5f9;
-          background: #1e293b;
+          background: #161e2e;
+          border-color: #334155;
         }
       }
 
@@ -1287,10 +1237,10 @@ export interface TerminalAiMessage {
         flex: 1 1 0%;
         min-height: 0;
         overflow-y: auto;
-        padding: 0.65rem 0.85rem;
-        background: #0b0f19;
-        font-size: 0.78rem;
-        line-height: 1.5;
+        padding: 0.75rem 1rem;
+        background: #05080f;
+        font-size: 0.8rem;
+        line-height: 1.55;
         color: #cbd5e1;
         box-sizing: border-box;
       }
@@ -1299,7 +1249,7 @@ export interface TerminalAiMessage {
       .cli-stdout-stream {
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 0.45rem;
       }
 
       .cli-running-indicator {
@@ -1331,7 +1281,8 @@ export interface TerminalAiMessage {
         color: #fca5a5;
         background: rgba(239, 68, 68, 0.08);
         border-left: 2px solid #ef4444;
-        padding: 0.4rem 0.6rem;
+        padding: 0.45rem 0.65rem;
+        border-radius: 0 4px 4px 0;
         white-space: pre-wrap;
         word-break: break-all;
         font-family: inherit;
@@ -1345,9 +1296,9 @@ export interface TerminalAiMessage {
       .cli-exit-line {
         font-size: 0.7rem;
         color: #64748b;
-        margin-top: 0.25rem;
-        padding-top: 0.25rem;
-        border-top: 1px dashed #1e293b;
+        margin-top: 0.35rem;
+        padding-top: 0.35rem;
+        border-top: 1px dashed #161e2e;
 
         &.is-err { color: #f87171; }
         &.is-ok { color: #34d399; }
@@ -1358,17 +1309,17 @@ export interface TerminalAiMessage {
 
         .cursor-block {
           display: inline-block;
-          width: 7px;
-          height: 13px;
+          width: 8px;
+          height: 14px;
           background: #10b981;
           vertical-align: middle;
           animation: pulseBlink 0.9s infinite alternate;
         }
 
         .cli-idle-hint {
-          margin-top: 0.4rem;
+          margin-top: 0.5rem;
           color: #475569;
-          font-size: 0.72rem;
+          font-size: 0.74rem;
 
           strong { color: #94a3b8; }
         }
@@ -1388,10 +1339,10 @@ export interface TerminalAiMessage {
       }
 
       .cli-test-card {
-        background: #0f172a;
-        border: 1px solid #1e293b;
+        background: #080c14;
+        border: 1px solid #161e2e;
         border-radius: 4px;
-        padding: 0.45rem 0.65rem;
+        padding: 0.5rem 0.75rem;
 
         &.is-pass { border-left: 3px solid #10b981; }
         &.is-fail { border-left: 3px solid #ef4444; }
@@ -1420,7 +1371,7 @@ export interface TerminalAiMessage {
       .cli-test-diff {
         margin-top: 0.35rem;
         padding-top: 0.35rem;
-        border-top: 1px solid #1e293b;
+        border-top: 1px solid #161e2e;
         display: flex;
         flex-direction: column;
         gap: 0.2rem;
@@ -1443,10 +1394,11 @@ export interface TerminalAiMessage {
         background: #059669;
         color: #ffffff;
         border: none;
-        padding: 0.3rem 0.75rem;
+        padding: 0.35rem 0.85rem;
         border-radius: 3px;
         font-size: 0.72rem;
         font-family: inherit;
+        font-weight: 600;
         cursor: pointer;
 
         &:hover { background: #047857; }
@@ -1463,10 +1415,10 @@ export interface TerminalAiMessage {
       }
 
       .cli-copilot-banner {
-        background: #0f172a;
+        background: #080c14;
         border: 1px solid rgba(168, 85, 247, 0.25);
         border-radius: 4px;
-        padding: 0.45rem 0.65rem;
+        padding: 0.45rem 0.7rem;
         margin-bottom: 0.45rem;
         flex-shrink: 0;
       }
@@ -1482,7 +1434,7 @@ export interface TerminalAiMessage {
 
       .cli-chips-row {
         display: flex;
-        gap: 0.3rem;
+        gap: 0.35rem;
         overflow-x: auto;
         padding-bottom: 0.35rem;
         margin-bottom: 0.4rem;
@@ -1490,24 +1442,36 @@ export interface TerminalAiMessage {
       }
 
       .cli-chip {
-        background: #1e293b;
-        border: 1px solid #334155;
+        background: #0e1422;
+        border: 1px solid #1e293b;
         color: #94a3b8;
         font-size: 0.68rem;
-        padding: 0.2rem 0.45rem;
+        padding: 0.22rem 0.5rem;
         border-radius: 3px;
         white-space: nowrap;
         cursor: pointer;
         font-family: inherit;
-        transition: all 0.15s;
+        transition: all 0.15s ease;
 
         &:hover:not(:disabled) {
           color: #ffffff;
-          background: #334155;
+          background: #1a2333;
           border-color: #a855f7;
         }
 
         &:disabled { opacity: 0.4; cursor: not-allowed; }
+      }
+
+      .chip-eval {
+        color: #facc15;
+        border-color: rgba(250, 204, 21, 0.3);
+        background: rgba(250, 204, 21, 0.06);
+
+        &:hover:not(:disabled) {
+          border-color: #facc15;
+          background: rgba(250, 204, 21, 0.18);
+          color: #ffffff;
+        }
       }
 
       .cli-messages-stream {
@@ -1515,14 +1479,14 @@ export interface TerminalAiMessage {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.55rem;
+        gap: 0.6rem;
         margin-bottom: 0.45rem;
         padding-right: 0.2rem;
       }
 
       .cli-copilot-welcome {
-        background: #0f172a;
-        border: 1px dashed rgba(168, 85, 247, 0.3);
+        background: #080c14;
+        border: 1px dashed rgba(168, 85, 247, 0.25);
         border-radius: 4px;
         padding: 0.85rem;
         text-align: center;
@@ -1535,8 +1499,8 @@ export interface TerminalAiMessage {
       }
 
       .cli-msg-card {
-        background: #0f172a;
-        border: 1px solid #1e293b;
+        background: #080c14;
+        border: 1px solid #161e2e;
         border-radius: 4px;
         padding: 0.55rem 0.75rem;
 
@@ -1568,8 +1532,8 @@ export interface TerminalAiMessage {
         line-height: 1.5;
 
         pre {
-          background: #090d16;
-          border: 1px solid #1e293b;
+          background: #05080f;
+          border: 1px solid #161e2e;
           padding: 0.55rem;
           border-radius: 3px;
           color: #38bdf8;
@@ -1594,12 +1558,12 @@ export interface TerminalAiMessage {
         gap: 0.35rem;
         margin-top: 0.4rem;
         padding-top: 0.4rem;
-        border-top: 1px solid #1e293b;
+        border-top: 1px solid #161e2e;
       }
 
       .cli-code-btn {
-        background: #1e293b;
-        border: 1px solid #334155;
+        background: #0e1422;
+        border: 1px solid #1e293b;
         color: #f1f5f9;
         font-size: 0.68rem;
         padding: 0.2rem 0.5rem;
@@ -1607,7 +1571,7 @@ export interface TerminalAiMessage {
         cursor: pointer;
         font-family: inherit;
 
-        &:hover { background: #334155; }
+        &:hover { background: #1a2333; }
       }
 
       .btn-apply-snippet {
@@ -1632,8 +1596,8 @@ export interface TerminalAiMessage {
         display: flex;
         align-items: center;
         gap: 0.35rem;
-        padding: 0.35rem 0;
-        border-top: 1px solid #1e293b;
+        padding: 0.4rem 0;
+        border-top: 1px solid #161e2e;
         flex-shrink: 0;
       }
 
@@ -1646,8 +1610,8 @@ export interface TerminalAiMessage {
 
       .cli-text-input {
         flex: 1;
-        background: #090d16;
-        border: 1px solid #334155;
+        background: #080c14;
+        border: 1px solid #1e293b;
         border-radius: 3px;
         color: #f8fafc;
         font-size: 0.74rem;
@@ -1655,7 +1619,7 @@ export interface TerminalAiMessage {
         outline: none;
 
         &:focus { border-color: #a855f7; }
-        &::placeholder { color: #475569; }
+        &::placeholder { color: #334155; }
       }
 
       .cli-send-btn {
@@ -1676,7 +1640,7 @@ export interface TerminalAiMessage {
       /* TRANSIENT TOAST */
       .terminal-toast {
         position: absolute;
-        bottom: 30px;
+        bottom: 34px;
         left: 50%;
         transform: translateX(-50%);
         background: #059669;
@@ -1690,17 +1654,19 @@ export interface TerminalAiMessage {
         animation: fadeInOut 2.5s forwards;
       }
 
-      /* STATUS BAR */
+      /* ============================================================
+         LINUX STATUS BAR (Neovim / Tmux Style)
+         ============================================================ */
       .terminal-statusbar {
-        height: 22px;
-        background: #0f172a;
-        color: #94a3b8;
+        height: 24px;
+        background: #080c14;
+        color: #64748b;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 0.5rem;
+        padding: 0 0.65rem;
         font-size: 0.68rem;
-        border-top: 1px solid #1e293b;
+        border-top: 1px solid #161e2e;
         flex-shrink: 0;
         user-select: none;
       }
@@ -1719,17 +1685,18 @@ export interface TerminalAiMessage {
       }
 
       .status-sym { font-size: 0.75rem; }
-      .status-lang { color: #38bdf8; }
+      .status-lang { color: #38bdf8; font-weight: 600; }
 
       @keyframes spin { to { transform: rotate(360deg); } }
       @keyframes pulseBlink { from { opacity: 0.2; } to { opacity: 1; } }
+
       /* ============================================================
          MOBILE TERMINAL TABS (VISIBLE <= 768px)
          ============================================================ */
       .mobile-terminal-tabs {
         display: none;
-        background: #0d121f;
-        border-bottom: 1px solid #1e293b;
+        background: #0c101a;
+        border-bottom: 1px solid #161e2e;
         padding: 4px 6px;
         gap: 6px;
         flex-shrink: 0;
@@ -1743,7 +1710,7 @@ export interface TerminalAiMessage {
         gap: 5px;
         padding: 6px 8px;
         border-radius: 4px;
-        background: #131926;
+        background: #0e1422;
         border: 1px solid #1e293b;
         color: #94a3b8;
         font-size: 0.74rem;
@@ -1753,11 +1720,11 @@ export interface TerminalAiMessage {
 
         &:hover {
           color: #f1f5f9;
-          background: #1e293b;
+          background: #1a2333;
         }
 
         &.is-active {
-          background: #1e293b;
+          background: #1a2333;
           color: #38bdf8;
           border-color: rgba(56, 189, 248, 0.4);
           box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
@@ -1772,7 +1739,7 @@ export interface TerminalAiMessage {
         font-size: 0.62rem;
         padding: 0.05rem 0.3rem;
         border-radius: 3px;
-        background: #0f172a;
+        background: #080c14;
         color: #cbd5e1;
 
         &.badge-ok { background: #059669; color: #fff; }
@@ -1784,18 +1751,14 @@ export interface TerminalAiMessage {
          ============================================================ */
       @media (max-width: 768px) {
         .linux-terminal-window {
-          height: 480px;
-          min-height: 400px;
+          height: 500px;
+          min-height: 420px;
           margin: 0.75rem 0;
           border-radius: 6px;
         }
 
         .mobile-terminal-tabs {
           display: flex;
-        }
-
-        .cli-btn-layout {
-          display: none !important;
         }
 
         /* Pane toggle in mobile: show 1 pane at 100% height instead of cramped stacking */
@@ -1834,86 +1797,79 @@ export interface TerminalAiMessage {
         }
 
         .terminal-titlebar {
-          padding: 0 0.4rem;
+          padding: 0 0.45rem;
           height: 38px;
-          gap: 0.3rem;
+          gap: 0.35rem;
         }
 
         .titlebar-left {
-          min-width: auto;
-          gap: 0.25rem;
-          flex-shrink: 0;
+          gap: 0.35rem;
         }
 
-        .terminal-dots {
-          gap: 0.25rem;
-          margin-right: 0.15rem;
-        }
-
-        .terminal-tab {
-          font-size: 0.68rem;
-          padding: 0.15rem 0.4rem;
-
-          &:not(.is-active) {
-            display: none;
-          }
+        .terminal-session-info {
+          font-size: 0.7rem;
         }
 
         .titlebar-right {
-          gap: 0.2rem;
+          gap: 0.25rem;
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
         }
 
-        .cli-select {
-          font-size: 0.68rem;
-          padding: 0.15rem 0.25rem;
-          max-width: 90px;
-        }
-
         .cli-btn {
-          padding: 0.18rem 0.38rem;
-          font-size: 0.68rem;
+          padding: 0.2rem 0.45rem;
+          font-size: 0.7rem;
 
           .cli-kbd {
             display: none;
           }
         }
 
+        .cli-icon-btn {
+          width: 26px;
+          height: 26px;
+        }
+
+        .cli-select-compact {
+          font-size: 0.68rem;
+          padding: 0.15rem 0.35rem;
+          max-width: 90px;
+        }
+
         .editor-gutter {
-          width: 28px;
-          font-size: 0.72rem;
+          width: 32px;
+          font-size: 0.74rem;
           padding: 0.5rem 0;
         }
 
         .gutter-line {
-          padding-right: 0.3rem;
+          padding-right: 0.4rem;
         }
 
         .editor-textarea {
-          font-size: 0.8rem;
-          padding: 0.5rem 0.65rem;
+          font-size: 0.82rem;
+          padding: 0.5rem 0.75rem;
           line-height: 1.5;
         }
 
         .terminal-viewport {
-          padding: 0.5rem 0.65rem;
-          font-size: 0.75rem;
+          padding: 0.5rem 0.75rem;
+          font-size: 0.76rem;
         }
 
         .terminal-header-strip {
-          padding: 0 0.35rem;
-          height: 30px;
+          padding: 0 0.45rem;
+          height: 32px;
         }
 
         .term-strip-tab {
-          padding: 0.25rem 0.4rem;
-          font-size: 0.66rem;
+          padding: 0.3rem 0.45rem;
+          font-size: 0.68rem;
         }
 
         .terminal-statusbar {
-          font-size: 0.62rem;
-          padding: 0 0.4rem;
+          font-size: 0.64rem;
+          padding: 0 0.45rem;
 
           .status-hide-mobile {
             display: none !important;
@@ -1923,7 +1879,7 @@ export interface TerminalAiMessage {
 
       @media (max-width: 480px) {
         .linux-terminal-window {
-          height: 440px;
+          height: 460px;
           min-height: 380px;
         }
       }
