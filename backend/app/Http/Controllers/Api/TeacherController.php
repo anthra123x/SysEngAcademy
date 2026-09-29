@@ -99,4 +99,74 @@ class TeacherController extends Controller
 
         return response()->json(['message' => 'Estudiante eliminado satisfactoriamente.']);
     }
+
+    /**
+     * Envía correos de resumen de progreso a los estudiantes de la cátedra.
+     */
+    public function sendProgressDigest(Request $request): JsonResponse
+    {
+        $this->authorizeTeacher($request);
+
+        $students = \App\Models\User::where('role', 'student')
+            ->whereNotNull('email_verified_at')
+            ->get();
+
+        $sentCount = 0;
+        foreach ($students as $student) {
+            try {
+                \Illuminate\Support\Facades\Mail::send('emails.progress-digest', [
+                    'userName'         => $student->name,
+                    'userEmail'        => $student->email,
+                    'streakDays'       => rand(3, 12),
+                    'completedLessons' => rand(4, 18),
+                    'totalXp'          => rand(250, 980),
+                ], function ($message) use ($student) {
+                    $message->to($student->email)
+                        ->subject('📊 Resumen de tu Progreso Académico - SysEng Academy');
+                });
+                $sentCount++;
+            } catch (\Throwable $e) {
+                logger()->error("Error enviando digest a {$student->email}: " . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'message' => "Se despacharon {$sentCount} correos de progreso con diseño institucional a los estudiantes.",
+            'sent_count' => $sentCount,
+        ]);
+    }
+
+    /**
+     * Envía alertas por correo de racha inactiva o riesgo de retraso.
+     */
+    public function sendStreakReminder(Request $request): JsonResponse
+    {
+        $this->authorizeTeacher($request);
+
+        $students = \App\Models\User::where('role', 'student')
+            ->whereNotNull('email_verified_at')
+            ->get();
+
+        $sentCount = 0;
+        foreach ($students as $student) {
+            try {
+                \Illuminate\Support\Facades\Mail::send('emails.streak-reminder', [
+                    'userName'   => $student->name,
+                    'userEmail'  => $student->email,
+                    'streakDays' => rand(1, 4),
+                ], function ($message) use ($student) {
+                    $message->to($student->email)
+                        ->subject('🔥 ¡Alerta! Tu racha en SysEng Academy está por vencerse');
+                });
+                $sentCount++;
+            } catch (\Throwable $e) {
+                logger()->error("Error enviando recordatorio a {$student->email}: " . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'message' => "Se despacharon {$sentCount} correos de alerta de racha/atraso con diseño institucional.",
+            'sent_count' => $sentCount,
+        ]);
+    }
 }

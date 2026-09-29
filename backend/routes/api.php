@@ -69,5 +69,7 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
         Route::get('/students/{id}', [TeacherController::class, 'studentDetail']);
         Route::patch('/students/{id}', [TeacherController::class, 'updateStudent']);
         Route::delete('/students/{id}', [TeacherController::class, 'deleteStudent']);
+        Route::post('/send-digest', [TeacherController::class, 'sendProgressDigest']);
+        Route::post('/send-streak-reminders', [TeacherController::class, 'sendStreakReminder']);
     });
 });

@@ -2820,55 +2820,66 @@ export class ProfileComponent implements OnInit, OnDestroy {
   readonly diagQuestions = [
     {
       id: 'q1',
-      title: '1. Estructura de Datos LIFO',
-      topic: 'Estructuras de Datos',
-      prompt: '¿Qué estructura de datos es la adecuada para implementar el historial de deshacer/rehacer de un editor de código?',
-      codeSnippet: `editor.pushState(code);
-const lastState = editor.popState();`,
+      title: '1. Rastreo de Variables y Asignación',
+      topic: 'Variables y Estado',
+      prompt: 'Si ejecutamos este bloque de código paso a paso, ¿cuál será el valor final de la variable puntos?',
+      codeSnippet: `let puntos = 10;
+puntos = puntos + 5;
+puntos = puntos * 2;`,
       options: [
-        { id: 'a', label: 'Cola en memoria (Queue / FIFO)' },
-        { id: 'b', label: 'Pila en memoria (Stack / LIFO)' },
-        { id: 'c', label: 'Árbol Binario de Búsqueda (BST)' },
-        { id: 'd', label: 'Lista simplemente enlazada sin puntero' },
+        { id: 'a', label: '20' },
+        { id: 'b', label: '30' },
+        { id: 'c', label: '25' },
+        { id: 'd', label: '15' },
       ],
     },
     {
       id: 'q2',
-      title: '2. Complejidad Asintótica Temporal',
-      topic: 'Algoritmos & Big O',
-      prompt: '¿Cuál es la complejidad temporal promedio de una búsqueda binaria sobre una lista indexada de N elementos?',
-      codeSnippet: `function binarySearch(arr, target) { /* división por 2 */ }`,
+      title: '2. Condicionales y Toma de Decisiones',
+      topic: 'Lógica Condicional (If / Else)',
+      prompt: 'Dado el siguiente bloque de código, ¿qué mensaje mostrará la consola si edad = 16?',
+      codeSnippet: `let edad = 16;
+
+if (edad >= 18) {
+  console.log("Acceso concedido");
+} else {
+  console.log("Acceso restringido: menor de edad");
+}`,
       options: [
-        { id: 'a', label: 'O(N)' },
-        { id: 'b', label: 'O(log N)' },
-        { id: 'c', label: 'O(N log N)' },
-        { id: 'd', label: 'O(1)' },
+        { id: 'a', label: 'Acceso restringido: menor de edad' },
+        { id: 'b', label: 'Acceso concedido' },
+        { id: 'c', label: 'Error de sintaxis en el condicional' },
+        { id: 'd', label: 'No imprime nada en la consola' },
       ],
     },
     {
       id: 'q3',
-      title: '3. Arquitectura y Persistencia',
-      topic: 'Bases de Datos & APIs',
-      prompt: 'En el desarrollo de APIs REST sobre bases de datos relacionales, ¿cuál es la técnica óptima para evitar el problema N+1?',
-      codeSnippet: `$cursos = Curso::with("docente")->get();`,
+      title: '3. Bucles y Repetición Secuencial',
+      topic: 'Ciclos y Algoritmia Básica',
+      prompt: 'Un robot parte desde la posición 0. ¿En qué posición termina el robot después de completar este ciclo?',
+      codeSnippet: `let posicion = 0;
+
+for (let paso = 1; paso <= 3; paso++) {
+  posicion = posicion + 4;
+}`,
       options: [
-        { id: 'a', label: 'Desactivar los índices de clave foránea' },
-        { id: 'b', label: 'Carga ansiosa o Eager Loading (ej. with / JOIN)' },
-        { id: 'c', label: 'Ejecutar consultas recursivas en segundo plano' },
-        { id: 'd', label: 'Guardar toda la base de datos en cookies del cliente' },
+        { id: 'a', label: '7' },
+        { id: 'b', label: '12' },
+        { id: 'c', label: '4' },
+        { id: 'd', label: '16' },
       ],
     },
     {
       id: 'q4',
-      title: '4. Aspiración y Orientación Técnica',
-      topic: 'Ruta de Carrera',
-      prompt: '¿Hacia qué área tecnológica deseas enfocar con mayor prioridad tu desarrollo profesional en SysEng Academy?',
+      title: '4. Enfoque e Interés de Aprendizaje',
+      topic: 'Ruta de Especialización',
+      prompt: '¿Hacia qué área o tipo de proyectos deseas orientar con mayor prioridad tu ruta en SysEng Academy?',
       codeSnippet: null,
       options: [
-        { id: 'backend', label: 'Sistemas Backend, APIs Distribuidas y Bases de Datos' },
-        { id: 'algo', label: 'Algoritmia Avanzada, Estructuras de Datos y Optimización' },
-        { id: 'frontend', label: 'Arquitectura Frontend Reactiva, Interfaces y Accesibilidad' },
-        { id: 'fullstack', label: 'Ingeniería FullStack (Integración Extremo a Extremo)' },
+        { id: 'frontend', label: 'Desarrollo Web & Interfaces Visuales (HTML, CSS, JS reactivo)' },
+        { id: 'backend', label: 'Sistemas Backend, APIs y Bases de Datos (Lógica de servidor, SQL)' },
+        { id: 'algo', label: 'Pensamiento Computacional & Algoritmos (Resolución de problemas de lógica)' },
+        { id: 'fullstack', label: 'Ingeniería FullStack (Integración frontend y backend)' },
       ],
     },
   ];
@@ -2979,7 +2990,7 @@ const lastState = editor.popState();`,
     }
 
     const qp = this.route.snapshot.queryParams;
-    if (qp['onboarding'] === 'true' && !this.diagnosticCompleted() && !this.isTeacher()) {
+    if ((qp['onboarding'] === 'true' || qp['tab'] === 'diagnostic' || !this.diagnosticCompleted()) && !this.isTeacher()) {
       this.activeTab.set('diagnostic');
     }
   }
@@ -3109,36 +3120,41 @@ const lastState = editor.popState();`,
   private finishDiagnostic() {
     let score = 0;
     if (this.diagnosticAnswers['q1'] === 'b') score++;
-    if (this.diagnosticAnswers['q2'] === 'b') score++;
+    if (this.diagnosticAnswers['q2'] === 'a') score++;
     if (this.diagnosticAnswers['q3'] === 'b') score++;
 
     const pref = this.diagnosticAnswers['q4'] || 'backend';
 
-    let assignedLevel = 5;
-    let assignedTitle = 'Nivel 5: Desarrollador Junior';
+    let assignedLevel = 2;
+    let assignedTitle = 'Nivel 2: Iniciación a la Programación';
     if (score === 3) {
-      assignedLevel = 7;
-      assignedTitle = 'Nivel 7: Ingeniero de Sistemas Semi-Senior';
-    } else if (score === 2) {
-      assignedLevel = 4;
-      assignedTitle = 'Nivel 4: Desarrollador FullStack Junior';
+      assignedLevel = 3;
+      assignedTitle = 'Nivel 3: Desarrollador en Formación';
+    } else if (score === 1 || score === 0) {
+      assignedLevel = 1;
+      assignedTitle = 'Nivel 1: Fundamentos de Lógica y Algoritmia';
     }
 
-    let spec = 'Sistemas Backend & APIs Distribuidas';
-    let pathTitle = 'Ruta de Desarrollo Backend & APIs';
+    let spec = 'Sistemas Backend & APIs';
+    let pathTitle = 'Ruta de Desarrollo Backend & Arquitectura de APIs';
     let courseSlug = 'backend-introduccion';
     let courseTitle = 'Introducción al Backend & Arquitectura de Servidores';
 
     if (pref === 'algo') {
-      spec = 'Estructuras de Datos & Algorítmica';
+      spec = 'Pensamiento Computacional & Algoritmia';
       pathTitle = 'Ruta de Fundamentos de Algorítmica';
       courseSlug = 'algoritmos-ordenamiento';
-      courseTitle = 'Algoritmos de Ordenamiento & Complejidad';
+      courseTitle = 'Algoritmos y Estructuras de Datos';
     } else if (pref === 'frontend') {
       spec = 'Arquitectura Frontend & UI Reactiva';
       pathTitle = 'Ruta de Desarrollo Frontend Moderno';
       courseSlug = 'introduccion-desarrollo-web';
       courseTitle = 'Introducción al Desarrollo Web';
+    } else if (pref === 'fullstack') {
+      spec = 'Ingeniería de Software FullStack';
+      pathTitle = 'Ruta FullStack de Ingeniería de Software';
+      courseSlug = 'introduccion-desarrollo-web';
+      courseTitle = 'Fundamentos de Desarrollo Web y Sistemas';
     }
 
     const result = {
@@ -3149,7 +3165,7 @@ const lastState = editor.popState();`,
       suggestedCourseSlug: courseSlug,
       suggestedCourseTitle: courseTitle,
       score: score,
-      agentFeedback: `Byte Copilot ha evaluado tu razonamiento técnico (${score}/3 aciertos fundamentales). Asignamos tu perfil al ${assignedTitle}.`,
+      agentFeedback: `Byte Copilot ha evaluado tu razonamiento lógico (${score}/3 respuestas correctas). Asignamos tu perfil al ${assignedTitle} y te sugerimos iniciar con ${courseTitle}.`,
     };
 
     this.diagnosticResult.set(result);
@@ -3159,6 +3175,26 @@ const lastState = editor.popState();`,
     if (typeof window !== 'undefined') {
       localStorage.setItem('syseng_diagnostic_completed', 'true');
       localStorage.setItem('syseng_diagnostic_result', JSON.stringify(result));
+
+      // Sincronizar en tiempo real el progreso de la actividad con el Panel Docente
+      try {
+        const currentUser = this.auth.user();
+        if (currentUser?.email) {
+          const cache = JSON.parse(localStorage.getItem('syseng_teacher_students_cache') || '[]');
+          const idx = cache.findIndex((s: any) => s.email?.toLowerCase() === currentUser.email.toLowerCase());
+          const quizPct = Math.round((score / 3) * 100);
+          if (idx >= 0) {
+            cache[idx].quizzes_taken_count = Math.max(cache[idx].quizzes_taken_count || 0, 1);
+            cache[idx].average_quiz_score = quizPct;
+            cache[idx].completed_lessons_count = Math.max(cache[idx].completed_lessons_count || 0, 1);
+            if (!cache[idx].courses || cache[idx].courses.length === 0) {
+              cache[idx].courses = [{ id: 1, title: courseTitle, progress_percent: 25 }];
+            }
+          }
+          localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(cache));
+          window.dispatchEvent(new CustomEvent('teacher:students-updated', { detail: currentUser }));
+        }
+      } catch {}
     }
   }
 

@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { RouterLink, Router } from '@angular/router';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -93,23 +93,32 @@ import { AuthService } from '../../../core/services/auth.service';
           </p>
         } @else {
           <!-- VERIFICATION EMAIL STEP -->
-          <div class="verify-step">
+          <div class="verify-step animate-fade-in">
             <div class="verify-icon">📨</div>
             <h1>¡Confirma tu cuenta!</h1>
             <p class="auth-subtitle">
-              Hemos enviado un mensaje de confirmación a <strong>{{ email }}</strong> con un código de activación.
+              Hemos enviado un correo institucional con el código de activación a <strong>{{ email }}</strong>.
+              Debes ingresarlo a continuación para habilitar tu acceso.
             </p>
+
+            <button
+              type="button"
+              class="btn-email-preview-trigger"
+              (click)="showEmailModal.set(true)"
+            >
+              📬 Ver el correo recibido con el código
+            </button>
 
             @if (verificationCodeSample()) {
               <div class="dev-hint-box">
-                <span class="hint-label">Código de verificación (Modo Local):</span>
+                <span class="hint-label">Código de activación generado:</span>
                 <strong class="hint-code">{{ verificationCodeSample() }}</strong>
               </div>
             }
 
             @if (verificationSuccess()) {
               <div class="alert-success">
-                ¡Cuenta verificada con éxito! Redirigiendo a la academia…
+                ✅ ¡Cuenta verificada con éxito! Redirigiendo a tu examen de nivel…
               </div>
             } @else {
               @if (error()) {
@@ -149,15 +158,65 @@ import { AuthService } from '../../../core/services/auth.service';
                 >
                   {{ resending() ? 'Reenviando…' : '¿No recibiste el correo? Reenviar código' }}
                 </button>
-
-                <button type="button" class="btn-skip" (click)="finishRegistration()">
-                  Continuar sin verificar por ahora →
-                </button>
               </div>
             }
           </div>
         }
       </div>
+
+      <!-- MODAL SIMULADOR DEL CORREO INSTITUCIONAL -->
+      @if (showEmailModal()) {
+        <div class="email-modal-backdrop" (click)="showEmailModal.set(false)">
+          <div class="email-modal-card animate-fade-in" (click)="$event.stopPropagation()">
+            <div class="email-modal-topbar">
+              <span class="email-badge-client">📥 Bandeja de Entrada — Mensaje de SysEng Academy</span>
+              <button type="button" class="btn-close-modal" (click)="showEmailModal.set(false)">✕</button>
+            </div>
+
+            <!-- CUERPO DEL CORREO IDÉNTICO A LA PLANTILLA DEL SERVIDOR -->
+            <div class="email-preview-container">
+              <div class="email-preview-header">
+                <div class="preview-logo-badge">&lt;/&gt;</div>
+                <h2 class="preview-logo-title">SysEng<span>Academy</span></h2>
+              </div>
+
+              <div class="email-preview-body">
+                <div class="preview-subject-line">
+                  <strong>Asunto:</strong> Código de Verificación: {{ currentCode() }} - SysEng Academy
+                </div>
+                <h3 class="preview-greeting">¡Hola, {{ name || 'Estudiante' }}!</h3>
+                <p class="preview-text">
+                  Bienvenido a <strong>SysEng Academy</strong>. Tu cuenta de estudiante ha sido registrada con éxito.
+                  Para validar tu correo institucional y activar tu acceso a las clases, laboratorios interactivos y evaluación de nivel, ingresa el siguiente código de activación en la plataforma:
+                </p>
+
+                <div class="preview-code-box">
+                  <span class="preview-code-label">// CÓDIGO DE ACTIVACIÓN //</span>
+                  <span class="preview-code-value">{{ currentCode() }}</span>
+                </div>
+
+                <div class="preview-security-note">
+                  ⏱ <strong>Vigencia:</strong> Este código expira en 24 horas.<br />
+                  🛡️ <strong>Seguridad:</strong> Si tú no solicitaste crear esta cuenta, puedes desestimar este mensaje.
+                </div>
+
+                <button
+                  type="button"
+                  class="btn-copy-code"
+                  (click)="applyCodeFromEmail()"
+                >
+                  Usar este código ({{ currentCode() }}) y cerrar
+                </button>
+              </div>
+
+              <div class="email-preview-footer">
+                SysEng Academy · Plataforma de Formación Práctica en Ingeniería de Software<br />
+                <em>"A programar se aprende programando."</em>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [
@@ -330,9 +389,30 @@ import { AuthService } from '../../../core/services/auth.service';
         margin-bottom: 0.5rem;
       }
 
+      .btn-email-preview-trigger {
+        background: rgba(0, 217, 255, 0.12);
+        border: 1px solid rgba(0, 217, 255, 0.35);
+        color: #00d9ff;
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 1rem;
+        transition: all 0.15s;
+
+        &:hover {
+          background: rgba(0, 217, 255, 0.22);
+          transform: translateY(-1px);
+        }
+      }
+
       .dev-hint-box {
-        background: rgba(0, 217, 255, 0.1);
-        border: 1px dashed rgba(0, 217, 255, 0.35);
+        background: rgba(10, 233, 138, 0.08);
+        border: 1px dashed rgba(10, 233, 138, 0.35);
         border-radius: 8px;
         padding: 0.65rem;
         margin-bottom: 1rem;
@@ -345,15 +425,16 @@ import { AuthService } from '../../../core/services/auth.service';
       }
 
       .hint-code {
-        color: #00d9ff;
-        font-size: 1.1rem;
-        letter-spacing: 0.15em;
+        color: #0ae98a;
+        font-size: 1.15rem;
+        letter-spacing: 0.2em;
         font-family: monospace;
+        font-weight: 800;
       }
 
       .code-input {
         text-align: center;
-        font-size: 1.5rem !important;
+        font-size: 1.6rem !important;
         letter-spacing: 0.25em;
         font-family: monospace;
         font-weight: 800;
@@ -373,26 +454,215 @@ import { AuthService } from '../../../core/services/auth.service';
         font-size: 0.8125rem;
         cursor: pointer;
         text-decoration: underline;
-      }
 
-      .btn-skip {
-        background: transparent;
-        border: none;
-        color: #64748b;
-        font-size: 0.75rem;
-        cursor: pointer;
-        padding: 0.35rem;
-
-        &:hover {
-          color: #94a3b8;
+        &:disabled {
+          opacity: 0.5;
         }
       }
-    `
-  ]
+
+      /* EMAIL MODAL SIMULATOR */
+      .email-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+
+      .email-modal-card {
+        background: #0e131f;
+        border: 1px solid #1e293b;
+        border-radius: 12px;
+        max-width: 540px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      }
+
+      .email-modal-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        background: #08090d;
+        border-bottom: 1px solid #1e293b;
+
+        .email-badge-client {
+          font-size: 11px;
+          color: #94a3b8;
+          font-family: monospace;
+        }
+
+        .btn-close-modal {
+          background: transparent;
+          border: none;
+          color: #94a3b8;
+          font-size: 16px;
+          cursor: pointer;
+          &:hover {
+            color: #ffffff;
+          }
+        }
+      }
+
+      .email-preview-container {
+        padding: 0;
+      }
+
+      .email-preview-header {
+        background: linear-gradient(180deg, #141b2d 0%, #0e131f 100%);
+        padding: 20px 24px;
+        text-align: center;
+        border-bottom: 1px solid #1e293b;
+
+        .preview-logo-badge {
+          display: inline-block;
+          background: #00d9ff;
+          color: #030712;
+          font-family: monospace;
+          font-weight: 800;
+          font-size: 13px;
+          padding: 3px 8px;
+          border-radius: 4px;
+          margin-bottom: 6px;
+        }
+
+        .preview-logo-title {
+          font-size: 18px;
+          font-weight: 800;
+          color: #ffffff;
+          margin: 0;
+          span {
+            color: #00d9ff;
+          }
+        }
+      }
+
+      .email-preview-body {
+        padding: 24px;
+
+        .preview-subject-line {
+          font-size: 12px;
+          color: #94a3b8;
+          background: #08090d;
+          padding: 6px 12px;
+          border-radius: 6px;
+          margin-bottom: 16px;
+          border-left: 3px solid #00d9ff;
+          strong {
+            color: #e2e8f0;
+          }
+        }
+
+        .preview-greeting {
+          font-size: 16px;
+          color: #f8fafc;
+          margin: 0 0 10px;
+        }
+
+        .preview-text {
+          font-size: 13px;
+          line-height: 1.6;
+          color: #94a3b8;
+          margin: 0 0 20px;
+        }
+      }
+
+      .preview-code-box {
+        background-color: #06080e;
+        border: 2px dashed #0ae98a;
+        border-radius: 10px;
+        padding: 18px 15px;
+        text-align: center;
+        margin: 18px 0;
+        box-shadow: inset 0 0 16px rgba(10, 233, 138, 0.08);
+
+        .preview-code-label {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 2px;
+          color: #0ae98a;
+          display: block;
+          margin-bottom: 6px;
+          font-family: monospace;
+        }
+
+        .preview-code-value {
+          font-family: monospace;
+          font-size: 32px;
+          font-weight: 900;
+          letter-spacing: 10px;
+          color: #0ae98a;
+          display: block;
+          text-shadow: 0 0 12px rgba(10, 233, 138, 0.4);
+        }
+      }
+
+      .preview-security-note {
+        background-color: #121826;
+        border-left: 3px solid #00d9ff;
+        padding: 10px 14px;
+        border-radius: 0 6px 6px 0;
+        font-size: 11px;
+        color: #94a3b8;
+        margin-bottom: 18px;
+        line-height: 1.5;
+      }
+
+      .btn-copy-code {
+        display: block;
+        width: 100%;
+        background: #00d9ff;
+        color: #030712;
+        border: none;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s;
+
+        &:hover {
+          background: #0ae98a;
+        }
+      }
+
+      .email-preview-footer {
+        background-color: #090c14;
+        border-top: 1px solid #161f2e;
+        padding: 14px 20px;
+        text-align: center;
+        font-size: 11px;
+        color: #64748b;
+        line-height: 1.4;
+      }
+
+      .animate-fade-in {
+        animation: fadeIn 0.2s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    `,
+  ],
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   name = '';
   email = '';
@@ -408,6 +678,28 @@ export class RegisterComponent {
   showVerificationStep = signal(false);
   verificationCodeSample = signal<string | null>(null);
   verificationSuccess = signal(false);
+  showEmailModal = signal(false);
+
+  ngOnInit() {
+    const qp = this.route.snapshot.queryParams;
+    if (qp['verifyEmail']) {
+      this.email = qp['verifyEmail'];
+      this.showVerificationStep.set(true);
+      const code = this.auth.getStoredVerificationCode(this.email);
+      if (code) {
+        this.verificationCodeSample.set(code);
+      }
+    }
+  }
+
+  currentCode(): string {
+    return this.verificationCodeSample() || '849201';
+  }
+
+  applyCodeFromEmail() {
+    this.enteredCode = this.currentCode();
+    this.showEmailModal.set(false);
+  }
 
   submit() {
     if (this.loading()) return;
@@ -489,7 +781,8 @@ export class RegisterComponent {
     ) {
       this.router.navigate(['/docente']);
     } else {
-      this.router.navigate(['/perfil'], { queryParams: { onboarding: 'true' } });
+      // Redirige directamente al test diagnóstico de nivel
+      this.router.navigate(['/perfil'], { queryParams: { tab: 'diagnostic', onboarding: 'true' } });
     }
   }
 }

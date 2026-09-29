@@ -32,7 +32,13 @@ import { AuthService } from '../../core/services/auth.service';
 
           <div class="head-actions">
             <button type="button" class="btn btn-ghost" (click)="loadAllData()" [disabled]="loading()">
-              <span>{{ loading() ? 'Sincronizando…' : 'Sincronizar' }}</span>
+              <span>{{ loading() ? 'Sincronizando…' : '🔄 Sincronizar' }}</span>
+            </button>
+            <button type="button" class="btn btn-outline" (click)="triggerProgressDigest()" [disabled]="sendingDigest()">
+              <span>{{ sendingDigest() ? 'Enviando…' : '📧 Enviar Resumen Progreso' }}</span>
+            </button>
+            <button type="button" class="btn btn-outline" (click)="triggerStreakReminder()" [disabled]="sendingStreak()">
+              <span>{{ sendingStreak() ? 'Enviando…' : '🔥 Alertas de Racha' }}</span>
             </button>
             <button type="button" class="btn btn-outline" (click)="openCreateModal('challenge')">
               <span>➕ Nuevo Reto</span>
@@ -43,6 +49,15 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
         </div>
       </div>
+
+      @if (actionNotification()) {
+        <div class="container" style="margin-top: 1rem;">
+          <div class="action-toast animate-fade-in">
+            <span>{{ actionNotification() }}</span>
+            <button type="button" class="btn-toast-close" (click)="actionNotification.set('')">✕</button>
+          </div>
+        </div>
+      }
 
       <div class="container dashboard-container">
         <!-- KPIS MÉTRICAS NEUTRAS -->
@@ -128,6 +143,14 @@ import { AuthService } from '../../core/services/auth.service';
                   Pendientes
                 </button>
               </div>
+
+              <button
+                type="button"
+                class="btn-simulate-student"
+                (click)="simulateNewClassroomStudent()"
+              >
+                🎓 Simular Registro de Alumno en Clase
+              </button>
             </div>
 
             @if (loading()) {
@@ -855,6 +878,46 @@ import { AuthService } from '../../core/services/auth.service';
         align-items: center;
         gap: 0.6rem;
         flex-wrap: wrap;
+      }
+
+      .action-toast {
+        background: rgba(10, 233, 138, 0.1);
+        border: 1px solid rgba(10, 233, 138, 0.35);
+        border-radius: 8px;
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #F8FAFC;
+        font-size: 0.875rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+
+        .btn-toast-close {
+          background: transparent;
+          border: none;
+          color: #94A3B8;
+          cursor: pointer;
+          font-size: 14px;
+          &:hover { color: #FFF; }
+        }
+      }
+
+      .btn-simulate-student {
+        margin-left: auto;
+        background: rgba(0, 217, 255, 0.1);
+        border: 1px dashed rgba(0, 217, 255, 0.4);
+        color: #00D9FF;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        &:hover {
+          background: rgba(0, 217, 255, 0.2);
+          border-color: #00D9FF;
+        }
       }
 
       /* BOTONES */
@@ -1847,8 +1910,21 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
   readonly aiGenerating = signal<boolean>(false);
   readonly aiGeneratedQuestions = signal<QuizQuestion[]>([]);
 
+  readonly sendingDigest = signal(false);
+  readonly sendingStreak = signal(false);
+  readonly actionNotification = signal('');
+
+  private studentsUpdateListener = () => {
+    this.loadAllData();
+  };
+
   ngOnInit() {
     this.loadAllData();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('teacher:students-updated', this.studentsUpdateListener);
+      window.addEventListener('storage', this.studentsUpdateListener);
+    }
 
     // Sincronización reactiva con queryParams de la URL (navbar pills)
     this.routeSub = this.route.queryParams.subscribe(params => {
@@ -1861,6 +1937,70 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.routeSub?.unsubscribe();
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('teacher:students-updated', this.studentsUpdateListener);
+      window.removeEventListener('storage', this.studentsUpdateListener);
+    }
+  }
+
+  triggerProgressDigest() {
+    this.sendingDigest.set(true);
+    this.teacherSvc.sendProgressDigest().subscribe({
+      next: res => {
+        this.sendingDigest.set(false);
+        this.actionNotification.set('📨 ' + res.message);
+        setTimeout(() => this.actionNotification.set(''), 6000);
+      },
+      error: () => this.sendingDigest.set(false),
+    });
+  }
+
+  triggerStreakReminder() {
+    this.sendingStreak.set(true);
+    this.teacherSvc.sendStreakReminder().subscribe({
+      next: res => {
+        this.sendingStreak.set(false);
+        this.actionNotification.set('🔥 ' + res.message);
+        setTimeout(() => this.actionNotification.set(''), 6000);
+      },
+      error: () => this.sendingStreak.set(false),
+    });
+  }
+
+  simulateNewClassroomStudent() {
+    const studentNames = ['Alejandro Morales', 'Valeria Silva', 'Sebastián Restrepo', 'Daniela Ospina', 'Mateo Henao'];
+    const randomName = studentNames[Math.floor(Math.random() * studentNames.length)];
+    const randomId = Date.now();
+    const email = randomName.toLowerCase().replace(' ', '.') + '@universidad.edu.co';
+
+    const newStudent: TeacherStudent = {
+      id: randomId,
+      name: randomName,
+      email: email,
+      role: 'student',
+      email_verified: true,
+      email_verified_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      enrollments_count: 2,
+      completed_lessons_count: 2,
+      quizzes_taken_count: 1,
+      average_quiz_score: 100,
+      courses: [
+        { id: 1, title: 'Introducción a la Programación', progress_percent: 35 },
+        { id: 2, title: 'Fundamentos de Algorítmica', progress_percent: 20 },
+      ],
+    };
+
+    if (typeof window !== 'undefined') {
+      try {
+        const cache = JSON.parse(localStorage.getItem('syseng_teacher_students_cache') || '[]');
+        cache.unshift(newStudent);
+        localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(cache));
+        window.dispatchEvent(new CustomEvent('teacher:students-updated', { detail: newStudent }));
+        this.actionNotification.set(`🎓 ¡Nuevo alumno en clase! "${randomName}" creó su cuenta, verificó el código y completó el test de nivel.`);
+        setTimeout(() => this.actionNotification.set(''), 7000);
+      } catch {}
+    }
   }
 
   setTab(tab: 'students' | 'activities' | 'activity' | 'ai') {

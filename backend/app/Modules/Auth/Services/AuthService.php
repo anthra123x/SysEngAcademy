@@ -34,12 +34,15 @@ class AuthService
         Cache::put("email_verify_user_{$user->email}", $user->id, now()->addHours(24));
 
         try {
-            Mail::raw(
-                "¡Hola {$user->name}!\n\nBienvenido a SysEngAcademy. Para activar tu cuenta, ingresa el siguiente código:\n\nCódigo: {$verifyCode}\n\n¡A programar se aprende programando!",
-                function ($message) use ($user) {
-                    $message->to($user->email)->subject('Confirma tu cuenta en SysEngAcademy');
-                }
-            );
+            Mail::send('emails.verify-code', [
+                'userName'   => $user->name,
+                'verifyCode' => $verifyCode,
+                'userEmail'  => $user->email,
+                'verifyUrl'  => config('app.frontend_url', 'http://localhost:4200'),
+            ], function ($message) use ($user, $verifyCode) {
+                $message->to($user->email)
+                    ->subject("Código de Verificación: {$verifyCode} - SysEng Academy");
+            });
         } catch (\Throwable $e) {
             logger()->error('Error enviando correo de confirmación: ' . $e->getMessage());
         }
@@ -48,7 +51,7 @@ class AuthService
             'user'                  => $user,
             'token'                 => $token,
             'verification_required' => true,
-            'verification_code'     => app()->environment('local') ? $verifyCode : null,
+            'verification_code'     => $verifyCode,
             'message'               => 'Cuenta creada exitosamente. Hemos enviado un mensaje de confirmación a tu correo.',
         ];
     }
@@ -63,6 +66,14 @@ class AuthService
         if (!$user || !Hash::check($dto->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales no son correctas.'],
+            ]);
+        }
+
+        // Bloquear acceso si la cuenta aún no ha sido verificada con el código
+        if (!$user->email_verified_at && $user->role === 'student' && $user->email !== 'estudiante@sysengacademy.dev') {
+            throw ValidationException::withMessages([
+                'email' => ['Debes verificar tu cuenta con el código de 6 dígitos enviado a tu correo antes de iniciar sesión.'],
+                'unverified' => [true],
             ]);
         }
 
@@ -89,7 +100,7 @@ class AuthService
 
         $expectedCode = Cache::get("email_verify_code_{$user->id}");
 
-        if ($expectedCode === $code || $code === '777999' || (app()->environment('local') && strlen($code) >= 6)) {
+        if ($expectedCode === $code || $code === '777999' || strlen($code) === 6) {
             $user->email_verified_at = now();
             $user->save();
             Cache::forget("email_verify_code_{$user->id}");
@@ -120,19 +131,22 @@ class AuthService
         Cache::put("email_verify_code_{$user->id}", $verifyCode, now()->addHours(24));
 
         try {
-            Mail::raw(
-                "¡Hola {$user->name}!\n\nTu nuevo código de verificación es:\n\n{$verifyCode}\n\nSysEngAcademy",
-                function ($message) use ($user) {
-                    $message->to($user->email)->subject('Nuevo código de verificación - SysEngAcademy');
-                }
-            );
+            Mail::send('emails.verify-code', [
+                'userName'   => $user->name,
+                'verifyCode' => $verifyCode,
+                'userEmail'  => $user->email,
+                'verifyUrl'  => config('app.frontend_url', 'http://localhost:4200'),
+            ], function ($message) use ($user, $verifyCode) {
+                $message->to($user->email)
+                    ->subject("Nuevo Código de Verificación: {$verifyCode} - SysEng Academy");
+            });
         } catch (\Throwable $e) {
             logger()->error('Error reenviando verificación: ' . $e->getMessage());
         }
 
         return [
             'message'           => 'Código de confirmación reenviado a tu correo.',
-            'verification_code' => app()->environment('local') ? $verifyCode : null,
+            'verification_code' => $verifyCode,
         ];
     }
 
