@@ -27,7 +27,7 @@ export class ApiService {
     return false;
   }
 
-  get<T>(path: string, params?: Record<string, unknown>): Observable<T> {
+  get<T>(path: string, params?: Record<string, unknown>, timeoutMs: number = 2800): Observable<T> {
     if (this.isStandalone) {
       return throwError(() => new Error('SysEng: Standalone mode (zero-latency fallback active)'));
     }
@@ -41,17 +41,17 @@ export class ApiService {
       });
     }
     return this.http.get<T>(`${this.baseUrl}${path}`, { params: httpParams }).pipe(
-      timeout(2800)
+      timeout(timeoutMs)
     );
   }
 
-  post<T>(path: string, body?: unknown): Observable<T> {
+  post<T>(path: string, body?: unknown, timeoutMs: number = 3800): Observable<T> {
     if (this.isStandalone) {
       return throwError(() => new Error('SysEng: Standalone mode (zero-latency fallback active)'));
     }
 
     return this.http.post<T>(`${this.baseUrl}${path}`, body).pipe(
-      timeout(3800)
+      timeout(timeoutMs)
     );
   }
 

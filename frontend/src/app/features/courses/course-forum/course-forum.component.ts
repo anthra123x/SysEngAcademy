@@ -23,6 +23,10 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
         </button>
       </div>
 
+      @if (actionError(); as err) {
+        <p class="composer-error">{{ err }}</p>
+      }
+
       <!-- New Post Composer Modal/Inline -->
       @if (showComposer()) {
         <div class="forum-composer">
@@ -64,7 +68,7 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
                 <div class="form-group w-auto">
                   <label>Módulo Relacionado</label>
                   <select class="input" [(ngModel)]="newPost.module_id" name="postModule">
-                    <option [ngValue]="undefined">General (Todo el curso)</option>
+                    <option [ngValue]="null">General (Todo el curso)</option>
                     @for (mod of modules(); track mod.id) {
                       <option [ngValue]="mod.id">Módulo {{ $index + 1 }}: {{ mod.title }}</option>
                     }
@@ -141,7 +145,7 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
         </div>
 
         <div class="filter-controls">
-          <select class="input input-sm" [ngModel]="selectedModuleId()" (ngModelChange)="setModule($event)">
+          <select class="input input-sm" [ngModel]="selectedModuleId() ?? ''" (ngModelChange)="setModule($event)">
             <option value="">Todos los módulos</option>
             @for (mod of modules(); track mod.id) {
               <option [value]="mod.id">Módulo {{ $index + 1 }}: {{ mod.title }}</option>
@@ -164,6 +168,13 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
           <div class="skeleton" style="height: 120px; border-radius: var(--radius-lg); margin-bottom: var(--sp-3);"></div>
           <div class="skeleton" style="height: 120px; border-radius: var(--radius-lg); margin-bottom: var(--sp-3);"></div>
           <div class="skeleton" style="height: 120px; border-radius: var(--radius-lg);"></div>
+        </div>
+      } @else if (loadError(); as err) {
+        <div class="forum-empty">
+          <div class="empty-icon">⚠️</div>
+          <h4>No pudimos cargar las discusiones</h4>
+          <p>{{ err }}</p>
+          <button class="btn btn-outline btn-sm" (click)="loadPosts()">Reintentar</button>
         </div>
       } @else if (posts().length === 0) {
         <div class="forum-empty">
@@ -821,6 +832,15 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
       padding: var(--sp-2) 0;
     }
 
+    /* Aviso de fallo al publicar/responder: se reutilizan los tokens
+       tipograficos existentes para no alterar paleta ni layout. */
+    .composer-error {
+      font-size: var(--text-xs);
+      color: var(--danger, #f87171);
+      text-align: center;
+      margin: 0;
+    }
+
     .reply-box {
       display: flex;
       flex-direction: column;
@@ -863,8 +883,13 @@ export class CourseForumComponent implements OnInit {
   submitting   = signal(false);
   showComposer = signal(false);
 
+  /** Fallo al listar publicaciones: se distingue del "aun no hay posts" real. */
+  loadError   = signal<string | null>(null);
+  /** Fallo al publicar/responder/votar/marcar solucion. */
+  actionError = signal<string | null>(null);
+
   selectedCategory = signal<string>('');
-  selectedModuleId = signal<number | ''>('');
+  selectedModuleId = signal<number | null>(null);
   searchQuery      = signal<string>('');
 
   // Active expanded thread state
@@ -882,11 +907,12 @@ export class CourseForumComponent implements OnInit {
     title: string;
     content: string;
     category: ForumCategory;
-    module_id?: number;
+    module_id: number | null;
   } = {
     title: '',
     content: '',
     category: 'question',
+    module_id: null,
   };
 
   ngOnInit() {
@@ -903,6 +929,7 @@ export class CourseForumComponent implements OnInit {
 
   loadPosts() {
     this.loading.set(true);
+    this.loadError.set(null);
     const filters: ForumFilters = {};
     if (this.selectedCategory()) filters.category = this.selectedCategory();
     if (this.selectedModuleId()) filters.module_id = Number(this.selectedModuleId());
@@ -914,7 +941,12 @@ export class CourseForumComponent implements OnInit {
         this.totalPosts.set(res.total ?? (res.data?.length ?? 0));
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        this.posts.set([]);
+        this.totalPosts.set(0);
+        this.loadError.set(this.readableError(err, 'No se pudo conectar con el servidor del foro.'));
+        this.loading.set(false);
+      },
     });
   }
 
@@ -923,8 +955,8 @@ export class CourseForumComponent implements OnInit {
     this.loadPosts();
   }
 
-  setModule(mid: number | '') {
-    this.selectedModuleId.set(mid);
+  setModule(mid: number | string) {
+    this.selectedModuleId.set(mid === '' || mid === null ? null : Number(mid));
     this.loadPosts();
   }
 
@@ -934,36 +966,51 @@ export class CourseForumComponent implements OnInit {
   }
 
   toggleComposer() {
+    this.actionError.set(null);
     this.showComposer.update(v => !v);
   }
 
   submitPost() {
     if (!this.newPost.title.trim() || !this.newPost.content.trim()) return;
     this.submitting.set(true);
+    this.actionError.set(null);
 
     this.forumSvc.createPost(this.courseSlug(), {
       title: this.newPost.title.trim(),
       content: this.newPost.content.trim(),
       category: this.newPost.category,
-      module_id: this.newPost.module_id ? Number(this.newPost.module_id) : undefined,
+      module_id: this.newPost.module_id ?? undefined,
     }).subscribe({
       next: (post) => {
         this.posts.update(list => [post, ...list]);
         this.totalPosts.update(t => t + 1);
         this.showComposer.set(false);
         this.submitting.set(false);
-        this.newPost = { title: '', content: '', category: 'question' };
+        // Se conserva el modulo elegido para que el estudiante pueda
+        // publicar varias aportes seguidas en el mismo modulo.
+        this.newPost = { title: '', content: '', category: 'question', module_id: this.newPost.module_id };
       },
-      error: () => this.submitting.set(false),
+      error: (err) => {
+        this.actionError.set(this.readableError(err, 'No se pudo publicar tu aporte. Inténtalo de nuevo.'));
+        this.submitting.set(false);
+      },
     });
   }
 
   upvote(post: ForumPost) {
-    if (!this.auth.isAuthenticated()) return;
+    if (!this.auth.isAuthenticated()) {
+      this.actionError.set('Inicia sesión para votar las publicaciones de la comunidad.');
+      return;
+    }
+    this.actionError.set(null);
     this.forumSvc.upvotePost(post.id).subscribe({
       next: (res) => {
-        post.upvotes = res.upvotes;
-      }
+        this.posts.update(list =>
+          list.map(p => (p.id === post.id ? { ...p, upvotes: res.upvotes } : p))
+        );
+      },
+      error: (err) =>
+        this.actionError.set(this.readableError(err, 'No se pudo registrar tu voto.')),
     });
   }
 
@@ -975,19 +1022,24 @@ export class CourseForumComponent implements OnInit {
     }
 
     this.openThreadId.set(postId);
+    this.activeThreadReplies.set([]);
     this.loadingThread.set(true);
     this.forumSvc.getPost(postId).subscribe({
       next: (post) => {
         this.activeThreadReplies.set(post.replies ?? []);
         this.loadingThread.set(false);
       },
-      error: () => this.loadingThread.set(false),
+      error: (err) => {
+        this.actionError.set(this.readableError(err, 'No se pudieron cargar las respuestas.'));
+        this.loadingThread.set(false);
+      },
     });
   }
 
   sendReply(postId: number) {
     if (!this.newReplyContent.trim()) return;
     this.replying.set(true);
+    this.actionError.set(null);
 
     this.forumSvc.addReply(postId, this.newReplyContent.trim()).subscribe({
       next: (reply) => {
@@ -998,11 +1050,15 @@ export class CourseForumComponent implements OnInit {
         this.newReplyContent = '';
         this.replying.set(false);
       },
-      error: () => this.replying.set(false),
+      error: (err) => {
+        this.actionError.set(this.readableError(err, 'No se pudo enviar tu respuesta.'));
+        this.replying.set(false);
+      },
     });
   }
 
   markAsSolution(replyId: number) {
+    this.actionError.set(null);
     this.forumSvc.markSolution(replyId).subscribe({
       next: (updatedReply) => {
         this.activeThreadReplies.update(list =>
@@ -1014,8 +1070,32 @@ export class CourseForumComponent implements OnInit {
             list.map(p => p.id === currPostId ? { ...p, is_solved: true } : p)
           );
         }
-      }
+      },
+      error: (err) =>
+        this.actionError.set(this.readableError(err, 'No se pudo marcar la respuesta como solución.')),
     });
+  }
+
+  /**
+   * Traduce la respuesta de Laravel a un mensaje util para el estudiante.
+   * Antes los errores se descartaban y el foro aparentaba estar vacio.
+   */
+  private readableError(err: unknown, fallback: string): string {
+    const anyErr = err as { error?: unknown; status?: number; message?: string } | null;
+    const payload = anyErr?.error as
+      | { message?: string; errors?: Record<string, string[]> }
+      | undefined;
+
+    if (payload?.errors) {
+      const first = Object.values(payload.errors)[0]?.[0];
+      if (first) return first;
+    }
+    if (payload?.message && !payload.message.includes('Unauthenticated')) {
+      return payload.message;
+    }
+    if (anyErr?.status === 401) return 'Tu sesión expiró. Inicia sesión para continuar.';
+    if (anyErr?.status === 0) return 'Sin conexión con el servidor del foro.';
+    return fallback;
   }
 
   categoryLabel(cat: ForumCategory): string {
