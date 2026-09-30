@@ -359,4 +359,41 @@ export class AuthService {
   getToken(): string | null {
     return localStorage.getItem('syseng_token');
   }
+
+  isDiagnosticCompleted(email?: string): boolean {
+    if (typeof window === 'undefined') return true;
+    const targetEmail = (email || this._user()?.email || '').toLowerCase().trim();
+    if (!targetEmail) return true;
+    const userKey = `syseng_${targetEmail}_diagnostic_completed`;
+    const val = localStorage.getItem(userKey);
+    if (val !== null) return val === 'true';
+    if (targetEmail === 'estudiante@sysengacademy.dev') {
+      return localStorage.getItem('syseng_diagnostic_completed') === 'true';
+    }
+    return false;
+  }
+
+  saveDiagnosticResult(result: any, email?: string): void {
+    if (typeof window === 'undefined') return;
+    const targetEmail = (email || this._user()?.email || '').toLowerCase().trim();
+    if (!targetEmail) return;
+    const userKey = `syseng_${targetEmail}_diagnostic_completed`;
+    const resKey = `syseng_${targetEmail}_diagnostic_result`;
+    localStorage.setItem(userKey, 'true');
+    localStorage.setItem(resKey, JSON.stringify(result));
+    localStorage.setItem('syseng_diagnostic_completed', 'true');
+    localStorage.setItem('syseng_diagnostic_result', JSON.stringify(result));
+  }
+
+  getDiagnosticResult(email?: string): any {
+    if (typeof window === 'undefined') return null;
+    const targetEmail = (email || this._user()?.email || '').toLowerCase().trim();
+    const resKey = `syseng_${targetEmail}_diagnostic_result`;
+    try {
+      const raw = localStorage.getItem(resKey) || localStorage.getItem('syseng_diagnostic_result');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { CoursesService } from '../../core/services/courses.service';
@@ -97,13 +97,13 @@ export interface StreakDay {
             <div class="onboarding-notice-left">
               <span class="pulse-icon">⚡</span>
               <div class="notice-text">
-                <strong>[NIVELACIÓN PENDIENTE]</strong>
-                <span>Realiza tu test inicial con el Agente de IA para calibrar tu nivel de programación y asignar tu ruta recomendada.</span>
+                <strong>[CALIBRACIÓN PENDIENTE]</strong>
+                <span>Realiza tu calibración inicial con Byte IA para desbloquear tu ruta y temario de ingeniería personalizado.</span>
               </div>
             </div>
-            <button type="button" class="btn btn-sm btn-primary-glitch" (click)="activeTab.set('diagnostic')">
-              $ syseng-diagnostic --eval →
-            </button>
+            <a routerLink="/onboarding" class="btn btn-sm btn-primary-glitch">
+              $ syseng-calibrate --start →
+            </a>
           </div>
         }
 
@@ -302,17 +302,6 @@ export interface StreakDay {
                   <span class="term-tab__prompt">$</span>
                   <span class="term-tab__cmd">streak</span>
                   <span class="term-tab__flag">🔥 {{ currentStreak() }}d</span>
-                </button>
-
-                <button
-                  type="button"
-                  class="term-tab term-tab--diag"
-                  [class.is-active]="activeTab() === 'diagnostic'"
-                  (click)="activeTab.set('diagnostic')"
-                >
-                  <span class="term-tab__prompt">$</span>
-                  <span class="term-tab__cmd">diagnostic</span>
-                  <span class="term-tab__flag">--eval-ia</span>
                 </button>
 
                 <button
@@ -622,6 +611,21 @@ export interface StreakDay {
                       <span class="sensor-sub text-primary">Firmadas con SHA-256</span>
                     </div>
                   </div>
+
+                  <div class="sensor-card sensor-card--glow">
+                    <div class="sensor-card__head">
+                      <span class="sensor-label">NIVEL Y TEMARIO CALIBRADO</span>
+                      <span class="sensor-code">[BYTE_IA]</span>
+                    </div>
+                    <div class="sensor-num text-cyan" style="font-size: 1.05rem; line-height: 1.3;">
+                      {{ diagnosticCompleted() ? diagnosticResult().assignedLevelTitle : 'Pendiente de Calibrar' }}
+                    </div>
+                    <div class="sensor-footer">
+                      <a routerLink="/onboarding" class="sensor-sub text-primary">
+                        {{ diagnosticCompleted() ? 'Ver temario y plan a medida →' : 'Realizar calibración inicial →' }}
+                      </a>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="section-container">
@@ -766,110 +770,7 @@ export interface StreakDay {
               </div>
             }
 
-            @if (!isTeacher() && activeTab() === 'diagnostic') {
-              <div class="tab-pane animate-fade-in">
-                <div class="section-terminal-bar">
-                  <div class="terminal-bar-title">
-                    <span class="term-prefix">syseng-diagnostic</span>
-                    <span class="term-arg">--eval-engine=byte-ai-v2</span>
-                  </div>
-                  <span class="term-status-badge text-cyan">AGENTE DE NIVELACIÓN CONECTADO 🤖</span>
-                </div>
 
-                @if (!diagnosticFinished()) {
-                  <div class="diag-wizard-card">
-                    <div class="diag-wizard-head">
-                      <div class="diag-head-left">
-                        <span class="diag-step-badge">PREGUNTA {{ currentDiagQuestionIndex() + 1 }} DE {{ diagQuestions.length }}</span>
-                        <h3>{{ currentQuestion().title }}</h3>
-                      </div>
-                      <span class="diag-topic-tag">{{ currentQuestion().topic }}</span>
-                    </div>
-
-                    <div class="diag-terminal-code-block" *ngIf="currentQuestion().codeSnippet">
-                      <pre><code>{{ currentQuestion().codeSnippet }}</code></pre>
-                    </div>
-
-                    <p class="diag-question-text">{{ currentQuestion().prompt }}</p>
-
-                    <div class="diag-options-grid">
-                      @for (opt of currentQuestion().options; track opt.id) {
-                        <button
-                          type="button"
-                          class="diag-option-btn"
-                          [class.is-selected]="selectedDiagAnswer() === opt.id"
-                          (click)="selectedDiagAnswer.set(opt.id)"
-                        >
-                          <span class="opt-key">{{ opt.id | uppercase }})</span>
-                          <span class="opt-label">{{ opt.label }}</span>
-                        </button>
-                      }
-                    </div>
-
-                    <div class="diag-actions-footer">
-                      <button
-                        type="button"
-                        class="btn btn-primary"
-                        [disabled]="!selectedDiagAnswer() || evaluatingQuestion()"
-                        (click)="submitDiagAnswer()"
-                      >
-                        {{ currentDiagQuestionIndex() < diagQuestions.length - 1 ? 'Siguiente Pregunta →' : 'Finalizar y Calibrar con IA ⚡' }}
-                      </button>
-                    </div>
-                  </div>
-                } @else {
-                  <div class="diag-result-card animate-fade-in">
-                    <div class="result-top-banner">
-                      <div class="result-icon-robot">🤖</div>
-                      <div class="result-header-text">
-                        <span class="result-sub-eyebrow">DICTAMEN TÉCNICO DE BYTE COPILOT:</span>
-                        <h2>{{ diagnosticResult().assignedLevelTitle }}</h2>
-                        <span class="result-xp-reward">🎁 ¡+200 XP de Bienvenida Concedidos!</span>
-                      </div>
-                    </div>
-
-                    <div class="result-breakdown-grid">
-                      <div class="result-item">
-                        <span class="rk">Nivel Inicial Asignado:</span>
-                        <span class="rv text-purple">Nivel {{ diagnosticResult().assignedLevelNumber }}</span>
-                      </div>
-                      <div class="result-item">
-                        <span class="rk">Especialidad Recomendada:</span>
-                        <span class="rv text-cyan">{{ diagnosticResult().recommendedSpecialty }}</span>
-                      </div>
-                      <div class="result-item">
-                        <span class="rk">Aciertos en Evaluación:</span>
-                        <span class="rv text-success">{{ diagnosticResult().score }} de {{ diagQuestions.length }} correctas</span>
-                      </div>
-                      <div class="result-item">
-                        <span class="rk">Ruta Oficial Asignada:</span>
-                        <span class="rv">{{ diagnosticResult().recommendedPathTitle }}</span>
-                      </div>
-                    </div>
-
-                    <div class="result-ai-feedback">
-                      <div class="ai-speech-bubble">
-                        <div class="ai-avatar-mini">byte&gt;</div>
-                        <p>{{ diagnosticResult().agentFeedback }}</p>
-                      </div>
-                    </div>
-
-                    <div class="result-action-strip">
-                      <div class="course-suggestion-meta">
-                        <span class="cs-lbl">Curso inicial prioritario:</span>
-                        <strong class="cs-val">{{ diagnosticResult().suggestedCourseTitle }}</strong>
-                      </div>
-                      <div class="result-buttons">
-                        <button type="button" class="btn btn-outline" (click)="restartDiagnostic()">🔄 Recalibrar</button>
-                        <a [routerLink]="['/cursos', diagnosticResult().suggestedCourseSlug]" class="btn btn-primary">
-                          🚀 Empezar Mi Ruta →
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
 
             @if (!isTeacher() && activeTab() === 'guilds') {
               <div class="tab-pane animate-fade-in">
@@ -2500,12 +2401,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   private coursesSvc = inject(CoursesService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   enrollments = signal<Enrollment[]>([]);
   loading = signal(true);
 
   // Tab state: student vs teacher
-  activeTab = signal<'overview' | 'streak' | 'diagnostic' | 'guilds' | 'achievements' | 'leaderboard' | 'advisor'>('overview');
+  activeTab = signal<'overview' | 'streak' | 'guilds' | 'achievements' | 'leaderboard' | 'advisor'>('overview');
   activeTeacherTab = signal<'overview' | 'students' | 'activities' | 'advisor'>('overview');
   selectedBadgeFilter = signal<'all' | 'unlocked' | 'challenges' | 'courses'>('all');
 
@@ -3002,8 +2904,8 @@ for (let paso = 1; paso <= 3; paso++) {
     }
 
     const qp = this.route.snapshot.queryParams;
-    if ((qp['onboarding'] === 'true' || qp['tab'] === 'diagnostic' || !this.diagnosticCompleted()) && !this.isTeacher()) {
-      this.activeTab.set('diagnostic');
+    if ((qp['onboarding'] === 'true' || qp['tab'] === 'diagnostic') && !this.isTeacher()) {
+      this.router.navigate(['/onboarding']);
     }
   }
 
@@ -3081,24 +2983,34 @@ for (let paso = 1; paso <= 3; paso++) {
       this.todayCheckedIn.set(true);
     }
 
-    const diagDone = localStorage.getItem(userKeyDiag) === 'true';
+    const diagDone = this.auth.isDiagnosticCompleted(this.currentStudentEmail());
     this.diagnosticCompleted.set(diagDone);
     if (diagDone) {
       try {
-        const res = JSON.parse(localStorage.getItem(userKeyDiagRes) || '{}');
-        if (res.assignedLevelTitle) {
-          this.diagnosticResult.set(res);
+        const res = this.auth.getDiagnosticResult(this.currentStudentEmail()) || JSON.parse(localStorage.getItem(userKeyDiagRes) || '{}');
+        const levelTitle = res.levelTitle || res.assignedLevelTitle;
+        if (levelTitle) {
+          const mapped = {
+            ...res,
+            assignedLevelTitle: levelTitle,
+            assignedLevelNumber: res.levelNumber || res.assignedLevelNumber || 1,
+            recommendedSpecialty: res.recommendedSpecialty || 'Ingeniería de Software',
+            recommendedPathTitle: res.recommendedPathTitle || 'Ruta de Fundamentos de Software',
+            suggestedCourseSlug: res.primaryCourseSlug || res.suggestedCourseSlug || 'introduccion-programacion',
+            suggestedCourseTitle: res.primaryCourseTitle || res.suggestedCourseTitle || 'Introducción a la Programación',
+          };
+          this.diagnosticResult.set(mapped);
           this.diagnosticFinished.set(true);
           this.currentRecommendation.set({
-            pathTitle: res.recommendedPathTitle || 'Ruta de Fundamentos de Software',
-            pathSlug: res.suggestedCourseSlug || 'introduccion-programacion',
-            targetLevelName: res.assignedLevelTitle || 'Cadete en Formación',
+            pathTitle: mapped.recommendedPathTitle,
+            pathSlug: mapped.suggestedCourseSlug,
+            targetLevelName: mapped.assignedLevelTitle,
             milestoneOrder: 1,
-            rationale: `Byte Copilot ha evaluado tu razonamiento lógico (${res.score}/3 respuestas correctas). Según tu perfil, tu siguiente paso es dominar los conceptos clave de ${res.suggestedCourseTitle || 'Introducción a la Programación'}.`,
+            rationale: res.agentFeedback || `Byte IA ha evaluado tu perfil y estructurado tu temario de ingeniería personalizado.`,
             topicsToStudy: ['Fundamentos de Programación', 'Algoritmos y Lógica', 'Prácticas en Terminal'],
-            suggestedCourseSlug: res.suggestedCourseSlug || 'introduccion-programacion',
-            suggestedCourseTitle: res.suggestedCourseTitle || 'Introducción a la Programación',
-            matchScore: 94,
+            suggestedCourseSlug: mapped.suggestedCourseSlug,
+            suggestedCourseTitle: mapped.suggestedCourseTitle,
+            matchScore: 96,
           });
         }
       } catch {}

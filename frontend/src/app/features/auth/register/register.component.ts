@@ -781,8 +781,8 @@ export class RegisterComponent implements OnInit {
     ) {
       this.router.navigate(['/docente']);
     } else {
-      // Redirige directamente al test diagnóstico de nivel
-      this.router.navigate(['/perfil'], { queryParams: { tab: 'diagnostic', onboarding: 'true' } });
+      // Redirige directamente al onboarding y examen diagnóstico
+      this.router.navigate(['/onboarding']);
     }
   }
 }

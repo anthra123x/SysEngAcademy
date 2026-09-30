@@ -477,17 +477,11 @@ export class LoginComponent {
     ) {
       this.router.navigate(['/docente']);
     } else {
-      // Para estudiantes: si no han completado el diagnóstico inicial, redirigir directamente al test de nivel
-      const email = (user?.email || '').toLowerCase().trim();
-      const isDemo = email === 'estudiante@sysengacademy.dev';
-      const diagKey = isDemo ? 'syseng_diagnostic_completed' : `syseng_${email}_diagnostic_completed`;
-      const isDiagDone =
-        typeof window !== 'undefined'
-          ? localStorage.getItem(diagKey)
-          : 'true';
+      // Para estudiantes: solo cuando la cuenta sea nueva o no haya completado el diagnóstico inicial
+      const isDiagDone = this.auth.isDiagnosticCompleted(user?.email);
 
-      if (!isDiagDone || isDiagDone !== 'true') {
-        this.router.navigate(['/perfil'], { queryParams: { tab: 'diagnostic', onboarding: 'true' } });
+      if (!isDiagDone) {
+        this.router.navigate(['/onboarding']);
       } else {
         this.router.navigate(['/perfil']);
       }
