@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+import { ApiService } from '../../core/services/api.service';
 
 export interface DiagnosticQuestion {
   id: string;
@@ -446,23 +447,30 @@ export interface DiagnosticAnalysisResult {
             <section class="stage-section analyzing-section animate-fade-in">
               <div class="analyzing-matrix font-mono">
                 <div class="matrix-loader-spinner"></div>
-                <h2 class="analyzing-heading">Byte IA está evaluando tu matriz de competencias...</h2>
-                <p class="analyzing-sub">Calculando perfiles de complejidad algorítmica, POO y persistencia relacional:</p>
+                <h2 class="analyzing-heading">Byte IA está evaluando tu diagnóstico en tiempo real...</h2>
+                <p class="analyzing-sub">El agente de inteligencia artificial analiza cada respuesta individualmente para generar tu ruta personalizada:</p>
 
                 <div class="terminal-exec-feed">
                   <div class="exec-log-line is-done">
-                    <span class="exec-tick">✔</span> [0.12s] Parsing AST de soluciones algorítmicas y complejidad Big-O... <span class="txt-green">[OK]</span>
+                    <span class="exec-tick">✔</span> [0.02s] Respuestas capturadas correctamente ({{ questions.length }} preguntas)... <span class="txt-green">[OK]</span>
                   </div>
                   <div class="exec-log-line is-done">
-                    <span class="exec-tick">✔</span> [0.38s] Verificando entendimiento de invariantes de negocio y POO... <span class="txt-green">[OK]</span>
+                    <span class="exec-tick">✔</span> [0.15s] Enviando matriz de respuestas al Agente Byte IA... <span class="txt-green">[OK]</span>
                   </div>
                   <div class="exec-log-line is-active">
-                    <span class="exec-pulse">⚡</span> [0.65s] Clasificando consultas SQL relacionales y arquitectura... <span class="txt-cyan">[EN PROCESO]</span>
+                    <span class="exec-pulse">⚡</span> Byte IA está analizando tus fortalezas, debilidades y preferencia técnica... <span class="txt-cyan">[PROCESANDO]</span>
                   </div>
                   <div class="exec-log-line">
-                    <span class="exec-wait">○</span> [0.90s] Estructurando temario personalizado en 3 fases de ingeniería... <span class="txt-muted">[PENDIENTE]</span>
+                    <span class="exec-wait">○</span> Generando retroalimentación personalizada y temario en 3 fases... <span class="txt-muted">[EN COLA]</span>
+                  </div>
+                  <div class="exec-log-line">
+                    <span class="exec-wait">○</span> Calibrando nivel y ruta de especialización... <span class="txt-muted">[PENDIENTE]</span>
                   </div>
                 </div>
+
+                <p class="analyzing-note" style="margin-top: 18px; font-size: 11px; color: #64748b; text-align: center;">
+                  Este proceso puede tomar entre 10 y 30 segundos mientras el agente genera tu análisis personalizado.
+                </p>
               </div>
             </section>
           }
@@ -1681,6 +1689,7 @@ export interface DiagnosticAnalysisResult {
 export class OnboardingComponent implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private api = inject(ApiService);
 
   // Etapas del onboarding
   readonly stage = signal<'welcome' | 'tour' | 'assessment' | 'analyzing' | 'results'>('welcome');
@@ -1697,6 +1706,8 @@ export class OnboardingComponent implements OnInit {
   readonly selectedOption = signal<string | null>(null);
   readonly userAnswers = signal<Record<string, string>>({});
   readonly analysisResult = signal<DiagnosticAnalysisResult | null>(null);
+  readonly aiEvaluationFailed = signal(false);
+  readonly aiEvaluationInProgress = signal(false);
 
   // Preguntas de razonamiento lógico y afinidad técnica
   readonly questions: DiagnosticQuestion[] = [
@@ -1805,6 +1816,27 @@ for (let paso = 1; paso <= 4; paso++) {
       this.analysisResult.set(existing);
       this.stage.set('results');
     }
+
+    // Aleatorizar el orden de opciones en cada pregunta para que la respuesta
+    // correcta no esté siempre en la primera posición
+    this.shuffleQuestionOptions();
+  }
+
+  /**
+   * Baraja las opciones de cada pregunta técnica preservando la referencia
+   * correctAnswer (ya que es un ID, no un índice). Las preguntas de
+   * preferencia (specialty) no se barajan porque no tienen respuesta correcta.
+   */
+  private shuffleQuestionOptions(): void {
+    for (const q of this.questions) {
+      if (q.category === 'specialty') continue;
+      // Fisher-Yates shuffle
+      const opts = q.options;
+      for (let i = opts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [opts[i], opts[j]] = [opts[j], opts[i]];
+      }
+    }
   }
 
   goToTour() {
@@ -1851,13 +1883,66 @@ for (let paso = 1; paso <= 4; paso++) {
 
   private finishAssessment() {
     this.stage.set('analyzing');
+    this.aiEvaluationInProgress.set(true);
+    this.aiEvaluationFailed.set(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    setTimeout(() => {
-      this.computeDiagnosisAndSyllabus();
+    // Intentar evaluación con IA primero
+    this.evaluateWithAI().then((success) => {
+      if (!success) {
+        // Fallback a evaluación local determinística
+        this.aiEvaluationFailed.set(true);
+        this.computeDiagnosisAndSyllabus();
+      }
+      this.aiEvaluationInProgress.set(false);
       this.stage.set('results');
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 1200);
+    });
+  }
+
+  /**
+   * Envía las respuestas al backend para que la IA genere una evaluación
+   * personalizada. Retorna true si tuvo éxito, false si debe usar fallback.
+   */
+  private async evaluateWithAI(): Promise<boolean> {
+    try {
+      const payload = {
+        answers: this.userAnswers(),
+        questions: this.questions.map(q => ({
+          id: q.id,
+          title: q.title,
+          category: q.category,
+          prompt: q.prompt,
+          codeSnippet: q.codeSnippet || null,
+          options: q.options,
+          correctAnswer: q.correctAnswer || null,
+        })),
+        student_name: this.user()?.name || 'Estudiante',
+        student_email: this.user()?.email || 'anon@syseng',
+      };
+
+      const response = await this.api.post<{
+        success: boolean;
+        fallback?: boolean;
+        result?: DiagnosticAnalysisResult;
+      }>('/ai/diagnostic', payload, 30000).toPromise();
+
+      if (response?.success && response.result) {
+        const aiResult = response.result;
+        aiResult.completedAt = aiResult.completedAt || new Date().toISOString();
+        this.analysisResult.set(aiResult);
+        this.auth.saveDiagnosticResult(aiResult);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('syseng:diagnostic_completed', { detail: aiResult }));
+        }
+        return true;
+      }
+
+      return false;
+    } catch (err) {
+      console.warn('[Onboarding] Evaluación IA falló, usando fallback local:', err);
+      return false;
+    }
   }
 
   private computeDiagnosisAndSyllabus() {

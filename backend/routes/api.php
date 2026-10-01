@@ -64,6 +64,9 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
     Route::post('/ai/conversations/{conversation}/message', [AiChatController::class, 'message']);
     Route::post('/ai/conversations/{conversation}/stream', [AiChatController::class, 'streamMessage']);
 
+    // Evaluación diagnóstica con IA
+    Route::post('/ai/diagnostic', [\App\Http\Controllers\Api\DiagnosticController::class, 'evaluate']);
+
     // Teacher & Admin Dashboard routes
     Route::prefix('teacher')->group(function () {
         Route::get('/overview', [TeacherController::class, 'overview']);
