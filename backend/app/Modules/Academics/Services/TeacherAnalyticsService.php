@@ -19,14 +19,15 @@ class TeacherAnalyticsService
         return Cache::remember('teacher_overview_stats', 30, function () {
             $totalStudents = User::where('role', 'student')->count();
             $totalCourses = Course::count();
-            $totalCompletions = LessonProgress::count();
-            $totalEnrollments = Enrollment::count();
+            $totalCompletions = LessonProgress::whereHas('user')->count();
+            $totalEnrollments = Enrollment::whereHas('user')->count();
 
             // Promedio global de quizzes
-            $avgScore = (float) (LessonProgress::whereNotNull('score')->avg('score') ?? 0.0);
+            $avgScore = (float) (LessonProgress::whereHas('user')->whereNotNull('score')->avg('score') ?? 0.0);
 
-            // Actividad reciente de los alumnos (últimas 10 lecciones/quizzes)
-            $recentActivity = LessonProgress::with(['user:id,name,email', 'lesson:id,title,type'])
+            // Actividad reciente de los alumnos (últimas 10 lecciones/quizzes de usuarios activos)
+            $recentActivity = LessonProgress::whereHas('user')
+                ->with(['user:id,name,email', 'lesson:id,title,type'])
                 ->orderBy('completed_at', 'desc')
                 ->take(10)
                 ->get()

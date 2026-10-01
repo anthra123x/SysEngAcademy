@@ -82,6 +82,7 @@ class TeacherController extends Controller
         ]);
 
         $student = $this->managementService->updateStudent($id, $validated);
+        $this->analyticsService->invalidateCache();
 
         return response()->json([
             'message' => 'Cuenta de estudiante actualizada correctamente.',
@@ -96,6 +97,7 @@ class TeacherController extends Controller
     {
         $this->authorizeTeacher($request);
         $this->managementService->deleteStudent($id);
+        $this->analyticsService->invalidateCache();
 
         return response()->json(['message' => 'Estudiante eliminado satisfactoriamente.']);
     }

@@ -2145,12 +2145,11 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
   });
 
   readonly totalStudentsCount = computed(() => {
-    return this.students().length || this.overview()?.stats.total_students || 0;
+    return this.students().length;
   });
 
   readonly totalLessonsCompleted = computed(() => {
-    const fromStudents = this.students().reduce((acc, s) => acc + (s.completed_lessons_count || 0), 0);
-    return fromStudents || this.overview()?.stats.total_completions || 0;
+    return this.students().reduce((acc, s) => acc + (s.completed_lessons_count || 0), 0);
   });
 
   readonly averageQuizScore = computed(() => {
@@ -2159,7 +2158,7 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
       const avg = scored.reduce((acc, s) => acc + (s.average_quiz_score || 0), 0) / scored.length;
       return Math.round(avg * 10) / 10;
     }
-    return this.overview()?.stats.average_score ?? 89.1;
+    return 0;
   });
 
   readonly studentsAtRisk = computed(() => {
@@ -2194,17 +2193,19 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
 
     this.teacherSvc.deleteStudent(st.id).subscribe({
       next: () => {
-        this.students.update(all => all.filter(item => item.id !== st.id));
+        this.students.update(all => all.filter(item => item.id !== st.id && item.email?.toLowerCase().trim() !== st.email?.toLowerCase().trim()));
         this.overview.update(ov => {
           if (!ov) return null;
           return {
             ...ov,
             stats: {
               ...ov.stats,
-              total_students: Math.max(0, (ov.stats.total_students || 1) - 1),
+              total_students: Math.max(0, this.students().length),
             },
           };
         });
+        this.actionNotification.set(`Estudiante "${st.name}" eliminado de la cátedra.`);
+        setTimeout(() => this.actionNotification.set(''), 4000);
       },
     });
   }

@@ -118,95 +118,26 @@ export interface TeacherStudentDetail {
   }>;
 }
 
-export const FALLBACK_TEACHER_STUDENTS: TeacherStudent[] = [
-  {
-    id: 3,
-    name: 'Ana Estudiante (Demo)',
-    email: 'estudiante@sysengacademy.dev',
-    role: 'student',
-    email_verified: true,
-    email_verified_at: '2026-09-27T10:00:00.000Z',
-    created_at: '2026-09-20T08:00:00.000Z',
-    enrollments_count: 4,
-    completed_lessons_count: 18,
-    quizzes_taken_count: 4,
-    average_quiz_score: 94.0,
-    courses: [
-      { id: 1, title: 'Introducción a la Programación', progress_percent: 100 },
-      { id: 2, title: 'Algoritmos de Ordenamiento', progress_percent: 65 },
-      { id: 3, title: 'Introducción al Desarrollo Web', progress_percent: 40 },
-      { id: 106, title: 'Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos', progress_percent: 100 },
-    ],
-  },
-  {
-    id: 29,
-    name: 'Carlos Prueba',
-    email: 'carlos_test_1790540376@gmail.com',
-    role: 'student',
-    email_verified: true,
-    email_verified_at: '2026-09-27T12:00:00.000Z',
-    created_at: '2026-09-27T11:00:00.000Z',
-    enrollments_count: 2,
-    completed_lessons_count: 8,
-    quizzes_taken_count: 2,
-    average_quiz_score: 88.0,
-    courses: [
-      { id: 1, title: 'Introducción a la Programación', progress_percent: 75 },
-      { id: 4, title: 'Introducción al Backend', progress_percent: 30 },
-    ],
-  },
-  {
-    id: 30,
-    name: 'Mateo Silva',
-    email: 'mateo.silva@alumnos.syseng.edu',
-    role: 'student',
-    email_verified: true,
-    email_verified_at: '2026-09-25T14:30:00.000Z',
-    created_at: '2026-09-25T14:00:00.000Z',
-    enrollments_count: 3,
-    completed_lessons_count: 14,
-    quizzes_taken_count: 3,
-    average_quiz_score: 96.0,
-    courses: [
-      { id: 1, title: 'Introducción a la Programación', progress_percent: 100 },
-      { id: 2, title: 'Algoritmos de Ordenamiento', progress_percent: 100 },
-      { id: 12, title: 'Integración Frontend ↔ Backend', progress_percent: 50 },
-    ],
-  },
-  {
-    id: 31,
-    name: 'Sofía Herrera',
-    email: 'sofia.herrera@tech.dev',
-    role: 'student',
-    email_verified: true,
-    email_verified_at: '2026-09-26T09:15:00.000Z',
-    created_at: '2026-09-26T09:00:00.000Z',
-    enrollments_count: 1,
-    completed_lessons_count: 4,
-    quizzes_taken_count: 1,
-    average_quiz_score: 82.0,
-    courses: [
-      { id: 5, title: 'HTML, CSS y JavaScript', progress_percent: 45 },
-    ],
-  },
-  {
-    id: 32,
-    name: 'Lucas Ramírez',
-    email: 'lucas.ramirez@code.org',
-    role: 'student',
-    email_verified: false,
-    email_verified_at: null,
-    created_at: '2026-09-27T16:20:00.000Z',
-    enrollments_count: 2,
-    completed_lessons_count: 10,
-    quizzes_taken_count: 2,
-    average_quiz_score: 85.5,
-    courses: [
-      { id: 1, title: 'Introducción a la Programación', progress_percent: 80 },
-      { id: 20, title: 'Fundamentos de requerimientos', progress_percent: 55 },
-    ],
-  },
+// Constantes de saneamiento para purgar datos ficticios legados o eliminados
+const LEGACY_MOCK_NAMES = [
+  'ana estudiante',
+  'carlos prueba',
+  'mateo silva',
+  'sofía herrera',
+  'sofia herrera',
+  'lucas ramírez',
+  'lucas ramirez',
 ];
+
+const LEGACY_MOCK_EMAILS = [
+  'carlos_test_',
+  '@alumnos.syseng.edu',
+  'sofia.herrera@tech.dev',
+  'lucas.ramirez@code.org',
+  'ana@sysengacademy.dev',
+];
+
+export const FALLBACK_TEACHER_STUDENTS: TeacherStudent[] = [];
 
 @Injectable({
   providedIn: 'root',
@@ -214,13 +145,203 @@ export const FALLBACK_TEACHER_STUDENTS: TeacherStudent[] = [
 export class TeacherService {
   private readonly api = inject(ApiService);
 
-  private getLocalStudents(): TeacherStudent[] {
+  constructor() {
+    this.sanitizeLegacyCaches();
+  }
+
+  /**
+   * Obtiene la lista negra de identificadores y correos de estudiantes eliminados.
+   */
+  private getDeletedIdentifiers(): Set<string> {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const stored = localStorage.getItem('syseng_deleted_students');
+      if (stored) {
+        const arr = JSON.parse(stored);
+        return new Set(Array.isArray(arr) ? arr.map((x: any) => String(x).toLowerCase().trim()) : []);
+      }
+    } catch {}
+    return new Set();
+  }
+
+  /**
+   * Registra permanentemente a un estudiante en la lista de eliminados y purga todos los almacenes locales.
+   */
+  private markAsDeleted(id: number, email?: string): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const set = this.getDeletedIdentifiers();
+      set.add(String(id));
+      if (email) set.add(email.toLowerCase().trim());
+      localStorage.setItem('syseng_deleted_students', JSON.stringify(Array.from(set)));
+
+      // Purgar de cache docente
+      let cache = this.readRawLocalStudents();
+      cache = cache.filter(s => s.id !== id && (!email || s.email.toLowerCase().trim() !== email.toLowerCase().trim()));
+      localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(cache));
+
+      // Purgar de usuarios registrados en el navegador
+      const regUsersRaw = localStorage.getItem('syseng_registered_users');
+      if (regUsersRaw) {
+        let regList = JSON.parse(regUsersRaw);
+        if (Array.isArray(regList)) {
+          regList = regList.filter((item: any) => {
+            const u = item.user;
+            if (!u) return false;
+            return u.id !== id && (!email || u.email?.toLowerCase().trim() !== email.toLowerCase().trim());
+          });
+          localStorage.setItem('syseng_registered_users', JSON.stringify(regList));
+        }
+      }
+    } catch {}
+  }
+
+  /**
+   * Saneamiento preventivo: purga de localStorage cualquier alumno ficticio heredado o eliminado.
+   */
+  private sanitizeLegacyCaches(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const deletedSet = this.getDeletedIdentifiers();
+
+      const isLegacyOrDeleted = (name?: string, email?: string, id?: number): boolean => {
+        const normName = (name || '').toLowerCase().trim();
+        const normEmail = (email || '').toLowerCase().trim();
+        const strId = id !== undefined ? String(id) : '';
+
+        if (strId && deletedSet.has(strId)) return true;
+        if (normEmail && deletedSet.has(normEmail)) return true;
+
+        if (LEGACY_MOCK_NAMES.some(mock => normName.includes(mock))) return true;
+        if (LEGACY_MOCK_EMAILS.some(mock => normEmail.includes(mock))) return true;
+
+        return false;
+      };
+
+      // Limpiar cache docente
+      const rawCache = localStorage.getItem('syseng_teacher_students_cache');
+      if (rawCache) {
+        const students: TeacherStudent[] = JSON.parse(rawCache);
+        if (Array.isArray(students)) {
+          const cleaned = students.filter(s => !isLegacyOrDeleted(s.name, s.email, s.id));
+          localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(cleaned));
+        }
+      }
+
+      // Limpiar usuarios registrados
+      const rawReg = localStorage.getItem('syseng_registered_users');
+      if (rawReg) {
+        const regList = JSON.parse(rawReg);
+        if (Array.isArray(regList)) {
+          const cleaned = regList.filter((item: any) => {
+            const u = item.user;
+            if (!u) return false;
+            return !isLegacyOrDeleted(u.name, u.email, u.id);
+          });
+          localStorage.setItem('syseng_registered_users', JSON.stringify(cleaned));
+        }
+      }
+    } catch {}
+  }
+
+  private readRawLocalStudents(): TeacherStudent[] {
     if (typeof window === 'undefined') return [];
     try {
       const stored = localStorage.getItem('syseng_teacher_students_cache');
       if (stored) return JSON.parse(stored);
     } catch {}
     return [];
+  }
+
+  /**
+   * Retorna los alumnos reales en el entorno del cliente, garantizando cero datos ficticios ni eliminados.
+   */
+  private getLocalStudents(): TeacherStudent[] {
+    if (typeof window === 'undefined') return [];
+    this.sanitizeLegacyCaches();
+
+    const deletedSet = this.getDeletedIdentifiers();
+    const studentsMap = new Map<string, TeacherStudent>();
+
+    // 1. Incorporar estudiantes de syseng_registered_users
+    try {
+      const rawReg = localStorage.getItem('syseng_registered_users');
+      if (rawReg) {
+        const list = JSON.parse(rawReg);
+        if (Array.isArray(list)) {
+          for (const item of list) {
+            const u = item.user;
+            if (!u) continue;
+            const normEmail = (u.email || '').toLowerCase().trim();
+            if (normEmail === 'andrescamilomartinez330@gmail.com') continue; // Docente
+            if (deletedSet.has(normEmail) || deletedSet.has(String(u.id))) continue;
+
+            studentsMap.set(normEmail, {
+              id: u.id || Date.now(),
+              name: u.name,
+              email: u.email,
+              role: 'student',
+              email_verified: !!u.email_verified_at,
+              email_verified_at: u.email_verified_at || null,
+              created_at: u.created_at || new Date().toISOString(),
+              enrollments_count: 1,
+              completed_lessons_count: 0,
+              quizzes_taken_count: 0,
+              average_quiz_score: null,
+              courses: [
+                { id: 1, title: 'Introducción a la Programación', progress_percent: 0 },
+              ],
+            });
+          }
+        }
+      }
+    } catch {}
+
+    // 2. Incorporar Estudiante Demo inicial de la base de datos PostgreSQL si no ha sido eliminado
+    const demoEmail = 'estudiante@sysengacademy.dev';
+    if (!deletedSet.has(demoEmail) && !deletedSet.has('94') && !studentsMap.has(demoEmail)) {
+      studentsMap.set(demoEmail, {
+        id: 94,
+        name: 'Estudiante Demo',
+        email: demoEmail,
+        role: 'student',
+        email_verified: true,
+        email_verified_at: '2026-10-01T08:02:44.000Z',
+        created_at: '2026-10-01T08:02:42.000Z',
+        enrollments_count: 0,
+        completed_lessons_count: 0,
+        quizzes_taken_count: 0,
+        average_quiz_score: null,
+        courses: [],
+      });
+    }
+
+    // 3. Cruzar con cache previo si existe para preservar métricas avanzadas de progreso
+    const rawCache = this.readRawLocalStudents();
+    for (const cached of rawCache) {
+      const normEmail = (cached.email || '').toLowerCase().trim();
+      if (deletedSet.has(normEmail) || deletedSet.has(String(cached.id))) continue;
+      if (normEmail === 'andrescamilomartinez330@gmail.com') continue;
+
+      if (studentsMap.has(normEmail)) {
+        // Preservar progresos
+        const existing = studentsMap.get(normEmail)!;
+        existing.completed_lessons_count = Math.max(existing.completed_lessons_count, cached.completed_lessons_count || 0);
+        existing.enrollments_count = Math.max(existing.enrollments_count, cached.enrollments_count || 0);
+        existing.average_quiz_score = cached.average_quiz_score;
+        existing.quizzes_taken_count = cached.quizzes_taken_count;
+        if (cached.courses?.length) existing.courses = cached.courses;
+      } else {
+        studentsMap.set(normEmail, cached);
+      }
+    }
+
+    const result = Array.from(studentsMap.values());
+    try {
+      localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(result));
+    } catch {}
+
+    return result;
   }
 
   private saveLocalStudents(students: TeacherStudent[]) {
@@ -240,7 +361,7 @@ export class TeacherService {
         const scoredStudents = students.filter(s => s.average_quiz_score !== null && s.average_quiz_score > 0);
         const avgScore = scoredStudents.length
           ? Math.round((scoredStudents.reduce((sum, s) => sum + (s.average_quiz_score || 0), 0) / scoredStudents.length) * 10) / 10
-          : 89.1;
+          : 0;
 
         const overview: TeacherOverviewResponse = {
           stats: {
@@ -250,7 +371,7 @@ export class TeacherService {
             total_enrollments: totalEnrollments,
             average_score: avgScore,
           },
-          recent_activity: FALLBACK_TEACHER_OVERVIEW.recent_activity,
+          recent_activity: [], // Cero actividad falsa o de alumnos eliminados
           popular_courses: FALLBACK_TEACHER_OVERVIEW.popular_courses,
         };
         return of(overview);
@@ -278,7 +399,29 @@ export class TeacherService {
   getStudentDetail(id: number): Observable<TeacherStudentDetail> {
     return this.api.get<TeacherStudentDetail>(`/teacher/students/${id}`).pipe(
       catchError(() => {
-        const student = this.getLocalStudents().find(s => s.id === id) || FALLBACK_TEACHER_STUDENTS[0];
+        const student = this.getLocalStudents().find(s => s.id === id);
+        if (!student) {
+          return of({
+            student: {
+              id,
+              name: 'Estudiante no encontrado',
+              email: 'desconocido@sysengacademy.dev',
+              role: 'student',
+              email_verified: false,
+              email_verified_at: null,
+              created_at: new Date().toISOString(),
+            },
+            academic_summary: {
+              total_enrolled: 0,
+              total_completed: 0,
+              quizzes_taken: 0,
+              average_score: null,
+            },
+            courses: [],
+            completed_lessons: [],
+          });
+        }
+
         const detail: TeacherStudentDetail = {
           student: {
             id: student.id,
@@ -295,7 +438,7 @@ export class TeacherService {
             quizzes_taken: student.quizzes_taken_count,
             average_score: student.average_quiz_score,
           },
-          courses: student.courses.map((c, i) => ({
+          courses: (student.courses || []).map((c, i) => ({
             id: i + 1,
             course_id: c.id,
             title: c.title,
@@ -303,28 +446,7 @@ export class TeacherService {
             enrolled_at: '2026-09-20T00:00:00.000Z',
             completed_at: c.progress_percent === 100 ? '2026-09-25T00:00:00.000Z' : null,
           })),
-          completed_lessons: [
-            {
-              id: 1,
-              lesson_id: 101,
-              lesson_title: 'Fundamentos de Algoritmos y Variables',
-              lesson_type: 'practice',
-              course_title: student.courses[0]?.title ?? 'Programación',
-              score: 95,
-              passed: true,
-              completed_at: '2026-09-22T10:00:00.000Z',
-            },
-            {
-              id: 2,
-              lesson_id: 102,
-              lesson_title: 'Estructuras Condicionales y Bucles',
-              lesson_type: 'practice',
-              course_title: student.courses[0]?.title ?? 'Programación',
-              score: 90,
-              passed: true,
-              completed_at: '2026-09-23T11:30:00.000Z',
-            },
-          ],
+          completed_lessons: [],
         };
         return of(detail);
       })
@@ -352,11 +474,15 @@ export class TeacherService {
   }
 
   deleteStudent(id: number): Observable<any> {
+    const students = this.getLocalStudents();
+    const target = students.find(s => s.id === id);
+    const targetEmail = target?.email;
+
+    // Marcar como eliminado en cliente de forma inmediata e irreversible
+    this.markAsDeleted(id, targetEmail);
+
     return this.api.delete(`/teacher/students/${id}`).pipe(
       catchError(() => {
-        let students = this.getLocalStudents();
-        students = students.filter(s => s.id !== id);
-        this.saveLocalStudents(students);
         return of({ message: 'Estudiante eliminado satisfactoriamente.' });
       })
     );
@@ -367,8 +493,8 @@ export class TeacherService {
       catchError(() => {
         const students = this.getLocalStudents().filter(s => s.email_verified);
         return of({
-          message: `Se enviaron ${students.length || 5} boletines de progreso institucional a las casillas de correo de los alumnos.`,
-          sent_count: students.length || 5,
+          message: `Se enviaron ${students.length} boletines de progreso institucional a las casillas de correo de los alumnos.`,
+          sent_count: students.length,
         });
       })
     );
@@ -380,7 +506,7 @@ export class TeacherService {
         const students = this.getLocalStudents();
         return of({
           message: `Se despacharon alertas de inactividad de racha a los estudiantes para prevenir atrasos en la cátedra.`,
-          sent_count: students.length || 4,
+          sent_count: students.length,
         });
       })
     );
