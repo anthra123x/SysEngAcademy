@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+import { ApiService } from '../../core/services/api.service';
 import { CoursesService } from '../../core/services/courses.service';
 import { TeacherService, TeacherStudent, TeacherActivity, TeacherOverviewResponse } from '../../core/services/teacher.service';
 import { Enrollment } from '../../core/models';
@@ -795,25 +796,19 @@ export interface StreakDay {
                         <span class="stat-v text-success">{{ streakMultiplier() }}x Boost</span>
                       </div>
                       <div class="streak-stat-item">
+                        <span class="stat-k">Tiempo Activo Hoy:</span>
+                        <span class="stat-v text-cyan">{{ todayStudyMinutes() }} min de estudio</span>
+                      </div>
+                      <div class="streak-stat-item">
                         <span class="stat-k">Estado de Hoy:</span>
-                        @if (todayCheckedIn()) {
-                          <span class="stat-v text-success">✓ Check-in Realizado (+25 XP)</span>
-                        } @else {
-                          <span class="stat-v text-orange">⚡ Pendiente de Check-in</span>
-                        }
+                        <span class="stat-v text-success">✓ Sesión Activa Registrada (+25 XP)</span>
                       </div>
                     </div>
 
                     <div class="streak-action-box">
-                      @if (!todayCheckedIn()) {
-                        <button type="button" class="btn btn-primary btn-block" (click)="doDailyCheckIn()">
-                          🔥 Registrar Práctica Diaria de Hoy (+25 XP)
-                        </button>
-                      } @else {
-                        <div class="checked-in-banner">
-                          <span>✓ ¡Excelente! Ya aseguraste tu racha de hoy. Vuelve mañana para sumar el día {{ currentStreak() + 1 }}.</span>
-                        </div>
-                      }
+                      <div class="checked-in-banner">
+                        <span>✓ Telemetría en tiempo real: Tu racha se actualiza automáticamente conforme trabajas y estudias en la plataforma.</span>
+                      </div>
                     </div>
                   </div>
 
@@ -825,7 +820,8 @@ export interface StreakDay {
                       @for (day of weekDays(); track day.dayName) {
                         <div class="week-day-cell" [class.is-done]="day.completed" [class.is-today]="day.isToday">
                           <span class="day-name">{{ day.dayName }}</span>
-                          <div class="day-indicator">
+                          <span class="day-date font-mono" style="font-size: 10px; color: #64748b; margin-top: 2px;">{{ day.shortDate }}</span>
+                          <div class="day-indicator" style="margin-top: 4px;">
                             @if (day.completed) { <span>🔥</span> } @else if (day.isToday) { <span>⚡</span> } @else { <span>·</span> }
                           </div>
                           <span class="day-status-txt">
@@ -839,42 +835,359 @@ export interface StreakDay {
               </div>
             }
 
-
-
             @if (!isTeacher() && activeTab() === 'guilds') {
               <div class="tab-pane animate-fade-in">
-                <div class="section-terminal-bar">
-                  <div class="terminal-bar-title">
-                    <span class="term-prefix">ls -la</span>
-                    <span class="term-arg">/var/syseng/study-guilds</span>
+                @if (selectedGuild() === null) {
+                  <!-- VISTA LISTA DE CLANES -->
+                  <div class="section-terminal-bar">
+                    <div class="terminal-bar-title">
+                      <span class="term-prefix">ls -la</span>
+                      <span class="term-arg">/var/syseng/study-guilds</span>
+                    </div>
+                    <button type="button" class="btn btn-xs btn-outline" (click)="openCreateGuildModal()">
+                      + Crear Grupo de Estudio
+                    </button>
                   </div>
-                  <button type="button" class="btn btn-xs btn-outline" (click)="openCreateGuildModal()">
-                    + Crear Grupo de Estudio
-                  </button>
-                </div>
 
-                <div class="guilds-layout">
-                  <div class="guilds-grid">
-                    @for (guild of studyGroups(); track guild.id) {
-                      <div class="guild-card" [class.is-my-guild]="guild.isMember">
-                        <div class="guild-header">
-                          <div class="guild-badge-tag">{{ guild.tag }}</div>
-                          <span class="guild-streak">🔥 {{ guild.streakDays }}d racha grupal</span>
+                  <div class="guilds-layout">
+                    <div class="guilds-grid">
+                      @for (guild of studyGroups(); track guild.id) {
+                        <div class="guild-card" [class.is-my-guild]="guild.isMember" (click)="openGuildWorkspace(guild)">
+                          <div class="guild-header">
+                            <div class="guild-badge-tag">{{ guild.tag }}</div>
+                            <span class="guild-streak">🔥 {{ guild.streakDays }}d racha grupal</span>
+                          </div>
+                          <h3 class="guild-title">{{ guild.name }}</h3>
+                          <p class="guild-desc">{{ guild.description }}</p>
+                          <div class="guild-footer">
+                            <span class="guild-members-count">👥 {{ guild.researchers.length }} miembros</span>
+                            <div class="guild-card-actions" (click)="$event.stopPropagation()">
+                              @if (guild.isMember) {
+                                <button type="button" class="btn btn-sm btn-outline-danger" (click)="leaveGuild(guild.id)">✓ Miembro (Salir)</button>
+                              } @else {
+                                <button type="button" class="btn btn-sm btn-primary" (click)="joinGuild(guild.id)">+ Unirme</button>
+                              }
+                              <button type="button" class="btn btn-sm btn-outline" (click)="openGuildWorkspace(guild)">
+                                Abrir Clan →
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <h3 class="guild-title">{{ guild.name }}</h3>
-                        <p class="guild-desc">{{ guild.description }}</p>
-                        <div class="guild-footer">
-                          <span class="guild-members-count">👥 {{ guild.membersCount }} miembros</span>
-                          @if (guild.isMember) {
-                            <button type="button" class="btn btn-sm btn-outline-danger" (click)="leaveGuild(guild.id)">✓ Miembro (Salir)</button>
-                          } @else {
-                            <button type="button" class="btn btn-sm btn-primary" (click)="joinGuild(guild.id)">+ Unirme</button>
+                      }
+                    </div>
+                  </div>
+                } @else {
+                  <!-- VISTA INTERACTIVA DEL WORKSPACE DEL CLAN -->
+                  <div class="guild-workspace-shell animate-fade-in">
+                    <!-- TOP BAR DEL WORKSPACE -->
+                    <div class="section-terminal-bar workspace-bar">
+                      <div class="terminal-bar-title">
+                        <button type="button" class="btn-term-back" (click)="closeGuildWorkspace()">
+                          ← Volver a Clanes
+                        </button>
+                        <span class="term-prefix">cd /var/syseng/guilds/</span>
+                        <span class="term-arg">{{ selectedGuild()!.tag.toLowerCase() }}</span>
+                      </div>
+                      <div class="workspace-header-actions">
+                        @if (selectedGuild()!.isMember) {
+                          <span class="badge-active-member">✓ Eres Miembro del Clan</span>
+                          <button type="button" class="btn btn-xs btn-outline-danger" (click)="leaveGuild(selectedGuild()!.id)">
+                            Salir del Clan
+                          </button>
+                        } @else {
+                          <button type="button" class="btn btn-xs btn-primary" (click)="joinGuild(selectedGuild()!.id)">
+                            + Unirme a este Clan
+                          </button>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- HERO BANNER DEL CLAN -->
+                    <div class="guild-hero-banner">
+                      <div class="gh-main">
+                        <div class="gh-tag-row">
+                          <span class="guild-badge-tag">{{ selectedGuild()!.tag }}</span>
+                          <span class="category-pill">{{ selectedGuild()!.category | uppercase }}</span>
+                          <span class="guild-streak">🔥 {{ selectedGuild()!.streakDays }}d racha</span>
+                          <span class="guild-members-count">👥 {{ selectedGuild()!.researchers.length }} miembros reales</span>
+                        </div>
+                        <h2 class="gh-name">{{ selectedGuild()!.name }}</h2>
+                        <p class="gh-desc">{{ selectedGuild()!.description }}</p>
+                      </div>
+                    </div>
+
+                    <!-- SUBTABS DE NAVEGACIÓN DENTRO DEL CLAN -->
+                    <div class="guild-workspace-nav font-mono">
+                      <button
+                        type="button"
+                        class="gw-tab"
+                        [class.is-active]="activeGuildSection() === 'feed'"
+                        (click)="activeGuildSection.set('feed')"
+                      >
+                        <span class="gw-tab-prefix">$</span> clan-feed --debates
+                      </button>
+                      <button
+                        type="button"
+                        class="gw-tab"
+                        [class.is-active]="activeGuildSection() === 'team'"
+                        (click)="activeGuildSection.set('team')"
+                      >
+                        <span class="gw-tab-prefix">$</span> members --team ({{ selectedGuild()!.researchers.length }})
+                      </button>
+                      <button
+                        type="button"
+                        class="gw-tab"
+                        [class.is-active]="activeGuildSection() === 'projects'"
+                        (click)="activeGuildSection.set('projects')"
+                      >
+                        <span class="gw-tab-prefix">$</span> challenge --weekly
+                      </button>
+                    </div>
+
+                    <!-- SECCIÓN 1: FEED Y DEBATES INTERACTIVOS -->
+                    @if (activeGuildSection() === 'feed') {
+                      <div class="guild-section-pane animate-fade-in">
+                        <!-- FORMULARIO DE NUEVA PUBLICACIÓN -->
+                        <div class="clan-post-creator">
+                          <div class="cpc-header">
+                            <span class="cpc-title">📝 Iniciar Debate o Compartir Hallazgo</span>
+                            <div class="cpc-types">
+                              <button
+                                type="button"
+                                class="cpc-type-btn"
+                                [class.is-selected]="newPostType() === 'hallazgo'"
+                                (click)="newPostType.set('hallazgo')"
+                              >💡 Hallazgo</button>
+                              <button
+                                type="button"
+                                class="cpc-type-btn"
+                                [class.is-selected]="newPostType() === 'pregunta'"
+                                (click)="newPostType.set('pregunta')"
+                              >❓ Pregunta</button>
+                              <button
+                                type="button"
+                                class="cpc-type-btn"
+                                [class.is-selected]="newPostType() === 'benchmark'"
+                                (click)="newPostType.set('benchmark')"
+                              >⚡ Benchmark</button>
+                            </div>
+                          </div>
+
+                          <input
+                            type="text"
+                            class="term-input cpc-input-title"
+                            placeholder="Título del debate o problema técnico..."
+                            [ngModel]="newPostTitle()"
+                            (ngModelChange)="newPostTitle.set($event)"
+                          />
+
+                          <textarea
+                            class="term-textarea cpc-textarea"
+                            rows="3"
+                            placeholder="Describe el reto, código o duda técnica para tus compañeros del clan..."
+                            [ngModel]="newPostContent()"
+                            (ngModelChange)="newPostContent.set($event)"
+                          ></textarea>
+
+                          <div class="cpc-footer">
+                            <button
+                              type="button"
+                              class="btn-code-toggle font-mono"
+                              (click)="showCodeInput.set(!showCodeInput())"
+                            >
+                              {{ showCodeInput() ? '[-] Ocultar bloque de código' : '[+] Adjuntar fragmento de código' }}
+                            </button>
+
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-primary"
+                              [disabled]="!newPostTitle().trim() || !newPostContent().trim()"
+                              (click)="publishClanPost()"
+                            >
+                              🚀 Publicar en el Clan
+                            </button>
+                          </div>
+
+                          @if (showCodeInput()) {
+                            <div class="cpc-code-wrapper animate-fade-in">
+                              <div class="cpc-code-meta">
+                                <span class="lbl-code font-mono">Lenguaje:</span>
+                                <select
+                                  class="term-select"
+                                  [ngModel]="newPostCodeLang()"
+                                  (ngModelChange)="newPostCodeLang.set($event)"
+                                >
+                                  <option value="cpp">C++20</option>
+                                  <option value="python">Python</option>
+                                  <option value="javascript">JavaScript / TypeScript</option>
+                                  <option value="sql">PostgreSQL</option>
+                                  <option value="php">PHP</option>
+                                </select>
+                              </div>
+                              <textarea
+                                class="term-textarea font-mono code-area"
+                                rows="4"
+                                placeholder="// Pega aquí tu código o prueba de concepto..."
+                                [ngModel]="newPostCode()"
+                                (ngModelChange)="newPostCode.set($event)"
+                              ></textarea>
+                            </div>
+                          }
+                        </div>
+
+                        <!-- LISTA DE DEBATES / FEED POSTS -->
+                        <div class="clan-feed-list">
+                          @for (post of selectedGuild()!.researchFeed; track post.id) {
+                            <article class="clan-post-card">
+                              <div class="post-header">
+                                <div class="post-author-box">
+                                  <span class="post-avatar">{{ post.author.slice(0, 2).toUpperCase() }}</span>
+                                  <div class="post-author-meta">
+                                    <strong class="post-author-name">{{ post.author }}</strong>
+                                    <span class="post-author-role">{{ post.authorRole }}</span>
+                                  </div>
+                                </div>
+                                <div class="post-meta-right">
+                                  <span class="post-type-tag" [class]="'type-' + post.type">{{ post.type | uppercase }}</span>
+                                  <span class="post-time font-mono">{{ post.timeAgo }}</span>
+                                </div>
+                              </div>
+
+                              <h3 class="post-title">{{ post.title }}</h3>
+                              <p class="post-body">{{ post.content }}</p>
+
+                              @if (post.codeSnippet) {
+                                <div class="post-code-box font-mono">
+                                  <div class="post-code-bar">
+                                    <span>CODE_SNIPPET</span>
+                                    <span>{{ (post.codeLanguage || 'SRC') | uppercase }}</span>
+                                  </div>
+                                  <pre class="code-pre"><code>{{ post.codeSnippet }}</code></pre>
+                                </div>
+                              }
+
+                              <div class="post-actions-bar">
+                                <button
+                                  type="button"
+                                  class="post-action-btn font-mono"
+                                  [class.has-voted]="post.hasUpvoted"
+                                  (click)="togglePostUpvote(post.id)"
+                                >
+                                  ▲ {{ post.upvotes }} Votos
+                                </button>
+                                <button
+                                  type="button"
+                                  class="post-action-btn font-mono"
+                                  (click)="toggleComments(post.id)"
+                                >
+                                  💬 {{ post.comments?.length || 0 }} Respuestas
+                                </button>
+                              </div>
+
+                              @if (expandedComments()[post.id]) {
+                                <div class="post-comments-section animate-fade-in">
+                                  <!-- Respuestas existentes -->
+                                  @for (c of post.comments || []; track c.id) {
+                                    <div class="comment-item">
+                                      <div class="ci-head">
+                                        <strong class="ci-author">{{ c.author }}</strong>
+                                        <span class="ci-time font-mono">{{ c.timeAgo }}</span>
+                                      </div>
+                                      <p class="ci-text">{{ c.text }}</p>
+                                    </div>
+                                  }
+
+                                  <!-- Input para responder -->
+                                  <div class="comment-input-row">
+                                    <input
+                                      type="text"
+                                      class="term-input ci-input"
+                                      placeholder="Escribe tu respuesta técnica..."
+                                      [ngModel]="commentInputMap()[post.id] || ''"
+                                      (ngModelChange)="updateCommentInput(post.id, $event)"
+                                      (keyup.enter)="submitPostComment(post.id)"
+                                    />
+                                    <button
+                                      type="button"
+                                      class="btn btn-xs btn-primary"
+                                      [disabled]="!commentInputMap()[post.id]?.trim()"
+                                      (click)="submitPostComment(post.id)"
+                                    >
+                                      Responder
+                                    </button>
+                                  </div>
+                                </div>
+                              }
+                            </article>
                           }
                         </div>
                       </div>
                     }
+
+                    <!-- SECCIÓN 2: MIEMBROS REALES DEL CLAN -->
+                    @if (activeGuildSection() === 'team') {
+                      <div class="guild-section-pane animate-fade-in">
+                        <div class="members-terminal-box">
+                          <div class="members-head-bar font-mono">
+                            <span class="txt-muted">MIEMBROS REGISTRADOS EN ESTE CLAN ({{ selectedGuild()!.researchers.length }})</span>
+                          </div>
+                          <div class="members-grid">
+                            @for (m of selectedGuild()!.researchers; track m.id) {
+                              <div class="member-card">
+                                <div class="mc-avatar">{{ m.name.slice(0, 2).toUpperCase() }}</div>
+                                <div class="mc-info">
+                                  <h4 class="mc-name">
+                                    {{ m.name }}
+                                    @if (m.name.toLowerCase().includes(currentStudentEmail().split('@')[0]) || m.role.includes('Tú')) {
+                                      <span class="cat-chip" style="color: #00f0ff; margin-left: 6px;">(Tú)</span>
+                                    }
+                                  </h4>
+                                  <span class="mc-role">{{ m.role }}</span>
+                                  <div class="mc-stats font-mono">
+                                    <span class="mc-lvl">Lvl {{ m.level }}</span>
+                                    <span class="mc-contribs">{{ m.contributionsCount }} aportes</span>
+                                  </div>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- SECCIÓN 3: RETO SEMANAL DEL CLAN -->
+                    @if (activeGuildSection() === 'projects') {
+                      <div class="guild-section-pane animate-fade-in">
+                        <div class="weekly-challenge-box">
+                          <div class="wcb-badge font-mono">🔥 OBJETIVO SEMANAL DEL CLAN</div>
+                          <h3 class="wcb-title">{{ selectedGuild()!.weeklyChallenge.title }}</h3>
+                          <p class="wcb-desc">
+                            Resolver este objetivo grupal otorga bonificación de experiencia directa a todos los miembros activos del clan en el ranking general.
+                          </p>
+                          <div class="wcb-reward font-mono">
+                            <span class="txt-muted">Recompensa:</span>
+                            <span class="reward-xp">+{{ selectedGuild()!.weeklyChallenge.xpReward }} XP de Clan</span>
+                          </div>
+                          <div class="wcb-action">
+                            @if (selectedGuild()!.weeklyChallenge.completed) {
+                              <div class="wcb-completed-banner">
+                                ✓ ¡Reto Semanal Completado con Éxito por el Clan!
+                              </div>
+                            } @else {
+                              <button
+                                type="button"
+                                class="btn btn-primary"
+                                (click)="completeClanChallenge()"
+                              >
+                                ⚡ Marcar Reto como Superado (+{{ selectedGuild()!.weeklyChallenge.xpReward }} XP)
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
                   </div>
-                </div>
+                }
               </div>
             }
 
@@ -918,29 +1231,44 @@ export interface StreakDay {
                     <span class="term-prefix">top -b -n 1 | head</span>
                     <span class="term-arg">--ranking=global-xp</span>
                   </div>
-                  <span class="term-status-badge text-primary">CUADRO DE HONOR ACTIVO</span>
+                  <span class="term-status-badge text-primary">CUADRO DE HONOR EN TIEMPO REAL</span>
                 </div>
 
-                <div class="podium-section">
-                  <div class="podium-step podium-silver">
-                    <div class="podium-avatar">🥈</div>
-                    <div class="podium-name">{{ leaderboard()[1].name }}</div>
-                    <div class="podium-xp">{{ leaderboard()[1].xp }} XP</div>
-                    <div class="podium-block step-2">#2</div>
-                  </div>
-                  <div class="podium-step podium-gold">
-                    <div class="podium-crown">👑</div>
-                    <div class="podium-avatar">🥇</div>
-                    <div class="podium-name">{{ leaderboard()[0].name }}</div>
-                    <div class="podium-xp">{{ leaderboard()[0].xp }} XP</div>
-                    <div class="podium-block step-1">#1</div>
-                  </div>
-                  <div class="podium-step podium-bronze is-me">
-                    <div class="podium-avatar">🥉</div>
-                    <div class="podium-name">{{ leaderboard()[2].name }} (Tú)</div>
-                    <div class="podium-xp">{{ leaderboard()[2].xp }} XP</div>
-                    <div class="podium-block step-3">#3</div>
-                  </div>
+                <div class="podium-section" [class.is-single-leader]="leaderboard().length === 1">
+                  @if (leaderboard().length >= 2) {
+                    <div class="podium-step podium-silver" [class.is-me]="leaderboard()[1].isCurrentUser">
+                      <div class="podium-avatar">🥈</div>
+                      <div class="podium-name">
+                        {{ leaderboard()[1].name }}
+                        @if (leaderboard()[1].isCurrentUser) { <span class="podium-tu-tag">(Tú)</span> }
+                      </div>
+                      <div class="podium-xp">{{ leaderboard()[1].xp }} XP</div>
+                      <div class="podium-block step-2">#2</div>
+                    </div>
+                  }
+                  @if (leaderboard().length >= 1) {
+                    <div class="podium-step podium-gold" [class.is-me]="leaderboard()[0].isCurrentUser">
+                      <div class="podium-crown">👑</div>
+                      <div class="podium-avatar">🥇</div>
+                      <div class="podium-name">
+                        {{ leaderboard()[0].name }}
+                        @if (leaderboard()[0].isCurrentUser) { <span class="podium-tu-tag">(Tú)</span> }
+                      </div>
+                      <div class="podium-xp">{{ leaderboard()[0].xp }} XP</div>
+                      <div class="podium-block step-1">#1</div>
+                    </div>
+                  }
+                  @if (leaderboard().length >= 3) {
+                    <div class="podium-step podium-bronze" [class.is-me]="leaderboard()[2].isCurrentUser">
+                      <div class="podium-avatar">🥉</div>
+                      <div class="podium-name">
+                        {{ leaderboard()[2].name }}
+                        @if (leaderboard()[2].isCurrentUser) { <span class="podium-tu-tag">(Tú)</span> }
+                      </div>
+                      <div class="podium-xp">{{ leaderboard()[2].xp }} XP</div>
+                      <div class="podium-block step-3">#3</div>
+                    </div>
+                  }
                 </div>
 
                 <div class="leaderboard-table-shell">
@@ -2100,6 +2428,595 @@ export interface StreakDay {
       }
     }
 
+    /* GUILD WORKSPACE & INTERACTIVE CLAN SHELL */
+    .guild-workspace-shell {
+      margin-top: 14px;
+      background: #0B0E14;
+      border: 1px solid #1E293B;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+
+      .workspace-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #0d121c;
+        border-bottom: 1px solid #1E293B;
+        padding: 10px 16px;
+
+        .btn-term-back {
+          background: transparent;
+          border: 1px solid #334155;
+          color: #94A3B8;
+          font-family: var(--font-mono);
+          font-size: 11px;
+          padding: 4px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-right: 12px;
+          transition: all 0.2s ease;
+          &:hover {
+            color: #00F0FF;
+            border-color: #00F0FF;
+            background: rgba(0, 240, 255, 0.05);
+          }
+        }
+
+        .workspace-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          .badge-active-member {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: #0AE98A;
+            background: rgba(10, 233, 138, 0.1);
+            border: 1px solid rgba(10, 233, 138, 0.25);
+            padding: 3px 8px;
+            border-radius: 4px;
+          }
+        }
+      }
+
+      .guild-hero-banner {
+        padding: 24px;
+        background: radial-gradient(circle at top right, rgba(0, 240, 255, 0.05), transparent 70%);
+        border-bottom: 1px solid #161F2E;
+
+        .gh-tag-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 12px;
+          flex-wrap: wrap;
+
+          .guild-badge-tag {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 800;
+            color: #00F0FF;
+            background: rgba(0, 240, 255, 0.12);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+          }
+
+          .category-pill {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: #A855F7;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            padding: 2px 8px;
+            border-radius: 4px;
+          }
+
+          .guild-streak {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: #FF9D33;
+          }
+
+          .guild-members-count {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: #64748B;
+          }
+        }
+
+        .gh-name {
+          font-size: 20px;
+          color: #F1F5F9;
+          margin: 0 0 8px;
+          font-weight: 700;
+        }
+
+        .gh-desc {
+          font-size: 13px;
+          color: #94A3B8;
+          line-height: 1.6;
+          margin: 0;
+          max-width: 800px;
+        }
+      }
+
+      .guild-workspace-nav {
+        display: flex;
+        background: #090D14;
+        border-bottom: 1px solid #1E293B;
+        padding: 0 16px;
+        gap: 6px;
+
+        .gw-tab {
+          background: transparent;
+          border: none;
+          color: #64748B;
+          font-size: 12px;
+          padding: 12px 16px;
+          cursor: pointer;
+          border-bottom: 2px solid transparent;
+          transition: all 0.2s ease;
+
+          .gw-tab-prefix {
+            color: #00F0FF;
+            margin-right: 4px;
+          }
+
+          &:hover {
+            color: #E2E8F0;
+          }
+
+          &.is-active {
+            color: #00F0FF;
+            border-bottom-color: #00F0FF;
+            font-weight: 600;
+          }
+        }
+      }
+
+      .guild-section-pane {
+        padding: 20px;
+      }
+
+      /* POST CREATOR */
+      .clan-post-creator {
+        background: #0F1420;
+        border: 1px solid #1E293B;
+        border-radius: var(--radius-sm);
+        padding: 18px;
+        margin-bottom: 24px;
+
+        .cpc-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 14px;
+          flex-wrap: wrap;
+          gap: 10px;
+
+          .cpc-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #E2E8F0;
+          }
+
+          .cpc-types {
+            display: flex;
+            gap: 6px;
+
+            .cpc-type-btn {
+              background: #161F2E;
+              border: 1px solid #27344C;
+              color: #94A3B8;
+              font-size: 11px;
+              padding: 4px 10px;
+              border-radius: 4px;
+              cursor: pointer;
+              transition: all 0.2s ease;
+
+              &:hover {
+                color: #F1F5F9;
+              }
+
+              &.is-selected {
+                background: rgba(0, 240, 255, 0.12);
+                border-color: #00F0FF;
+                color: #00F0FF;
+                font-weight: 700;
+              }
+            }
+          }
+        }
+
+        .cpc-input-title {
+          width: 100%;
+          margin-bottom: 10px;
+          font-weight: 600;
+        }
+
+        .cpc-textarea {
+          width: 100%;
+          resize: vertical;
+          margin-bottom: 12px;
+        }
+
+        .cpc-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .btn-code-toggle {
+            background: transparent;
+            border: none;
+            color: #64748B;
+            font-size: 11px;
+            cursor: pointer;
+            &:hover {
+              color: #00F0FF;
+            }
+          }
+        }
+
+        .cpc-code-wrapper {
+          margin-top: 14px;
+          padding-top: 14px;
+          border-top: 1px solid #1E293B;
+
+          .cpc-code-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+
+            .lbl-code {
+              font-size: 11px;
+              color: #64748B;
+            }
+          }
+
+          .code-area {
+            width: 100%;
+            background: #080B10;
+            border-color: #1E293B;
+            color: #0AE98A;
+          }
+        }
+      }
+
+      /* POST CARDS */
+      .clan-feed-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .clan-post-card {
+        background: #0F1420;
+        border: 1px solid #1E293B;
+        border-radius: var(--radius-sm);
+        padding: 18px;
+
+        .post-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+
+          .post-author-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            .post-avatar {
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              background: #1E293B;
+              color: #00F0FF;
+              font-weight: 800;
+              font-size: 11px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: 1px solid #334155;
+            }
+
+            .post-author-meta {
+              display: flex;
+              flex-direction: column;
+
+              .post-author-name {
+                font-size: 13px;
+                color: #F1F5F9;
+              }
+
+              .post-author-role {
+                font-size: 10px;
+                color: #64748B;
+              }
+            }
+          }
+
+          .post-meta-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            .post-type-tag {
+              font-family: var(--font-mono);
+              font-size: 10px;
+              font-weight: 700;
+              padding: 2px 6px;
+              border-radius: 3px;
+              background: #1E293B;
+              color: #94A3B8;
+
+              &.type-hallazgo {
+                background: rgba(10, 233, 138, 0.1);
+                color: #0AE98A;
+                border: 1px solid rgba(10, 233, 138, 0.25);
+              }
+              &.type-pregunta {
+                background: rgba(234, 179, 8, 0.1);
+                color: #FACC15;
+                border: 1px solid rgba(234, 179, 8, 0.25);
+              }
+              &.type-benchmark {
+                background: rgba(0, 240, 255, 0.1);
+                color: #00F0FF;
+                border: 1px solid rgba(0, 240, 255, 0.25);
+              }
+            }
+
+            .post-time {
+              font-size: 11px;
+              color: #475569;
+            }
+          }
+        }
+
+        .post-title {
+          font-size: 15px;
+          color: #F1F5F9;
+          font-weight: 700;
+          margin: 0 0 8px;
+        }
+
+        .post-body {
+          font-size: 13px;
+          color: #94A3B8;
+          line-height: 1.6;
+          margin: 0 0 14px;
+        }
+
+        .post-code-box {
+          background: #080B10;
+          border: 1px solid #1E293B;
+          border-radius: 4px;
+          margin-bottom: 14px;
+          overflow: hidden;
+
+          .post-code-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 10px;
+            background: #0D121A;
+            border-bottom: 1px solid #161F2E;
+            font-size: 10px;
+            color: #64748B;
+          }
+
+          .code-pre {
+            margin: 0;
+            padding: 12px;
+            color: #0AE98A;
+            font-size: 12px;
+            overflow-x: auto;
+          }
+        }
+
+        .post-actions-bar {
+          display: flex;
+          gap: 12px;
+
+          .post-action-btn {
+            background: #161F2E;
+            border: 1px solid #27344C;
+            color: #94A3B8;
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+              color: #F1F5F9;
+              border-color: #334155;
+            }
+
+            &.has-voted {
+              background: rgba(0, 240, 255, 0.1);
+              border-color: #00F0FF;
+              color: #00F0FF;
+            }
+          }
+        }
+
+        .post-comments-section {
+          margin-top: 14px;
+          padding-top: 14px;
+          border-top: 1px solid #1E293B;
+
+          .comment-item {
+            background: #0B0E14;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+
+            .ci-head {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 4px;
+
+              .ci-author {
+                font-size: 11px;
+                color: #00F0FF;
+              }
+
+              .ci-time {
+                font-size: 10px;
+                color: #475569;
+              }
+            }
+
+            .ci-text {
+              font-size: 12px;
+              color: #CBD5E1;
+              margin: 0;
+              line-height: 1.4;
+            }
+          }
+
+          .comment-input-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+
+            .ci-input {
+              flex: 1;
+            }
+          }
+        }
+      }
+
+      /* MEMBERS SECTION */
+      .members-terminal-box {
+        .members-head-bar {
+          font-size: 11px;
+          color: #64748B;
+          margin-bottom: 16px;
+        }
+
+        .members-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 12px;
+
+          .member-card {
+            background: #0F1420;
+            border: 1px solid #1E293B;
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            .mc-avatar {
+              width: 36px;
+              height: 36px;
+              border-radius: 50%;
+              background: #1E293B;
+              color: #00F0FF;
+              font-weight: 800;
+              font-size: 12px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: 1px solid #334155;
+            }
+
+            .mc-info {
+              flex: 1;
+
+              .mc-name {
+                font-size: 13px;
+                color: #F1F5F9;
+                margin: 0 0 2px;
+                font-weight: 600;
+              }
+
+              .mc-role {
+                display: block;
+                font-size: 11px;
+                color: #64748B;
+                margin-bottom: 4px;
+              }
+
+              .mc-stats {
+                display: flex;
+                gap: 8px;
+                font-size: 10px;
+
+                .mc-lvl {
+                  color: #FACC15;
+                }
+
+                .mc-contribs {
+                  color: #0AE98A;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      /* WEEKLY CHALLENGE BOX */
+      .weekly-challenge-box {
+        background: #0F1420;
+        border: 1px solid #1E293B;
+        border-radius: 8px;
+        padding: 24px;
+        max-width: 640px;
+
+        .wcb-badge {
+          color: #FF9D33;
+          font-size: 11px;
+          font-weight: 800;
+          margin-bottom: 8px;
+        }
+
+        .wcb-title {
+          font-size: 18px;
+          color: #F1F5F9;
+          font-weight: 700;
+          margin: 0 0 10px;
+        }
+
+        .wcb-desc {
+          font-size: 13px;
+          color: #94A3B8;
+          line-height: 1.6;
+          margin: 0 0 16px;
+        }
+
+        .wcb-reward {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 20px;
+          font-size: 12px;
+
+          .reward-xp {
+            color: #0AE98A;
+            font-weight: 800;
+            font-size: 14px;
+          }
+        }
+
+        .wcb-completed-banner {
+          background: rgba(10, 233, 138, 0.1);
+          border: 1px solid rgba(10, 233, 138, 0.3);
+          color: #0AE98A;
+          font-family: var(--font-mono);
+          font-size: 13px;
+          padding: 12px 16px;
+          border-radius: 6px;
+          font-weight: 700;
+        }
+      }
+    }
+
     /* LEADERBOARD TAB */
     .podium-section {
       display: flex;
@@ -2109,6 +3026,17 @@ export interface StreakDay {
       padding: 36px 16px 20px;
       margin-bottom: 20px;
       border-bottom: 1px solid #161F2E;
+
+      &.is-single-leader {
+        justify-content: center;
+        .podium-step {
+          width: 180px;
+          .podium-block.step-1 {
+            height: 130px;
+            font-size: 22px;
+          }
+        }
+      }
 
       .podium-step {
         display: flex;
@@ -2137,6 +3065,13 @@ export interface StreakDay {
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 130px;
+
+          .podium-tu-tag {
+            color: #00F0FF;
+            font-size: 11px;
+            margin-left: 4px;
+            font-weight: 800;
+          }
         }
 
         .podium-xp {
@@ -2568,11 +3503,16 @@ export interface StreakDay {
 export class ProfileComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   private coursesSvc = inject(CoursesService);
+  private api = inject(ApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
   enrollments = signal<Enrollment[]>([]);
   loading = signal(true);
+  todayStudyMinutes = signal(1);
+  remoteLeaderboard = signal<LeaderboardEntry[]>([]);
+  private studyTimer: any = null;
+  private onDiagnosticUpdated = () => this.initLocalData();
 
   // Tab state: student vs teacher
   activeTab = signal<'overview' | 'streak' | 'guilds' | 'achievements' | 'leaderboard' | 'advisor'>('overview');
@@ -2976,10 +3916,10 @@ for (let paso = 1; paso <= 3; paso++) {
         category: 'systems',
         description: 'Estudio intensivo de llamadas POSIX, memoria virtual, concurrencia de bajo nivel y arquitectura de micro-kernels.',
         linesOfResearch: ['Gestión de Memoria y Paginación x86_64', 'Concurrencia Lock-Free & Atomics', 'Llamadas POSIX & Observabilidad eBPF'],
-        membersCount: 18,
-        streakDays: 19,
+        membersCount: 1,
+        streakDays: 4,
         weeklyChallenge: { title: 'Implementar un Thread Pool en C++20 con mutex POSIX', xpReward: 350, completed: false },
-        recentLogs: [{ author: 'Mateo (Lvl 16)', message: 'Subí benchmark de semáforos a la repo.', timeAgo: 'hace 2h' }],
+        recentLogs: [{ author: 'Director Cátedra Sistemas (Lvl 16)', message: 'Abrió la convocatoria de investigación del clan.', timeAgo: 'hace 1d' }],
         projects: [
           {
             id: 'krnl_p1',
@@ -2987,50 +3927,28 @@ for (let paso = 1; paso <= 3; paso++) {
             description: 'Desarrollo de un núcleo básico modular en C++20 con soporte para interrupciones de temporizador y conmutación de contexto.',
             techStack: ['C++20', 'Assembly x86', 'QEMU', 'CMake'],
             status: 'en_progreso',
-            leadResearcher: 'Mateo (Lvl 16)',
-            membersJoined: ['Mateo (Lvl 16)', 'Carlos (Lvl 12)', 'Valeria (Lvl 14)'],
+            leadResearcher: 'Director Cátedra Sistemas',
+            membersJoined: ['Director Cátedra Sistemas'],
             repoUrl: 'https://github.com/syseng-krnl/microkernel-prototype',
             createdAt: 'hace 3d',
-          },
-          {
-            id: 'krnl_p2',
-            title: 'Benchmark de Colas Concurrentes Lock-Free (Michael-Scott)',
-            description: 'Comparación empírica de estructuras Michael-Scott Queue contra colas con spinlocks bajo contención de 32 cores.',
-            techStack: ['C++', 'Atomics', 'POSIX Threads'],
-            status: 'revision',
-            leadResearcher: 'Valeria (Lvl 14)',
-            membersJoined: ['Valeria (Lvl 14)', 'Esteban (Lvl 15)'],
-            createdAt: 'hace 1 sem',
           },
         ],
         researchFeed: [
           {
             id: 'krnl_rf1',
-            author: 'Mateo (Lvl 16)',
+            author: 'Director Cátedra Sistemas',
             authorRole: 'Director de Semillero',
             type: 'benchmark',
             title: 'Medición de latencia: Mutex vs Spinlock en secciones críticas < 50ns',
             content: 'Realizamos 10M de operaciones concurrentes. En secciones críticas breves sin I/O, el spinlock con CPU pause disminuye la latencia en 34% al evitar el context switch al kernel de Linux.',
-            codeSnippet: `// Loop de spinlock con mitigación de bus\nwhile (lock.test_and_set(std::memory_order_acquire)) {\n    #if defined(__x86_64__)\n    __builtin_ia32_pause();\n    #endif\n}`,
+            codeSnippet: `// Loop de spinlock con mitigación de bus de memoria\nwhile (lock.test_and_set(std::memory_order_acquire)) {\n    #if defined(__x86_64__)\n    __builtin_ia32_pause();\n    #endif\n}`,
             codeLanguage: 'cpp',
-            upvotes: 9,
+            upvotes: 3,
             hasUpvoted: false,
             comments: [
-              { id: 'c1', author: 'Carlos (Lvl 12)', text: 'Cuidado con la inversión de prioridad si el hilo poseedor es desalojado por el planificador.', timeAgo: 'hace 2h' },
+              { id: 'c1', author: 'Mentor Técnico', text: 'Cuidado con la inversión de prioridad si el hilo poseedor es desalojado.', timeAgo: 'hace 5h' },
             ],
-            timeAgo: 'hace 3h',
-          },
-          {
-            id: 'krnl_rf2',
-            author: 'Carlos (Lvl 12)',
-            authorRole: 'Investigador Asociado',
-            type: 'hallazgo',
-            title: 'Reducción de cache misses en el despachador de procesos con Struct-of-Arrays (SoA)',
-            content: 'Transformamos la tabla de PCB a un diseño SoA para los flags de ejecución. La tasa de fallos de caché L1D cayó del 12.4% al 2.8% en ráfagas intensivas de scheduling.',
-            upvotes: 6,
-            hasUpvoted: false,
-            comments: [],
-            timeAgo: 'hace 6h',
+            timeAgo: 'hace 1d',
           },
         ],
         libraryPapers: [
@@ -3040,17 +3958,8 @@ for (let paso = 1; paso <= 3; paso++) {
             authors: 'McKusick, Neville-Neil, Watson',
             doiOrUrl: 'https://www.freebsd.org/doc/',
             summary: 'Texto fundamental sobre arquitectura de kernels monolíticos modernos, subsistema de memoria virtual y SMP.',
-            addedBy: 'Mateo',
+            addedBy: 'Director Cátedra',
             tags: ['Kernel', 'Virtual Memory', 'SMP'],
-          },
-          {
-            id: 'krnl_lp2',
-            title: 'Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue Algorithms',
-            authors: 'Maged M. Michael, Michael L. Scott (PODC)',
-            doiOrUrl: 'https://doi.org/10.1145/248052.248106',
-            summary: 'Paper canónico sobre la Michael-Scott Queue utilizando operaciones atómicas compare-and-swap.',
-            addedBy: 'Valeria',
-            tags: ['Lock-Free', 'Concurrency', 'Algorithms'],
           },
         ],
         upcomingSessions: [
@@ -3059,25 +3968,13 @@ for (let paso = 1; paso <= 3; paso++) {
             title: 'Coloquio Semanal: Análisis de Concurrencia y Detección de Deadlocks',
             dateStr: 'Jueves 18:00 UTC',
             topic: 'Revisión práctica con ThreadSanitizer y análisis de grafos de espera (Wait-For Graph).',
-            speaker: 'Mateo',
-            attendeesCount: 8,
-            userAttending: true,
-          },
-          {
-            id: 'krnl_us2',
-            title: 'Workshop Práctico: Perfilado de Memoria con Perf y Valgrind Massif',
-            dateStr: 'Sábado 15:00 UTC',
-            topic: 'Técnicas de optimización de accesos a memoria y vectorización SIMD en C++.',
-            speaker: 'Valeria',
-            attendeesCount: 11,
+            speaker: 'Director Cátedra Sistemas',
+            attendeesCount: 3,
             userAttending: false,
           },
         ],
         researchers: [
-          { id: 'm1', name: 'Mateo', role: 'Director de Semillero', level: 16, contributionsCount: 14 },
-          { id: 'm2', name: 'Valeria', role: 'Investigador Principal', level: 14, contributionsCount: 9 },
-          { id: 'm3', name: 'Carlos', role: 'Investigador Asociado', level: 12, contributionsCount: 6 },
-          { id: 'm4', name: 'Esteban', role: 'Investigador Junior', level: 11, contributionsCount: 4 },
+          { id: 'm1', name: 'Director Cátedra Sistemas', role: 'Director de Semillero', level: 16, contributionsCount: 6 },
         ],
         isMember: false,
       },
@@ -3088,10 +3985,10 @@ for (let paso = 1; paso <= 3; paso++) {
         category: 'algorithms',
         description: 'Resolución de problemas de alta complejidad algorítmica, árboles balanceados y optimización combinatoria.',
         linesOfResearch: ['Algoritmos de Enrutamiento en Grafos Masivos', 'Estructuras de Datos Auto-Balanceadas', 'Programación Dinámica Avanzada'],
-        membersCount: 26,
-        streakDays: 14,
-        weeklyChallenge: { title: 'Calcular Camino Más Corto con Dijkstra sobre Grafos', xpReward: 280, completed: true },
-        recentLogs: [{ author: 'Carlos (Lvl 12)', message: 'Resolví el balanceo AVL en 4ms.', timeAgo: 'hace 1h' }],
+        membersCount: 1,
+        streakDays: 3,
+        weeklyChallenge: { title: 'Calcular Camino Más Corto con Dijkstra sobre Grafos', xpReward: 280, completed: false },
+        recentLogs: [{ author: 'Director Cátedra Algoritmia (Lvl 15)', message: 'Publicó el reto de optimización de grafos.', timeAgo: 'hace 2d' }],
         projects: [
           {
             id: 'algo_p1',
@@ -3099,25 +3996,23 @@ for (let paso = 1; paso <= 3; paso++) {
             description: 'Optimización de consultas de distancias mínimas en redes topológicas a gran escala.',
             techStack: ['Python', 'C++', 'Graph Theory'],
             status: 'en_progreso',
-            leadResearcher: 'Carlos (Lvl 12)',
-            membersJoined: ['Carlos (Lvl 12)', 'Daniela (Lvl 13)'],
+            leadResearcher: 'Director Cátedra Algoritmia',
+            membersJoined: ['Director Cátedra Algoritmia'],
             createdAt: 'hace 5d',
           },
         ],
         researchFeed: [
           {
             id: 'algo_rf1',
-            author: 'Carlos (Lvl 12)',
+            author: 'Director Cátedra Algoritmia',
             authorRole: 'Director de Semillero',
             type: 'hallazgo',
             title: 'Balanceo AVL en O(log n) con rotaciones dobles compactas',
             content: 'Implementamos una versión compacta de rotaciones LR y RL que evita llamadas intermedias redundantes. El factor de balance se recalcula en O(1) tiempo constante.',
-            upvotes: 11,
+            upvotes: 4,
             hasUpvoted: false,
-            comments: [
-              { id: 'c1', author: 'Daniela (Lvl 13)', text: '¿Se comparó el throughput de inserciones contra un Red-Black Tree en benchmarks?', timeAgo: 'hace 1h' },
-            ],
-            timeAgo: 'hace 2h',
+            comments: [],
+            timeAgo: 'hace 2d',
           },
         ],
         libraryPapers: [
@@ -3127,7 +4022,7 @@ for (let paso = 1; paso <= 3; paso++) {
             authors: 'Geisberger et al.',
             doiOrUrl: 'https://doi.org/10.1007/978-3-540-68552-4_24',
             summary: 'Preprocesamiento de grafos para acelerar consultas de Dijkstra en órdenes de magnitud.',
-            addedBy: 'Carlos',
+            addedBy: 'Director Cátedra Algoritmia',
             tags: ['Grafos', 'A*', 'Dijkstra'],
           },
         ],
@@ -3137,14 +4032,13 @@ for (let paso = 1; paso <= 3; paso++) {
             title: 'Seminario: Complejidad Amortizada y Conjuntos Disjuntos (Union-Find)',
             dateStr: 'Miércoles 19:00 UTC',
             topic: 'Demostración de la función inversa de Ackermann en tiempo casi lineal.',
-            speaker: 'Carlos',
-            attendeesCount: 14,
+            speaker: 'Director Cátedra Algoritmia',
+            attendeesCount: 4,
             userAttending: false,
           },
         ],
         researchers: [
-          { id: 'al1', name: 'Carlos', role: 'Director de Semillero', level: 12, contributionsCount: 12 },
-          { id: 'al2', name: 'Daniela', role: 'Investigador Principal', level: 13, contributionsCount: 8 },
+          { id: 'al1', name: 'Director Cátedra Algoritmia', role: 'Director de Semillero', level: 15, contributionsCount: 5 },
         ],
         isMember: false,
       },
@@ -3155,10 +4049,10 @@ for (let paso = 1; paso <= 3; paso++) {
         category: 'backend',
         description: 'Diseño de microservicios resilientes, bases de datos distribuidas, mensajería asíncrona y alta disponibilidad.',
         linesOfResearch: ['Sistemas de Mensajería y Event-Driven Architecture', 'Bases de Datos Distribuidas y Consistencia Eventual', 'Patrones de Resiliencia y Rate Limiting'],
-        membersCount: 31,
-        streakDays: 22,
+        membersCount: 1,
+        streakDays: 5,
         weeklyChallenge: { title: 'Diseñar un Rate Limiter distribuido con Redis y Token Bucket', xpReward: 320, completed: false },
-        recentLogs: [{ author: 'Valeria (Lvl 14)', message: 'Añadí tests de carga con k6 para 10k req/s.', timeAgo: 'hace 3h' }],
+        recentLogs: [{ author: 'Director Cátedra Backend (Lvl 16)', message: 'Inició el banco de pruebas de arquitectura distribuida.', timeAgo: 'hace 1d' }],
         projects: [
           {
             id: 'arch_p1',
@@ -3166,23 +4060,23 @@ for (let paso = 1; paso <= 3; paso++) {
             description: 'Middleware escalable capaz de proteger microservicios ante ráfagas de 50k req/s sin degradar la latencia P99.',
             techStack: ['Go', 'Redis', 'Docker', 'k6'],
             status: 'en_progreso',
-            leadResearcher: 'Valeria (Lvl 14)',
-            membersJoined: ['Valeria (Lvl 14)', 'Mateo (Lvl 16)'],
+            leadResearcher: 'Director Cátedra Backend',
+            membersJoined: ['Director Cátedra Backend'],
             createdAt: 'hace 4d',
           },
         ],
         researchFeed: [
           {
             id: 'arch_rf1',
-            author: 'Valeria (Lvl 14)',
-            authorRole: 'Directora de Semillero',
+            author: 'Director Cátedra Backend',
+            authorRole: 'Director de Semillero',
             type: 'benchmark',
             title: 'Prueba de carga: Resiliencia de Circuit Breaker bajo latencia inducida',
             content: 'Configuramos un Circuit Breaker con umbral de fallos del 50% en ventana de 10s. En la prueba con inyección de latencia (500ms), el circuito abrió en 1.2s aislando el servicio degradado.',
-            upvotes: 8,
+            upvotes: 5,
             hasUpvoted: false,
             comments: [],
-            timeAgo: 'hace 4h',
+            timeAgo: 'hace 1d',
           },
         ],
         libraryPapers: [
@@ -3192,7 +4086,7 @@ for (let paso = 1; paso <= 3; paso++) {
             authors: 'Martin Kleppmann',
             doiOrUrl: 'https://dataintensive.net/',
             summary: 'El libro canónico sobre confiabilidad, escalabilidad y consistencia en sistemas distribuidos.',
-            addedBy: 'Valeria',
+            addedBy: 'Director Cátedra Backend',
             tags: ['Distribuidos', 'Bases de Datos', 'Consistencia'],
           },
         ],
@@ -3202,14 +4096,13 @@ for (let paso = 1; paso <= 3; paso++) {
             title: 'Coloquio: Event Sourcing y CQRS con Kafka y PostgreSQL',
             dateStr: 'Viernes 17:00 UTC',
             topic: 'Manejo de eventos desordenados, idempotencia y proyecciones de lectura.',
-            speaker: 'Valeria',
-            attendeesCount: 16,
+            speaker: 'Director Cátedra Backend',
+            attendeesCount: 5,
             userAttending: false,
           },
         ],
         researchers: [
-          { id: 'ar1', name: 'Valeria', role: 'Directora de Semillero', level: 14, contributionsCount: 15 },
-          { id: 'ar2', name: 'Mateo', role: 'Investigador Principal', level: 16, contributionsCount: 7 },
+          { id: 'ar1', name: 'Director Cátedra Backend', role: 'Director de Semillero', level: 16, contributionsCount: 7 },
         ],
         isMember: false,
       },
@@ -3220,10 +4113,10 @@ for (let paso = 1; paso <= 3; paso++) {
         category: 'security',
         description: 'Auditoría de seguridad en código fuente, sanitización estricta, criptografía aplicada y DevSecOps.',
         linesOfResearch: ['Análisis Estático de Vulnerabilidades (SAST)', 'Criptografía Aplicada y Gestión de Secretos', 'Mitigación de OWASP Top 10 y Ataques a APIs'],
-        membersCount: 15,
-        streakDays: 11,
+        membersCount: 1,
+        streakDays: 2,
         weeklyChallenge: { title: 'Mitigar vulnerabilidades OWASP Top 10 en endpoint de auth', xpReward: 400, completed: false },
-        recentLogs: [{ author: 'Esteban (Lvl 15)', message: 'Demostré inyección de cabeceras en proxy inverso.', timeAgo: 'hace 5h' }],
+        recentLogs: [{ author: 'Director Cátedra Seguridad (Lvl 15)', message: 'Estableció las pautas de mitigación de vulnerabilidades.', timeAgo: 'hace 3d' }],
         projects: [
           {
             id: 'sec_p1',
@@ -3231,23 +4124,23 @@ for (let paso = 1; paso <= 3; paso++) {
             description: 'Linter estático que recorre árboles sintácticos para identificar concatenaciones de consultas dinámicas y regex catastróficas.',
             techStack: ['Rust', 'Tree-sitter', 'OWASP Rules'],
             status: 'en_progreso',
-            leadResearcher: 'Esteban (Lvl 15)',
-            membersJoined: ['Esteban (Lvl 15)'],
+            leadResearcher: 'Director Cátedra Seguridad',
+            membersJoined: ['Director Cátedra Seguridad'],
             createdAt: 'hace 6d',
           },
         ],
         researchFeed: [
           {
             id: 'sec_rf1',
-            author: 'Esteban (Lvl 15)',
+            author: 'Director Cátedra Seguridad',
             authorRole: 'Director de Semillero',
             type: 'hallazgo',
             title: 'Auditoría de Tokens JWT: Riesgo de algoritmo none y firmas truncadas',
             content: 'Demostramos cómo librerías que no validan explícitamente el encabezado alg permiten falsificación de identidad sin conocimiento de la llave secreta.',
-            upvotes: 12,
+            upvotes: 4,
             hasUpvoted: false,
             comments: [],
-            timeAgo: 'hace 5h',
+            timeAgo: 'hace 2d',
           },
         ],
         libraryPapers: [
@@ -3257,7 +4150,7 @@ for (let paso = 1; paso <= 3; paso++) {
             authors: 'OWASP Foundation',
             doiOrUrl: 'https://owasp.org/www-project-api-security/',
             summary: 'Estándar de la industria sobre los vectores de ataque más críticos en APIs modernas.',
-            addedBy: 'Esteban',
+            addedBy: 'Director Cátedra Seguridad',
             tags: ['OWASP', 'API Security', 'BOLA'],
           },
         ],
@@ -3267,13 +4160,13 @@ for (let paso = 1; paso <= 3; paso++) {
             title: 'Taller: Threat Modeling de Arquitecturas Cloud con STRIDE',
             dateStr: 'Martes 18:00 UTC',
             topic: 'Metodología STRIDE y diseño de matrices de mitigación para microservicios.',
-            speaker: 'Esteban',
-            attendeesCount: 10,
+            speaker: 'Director Cátedra Seguridad',
+            attendeesCount: 3,
             userAttending: false,
           },
         ],
         researchers: [
-          { id: 'sc1', name: 'Esteban', role: 'Director de Semillero', level: 15, contributionsCount: 13 },
+          { id: 'sc1', name: 'Director Cátedra Seguridad', role: 'Director de Semillero', level: 15, contributionsCount: 4 },
         ],
         isMember: false,
       },
@@ -3407,13 +4300,29 @@ for (let paso = 1; paso <= 3; paso++) {
       this.teacherSvc.getOverview().subscribe(ov => this.facultyOverview.set(ov));
     }
 
+    // Cargar leaderboard remoto de la base de datos
+    this.api.get<LeaderboardEntry[]>('/leaderboard').subscribe({
+      next: (entries) => {
+        if (Array.isArray(entries)) {
+          this.remoteLeaderboard.set(entries);
+        }
+      },
+      error: () => {}
+    });
+
     this.initLocalData();
 
-    // Start animated ASCII frame cycler
+    // Start animated ASCII frame cycler y telemetría de estudio en vivo
     if (typeof window !== 'undefined') {
       this.frameTimer = setInterval(() => {
         this.currentFrame.update(f => (f + 1) % 3);
       }, 1200);
+
+      window.addEventListener('syseng:diagnostic_completed', this.onDiagnosticUpdated);
+
+      this.studyTimer = setInterval(() => {
+        this.trackStudyPulse();
+      }, 60000);
     }
 
     const qp = this.route.snapshot.queryParams;
@@ -3424,6 +4333,19 @@ for (let paso = 1; paso <= 3; paso++) {
 
   ngOnDestroy() {
     if (this.frameTimer) clearInterval(this.frameTimer);
+    if (this.studyTimer) clearInterval(this.studyTimer);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('syseng:diagnostic_completed', this.onDiagnosticUpdated);
+    }
+  }
+
+  private trackStudyPulse() {
+    this.todayStudyMinutes.update(m => m + 1);
+    if (typeof window !== 'undefined') {
+      const email = this.currentStudentEmail();
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(`syseng_${email}_study_mins_${today}`, String(this.todayStudyMinutes()));
+    }
   }
 
   private initLocalData() {
@@ -3440,12 +4362,16 @@ for (let paso = 1; paso <= 3; paso++) {
       this.selectedAvatarId.set(pool[0].id);
     }
 
+    const today = new Date().toISOString().slice(0, 10);
+    const studyMinsKey = `syseng_${this.currentStudentEmail()}_study_mins_${today}`;
+    const savedMins = parseInt(localStorage.getItem(studyMinsKey) || '0', 10);
+    this.todayStudyMinutes.set(Math.max(savedMins, 1));
+
     if (this.isDemoStudent()) {
       try {
         const st = JSON.parse(localStorage.getItem('syseng_streak_data') || '{}');
         this.currentStreak.set(st.currentStreak !== undefined ? st.currentStreak : 5);
         this.maxStreak.set(st.maxStreak !== undefined ? st.maxStreak : 12);
-        const today = new Date().toISOString().slice(0, 10);
         if (st.lastCheckIn === today) this.todayCheckedIn.set(true);
       } catch {
         this.currentStreak.set(5);
@@ -3455,13 +4381,13 @@ for (let paso = 1; paso <= 3; paso++) {
       this.diagnosticCompleted.set(true);
       this.diagnosticFinished.set(true);
       this.diagnosticResult.set({
-        assignedLevelNumber: 6,
-        assignedLevelTitle: 'Nivel 6: Desarrollador Backend Semi-Senior',
+        assignedLevelNumber: 4,
+        assignedLevelTitle: 'Nivel 4: Desarrollador Backend Semi-Senior',
         recommendedSpecialty: 'Sistemas Backend & APIs Distribuidas',
         recommendedPathTitle: 'Ruta de Desarrollo Backend & Arquitectura de APIs',
         suggestedCourseSlug: 'backend-introduccion',
         suggestedCourseTitle: 'Introducción al Backend & Arquitectura de Servidores',
-        score: 3,
+        score: 4,
         agentFeedback: 'Byte Copilot ha evaluado tu perfil demostrativo.',
       });
 
@@ -3480,7 +4406,7 @@ for (let paso = 1; paso <= 3; paso++) {
       return;
     }
 
-    // Alumno real (nuevo usuario): Cargar datos limpios asociados exclusivamente a su cuenta
+    // Alumno real: Cargar datos limpios y calcular racha en tiempo real
     const userKeyStreak = this.getUserStorageKey('streak_data');
     const userKeyDiag = this.getUserStorageKey('diagnostic_completed');
     const userKeyDiagRes = this.getUserStorageKey('diagnostic_result');
@@ -3490,14 +4416,43 @@ for (let paso = 1; paso <= 3; paso++) {
       const streakRaw = localStorage.getItem(userKeyStreak);
       if (streakRaw) {
         const st = JSON.parse(streakRaw);
-        this.currentStreak.set(st.currentStreak || 1);
-        this.maxStreak.set(st.maxStreak || 1);
-        const today = new Date().toISOString().slice(0, 10);
-        this.todayCheckedIn.set(st.lastCheckIn === today);
+        const lastCheckIn = st.lastCheckIn;
+
+        if (!lastCheckIn) {
+          this.currentStreak.set(1);
+          this.maxStreak.set(Math.max(st.maxStreak || 1, 1));
+          this.todayCheckedIn.set(true);
+          localStorage.setItem(userKeyStreak, JSON.stringify({ currentStreak: 1, maxStreak: Math.max(st.maxStreak || 1, 1), lastCheckIn: today }));
+        } else if (lastCheckIn === today) {
+          this.currentStreak.set(st.currentStreak || 1);
+          this.maxStreak.set(st.maxStreak || 1);
+          this.todayCheckedIn.set(true);
+        } else {
+          const lastDate = new Date(lastCheckIn);
+          const currDate = new Date(today);
+          const diffMs = currDate.getTime() - lastDate.getTime();
+          const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 1) {
+            const newStreak = (st.currentStreak || 1) + 1;
+            const newMax = Math.max(st.maxStreak || 1, newStreak);
+            this.currentStreak.set(newStreak);
+            this.maxStreak.set(newMax);
+            this.todayCheckedIn.set(true);
+            localStorage.setItem(userKeyStreak, JSON.stringify({ currentStreak: newStreak, maxStreak: newMax, lastCheckIn: today }));
+          } else {
+            const newMax = st.maxStreak || 1;
+            this.currentStreak.set(1);
+            this.maxStreak.set(newMax);
+            this.todayCheckedIn.set(true);
+            localStorage.setItem(userKeyStreak, JSON.stringify({ currentStreak: 1, maxStreak: newMax, lastCheckIn: today }));
+          }
+        }
       } else {
         this.currentStreak.set(1);
         this.maxStreak.set(1);
         this.todayCheckedIn.set(true);
+        localStorage.setItem(userKeyStreak, JSON.stringify({ currentStreak: 1, maxStreak: 1, lastCheckIn: today }));
       }
     } catch {
       this.currentStreak.set(1);
@@ -3546,7 +4501,7 @@ for (let paso = 1; paso <= 3; paso++) {
         suggestedCourseSlug: 'introduccion-programacion',
         suggestedCourseTitle: 'Introducción a la Programación',
         score: 0,
-        agentFeedback: 'Presenta tu examen diagnóstico de 3 preguntas de lógica básica para calibrar tu nivel y definir tu ruta de aprendizaje.',
+        agentFeedback: 'Presenta tu examen diagnóstico de razonamiento lógico para calibrar tu nivel y definir tu ruta de aprendizaje personalizada.',
       });
       this.currentRecommendation.set({
         pathTitle: 'Evaluación y Calibración Diagnóstica',
@@ -3554,7 +4509,7 @@ for (let paso = 1; paso <= 3; paso++) {
         targetLevelName: 'Nivel 1 (Diagnóstico Pendiente)',
         milestoneOrder: 1,
         rationale: 'Aún no has completado tu prueba diagnóstica. Preséntala en la pestaña "diagnostic" para que Byte Copilot calibre tus habilidades y recomiende tu primera ruta de formación técnica personalizada.',
-        topicsToStudy: ['Variables y Asignaciones', 'Condicionales Lógicos (if/else)', 'Bucles y Acumuladores'],
+        topicsToStudy: ['Razonamiento Lógico', 'Condicionales y Secuencias', 'Pensamiento Computacional'],
         suggestedCourseSlug: 'introduccion-programacion',
         suggestedCourseTitle: 'Introducción a la Programación',
         matchScore: 98,
@@ -3606,13 +4561,25 @@ for (let paso = 1; paso <= 3; paso++) {
 
   readonly weekDays = computed<StreakDay[]>(() => {
     const names = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
-    const currentDayIdx = (new Date().getDay() + 6) % 7;
-    return names.map((name, i) => ({
-      dayName: name,
-      shortDate: `${i + 22}/09`,
-      completed: i < currentDayIdx || (i === currentDayIdx && this.todayCheckedIn()),
-      isToday: i === currentDayIdx,
-    }));
+    const now = new Date();
+    const currentDayIdx = (now.getDay() + 6) % 7; // 0 = Lunes, 6 = Domingo
+    
+    // Lunes de la semana actual
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - currentDayIdx);
+
+    return names.map((name, i) => {
+      const dayDate = new Date(monday);
+      dayDate.setDate(monday.getDate() + i);
+      const dayNum = String(dayDate.getDate()).padStart(2, '0');
+      const monthNum = String(dayDate.getMonth() + 1).padStart(2, '0');
+      return {
+        dayName: name,
+        shortDate: `${dayNum}/${monthNum}`,
+        completed: i < currentDayIdx || (i === currentDayIdx && this.todayCheckedIn()),
+        isToday: i === currentDayIdx,
+      };
+    });
   });
 
   doDailyCheckIn() {
@@ -3890,30 +4857,68 @@ for (let paso = 1; paso <= 3; paso++) {
     this.showCreateGuildModal.set(false);
   }
 
+  openGuildWorkspace(guild: StudyGroup) {
+    this.selectedGuild.set(guild);
+    this.activeGuildSection.set('feed');
+  }
+
+  closeGuildWorkspace() {
+    this.selectedGuild.set(null);
+  }
+
   joinGuild(id: string) {
+    const currentUser = this.auth.user();
+    const myName = currentUser?.name || 'Tú';
+    const myLevel = this.userLevel();
+
     this.studyGroups.update(groups =>
       groups.map(g => {
         if (g.id === id) {
-          return {
+          const alreadyIn = g.researchers.some(r => r.name === myName || r.isCurrentUser);
+          const updatedResearchers = alreadyIn
+            ? g.researchers
+            : [
+                ...g.researchers,
+                {
+                  id: 'member_' + Date.now(),
+                  name: myName,
+                  role: 'Cadete Investigador Activo',
+                  level: myLevel,
+                  contributionsCount: 1,
+                  isCurrentUser: true,
+                },
+              ];
+          const updatedGuild: StudyGroup = {
             ...g,
             isMember: true,
-            membersCount: g.membersCount + 1,
+            membersCount: updatedResearchers.length,
+            researchers: updatedResearchers,
             recentLogs: [
               {
-                author: `${this.auth.user()?.name || 'Tú'} (Lvl ${this.userLevel()})`,
-                message: 'Se unió al clan de estudio.',
+                author: `${myName} (Lvl ${myLevel})`,
+                message: 'Se unió a las actividades y líneas de investigación del clan.',
                 timeAgo: 'hace un momento',
               },
               ...(g.recentLogs || []),
             ].slice(0, 4),
           };
+          if (this.selectedGuild()?.id === id) {
+            this.selectedGuild.set(updatedGuild);
+          }
+          return updatedGuild;
         }
         if (g.isMember) {
-          return {
+          const cleanedResearchers = g.researchers.filter(r => !r.isCurrentUser && r.name !== myName);
+          const updatedOther: StudyGroup = {
             ...g,
             isMember: false,
-            membersCount: Math.max(1, g.membersCount - 1),
+            membersCount: Math.max(1, cleanedResearchers.length),
+            researchers: cleanedResearchers,
           };
+          if (this.selectedGuild()?.id === g.id) {
+            this.selectedGuild.set(updatedOther);
+          }
+          return updatedOther;
         }
         return g;
       })
@@ -3922,12 +4927,202 @@ for (let paso = 1; paso <= 3; paso++) {
   }
 
   leaveGuild(id: string) {
+    const currentUser = this.auth.user();
+    const myName = currentUser?.name || 'Tú';
+
     this.studyGroups.update(groups =>
-      groups.map(g =>
-        g.id === id
-          ? { ...g, isMember: false, membersCount: Math.max(1, g.membersCount - 1) }
-          : g
-      )
+      groups.map(g => {
+        if (g.id === id) {
+          const cleanedResearchers = g.researchers.filter(r => !r.isCurrentUser && r.name !== myName);
+          const updated: StudyGroup = {
+            ...g,
+            isMember: false,
+            membersCount: Math.max(1, cleanedResearchers.length),
+            researchers: cleanedResearchers,
+            recentLogs: [
+              {
+                author: `${myName} (Lvl ${this.userLevel()})`,
+                message: 'Dejó de pertenecer activamente a este clan.',
+                timeAgo: 'hace un momento',
+              },
+              ...(g.recentLogs || []),
+            ].slice(0, 4),
+          };
+          if (this.selectedGuild()?.id === id) {
+            this.selectedGuild.set(updated);
+          }
+          return updated;
+        }
+        return g;
+      })
+    );
+    this.saveStudyGroups();
+  }
+
+  publishClanPost() {
+    const guild = this.selectedGuild();
+    if (!guild) return;
+
+    const title = this.newPostTitle().trim();
+    const content = this.newPostContent().trim();
+    if (!title || !content) return;
+
+    const currentUser = this.auth.user();
+    const myName = currentUser?.name || 'Tú';
+
+    const newEntry: ResearchLogEntry = {
+      id: 'rf_' + Date.now(),
+      author: myName,
+      authorRole: guild.isMember ? 'Miembro del Clan' : 'Visitante',
+      type: this.newPostType(),
+      title,
+      content,
+      codeSnippet: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCode().trim() : undefined,
+      codeLanguage: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCodeLang() : undefined,
+      upvotes: 1,
+      hasUpvoted: true,
+      comments: [],
+      timeAgo: 'hace un momento',
+    };
+
+    const updatedFeed = [newEntry, ...(guild.researchFeed || [])];
+    const updatedGuild: StudyGroup = {
+      ...guild,
+      researchFeed: updatedFeed,
+      recentLogs: [
+        {
+          author: `${myName} (Lvl ${this.userLevel()})`,
+          message: `Publicó: "${title}"`,
+          timeAgo: 'hace un momento',
+        },
+        ...(guild.recentLogs || []),
+      ].slice(0, 4),
+    };
+
+    this.selectedGuild.set(updatedGuild);
+    this.studyGroups.update(groups =>
+      groups.map(g => (g.id === guild.id ? updatedGuild : g))
+    );
+    this.saveStudyGroups();
+
+    this.newPostTitle.set('');
+    this.newPostContent.set('');
+    this.newPostCode.set('');
+    this.showCodeInput.set(false);
+  }
+
+  togglePostUpvote(postId: string) {
+    const guild = this.selectedGuild();
+    if (!guild) return;
+
+    const updatedFeed = (guild.researchFeed || []).map(p => {
+      if (p.id === postId) {
+        const hasVoted = !p.hasUpvoted;
+        return {
+          ...p,
+          hasUpvoted: hasVoted,
+          upvotes: hasVoted ? p.upvotes + 1 : Math.max(0, p.upvotes - 1),
+        };
+      }
+      return p;
+    });
+
+    const updatedGuild: StudyGroup = {
+      ...guild,
+      researchFeed: updatedFeed,
+    };
+
+    this.selectedGuild.set(updatedGuild);
+    this.studyGroups.update(groups =>
+      groups.map(g => (g.id === guild.id ? updatedGuild : g))
+    );
+    this.saveStudyGroups();
+  }
+
+  toggleComments(postId: string) {
+    this.expandedComments.update(map => ({
+      ...map,
+      [postId]: !map[postId],
+    }));
+  }
+
+  updateCommentInput(postId: string, text: string) {
+    this.commentInputMap.update(map => ({
+      ...map,
+      [postId]: text,
+    }));
+  }
+
+  submitPostComment(postId: string) {
+    const text = (this.commentInputMap()[postId] || '').trim();
+    if (!text) return;
+
+    const guild = this.selectedGuild();
+    if (!guild) return;
+
+    const currentUser = this.auth.user();
+    const myName = currentUser?.name || 'Tú';
+
+    const newComment: ResearchComment = {
+      id: 'c_' + Date.now(),
+      author: `${myName} (Lvl ${this.userLevel()})`,
+      text,
+      timeAgo: 'hace un momento',
+    };
+
+    const updatedFeed = (guild.researchFeed || []).map(p => {
+      if (p.id === postId) {
+        return {
+          ...p,
+          comments: [...(p.comments || []), newComment],
+        };
+      }
+      return p;
+    });
+
+    const updatedGuild: StudyGroup = {
+      ...guild,
+      researchFeed: updatedFeed,
+    };
+
+    this.selectedGuild.set(updatedGuild);
+    this.studyGroups.update(groups =>
+      groups.map(g => (g.id === guild.id ? updatedGuild : g))
+    );
+    this.saveStudyGroups();
+
+    this.commentInputMap.update(map => ({
+      ...map,
+      [postId]: '',
+    }));
+  }
+
+  completeClanChallenge() {
+    const guild = this.selectedGuild();
+    if (!guild || guild.weeklyChallenge.completed) return;
+
+    const currentUser = this.auth.user();
+    const myName = currentUser?.name || 'Tú';
+
+    const updatedGuild: StudyGroup = {
+      ...guild,
+      weeklyChallenge: {
+        ...guild.weeklyChallenge,
+        completed: true,
+      },
+      recentLogs: [
+        {
+          author: `${myName} (Lvl ${this.userLevel()})`,
+          message: `Superó el reto semanal: "${guild.weeklyChallenge.title}" (+${guild.weeklyChallenge.xpReward} XP)`,
+          timeAgo: 'hace un momento',
+        },
+        ...(guild.recentLogs || []),
+      ].slice(0, 4),
+    };
+
+    this.selectedGuild.set(updatedGuild);
+    this.studyGroups.update(groups =>
+      groups.map(g => (g.id === guild.id ? updatedGuild : g))
     );
     this.saveStudyGroups();
   }
@@ -3968,7 +5163,7 @@ for (let paso = 1; paso <= 3; paso++) {
   });
 
   readonly userLevel = computed(() => {
-    if (this.isDemoStudent()) return 17;
+    if (this.isDemoStudent()) return 4;
     if (this.diagnosticCompleted()) {
       return this.diagnosticResult().assignedLevelNumber || 2;
     }
@@ -3989,11 +5184,10 @@ for (let paso = 1; paso <= 3; paso++) {
     if (this.isDemoStudent()) return 'Arquitecto Principal de Sistemas';
     const lvl = this.userLevel();
     if (!this.diagnosticCompleted()) return 'Cadete de Sistemas (Nivel 1)';
-    if (lvl >= 7)  return 'Ingeniero de Sistemas Semi-Senior';
-    if (lvl >= 4)  return 'Desarrollador Junior Avanzado';
-    if (lvl >= 3)  return 'Desarrollador en Formación';
-    if (lvl >= 2)  return 'Iniciación a la Programación';
-    return 'Cadete de Sistemas (Iniciación)';
+    if (lvl >= 4)  return 'Desarrollador Junior Avanzado (Nivel 4)';
+    if (lvl >= 3)  return 'Desarrollador Intermedio (Nivel 3)';
+    if (lvl >= 2)  return 'Iniciación al Desarrollo (Nivel 2)';
+    return 'Cadete de Sistemas (Nivel 1)';
   });
 
   readonly specialization = computed(() => {
@@ -4013,8 +5207,8 @@ for (let paso = 1; paso <= 3; paso++) {
   });
 
   myRank(): number {
-    if (this.isDemoStudent()) return 3;
-    return this.diagnosticCompleted() ? 4 : 8;
+    const me = this.leaderboard().find(e => e.isCurrentUser);
+    return me ? me.rank : 1;
   }
 
   readonly badges = computed<AchievementBadge[]>(() => {
@@ -4133,38 +5327,113 @@ for (let paso = 1; paso <= 3; paso++) {
   readonly filteredBadges = computed(() => this.badges());
 
   readonly leaderboard = computed<LeaderboardEntry[]>(() => {
-    const user = this.auth.user();
-    const isDemo = this.isDemoStudent();
-    const score = this.diagnosticCompleted() ? Math.round((this.diagnosticResult().score / 3) * 100) : 0;
-    const lessons = this.completedCount();
+    const currentUser = this.auth.user();
+    const myEmail = this.currentStudentEmail();
+    const myName = currentUser?.name || 'Estudiante';
+    const myXp = this.totalXp();
+    const myLevel = this.userLevel();
+    const myRankTitle = this.rankTitle();
+    const mySpec = this.specialization().title;
+    const myLessons = this.completedCount();
+    const myScore = this.diagnosticCompleted()
+      ? Math.round(((this.diagnosticResult().score || 3) / 5) * 100)
+      : 0;
 
-    if (isDemo) {
-      return [
-        { rank: 1, name: 'Mateo Silva', email: 'mateo.silva@alumnos.syseng.edu', avatarText: 'MS', level: 16, rankTitle: 'Arquitecto Principal', specialization: 'Especialista en Algoritmos', completedLessons: 14, avgQuizScore: 96.0, xp: 1520, isCurrentUser: false, badgePill: '🥇 ORO' },
-        { rank: 2, name: 'Carlos Prueba', email: 'carlos_test_1790540376@gmail.com', avatarText: 'CP', level: 12, rankTitle: 'Líder Técnico', specialization: 'Arquitecto FullStack', completedLessons: 11, avgQuizScore: 88.0, xp: 1180, isCurrentUser: false, badgePill: '🥈 PLATA' },
-        { rank: 3, name: user?.name || 'Ana Estudiante (Demo)', email: user?.email || 'estudiante@sysengacademy.dev', avatarText: 'AE', level: 17, rankTitle: 'Arquitecto Principal de Sistemas', specialization: 'Sistemas Backend & APIs Distribuidas', completedLessons: 9, avgQuizScore: 91.7, xp: 1685, isCurrentUser: true, badgePill: '🥉 BRONCE' },
-      ];
+    // 1. Entrada del usuario activo
+    const myEntry: LeaderboardEntry = {
+      rank: 1,
+      name: myName,
+      email: myEmail,
+      avatarText: myName.slice(0, 2).toUpperCase(),
+      level: myLevel,
+      rankTitle: myRankTitle,
+      specialization: mySpec,
+      completedLessons: myLessons,
+      avgQuizScore: myScore,
+      xp: myXp,
+      isCurrentUser: true,
+      badgePill: '🥇 ORO',
+    };
+
+    const entriesMap = new Map<string, LeaderboardEntry>();
+    entriesMap.set(myEmail.toLowerCase(), myEntry);
+
+    // 2. Estudiantes remotos del backend PostgreSQL
+    for (const rem of this.remoteLeaderboard()) {
+      const email = rem.email?.toLowerCase();
+      if (!email) continue;
+      if (email === myEmail.toLowerCase()) {
+        entriesMap.set(email, {
+          ...myEntry,
+          xp: Math.max(rem.xp || 0, myXp),
+          completedLessons: Math.max(rem.completedLessons || 0, myLessons),
+          avgQuizScore: rem.avgQuizScore || myScore,
+        });
+      } else {
+        entriesMap.set(email, {
+          ...rem,
+          isCurrentUser: false,
+          avatarText: rem.avatarText || rem.name.slice(0, 2).toUpperCase(),
+        });
+      }
     }
 
-    return [
-      { rank: 1, name: 'Mateo Silva', email: 'mateo.silva@alumnos.syseng.edu', avatarText: 'MS', level: 16, rankTitle: 'Arquitecto Principal', specialization: 'Especialista en Algoritmos', completedLessons: 14, avgQuizScore: 96.0, xp: 1520, isCurrentUser: false, badgePill: '🥇 ORO' },
-      { rank: 2, name: 'Carlos Prueba', email: 'carlos_test_1790540376@gmail.com', avatarText: 'CP', level: 12, rankTitle: 'Líder Técnico', specialization: 'Arquitecto FullStack', completedLessons: 11, avgQuizScore: 88.0, xp: 1180, isCurrentUser: false, badgePill: '🥈 PLATA' },
-      { rank: 3, name: 'Valeria Silva', email: 'valeria.silva@universidad.edu.co', avatarText: 'VS', level: 3, rankTitle: 'Desarrolladora en Formación', specialization: 'Fundamentos de Algorítmica', completedLessons: 2, avgQuizScore: 100.0, xp: 350, isCurrentUser: false, badgePill: '🥉 BRONCE' },
-      {
-        rank: this.myRank(),
-        name: user?.name || 'Estudiante',
-        email: user?.email || '',
-        avatarText: (user?.name || 'ES').slice(0, 2).toUpperCase(),
-        level: this.userLevel(),
-        rankTitle: this.rankTitle(),
-        specialization: this.specialization().title,
-        completedLessons: lessons,
-        avgQuizScore: score,
-        xp: this.totalXp(),
-        isCurrentUser: true,
-        badgePill: this.diagnosticCompleted() ? '⚡ ACTIVO' : '🆕 NUEVO',
-      },
-    ];
+    // 3. Estudiantes locales registrados en el cliente
+    const localStudents = this.auth.getRegisteredStudents();
+    for (const st of localStudents) {
+      const email = st.email.toLowerCase();
+      if (email === myEmail.toLowerCase()) continue;
+      if (!entriesMap.has(email)) {
+        let studentXp = 80;
+        let studentLevel = 1;
+        let studentSpec = 'Fundamentos de Programación';
+        let studentLessons = 0;
+        let studentAvg = 0;
+
+        try {
+          const diag = this.auth.getDiagnosticResult(email);
+          if (diag) {
+            studentLevel = diag.levelNumber || diag.assignedLevelNumber || 2;
+            studentSpec = diag.recommendedSpecialty || studentSpec;
+            studentXp = 150 + studentLevel * 40;
+            studentAvg = Math.round(((diag.score || 2) / 5) * 100);
+          }
+        } catch {}
+
+        entriesMap.set(email, {
+          rank: 0,
+          name: st.name || email.split('@')[0],
+          email: st.email,
+          avatarText: (st.name || email).slice(0, 2).toUpperCase(),
+          level: studentLevel,
+          rankTitle: `Nivel ${studentLevel}`,
+          specialization: studentSpec,
+          completedLessons: studentLessons,
+          avgQuizScore: studentAvg,
+          xp: studentXp,
+          isCurrentUser: false,
+          badgePill: '⚡ ACTIVO',
+        });
+      }
+    }
+
+    // 4. Ordenar en tiempo real por XP descendente
+    const sorted = Array.from(entriesMap.values()).sort((a, b) => b.xp - a.xp);
+
+    // 5. Asignar rangos oficiales y condecoraciones de podio
+    return sorted.map((entry, idx) => {
+      const rank = idx + 1;
+      let badge = '⚡ ACTIVO';
+      if (rank === 1) badge = '🥇 ORO';
+      else if (rank === 2) badge = '🥈 PLATA';
+      else if (rank === 3) badge = '🥉 BRONCE';
+
+      return {
+        ...entry,
+        rank,
+        badgePill: badge,
+      };
+    });
   });
 
   emoji(enr: Enrollment): string {

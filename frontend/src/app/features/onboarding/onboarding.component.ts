@@ -1698,128 +1698,97 @@ export class OnboardingComponent implements OnInit {
   readonly userAnswers = signal<Record<string, string>>({});
   readonly analysisResult = signal<DiagnosticAnalysisResult | null>(null);
 
-  // Preguntas técnicas calibradas
+  // Preguntas de razonamiento lógico y afinidad técnica
   readonly questions: DiagnosticQuestion[] = [
     {
       id: 'q1',
-      topic: 'Algoritmos & Complejidad Asintótica',
+      topic: 'Razonamiento Lógico: Secuencias y Estados',
       category: 'logic',
-      title: 'Análisis de Complejidad Temporal (Big-O)',
-      prompt: 'Observa el siguiente algoritmo de Búsqueda Binaria. ¿Cuál es su complejidad temporal en el peor caso y por qué?',
-      codeSnippet: `def busqueda_binaria(arr: list[int], objetivo: int) -> int:
-    izq, der = 0, len(arr) - 1
-    while izq <= der:
-        medio = (izq + der) // 2
-        if arr[medio] == objetivo:
-            return medio
-        elif arr[medio] < objetivo:
-            izq = medio + 1
-        else:
-            der = medio - 1
-    return -1`,
+      title: 'Deducción de Reglas y Patrones Algorítmicos',
+      prompt: 'Un algoritmo procesa un valor numérico aplicando la siguiente regla de transformación:\n"Si el número actual es par, se divide entre 2. Si es impar, se multiplica por 3 y se le suma 1".\n\nSi la ejecución inicia con el número 6, ¿cuál es la secuencia exacta de los siguientes 3 pasos?',
+      codeSnippet: `// Estado inicial: x = 6
+Paso 1: ¿resultado de transformar 6?
+Paso 2: ¿resultado de transformar el valor anterior?
+Paso 3: ¿resultado de transformar el valor anterior?`,
       options: [
-        { id: 'a', label: 'O(N), porque en el peor de los casos debe recorrer cada elemento secuencialmente.' },
-        { id: 'b', label: 'O(log N), porque el espacio de búsqueda se reduce a la mitad en cada iteración del bucle.' },
-        { id: 'c', label: 'O(N log N), debido al costo acumulado de la división entera en cada paso.' },
-        { id: 'd', label: 'O(1), porque accede por índice directo al elemento central.' }
+        { id: 'a', label: '3, 10, 5 (6 es par → 3; 3 es impar → 3×3+1=10; 10 es par → 5)' },
+        { id: 'b', label: '18, 9, 28 (Aplica multiplicación consecutiva sin evaluar paridad)' },
+        { id: 'c', label: '3, 6, 9 (Suma constante de múltiplos)' },
+        { id: 'd', label: '12, 6, 3 (Secuencia decreciente directa)' }
       ],
-      correctAnswer: 'b'
+      correctAnswer: 'a'
     },
     {
       id: 'q2',
-      topic: 'Fundamentos de Lenguajes & Memoria',
+      topic: 'Lógica Booleana: Condiciones y Causa-Efecto',
       category: 'logic',
-      title: 'Mutabilidad y Paso de Parámetros por Referencia',
-      prompt: 'En lenguajes de alto nivel como Python, ¿qué salida imprimirá exactamente la ejecución de este código?',
-      codeSnippet: `def registrar_sensor(datos, nuevo_valor):
-    datos.append(nuevo_valor)
-    return len(datos)
+      title: 'Evaluación de Condiciones Lógicas Compuestas',
+      prompt: 'En un sistema automatizado, una compuerta de seguridad se abre si la condición general es Verdadera:\n(A AND B) OR (NOT C)\n\nSi los sensores reportan los siguientes valores:\n• A = Verdadero\n• B = Falso\n• C = Falso\n\n¿La compuerta se abrirá y cuál es la justificación lógica?',
+      codeSnippet: `A = true;
+B = false;
+C = false;
 
-sensores = [101, 102]
-total = registrar_sensor(sensores, 103)
-print(sensores, total)`,
+// Regla booleana del sistema:
+compuerta_abierta = (A && B) || (!C);`,
       options: [
-        { id: 'a', label: '[101, 102, 103] 3 (Las listas son mutables y la modificación afecta al llamador).' },
-        { id: 'b', label: '[101, 102] 3 (Las funciones operan sobre copias locales aisladas).' },
-        { id: 'c', label: '[101, 102, 103] [101, 102, 103] (Retorna la lista completa modificada).' },
-        { id: 'd', label: 'Error de ejecución: NameError al intentar modificar sensores.' }
+        { id: 'a', label: 'Sí se abre: (A AND B) es Falso, pero NOT C es Verdadero. La operación OR hace que el resultado final sea Verdadero.' },
+        { id: 'b', label: 'No se abre: Como B es Falso, invalida automáticamente toda la expresión.' },
+        { id: 'c', label: 'No se abre: La condición requiere que A y B sean Verdaderos al mismo tiempo.' },
+        { id: 'd', label: 'El sistema genera un estado indeterminado debido a la combinación de operadores.' }
       ],
       correctAnswer: 'a'
     },
     {
       id: 'q3',
-      topic: 'Programación Orientada a Objetos',
-      category: 'oop',
-      title: 'Principio de Encapsulamiento e Invariantes',
-      prompt: '¿Cuál es la principal ventaja arquitectónica de definir un método depositar() en lugar de modificar cuenta._saldo directamente desde afuera?',
-      codeSnippet: `class CuentaBancaria:
-    def __init__(self, saldo_inicial: float):
-        self._saldo = saldo_inicial  # atributo protegido
+      topic: 'Control de Flujo: Bucles y Acumuladores',
+      category: 'logic',
+      title: 'Rastreo de Estados e Iteraciones Acumuladas',
+      prompt: 'Un acumulador en memoria inicia en 0. Se ejecuta un bucle que se repite exactamente 4 veces con esta instrucción:\n"Suma 5 al acumulador. Inmediatamente después, si el acumulador supera 10, réstale 2".\n\n¿Cuál es el valor final del acumulador al terminar la cuarta repetición?',
+      codeSnippet: `let acumulador = 0;
 
-    def depositar(self, monto: float) -> bool:
-        if monto > 0:
-            self._saldo += monto
-            return True
-        return False`,
+for (let paso = 1; paso <= 4; paso++) {
+    acumulador = acumulador + 5;
+    if (acumulador > 10) {
+        acumulador = acumulador - 2;
+    }
+}`,
       options: [
-        { id: 'a', label: 'Permite validar invariantes de negocio (monto > 0) y protege el estado interno de corrupciones.' },
-        { id: 'b', label: 'Python prohíbe sintácticamente modificar variables que tengan guion bajo.' },
-        { id: 'c', label: 'Hace que el recolector de basura de memoria libere la clase más rápidamente.' },
-        { id: 'd', label: 'No tiene ventaja técnica, es solo una convención estética opcional.' }
+        { id: 'a', label: '16 (Paso 1: 5 → Paso 2: 10 → Paso 3: 15-2=13 → Paso 4: 13+5-2=16)' },
+        { id: 'b', label: '20 (Suma 5 en cada iteración sin descontar nada)' },
+        { id: 'c', label: '14 (Descuenta 2 en cada uno de los cuatro pasos)' },
+        { id: 'd', label: '12 (El valor se restablece al superar 10)' }
       ],
       correctAnswer: 'a'
     },
     {
       id: 'q4',
-      topic: 'Bases de Datos Relacionales & SQL',
-      category: 'database',
-      title: 'Consultas con LEFT JOIN y Registros Huérfanos',
-      prompt: 'En PostgreSQL o motores relacionales, ¿qué conjunto exacto de datos devuelve esta consulta?',
-      codeSnippet: `SELECT u.id, u.nombre
-FROM usuarios u
-LEFT JOIN pedidos p ON u.id = p.usuario_id
-WHERE p.id IS NULL;`,
+      topic: 'Descomposición Sistemática & Optimización',
+      category: 'logic',
+      title: 'Estrategia Óptima de Búsqueda y Resolución',
+      prompt: 'Tienes un índice alfabético ordenado de 1.000 registros y necesitas encontrar un término específico. ¿Cuál de estas estrategias representa el pensamiento algorítmico más rápido y eficiente?',
+      codeSnippet: `// Espacio de búsqueda ordenado: 1.000 registros
+// Meta: Minimizar el número de comparaciones requeridas`,
       options: [
-        { id: 'a', label: 'Todos los usuarios que tienen al menos un pedido registrado.' },
-        { id: 'b', label: 'Los usuarios que NUNCA han realizado ningún pedido en el sistema.' },
-        { id: 'c', label: 'Los pedidos que fueron cancelados o están en estado nulo.' },
-        { id: 'd', label: 'Genera un error porque WHERE no puede filtrar sobre columnas de un LEFT JOIN.' }
-      ],
-      correctAnswer: 'b'
-    },
-    {
-      id: 'q5',
-      topic: 'Arquitectura de Software & Principios SOLID',
-      category: 'architecture',
-      title: 'Separación de Responsabilidades (SRP)',
-      prompt: 'Si una clase ControladorPedido procesa la solicitud HTTP, valida el JSON, ejecuta consultas SQL directas y envía correos por SMTP, ¿qué principio clave se vulnera?',
-      codeSnippet: `// Clase con múltiples responsabilidades
-class ControladorPedido {
-    public function crear(Request $req) {
-        $data = $this->validarJSON($req);
-        DB::insert('INSERT INTO pedidos ...', $data);
-        Mail::to($data['email'])->send(new FacturaMail());
-    }
-}`,
-      options: [
-        { id: 'a', label: 'Principio de Responsabilidad Única (SRP): la clase tiene múltiples razones para cambiar.' },
-        { id: 'b', label: 'Principio de Sustitución de Liskov (LSP).' },
-        { id: 'c', label: 'Principio de Segregación de Interfaces (ISP).' },
-        { id: 'd', label: 'Ninguno, es el diseño recomendado en microframeworks modernos.' }
+        { id: 'a', label: 'Partición binaria: Abrir a la mitad; si el término está antes o después, descartar la mitad opuesta y repetir en la mitad restante (~10 pasos).' },
+        { id: 'b', label: 'Búsqueda lineal: Revisar registro por registro desde el inicio hasta hallarlo (hasta 1.000 pasos).' },
+        { id: 'c', label: 'Muestreo aleatorio: Revisar posiciones al azar esperando coincidencia por suerte.' },
+        { id: 'd', label: 'Búsqueda alternada: Revisar registros pares primero y luego impares.' }
       ],
       correctAnswer: 'a'
     },
     {
-      id: 'q6',
-      topic: 'Especialización Profesional Deseada',
+      id: 'q5',
+      topic: 'Aspiración Técnica & Especialidad',
       category: 'specialty',
-      title: 'Área Prioritaria de Formación',
-      prompt: '¿En qué rama de la ingeniería de software te gustaría enfocar tu plan de estudio en SysEngAcademy?',
+      title: 'Tu Área de Interés Prioritaria',
+      prompt: '¿En qué área de la ingeniería de software te gustaría enfocarte prioritariamente en SysEngAcademy?',
       options: [
-        { id: 'backend', label: 'Desarrollo Backend & APIs: Arquitectura en capas, bases de datos SQL y microservicios.' },
-        { id: 'algoritmos', label: 'Lógica Algorítmica & Ciencias de la Computación: Estructuras de datos, optimización y Big-O.' },
-        { id: 'web', label: 'Desarrollo Web Fullstack: Interfaces reactivas modernas, integración de APIs y ecosistema Web.' },
-        { id: 'arquitectura', label: 'Arquitectura de Software & DevOps: Patrones GoF, Clean Architecture y sistemas escalables.' }
+        { id: 'backend', label: 'Desarrollo Backend & APIs: Servidores, bases de datos SQL, persistencia y lógica distribuida.' },
+        { id: 'frontend', label: 'Desarrollo Frontend & Web: Interfaces reactivas modernas, componentes UI, experiencia de usuario y CSS/DOM.' },
+        { id: 'algoritmos', label: 'Lógica Algorítmica & Ciencias de la Computación: Estructuras de datos, acertijos de lógica pura y optimización asintótica.' },
+        { id: 'devops', label: 'DevOps & Automatización Cloud: Terminal Linux, contenedores Docker, CI/CD y despliegues continuos.' },
+        { id: 'ia', label: 'Inteligencia Artificial Aplicada: Integración de modelos LLM, prompting estructurado y agentes inteligentes.' },
+        { id: 'poo', label: 'Arquitectura de Software Orientada a Objetos: Modularidad limpia, principios SOLID y patrones de diseño GoF.' }
       ]
     }
   ];
@@ -1894,173 +1863,301 @@ class ControladorPedido {
   private computeDiagnosisAndSyllabus() {
     const answers = this.userAnswers();
     let score = 0;
-    const totalTechnical = 5;
+    const totalTechnical = 4; // 4 preguntas de razonamiento lógico
 
-    // Calificar preguntas técnicas (q1 a q5)
-    const isQ1Correct = answers['q1'] === 'b';
+    const isQ1Correct = answers['q1'] === 'a';
     const isQ2Correct = answers['q2'] === 'a';
     const isQ3Correct = answers['q3'] === 'a';
-    const isQ4Correct = answers['q4'] === 'b';
-    const isQ5Correct = answers['q5'] === 'a';
+    const isQ4Correct = answers['q4'] === 'a';
 
     if (isQ1Correct) score++;
     if (isQ2Correct) score++;
     if (isQ3Correct) score++;
     if (isQ4Correct) score++;
-    if (isQ5Correct) score++;
 
-    // Desglose de competencias
-    const logicScore = Math.round((((isQ1Correct ? 1 : 0) + (isQ2Correct ? 1 : 0)) / 2) * 100);
-    const oopScore = isQ3Correct ? 100 : 35;
-    const databaseScore = isQ4Correct ? 100 : 40;
-    const architectureScore = isQ5Correct ? 100 : 35;
+    // Desglose de competencias lógicas
+    const logicScore = isQ1Correct && isQ2Correct ? 100 : (isQ1Correct || isQ2Correct ? 60 : 30);
+    const flowScore = isQ3Correct ? 100 : 40;
+    const optimizationScore = isQ4Correct ? 100 : 35;
+    const generalScore = Math.round((score / totalTechnical) * 100);
 
-    // Preferencia de especialización
-    const specialtyPref = answers['q6'] || 'backend';
+    // Preferencia técnica declarada por el estudiante
+    const specialtyPref = answers['q5'] || 'backend';
 
+    // Determinar Nivel Asignado acorde a rendimiento
     let levelNumber = 1;
     let levelTitle = '';
-    let agentFeedback = '';
-    let syllabus: SyllabusPhase[] = [];
+
+    if (score <= 1) {
+      levelNumber = 1;
+      levelTitle = 'Nivel 1: Cadete en Formación · Lógica Inicial';
+    } else if (score === 2) {
+      levelNumber = 2;
+      levelTitle = 'Nivel 2: Explorador de Sistemas · Lógica Estructurada';
+    } else if (score === 3) {
+      levelNumber = 3;
+      levelTitle = 'Nivel 3: Desarrollador Junior Avanzado · Razonamiento Sistemático';
+    } else {
+      levelNumber = 4;
+      levelTitle = 'Nivel 4: Ingeniero Junior Promesa · Alto Rendimiento Lógico';
+    }
+
+    // Determinar Ruta, Curso y Temario Adaptativo según afinidad y nivel
     let recommendedPathSlug = 'fundamentos-programacion';
     let recommendedPathTitle = 'Fundamentos de Programación y Pensamiento Algorítmico';
     let primaryCourseSlug = 'introduccion-programacion';
     let primaryCourseTitle = 'Introducción a la Programación';
     let recommendedSpecialty = 'Lógica & Algoritmos';
+    let syllabus: SyllabusPhase[] = [];
 
-    if (score <= 2) {
-      // NIVEL 1: INICIACIÓN / JUNIOR I
-      levelNumber = 1;
-      levelTitle = 'Nivel 1: Junior I · Fundamentos y Lógica Computacional';
-      recommendedSpecialty = 'Fundamentos Algorítmicos';
-      recommendedPathSlug = 'fundamentos-programacion';
-      recommendedPathTitle = 'Ruta de Fundamentos de Programación';
-      primaryCourseSlug = 'introduccion-programacion';
-      primaryCourseTitle = 'Introducción a la Programación';
+    switch (specialtyPref) {
+      case 'frontend':
+        recommendedPathSlug = 'desarrollo-frontend';
+        recommendedPathTitle = 'Ruta de Desarrollo Frontend & Experiencia de Usuario';
+        primaryCourseSlug = score >= 3 ? 'desarrollo-web-fundamentos' : 'introduccion-programacion';
+        primaryCourseTitle = score >= 3 ? 'Fundamentos del Desarrollo Web Moderno' : 'Introducción a la Programación (Bases Frontend)';
+        recommendedSpecialty = 'Desarrollo Frontend & Interfaces Reactivas';
+        syllabus = [
+          {
+            phaseNumber: 1,
+            phaseTitle: 'Fase 1: Estructura Semántica, Layout y CSS Moderno',
+            courseTitle: 'Desarrollo Web: HTML5, CSS3 y Flexbox',
+            courseSlug: 'desarrollo-web-fundamentos',
+            description: 'Aprende a maquetar aplicaciones web con estándares accesibles, grid y diseño responsive.',
+            estimatedHours: 14,
+            skillsGained: ['HTML5 Semántico', 'CSS Flexbox & Grid', 'Diseño Adaptativo']
+          },
+          {
+            phaseNumber: 2,
+            phaseTitle: 'Fase 2: Interactividad, DOM y JavaScript Asíncrono',
+            courseTitle: 'JavaScript Moderno para Frontend',
+            courseSlug: 'javascript-moderno',
+            description: 'Manipulación del árbol DOM, eventos en tiempo real, promesas y consumo de endpoints JSON.',
+            estimatedHours: 16,
+            skillsGained: ['Eventos del Navegador', 'Fetch API', 'Programación Reactiva']
+          },
+          {
+            phaseNumber: 3,
+            phaseTitle: 'Fase 3: Arquitectura Basada en Componentes',
+            courseTitle: 'Frameworks SPA & Estado Centralizado',
+            courseSlug: 'desarrollo-frontend',
+            description: 'Construcción de aplicaciones escalables con separación de vistas, señales y ciclo de vida.',
+            estimatedHours: 20,
+            skillsGained: ['Arquitectura de Componentes', 'Manejo de Estado', 'Enrutamiento Client-Side']
+          }
+        ];
+        break;
 
-      agentFeedback =
-        `Identificamos que tienes gran entusiasmo pero requieres afianzar las bases de la algoritmia, ` +
-        `complejidad computacional Big-O y control de flujo antes de adentrarte en arquitecturas complejas. ` +
-        `Diseñamos para ti un temario que te llevará paso a paso desde la lógica pura hasta algoritmos estructurados.`;
+      case 'algoritmos':
+        recommendedPathSlug = 'fundamentos-programacion';
+        recommendedPathTitle = 'Ruta de Fundamentos de Programación y Pensamiento Algorítmico';
+        primaryCourseSlug = score >= 3 ? 'algoritmos-ordenamiento' : 'introduccion-programacion';
+        primaryCourseTitle = score >= 3 ? 'Algoritmos de Ordenamiento & Eficiencia' : 'Introducción a la Programación';
+        recommendedSpecialty = 'Ciencias de la Computación & Algoritmos';
+        syllabus = [
+          {
+            phaseNumber: 1,
+            phaseTitle: 'Fase 1: Lógica Pura y Variables de Estado',
+            courseTitle: 'Introducción a la Programación',
+            courseSlug: 'introduccion-programacion',
+            description: 'Fundamentos de control de flujo, tablas de verdad, variables y diagramas algorítmicos.',
+            estimatedHours: 12,
+            skillsGained: ['Pensamiento Lógico', 'Estructuras de Control', 'Depuración Paso a Paso']
+          },
+          {
+            phaseNumber: 2,
+            phaseTitle: 'Fase 2: Modularidad y Programación Estructurada',
+            courseTitle: 'Programación Estructurada con Python',
+            courseSlug: 'python-estructurado',
+            description: 'Diseño modular de funciones, arreglos, recursión y estructuras de datos dinámicas.',
+            estimatedHours: 15,
+            skillsGained: ['Modularidad', 'Colecciones en Memoria', 'Recursión']
+          },
+          {
+            phaseNumber: 3,
+            phaseTitle: 'Fase 3: Optimización y Análisis Asintótico Big-O',
+            courseTitle: 'Algoritmos de Ordenamiento & Eficiencia',
+            courseSlug: 'algoritmos-ordenamiento',
+            description: 'Mide el consumo de tiempo y memoria en algoritmos de partición, árboles y grafos.',
+            estimatedHours: 18,
+            skillsGained: ['Notación Big-O', 'Divide & Vencerás', 'Optimización de Memoria']
+          }
+        ];
+        break;
 
-      syllabus = [
-        {
-          phaseNumber: 1,
-          phaseTitle: 'Arranque: Lógica & Pensamiento Algorítmico',
-          courseTitle: 'Introducción a la Programación',
-          courseSlug: 'introduccion-programacion',
-          description: 'Aprende variables, condicionales, ciclos y diagramas de flujo sin fricción sintáctica en el sandbox.',
-          estimatedHours: 12,
-          skillsGained: ['Pensamiento Lógico', 'Estructuras de Control', 'Funciones']
-        },
-        {
-          phaseNumber: 2,
-          phaseTitle: 'Estructuración: Programación Modular con Python',
-          courseTitle: 'Programación Estructurada con Python',
-          courseSlug: 'python-estructurado',
-          description: 'Domina funciones, alcance de variables, listas, diccionarios y resolución estructurada de problemas.',
-          estimatedHours: 14,
-          skillsGained: ['Python Moderno', 'Mutabilidad de Datos', 'Modularización']
-        },
-        {
-          phaseNumber: 3,
-          phaseTitle: 'Consolidación: Algoritmos de Ordenamiento & Big-O',
-          courseTitle: 'Algoritmos de Ordenamiento',
-          courseSlug: 'algoritmos-ordenamiento',
-          description: 'Comprende cómo los algoritmos optimizan recursos de cómputo: Bubble, Merge y Quick Sort.',
-          estimatedHours: 8,
-          skillsGained: ['Complejidad Asintótica', 'Notación Big-O', 'Recursión']
-        }
-      ];
-    } else if (score <= 4) {
-      // NIVEL 2: INTERMEDIO / JUNIOR II / MID
-      levelNumber = 2;
-      levelTitle = 'Nivel 2: Junior II / Mid · Paradigma de Objetos & Backend';
-      recommendedSpecialty = specialtyPref === 'backend' ? 'Desarrollo Backend & APIs' : 'Programación Orientada a Objetos';
-      recommendedPathSlug = 'programacion-orientada-a-objetos';
-      recommendedPathTitle = 'Ruta de Programación Orientada a Objetos y Arquitectura';
-      primaryCourseSlug = 'clases-objetos-herencia';
-      primaryCourseTitle = 'Clases, Objetos y Herencia';
+      case 'devops':
+        recommendedPathSlug = 'devops';
+        recommendedPathTitle = 'Ruta de DevOps, Linux & Automatización Cloud';
+        primaryCourseSlug = score >= 3 ? 'introduccion-devops' : 'introduccion-programacion';
+        primaryCourseTitle = score >= 3 ? 'Introducción a DevOps y Contenedores' : 'Introducción a la Programación (Fundamentos DevOps)';
+        recommendedSpecialty = 'DevOps & Infraestructura Cloud';
+        syllabus = [
+          {
+            phaseNumber: 1,
+            phaseTitle: 'Fase 1: Dominio de Terminal Linux & Bash Scripting',
+            courseTitle: 'Terminal y Shell Scripting para Ingenieros',
+            courseSlug: 'terminal-linux-scripting',
+            description: 'Control de procesos Unix, pipes, redirecciones, permisos y automatización de tareas en servidor.',
+            estimatedHours: 12,
+            skillsGained: ['Bash Scripting', 'Permisos POSIX', 'Control de Procesos']
+          },
+          {
+            phaseNumber: 2,
+            phaseTitle: 'Fase 2: Contenedores Docker y Aislamiento de Entornos',
+            courseTitle: 'Docker & Microservicios Contenerizados',
+            courseSlug: 'docker-contenedores',
+            description: 'Creación de imágenes ligeras, volúmenes de datos, redes virtuales y docker-compose.',
+            estimatedHours: 16,
+            skillsGained: ['Dockerfiles Multi-stage', 'Redes de Contenedores', 'Docker Compose']
+          },
+          {
+            phaseNumber: 3,
+            phaseTitle: 'Fase 3: Pipelines de Integración Continua (CI/CD)',
+            courseTitle: 'CI/CD con GitHub Actions y Despliegues Cloud',
+            courseSlug: 'devops',
+            description: 'Automatización de compilación, ejecución de tests y entrega continua a entornos de producción.',
+            estimatedHours: 18,
+            skillsGained: ['GitHub Actions', 'Monitoreo de Salud', 'Zero-Downtime Deployment']
+          }
+        ];
+        break;
 
-      agentFeedback =
-        `¡Excelente desempeño! Demostraste comprensión sólida de algoritmos y estructuras de datos básicas. ` +
-        `Tu siguiente escalón técnico consiste en dominar la Programación Orientada a Objetos rigurosa, ` +
-        `el encapsulamiento con invariantes de negocio y bases de datos relacionales SQL.`;
+      case 'ia':
+        recommendedPathSlug = 'desarrollo-con-ia';
+        recommendedPathTitle = 'Ruta de Desarrollo Asistido por Inteligencia Artificial';
+        primaryCourseSlug = 'desarrollo-con-ia';
+        primaryCourseTitle = 'Ingeniería de Software con IA y Modelos LLM';
+        recommendedSpecialty = 'Inteligencia Artificial Aplicada';
+        syllabus = [
+          {
+            phaseNumber: 1,
+            phaseTitle: 'Fase 1: Modelos LLM y Prompt Engineering Técnico',
+            courseTitle: 'Fundamentos de Modelos de Lenguaje & Prompting',
+            courseSlug: 'desarrollo-con-ia',
+            description: 'Estructuración de instrucciones semánticas, Few-shot prompting y limitaciones de alucinación.',
+            estimatedHours: 10,
+            skillsGained: ['Prompting Estructurado', 'Embeddings Semánticos', 'Tokens & Context Window']
+          },
+          {
+            phaseNumber: 2,
+            phaseTitle: 'Fase 2: Programación Asistida y Pair Programming con Agentes',
+            courseTitle: 'Workflows de Ingeniería Asistida en el IDE',
+            courseSlug: 'agentes-desarrollo',
+            description: 'Uso de agentes de codificación para refactorización, generación de tests y análisis AST en vivo.',
+            estimatedHours: 14,
+            skillsGained: ['Pair Programming con Agentes', 'Generación de Pruebas Unitarias', 'Auditoría con IA']
+          },
+          {
+            phaseNumber: 3,
+            phaseTitle: 'Fase 3: Agentes Autónomos y Consumo de APIs de IA',
+            courseTitle: 'Integración de Agentes y Llamadas a Herramientas (Function Calling)',
+            courseSlug: 'ia-avanzada-agentes',
+            description: 'Conecta modelos con APIs externas, bases de datos y ejecución de funciones automáticas.',
+            estimatedHours: 18,
+            skillsGained: ['Function Calling', 'RAG (Retrieval Augmented Gen)', 'Agentes Autónomos']
+          }
+        ];
+        break;
 
-      syllabus = [
-        {
-          phaseNumber: 1,
-          phaseTitle: 'Arranque: Clases, Encapsulamiento y Modelado POO',
-          courseTitle: 'Clases, Objetos y Herencia',
-          courseSlug: 'clases-objetos-herencia',
-          description: 'Modela entidades reales con atributos protegidos, constructores y métodos con responsabilidades claras.',
-          estimatedHours: 16,
-          skillsGained: ['POO Avanzada', 'Encapsulamiento', 'Polimorfismo']
-        },
-        {
-          phaseNumber: 2,
-          phaseTitle: 'Persistencia: SQL Relacional desde Cero',
-          courseTitle: 'SQL desde Cero',
-          courseSlug: 'sql-desde-cero',
-          description: 'Aprende consultas complejas, JOINs relacionales, índices y diseño de esquemas en PostgreSQL.',
-          estimatedHours: 10,
-          skillsGained: ['PostgreSQL', 'JOINs & Agrupaciones', 'Integridad Referencial']
-        },
-        {
-          phaseNumber: 3,
-          phaseTitle: 'Clean Code: Principios SOLID en la Práctica',
-          courseTitle: 'Principios SOLID en la práctica',
-          courseSlug: 'principios-solid',
-          description: 'Aplica SRP, OCP, LSP, ISP y DIP para crear software mantenible, desacoplado y listo para producción.',
-          estimatedHours: 18,
-          skillsGained: ['Principios SOLID', 'Refactorización', 'Inyección de Dependencias']
-        }
-      ];
-    } else {
-      // NIVEL 3: AVANZADO / SENIOR
-      levelNumber = 3;
-      levelTitle = 'Nivel 3: Senior / Advanced · Arquitectura Limpia & Sistemas';
-      recommendedSpecialty = 'Arquitectura de Software & Patrones de Diseño';
-      recommendedPathSlug = 'programacion-orientada-a-objetos';
-      recommendedPathTitle = 'Ruta de Arquitectura de Software Avanzada';
-      primaryCourseSlug = 'patrones-de-diseno';
-      primaryCourseTitle = 'Patrones de Diseño (GoF)';
+      case 'poo':
+        recommendedPathSlug = 'desarrollo-orientado-objetos';
+        recommendedPathTitle = 'Ruta de Programación Orientada a Objetos y Diseño Limpio';
+        primaryCourseSlug = score >= 3 ? 'clases-objetos-herencia' : 'introduccion-poo';
+        primaryCourseTitle = score >= 3 ? 'Clases, Objetos y Herencia' : 'Introducción a la Programación Orientada a Objetos';
+        recommendedSpecialty = 'Arquitectura de Objetos & Principios SOLID';
+        syllabus = [
+          {
+            phaseNumber: 1,
+            phaseTitle: 'Fase 1: Abstracción, Clases, Objetos y Encapsulamiento',
+            courseTitle: 'Clases, Objetos y Herencia',
+            courseSlug: 'clases-objetos-herencia',
+            description: 'Modela entidades reales con encapsulamiento estricto, métodos mutadores y constructores.',
+            estimatedHours: 14,
+            skillsGained: ['Encapsulamiento', 'Constructores', 'Modelado de Dominio']
+          },
+          {
+            phaseNumber: 2,
+            phaseTitle: 'Fase 2: Herencia, Polimorfismo e Interfaces',
+            courseTitle: 'Polimorfismo y Diseño de Contratos de Software',
+            courseSlug: 'polimorfismo-interfaces',
+            description: 'Crea arquitecturas flexibles mediante contratos e interfaces desacopladas.',
+            estimatedHours: 16,
+            skillsGained: ['Polimorfismo', 'Interfaces y Tipos Abstractos', 'Inversión de Control']
+          },
+          {
+            phaseNumber: 3,
+            phaseTitle: 'Fase 3: Principios SOLID y Patrones de Diseño GoF',
+            courseTitle: 'Principios SOLID en la Práctica',
+            courseSlug: 'principios-solid',
+            description: 'Escribe código desacoplado, testeable y preparado para mantenimiento a largo plazo.',
+            estimatedHours: 18,
+            skillsGained: ['SRP, OCP, LSP, ISP, DIP', 'Inyección de Dependencias', 'Patrones GoF']
+          }
+        ];
+        break;
 
-      agentFeedback =
-        `¡Nivel sobresaliente! Respondiste con precisión sobre complejidad algorítmica, mutabilidad de memoria, ` +
-        `encapsulamiento y principios de arquitectura SOLID. Tu plan de estudio omitirá conceptos básicos ` +
-        `para enfocarse directamente en Patrones de Diseño GoF, Clean Architecture y sistemas escalables.`;
-
-      syllabus = [
-        {
-          phaseNumber: 1,
-          phaseTitle: 'Arranque: Patrones de Diseño GoF en Python',
-          courseTitle: 'Patrones de Diseño',
-          courseSlug: 'patrones-de-diseno',
-          description: 'Soluciones estructurales, creacionales y comportamentales probadas para software de gran envergadura.',
-          estimatedHours: 20,
-          skillsGained: ['Patrones GoF', 'Factory & Singleton', 'Observer & Strategy']
-        },
-        {
-          phaseNumber: 2,
-          phaseTitle: 'Arquitectura: Proyecto Final de Arquitectura POO',
-          courseTitle: 'Proyecto Final: Arquitectura de Software Orientada a Objetos',
-          courseSlug: 'arquitectura-proyecto-poo',
-          description: 'Construye un sistema completo con arquitectura en capas, entidades ricas y repositorios.',
-          estimatedHours: 16,
-          skillsGained: ['Layered Architecture', 'Repository Pattern', 'Dominio Rico']
-        },
-        {
-          phaseNumber: 3,
-          phaseTitle: 'Ingeniería Avanzada: Git Profesional & CI/CD',
-          courseTitle: 'Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos',
-          courseSlug: 'git-avanzado-rebase-cherry-pick-conflictos-complejos',
-          description: 'Domina los flujos de colaboración en equipos distribuidos de alto rendimiento.',
-          estimatedHours: 10,
-          skillsGained: ['Git Rebase', 'Worktrees & Bisect', 'Resolución de Conflictos']
-        }
-      ];
+      default: // 'backend'
+        recommendedPathSlug = 'desarrollo-backend';
+        recommendedPathTitle = 'Ruta de Desarrollo Backend & Arquitectura de APIs';
+        primaryCourseSlug = score >= 3 ? 'backend-introduccion' : 'introduccion-programacion';
+        primaryCourseTitle = score >= 3 ? 'Introducción al Backend & Arquitectura de Servidores' : 'Introducción a la Programación (Bases Backend)';
+        recommendedSpecialty = 'Sistemas Backend & Arquitectura de APIs';
+        syllabus = [
+          {
+            phaseNumber: 1,
+            phaseTitle: 'Fase 1: Arquitectura de Servidores y Protocolo HTTP',
+            courseTitle: 'Introducción al Backend & Arquitectura de Servidores',
+            courseSlug: 'backend-introduccion',
+            description: 'Comprende el ciclo de vida de peticiones HTTP, middlewares, códigos de estado y respuestas JSON.',
+            estimatedHours: 12,
+            skillsGained: ['Ciclo HTTP', 'Enrutamiento de Servidor', 'Middlewares']
+          },
+          {
+            phaseNumber: 2,
+            phaseTitle: 'Fase 2: Persistencia, Modelado Relacional y SQL',
+            courseTitle: 'SQL desde Cero y Persistencia de Datos',
+            courseSlug: 'sql-desde-cero',
+            description: 'Diseño de bases de datos relacionales, llaves foráneas, JOINs y transacciones en PostgreSQL.',
+            estimatedHours: 16,
+            skillsGained: ['PostgreSQL', 'Modelado Relacional', 'Consultas Optimizadas']
+          },
+          {
+            phaseNumber: 3,
+            phaseTitle: 'Fase 3: APIs RESTful, Autenticación y Seguridad',
+            courseTitle: 'Desarrollo de APIs RESTful y Seguridad',
+            courseSlug: 'desarrollo-backend',
+            description: 'Implementación de autenticación JWT stateless, validación estricta de payloads y control de acceso.',
+            estimatedHours: 20,
+            skillsGained: ['Autenticación JWT', 'Sanitización de Datos', 'Controladores REST']
+          }
+        ];
+        break;
     }
+
+    // Generar retroalimentación detallada y personalizada de Byte Copilot
+    const strengths: string[] = [];
+    if (isQ1Correct) strengths.push('✓ Excelente habilidad para proyectar transiciones de estado secuenciales.');
+    if (isQ2Correct) strengths.push('✓ Dominio riguroso de lógica booleana compuesta y evaluación de compuertas (AND/OR/NOT).');
+    if (isQ3Correct) strengths.push('✓ Gran capacidad para rastrear bucles iterativos con condiciones y acumuladores en memoria.');
+    if (isQ4Correct) strengths.push('✓ Intuición algorítmica óptima para optimización mediante partición (divide y vencerás).');
+
+    const weaknesses: string[] = [];
+    if (!isQ1Correct) weaknesses.push('• Sugerimos ejercitar la simulación paso a paso de variables numéricas y paridad.');
+    if (!isQ2Correct) weaknesses.push('• Conviene repasar tablas de verdad y precedencia de operadores lógicos condicionales.');
+    if (!isQ3Correct) weaknesses.push('• Fortalecer el seguimiento mental de acumuladores dentro de ciclos repetitivos.');
+    if (!isQ4Correct) weaknesses.push('• Desarrollar el pensamiento asintótico para elegir caminos de búsqueda eficientes.');
+
+    const strengthsSummary = strengths.length > 0
+      ? `Fortalezas demostradas:\n${strengths.join('\n')}`
+      : 'Has dado tus primeros pasos en el análisis de problemas computacionales.';
+
+    const weaknessesSummary = weaknesses.length > 0
+      ? `\n\nÁreas clave a potenciar:\n${weaknesses.join('\n')}`
+      : '\n\n¡Rendimiento impecable! No se detectaron fallos lógicos en tu evaluación.';
+
+    const rationale = `\n\nDiagnóstico del Agente: Obtuviste ${score} de ${totalTechnical} aciertos (${generalScore}%). Calibré tu perfil en ${levelTitle} y asigné tu plan a la "${recommendedPathTitle}", iniciando con "${primaryCourseTitle}". Esta ruta te permitirá capitalizar tus afinidades en ${recommendedSpecialty} mientras avanzas con retos prácticos progresivos.`;
+
+    const agentFeedback = `${strengthsSummary}${weaknessesSummary}${rationale}`;
 
     const result: DiagnosticAnalysisResult = {
       score,
@@ -2074,9 +2171,9 @@ class ControladorPedido {
       primaryCourseTitle,
       competencyBreakdown: {
         logic: logicScore,
-        oop: oopScore,
-        database: databaseScore,
-        architecture: architectureScore
+        oop: flowScore,
+        database: optimizationScore,
+        architecture: generalScore
       },
       syllabus,
       agentFeedback,
@@ -2085,8 +2182,11 @@ class ControladorPedido {
 
     this.analysisResult.set(result);
 
-    // Guardar en AuthService y localStorage
+    // Guardar en AuthService y emitir evento global para actualización en vivo del perfil
     this.auth.saveDiagnosticResult(result);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('syseng:diagnostic_completed', { detail: result }));
+    }
   }
 
   recalibrate() {

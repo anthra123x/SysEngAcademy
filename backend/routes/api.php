@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\ForumController;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\LearningPathController;
 use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\ProfileController;
@@ -29,6 +30,7 @@ Route::get('/courses/{slug}', [CourseController::class, 'show']);
 Route::get('/lessons/{slug}', [LessonController::class, 'show']);
 Route::get('/courses/{course}/forum', [ForumController::class, 'index']);
 Route::get('/forum/posts/{id}', [ForumController::class, 'show']);
+Route::get('/leaderboard', [LeaderboardController::class, 'index']);
 
 // Code execution routes (public, rate limited)
 Route::get('/languages', [CodeExecutionController::class, 'languages']);

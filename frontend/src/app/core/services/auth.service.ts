@@ -330,4 +330,15 @@ export class AuthService {
       return null;
     }
   }
+
+  getRegisteredStudents(): User[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const list = JSON.parse(localStorage.getItem('syseng_registered_users') || '[]');
+      return list.map((item: any) => item.user).filter((u: any) => !!u);
+    } catch {
+      return [];
+    }
+  }
 }
+
