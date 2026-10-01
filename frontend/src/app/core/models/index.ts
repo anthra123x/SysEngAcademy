@@ -200,6 +200,7 @@ export interface LessonContentDoc {
 export interface LessonQuizAnswer {
   id: number;
   answer_text: string;
+  answer?: string;
 }
 
 export interface LessonQuizQuestion {

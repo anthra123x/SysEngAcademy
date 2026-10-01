@@ -1112,6 +1112,7 @@ export default async function handler(req: any, res: any) {
             type: qu.type,
             answers: answers.filter((a: any) => Number(a.question_id) === Number(qu.id)).map((a: any) => ({
               id: Number(a.id),
+              answer_text: a.answer_text,
               answer: a.answer_text,
             })),
           })),
@@ -1135,6 +1136,79 @@ export default async function handler(req: any, res: any) {
         prev_lesson: prevLessonRows[0] ? { id: Number(prevLessonRows[0].id), slug: prevLessonRows[0].slug, title: prevLessonRows[0].title, type: prevLessonRows[0].type } : null,
         next_lesson: nextLessonRows[0] ? { id: Number(nextLessonRows[0].id), slug: nextLessonRows[0].slug, title: nextLessonRows[0].title, type: nextLessonRows[0].type } : null,
       }, 'public, s-maxage=30, stale-while-revalidate=120');
+    }
+
+    // POST /lessons/:slug/quiz/attempt (Evaluación de cuestionarios)
+    const quizAttemptMatch = cleanPath.match(/^\/lessons\/([^/]+)\/quiz\/attempt$/);
+    if (method === 'POST' && quizAttemptMatch) {
+      const slug = decodeURIComponent(quizAttemptMatch[1]);
+      const body = await getBody(req);
+      const submitted = body.answers || {};
+
+      const lessonRows: any = await sql`SELECT id FROM lessons WHERE slug = ${slug} OR id::text = ${slug} LIMIT 1`;
+      if (!lessonRows || lessonRows.length === 0) return sendJson(res, 404, { message: 'Lección no encontrada' });
+      const lessonId = Number(lessonRows[0].id);
+
+      const quizRows: any = await sql`SELECT id FROM quizzes WHERE lesson_id = ${lessonId} LIMIT 1`;
+      if (!quizRows || quizRows.length === 0) return sendJson(res, 404, { message: 'Quiz no encontrado' });
+      const quizId = Number(quizRows[0].id);
+
+      const questions: any = await sql`SELECT id FROM quiz_questions WHERE quiz_id = ${quizId} ORDER BY "order" ASC`;
+      const questionIds = (questions as any[]).map((qu: any) => Number(qu.id));
+
+      let allAnswers: any[] = [];
+      if (questionIds.length > 0) {
+        allAnswers = await sql`
+          SELECT id, question_id, is_correct, explanation
+          FROM quiz_answers
+          WHERE question_id = ANY(${questionIds}::bigint[])
+        `;
+      }
+
+      let correctCount = 0;
+      const totalCount = questionIds.length;
+      const results: any[] = [];
+
+      for (const qid of questionIds) {
+        const qAnswers = allAnswers.filter((a: any) => Number(a.question_id) === qid);
+        const correctIds = qAnswers.filter((a: any) => Boolean(a.is_correct)).map((a: any) => Number(a.id)).sort((a: number, b: number) => a - b);
+        const userSelected = (Array.isArray(submitted[qid]) ? submitted[qid] : (submitted[String(qid)] ? submitted[String(qid)] : []))
+          .map((id: any) => Number(id)).sort((a: number, b: number) => a - b);
+
+        const isCorrect = correctIds.length === userSelected.length && correctIds.every((id: number, idx: number) => id === userSelected[idx]);
+        if (isCorrect) correctCount++;
+
+        const expl = qAnswers.find((a: any) => Boolean(a.is_correct))?.explanation || 'Respuesta verificada.';
+        results.push({
+          question_id: qid,
+          correct: isCorrect,
+          correct_answer_ids: correctIds,
+          selected_ids: userSelected,
+          explanation: expl,
+        });
+      }
+
+      const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 100;
+      const passed = score >= 60;
+
+      // Registrar progreso si el usuario está autenticado
+      const user = await resolveUser(req, body);
+      if (user) {
+        await sql`
+          INSERT INTO lesson_progress (user_id, lesson_id, score, completed_at, created_at, updated_at)
+          VALUES (${Number(user.id)}, ${lessonId}, ${score}, NOW(), NOW(), NOW())
+          ON CONFLICT (user_id, lesson_id)
+          DO UPDATE SET score = GREATEST(lesson_progress.score, EXCLUDED.score), completed_at = NOW(), updated_at = NOW()
+        `;
+      }
+
+      return sendJson(res, 200, {
+        score,
+        correct: correctCount,
+        total: totalCount,
+        passed,
+        results,
+      });
     }
 
     // -------------------------------------------------------------

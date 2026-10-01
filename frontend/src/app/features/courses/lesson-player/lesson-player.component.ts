@@ -264,7 +264,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                             [disabled]="!!quizResult() || quizSubmitting()"
                             (change)="toggleAnswer(q.id, a.id, isMultiple(q))"
                           />
-                          <span class="quiz-option__text">{{ a.answer_text }}</span>
+                          <span class="quiz-option__text">{{ a.answer_text || a.answer }}</span>
                         </label>
                       }
                     </div>
@@ -2514,7 +2514,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   correctAnswersText(q: LessonQuizQuestion, res: QuizAttemptQuestionResult): string {
     return q.answers
       .filter(a => res.correct_answer_ids.includes(a.id))
-      .map(a => a.answer_text)
+      .map(a => a.answer_text || a.answer || '')
       .join(', ');
   }
 
