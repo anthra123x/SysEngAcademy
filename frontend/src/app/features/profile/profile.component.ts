@@ -57,12 +57,76 @@ export interface PathRecommendation {
   matchScore: number;
 }
 
+export interface ResearchProject {
+  id: string;
+  title: string;
+  description: string;
+  leadResearcher: string;
+  status: 'en_progreso' | 'revision' | 'concluido';
+  repoUrl?: string;
+  techStack: string[];
+  membersJoined: string[];
+  createdAt: string;
+}
+
+export interface ResearchComment {
+  id: string;
+  author: string;
+  text: string;
+  timeAgo: string;
+}
+
+export interface ResearchLogEntry {
+  id: string;
+  author: string;
+  authorRole: string;
+  type: 'hallazgo' | 'pregunta' | 'paper' | 'benchmark';
+  title: string;
+  content: string;
+  codeSnippet?: string;
+  codeLanguage?: string;
+  upvotes: number;
+  hasUpvoted?: boolean;
+  comments: ResearchComment[];
+  timeAgo: string;
+}
+
+export interface ResearchPaper {
+  id: string;
+  title: string;
+  authors: string;
+  doiOrUrl: string;
+  summary: string;
+  addedBy: string;
+  tags: string[];
+}
+
+export interface ResearchSession {
+  id: string;
+  title: string;
+  dateStr: string;
+  topic: string;
+  speaker: string;
+  attendeesCount: number;
+  userAttending: boolean;
+}
+
+export interface ResearchMember {
+  id: string;
+  name: string;
+  role: string;
+  level: number;
+  contributionsCount: number;
+  isCurrentUser?: boolean;
+}
+
 export interface StudyGroup {
   id: string;
   name: string;
   tag: string;
   category: string;
   description: string;
+  linesOfResearch: string[];
   membersCount: number;
   streakDays: number;
   weeklyChallenge: {
@@ -71,6 +135,11 @@ export interface StudyGroup {
     completed: boolean;
   };
   recentLogs: { author: string; message: string; timeAgo: string }[];
+  projects: ResearchProject[];
+  researchFeed: ResearchLogEntry[];
+  libraryPapers: ResearchPaper[];
+  upcomingSessions: ResearchSession[];
+  researchers: ResearchMember[];
   isMember: boolean;
 }
 
@@ -2898,57 +2967,321 @@ for (let paso = 1; paso <= 3; paso++) {
     agentFeedback: 'Presenta tu examen diagnóstico para calibrar tu nivel y definir tu ruta de aprendizaje recomendada.',
   });
 
+  getDefaultStudyGroups(): StudyGroup[] {
+    return [
+      {
+        id: 'krnl',
+        name: 'Kernel & C++ Systems Hackers',
+        tag: '[KRNL]',
+        category: 'systems',
+        description: 'Estudio intensivo de llamadas POSIX, memoria virtual, concurrencia de bajo nivel y arquitectura de micro-kernels.',
+        linesOfResearch: ['Gestión de Memoria y Paginación x86_64', 'Concurrencia Lock-Free & Atomics', 'Llamadas POSIX & Observabilidad eBPF'],
+        membersCount: 18,
+        streakDays: 19,
+        weeklyChallenge: { title: 'Implementar un Thread Pool en C++20 con mutex POSIX', xpReward: 350, completed: false },
+        recentLogs: [{ author: 'Mateo (Lvl 16)', message: 'Subí benchmark de semáforos a la repo.', timeAgo: 'hace 2h' }],
+        projects: [
+          {
+            id: 'krnl_p1',
+            title: 'Micro-Kernel Modular y Planificador Round-Robin',
+            description: 'Desarrollo de un núcleo básico modular en C++20 con soporte para interrupciones de temporizador y conmutación de contexto.',
+            techStack: ['C++20', 'Assembly x86', 'QEMU', 'CMake'],
+            status: 'en_progreso',
+            leadResearcher: 'Mateo (Lvl 16)',
+            membersJoined: ['Mateo (Lvl 16)', 'Carlos (Lvl 12)', 'Valeria (Lvl 14)'],
+            repoUrl: 'https://github.com/syseng-krnl/microkernel-prototype',
+            createdAt: 'hace 3d',
+          },
+          {
+            id: 'krnl_p2',
+            title: 'Benchmark de Colas Concurrentes Lock-Free (Michael-Scott)',
+            description: 'Comparación empírica de estructuras Michael-Scott Queue contra colas con spinlocks bajo contención de 32 cores.',
+            techStack: ['C++', 'Atomics', 'POSIX Threads'],
+            status: 'revision',
+            leadResearcher: 'Valeria (Lvl 14)',
+            membersJoined: ['Valeria (Lvl 14)', 'Esteban (Lvl 15)'],
+            createdAt: 'hace 1 sem',
+          },
+        ],
+        researchFeed: [
+          {
+            id: 'krnl_rf1',
+            author: 'Mateo (Lvl 16)',
+            authorRole: 'Director de Semillero',
+            type: 'benchmark',
+            title: 'Medición de latencia: Mutex vs Spinlock en secciones críticas < 50ns',
+            content: 'Realizamos 10M de operaciones concurrentes. En secciones críticas breves sin I/O, el spinlock con CPU pause disminuye la latencia en 34% al evitar el context switch al kernel de Linux.',
+            codeSnippet: `// Loop de spinlock con mitigación de bus\nwhile (lock.test_and_set(std::memory_order_acquire)) {\n    #if defined(__x86_64__)\n    __builtin_ia32_pause();\n    #endif\n}`,
+            codeLanguage: 'cpp',
+            upvotes: 9,
+            hasUpvoted: false,
+            comments: [
+              { id: 'c1', author: 'Carlos (Lvl 12)', text: 'Cuidado con la inversión de prioridad si el hilo poseedor es desalojado por el planificador.', timeAgo: 'hace 2h' },
+            ],
+            timeAgo: 'hace 3h',
+          },
+          {
+            id: 'krnl_rf2',
+            author: 'Carlos (Lvl 12)',
+            authorRole: 'Investigador Asociado',
+            type: 'hallazgo',
+            title: 'Reducción de cache misses en el despachador de procesos con Struct-of-Arrays (SoA)',
+            content: 'Transformamos la tabla de PCB a un diseño SoA para los flags de ejecución. La tasa de fallos de caché L1D cayó del 12.4% al 2.8% en ráfagas intensivas de scheduling.',
+            upvotes: 6,
+            hasUpvoted: false,
+            comments: [],
+            timeAgo: 'hace 6h',
+          },
+        ],
+        libraryPapers: [
+          {
+            id: 'krnl_lp1',
+            title: 'The Design and Implementation of the FreeBSD Operating System',
+            authors: 'McKusick, Neville-Neil, Watson',
+            doiOrUrl: 'https://www.freebsd.org/doc/',
+            summary: 'Texto fundamental sobre arquitectura de kernels monolíticos modernos, subsistema de memoria virtual y SMP.',
+            addedBy: 'Mateo',
+            tags: ['Kernel', 'Virtual Memory', 'SMP'],
+          },
+          {
+            id: 'krnl_lp2',
+            title: 'Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue Algorithms',
+            authors: 'Maged M. Michael, Michael L. Scott (PODC)',
+            doiOrUrl: 'https://doi.org/10.1145/248052.248106',
+            summary: 'Paper canónico sobre la Michael-Scott Queue utilizando operaciones atómicas compare-and-swap.',
+            addedBy: 'Valeria',
+            tags: ['Lock-Free', 'Concurrency', 'Algorithms'],
+          },
+        ],
+        upcomingSessions: [
+          {
+            id: 'krnl_us1',
+            title: 'Coloquio Semanal: Análisis de Concurrencia y Detección de Deadlocks',
+            dateStr: 'Jueves 18:00 UTC',
+            topic: 'Revisión práctica con ThreadSanitizer y análisis de grafos de espera (Wait-For Graph).',
+            speaker: 'Mateo',
+            attendeesCount: 8,
+            userAttending: true,
+          },
+          {
+            id: 'krnl_us2',
+            title: 'Workshop Práctico: Perfilado de Memoria con Perf y Valgrind Massif',
+            dateStr: 'Sábado 15:00 UTC',
+            topic: 'Técnicas de optimización de accesos a memoria y vectorización SIMD en C++.',
+            speaker: 'Valeria',
+            attendeesCount: 11,
+            userAttending: false,
+          },
+        ],
+        researchers: [
+          { id: 'm1', name: 'Mateo', role: 'Director de Semillero', level: 16, contributionsCount: 14 },
+          { id: 'm2', name: 'Valeria', role: 'Investigador Principal', level: 14, contributionsCount: 9 },
+          { id: 'm3', name: 'Carlos', role: 'Investigador Asociado', level: 12, contributionsCount: 6 },
+          { id: 'm4', name: 'Esteban', role: 'Investigador Junior', level: 11, contributionsCount: 4 },
+        ],
+        isMember: false,
+      },
+      {
+        id: 'algo',
+        name: 'Clan de Algoritmos & Grafos',
+        tag: '[ALGO]',
+        category: 'algorithms',
+        description: 'Resolución de problemas de alta complejidad algorítmica, árboles balanceados y optimización combinatoria.',
+        linesOfResearch: ['Algoritmos de Enrutamiento en Grafos Masivos', 'Estructuras de Datos Auto-Balanceadas', 'Programación Dinámica Avanzada'],
+        membersCount: 26,
+        streakDays: 14,
+        weeklyChallenge: { title: 'Calcular Camino Más Corto con Dijkstra sobre Grafos', xpReward: 280, completed: true },
+        recentLogs: [{ author: 'Carlos (Lvl 12)', message: 'Resolví el balanceo AVL en 4ms.', timeAgo: 'hace 1h' }],
+        projects: [
+          {
+            id: 'algo_p1',
+            title: 'Motor de Búsqueda de Caminos Multimodal con A* y Contraction Hierarchies',
+            description: 'Optimización de consultas de distancias mínimas en redes topológicas a gran escala.',
+            techStack: ['Python', 'C++', 'Graph Theory'],
+            status: 'en_progreso',
+            leadResearcher: 'Carlos (Lvl 12)',
+            membersJoined: ['Carlos (Lvl 12)', 'Daniela (Lvl 13)'],
+            createdAt: 'hace 5d',
+          },
+        ],
+        researchFeed: [
+          {
+            id: 'algo_rf1',
+            author: 'Carlos (Lvl 12)',
+            authorRole: 'Director de Semillero',
+            type: 'hallazgo',
+            title: 'Balanceo AVL en O(log n) con rotaciones dobles compactas',
+            content: 'Implementamos una versión compacta de rotaciones LR y RL que evita llamadas intermedias redundantes. El factor de balance se recalcula en O(1) tiempo constante.',
+            upvotes: 11,
+            hasUpvoted: false,
+            comments: [
+              { id: 'c1', author: 'Daniela (Lvl 13)', text: '¿Se comparó el throughput de inserciones contra un Red-Black Tree en benchmarks?', timeAgo: 'hace 1h' },
+            ],
+            timeAgo: 'hace 2h',
+          },
+        ],
+        libraryPapers: [
+          {
+            id: 'algo_lp1',
+            title: 'Contraction Hierarchies: Faster and Simpler Hierarchical Routing in Road Networks',
+            authors: 'Geisberger et al.',
+            doiOrUrl: 'https://doi.org/10.1007/978-3-540-68552-4_24',
+            summary: 'Preprocesamiento de grafos para acelerar consultas de Dijkstra en órdenes de magnitud.',
+            addedBy: 'Carlos',
+            tags: ['Grafos', 'A*', 'Dijkstra'],
+          },
+        ],
+        upcomingSessions: [
+          {
+            id: 'algo_us1',
+            title: 'Seminario: Complejidad Amortizada y Conjuntos Disjuntos (Union-Find)',
+            dateStr: 'Miércoles 19:00 UTC',
+            topic: 'Demostración de la función inversa de Ackermann en tiempo casi lineal.',
+            speaker: 'Carlos',
+            attendeesCount: 14,
+            userAttending: false,
+          },
+        ],
+        researchers: [
+          { id: 'al1', name: 'Carlos', role: 'Director de Semillero', level: 12, contributionsCount: 12 },
+          { id: 'al2', name: 'Daniela', role: 'Investigador Principal', level: 13, contributionsCount: 8 },
+        ],
+        isMember: false,
+      },
+      {
+        id: 'arch',
+        name: 'Arquitectura Backend & APIs',
+        tag: '[ARCH]',
+        category: 'backend',
+        description: 'Diseño de microservicios resilientes, bases de datos distribuidas, mensajería asíncrona y alta disponibilidad.',
+        linesOfResearch: ['Sistemas de Mensajería y Event-Driven Architecture', 'Bases de Datos Distribuidas y Consistencia Eventual', 'Patrones de Resiliencia y Rate Limiting'],
+        membersCount: 31,
+        streakDays: 22,
+        weeklyChallenge: { title: 'Diseñar un Rate Limiter distribuido con Redis y Token Bucket', xpReward: 320, completed: false },
+        recentLogs: [{ author: 'Valeria (Lvl 14)', message: 'Añadí tests de carga con k6 para 10k req/s.', timeAgo: 'hace 3h' }],
+        projects: [
+          {
+            id: 'arch_p1',
+            title: 'Rate Limiter Distribuido con Redis Cluster y Algoritmo Leaky Bucket',
+            description: 'Middleware escalable capaz de proteger microservicios ante ráfagas de 50k req/s sin degradar la latencia P99.',
+            techStack: ['Go', 'Redis', 'Docker', 'k6'],
+            status: 'en_progreso',
+            leadResearcher: 'Valeria (Lvl 14)',
+            membersJoined: ['Valeria (Lvl 14)', 'Mateo (Lvl 16)'],
+            createdAt: 'hace 4d',
+          },
+        ],
+        researchFeed: [
+          {
+            id: 'arch_rf1',
+            author: 'Valeria (Lvl 14)',
+            authorRole: 'Directora de Semillero',
+            type: 'benchmark',
+            title: 'Prueba de carga: Resiliencia de Circuit Breaker bajo latencia inducida',
+            content: 'Configuramos un Circuit Breaker con umbral de fallos del 50% en ventana de 10s. En la prueba con inyección de latencia (500ms), el circuito abrió en 1.2s aislando el servicio degradado.',
+            upvotes: 8,
+            hasUpvoted: false,
+            comments: [],
+            timeAgo: 'hace 4h',
+          },
+        ],
+        libraryPapers: [
+          {
+            id: 'arch_lp1',
+            title: 'Designing Data-Intensive Applications',
+            authors: 'Martin Kleppmann',
+            doiOrUrl: 'https://dataintensive.net/',
+            summary: 'El libro canónico sobre confiabilidad, escalabilidad y consistencia en sistemas distribuidos.',
+            addedBy: 'Valeria',
+            tags: ['Distribuidos', 'Bases de Datos', 'Consistencia'],
+          },
+        ],
+        upcomingSessions: [
+          {
+            id: 'arch_us1',
+            title: 'Coloquio: Event Sourcing y CQRS con Kafka y PostgreSQL',
+            dateStr: 'Viernes 17:00 UTC',
+            topic: 'Manejo de eventos desordenados, idempotencia y proyecciones de lectura.',
+            speaker: 'Valeria',
+            attendeesCount: 16,
+            userAttending: false,
+          },
+        ],
+        researchers: [
+          { id: 'ar1', name: 'Valeria', role: 'Directora de Semillero', level: 14, contributionsCount: 15 },
+          { id: 'ar2', name: 'Mateo', role: 'Investigador Principal', level: 16, contributionsCount: 7 },
+        ],
+        isMember: false,
+      },
+      {
+        id: 'sec',
+        name: 'CyberSecurity & Exploit Analysis',
+        tag: '[SEC]',
+        category: 'security',
+        description: 'Auditoría de seguridad en código fuente, sanitización estricta, criptografía aplicada y DevSecOps.',
+        linesOfResearch: ['Análisis Estático de Vulnerabilidades (SAST)', 'Criptografía Aplicada y Gestión de Secretos', 'Mitigación de OWASP Top 10 y Ataques a APIs'],
+        membersCount: 15,
+        streakDays: 11,
+        weeklyChallenge: { title: 'Mitigar vulnerabilidades OWASP Top 10 en endpoint de auth', xpReward: 400, completed: false },
+        recentLogs: [{ author: 'Esteban (Lvl 15)', message: 'Demostré inyección de cabeceras en proxy inverso.', timeAgo: 'hace 5h' }],
+        projects: [
+          {
+            id: 'sec_p1',
+            title: 'Herramienta de Análisis AST para Prevención de Inyección SQL y ReDoS',
+            description: 'Linter estático que recorre árboles sintácticos para identificar concatenaciones de consultas dinámicas y regex catastróficas.',
+            techStack: ['Rust', 'Tree-sitter', 'OWASP Rules'],
+            status: 'en_progreso',
+            leadResearcher: 'Esteban (Lvl 15)',
+            membersJoined: ['Esteban (Lvl 15)'],
+            createdAt: 'hace 6d',
+          },
+        ],
+        researchFeed: [
+          {
+            id: 'sec_rf1',
+            author: 'Esteban (Lvl 15)',
+            authorRole: 'Director de Semillero',
+            type: 'hallazgo',
+            title: 'Auditoría de Tokens JWT: Riesgo de algoritmo none y firmas truncadas',
+            content: 'Demostramos cómo librerías que no validan explícitamente el encabezado alg permiten falsificación de identidad sin conocimiento de la llave secreta.',
+            upvotes: 12,
+            hasUpvoted: false,
+            comments: [],
+            timeAgo: 'hace 5h',
+          },
+        ],
+        libraryPapers: [
+          {
+            id: 'sec_lp1',
+            title: 'OWASP Top 10 API Security Risks 2023',
+            authors: 'OWASP Foundation',
+            doiOrUrl: 'https://owasp.org/www-project-api-security/',
+            summary: 'Estándar de la industria sobre los vectores de ataque más críticos en APIs modernas.',
+            addedBy: 'Esteban',
+            tags: ['OWASP', 'API Security', 'BOLA'],
+          },
+        ],
+        upcomingSessions: [
+          {
+            id: 'sec_us1',
+            title: 'Taller: Threat Modeling de Arquitecturas Cloud con STRIDE',
+            dateStr: 'Martes 18:00 UTC',
+            topic: 'Metodología STRIDE y diseño de matrices de mitigación para microservicios.',
+            speaker: 'Esteban',
+            attendeesCount: 10,
+            userAttending: false,
+          },
+        ],
+        researchers: [
+          { id: 'sc1', name: 'Esteban', role: 'Director de Semillero', level: 15, contributionsCount: 13 },
+        ],
+        isMember: false,
+      },
+    ];
+  }
+
   // Study Groups state
-  studyGroups = signal<StudyGroup[]>([
-    {
-      id: 'krnl',
-      name: 'Kernel & C++ Systems Hackers',
-      tag: '[KRNL]',
-      category: 'systems',
-      description: 'Estudio intensivo de llamadas POSIX, memoria virtual y concurrencia.',
-      membersCount: 18,
-      streakDays: 19,
-      weeklyChallenge: { title: 'Implementar un Thread Pool en C++ con mutex POSIX', xpReward: 350, completed: false },
-      recentLogs: [{ author: 'Mateo (Lvl 16)', message: 'Subí benchmark de semáforos a la repo.', timeAgo: 'hace 2h' }],
-      isMember: false,
-    },
-    {
-      id: 'algo',
-      name: 'Clan de Algoritmos & Grafos',
-      tag: '[ALGO]',
-      category: 'algorithms',
-      description: 'Resolución de problemas de alta complejidad y árboles balanceados.',
-      membersCount: 26,
-      streakDays: 14,
-      weeklyChallenge: { title: 'Calcular Camino Más Corto con Dijkstra sobre Grafos', xpReward: 280, completed: true },
-      recentLogs: [{ author: 'Carlos (Lvl 12)', message: 'Resolví el balanceo AVL en 4ms.', timeAgo: 'hace 1h' }],
-      isMember: false,
-    },
-    {
-      id: 'arch',
-      name: 'Arquitectura Backend & APIs',
-      tag: '[ARCH]',
-      category: 'backend',
-      description: 'Diseño de microservicios, bases de datos distribuidas y patrones resilientes.',
-      membersCount: 31,
-      streakDays: 22,
-      weeklyChallenge: { title: 'Diseñar un Rate Limiter distribuido con Redis y Token Bucket', xpReward: 320, completed: false },
-      recentLogs: [{ author: 'Valeria (Lvl 14)', message: 'Añadí tests de carga con k6 para 10k req/s.', timeAgo: 'hace 3h' }],
-      isMember: false,
-    },
-    {
-      id: 'sec',
-      name: 'CyberSecurity & Exploit Analysis',
-      tag: '[SEC]',
-      category: 'security',
-      description: 'Auditoría de seguridad en código, sanitización estricta y criptografía aplicada.',
-      membersCount: 15,
-      streakDays: 11,
-      weeklyChallenge: { title: 'Mitigar vulnerabilidades OWASP Top 10 en endpoint de auth', xpReward: 400, completed: false },
-      recentLogs: [{ author: 'Esteban (Lvl 15)', message: 'Demostré inyección de cabeceras en proxy inverso.', timeAgo: 'hace 5h' }],
-      isMember: false,
-    },
-  ]);
+  studyGroups = signal<StudyGroup[]>(this.getDefaultStudyGroups());
 
   readonly currentStudentEmail = computed(() => {
     return this.auth.user()?.email?.toLowerCase().trim() || 'guest';
@@ -2962,12 +3295,64 @@ for (let paso = 1; paso <= 3; paso++) {
     return `syseng_${this.currentStudentEmail()}_${suffix}`;
   }
 
+  normalizeSemilleroData(groups: any[]): StudyGroup[] {
+    const defaultData = this.getDefaultStudyGroups();
+    return (groups || []).map(g => {
+      const def = defaultData.find(d => d.id === g.id);
+      return {
+        ...g,
+        linesOfResearch: g.linesOfResearch && g.linesOfResearch.length > 0 ? g.linesOfResearch : (def?.linesOfResearch || ['Ingeniería de Software & Arquitectura']),
+        projects: g.projects && g.projects.length > 0 ? g.projects : (def?.projects || []),
+        researchFeed: g.researchFeed && g.researchFeed.length > 0 ? g.researchFeed : (def?.researchFeed || []),
+        libraryPapers: g.libraryPapers && g.libraryPapers.length > 0 ? g.libraryPapers : (def?.libraryPapers || []),
+        upcomingSessions: g.upcomingSessions && g.upcomingSessions.length > 0 ? g.upcomingSessions : (def?.upcomingSessions || []),
+        researchers: g.researchers && g.researchers.length > 0 ? g.researchers : (def?.researchers || []),
+      };
+    });
+  }
+
+  // Semillero Workspace State
+  selectedGuild = signal<StudyGroup | null>(null);
+  activeGuildSection = signal<'feed' | 'projects' | 'papers' | 'sessions' | 'team'>('feed');
+
+  // Feed post creation state
+  newPostTitle = signal('');
+  newPostContent = signal('');
+  newPostType = signal<'hallazgo' | 'pregunta' | 'benchmark' | 'paper'>('hallazgo');
+  newPostCode = signal('');
+  newPostCodeLang = signal('cpp');
+  showCodeInput = signal(false);
+
+  // Comments state
+  expandedComments = signal<Record<string, boolean>>({});
+  commentInputMap = signal<Record<string, string>>({});
+
+  // Modals state
   showCreateGuildModal = signal(false);
   newGuildName = signal('');
   newGuildTag = signal('');
   newGuildCategory = signal<'systems' | 'algorithms' | 'backend' | 'frontend' | 'security' | 'ai'>('systems');
   newGuildDescription = signal('');
   guildActionError = signal<string | null>(null);
+
+  showCreateProjectModal = signal(false);
+  newProjectTitle = signal('');
+  newProjectDesc = signal('');
+  newProjectStack = signal('');
+  newProjectRepo = signal('');
+
+  showSharePaperModal = signal(false);
+  newPaperTitle = signal('');
+  newPaperAuthors = signal('');
+  newPaperUrl = signal('');
+  newPaperSummary = signal('');
+  newPaperTags = signal('');
+
+  showCreateSessionModal = signal(false);
+  newSessionTitle = signal('');
+  newSessionDate = signal('');
+  newSessionTopic = signal('');
+  newSessionSpeaker = signal('');
 
   // Recommendations
   readonly currentRecommendation = signal<PathRecommendation>({
@@ -3083,7 +3468,7 @@ for (let paso = 1; paso <= 3; paso++) {
       const savedDemoGroups = localStorage.getItem(this.getUserStorageKey('study_groups'));
       if (savedDemoGroups) {
         try {
-          this.studyGroups.set(JSON.parse(savedDemoGroups));
+          this.studyGroups.set(this.normalizeSemilleroData(JSON.parse(savedDemoGroups)));
         } catch {
           this.studyGroups.update(groups => groups.map(g => ({ ...g, isMember: g.id === 'krnl' })));
         }
@@ -3179,7 +3564,7 @@ for (let paso = 1; paso <= 3; paso++) {
     try {
       const groupsRaw = localStorage.getItem(userKeyGroups);
       if (groupsRaw) {
-        this.studyGroups.set(JSON.parse(groupsRaw));
+        this.studyGroups.set(this.normalizeSemilleroData(JSON.parse(groupsRaw)));
       } else {
         this.studyGroups.update(groups => groups.map(g => ({ ...g, isMember: false })));
       }
@@ -3442,6 +3827,44 @@ for (let paso = 1; paso <= 3; paso++) {
       description: desc,
       membersCount: 1,
       streakDays: 1,
+      linesOfResearch: ['Desarrollo Tecnológico e Innovación', 'Ingeniería de Software Aplicada'],
+      projects: [
+        {
+          id: 'proj_init_' + Date.now(),
+          title: `Proyecto Semilla: ${name}`,
+          description: `Iniciativa de investigación aplicada fundada por ${currentUser?.name || 'Tú'} para explorar soluciones computacionales avanzadas.`,
+          leadResearcher: currentUser?.name || 'Tú',
+          status: 'en_progreso',
+          techStack: ['Python', 'TypeScript', 'Docker'],
+          membersJoined: [currentUser?.name || 'Tú'],
+          createdAt: 'Hoy',
+        }
+      ],
+      researchFeed: [
+        {
+          id: 'feed_init_' + Date.now(),
+          author: `${currentUser?.name || 'Tú'}`,
+          authorRole: 'Investigador Principal',
+          type: 'hallazgo',
+          title: `Acta de Inicio: ${name}`,
+          content: 'Se formaliza la apertura de la línea de investigación y convocatoria de cadetes investigadores.',
+          upvotes: 1,
+          comments: [],
+          timeAgo: 'hace un momento',
+        }
+      ],
+      libraryPapers: [],
+      upcomingSessions: [],
+      researchers: [
+        {
+          id: 'mem_init_' + Date.now(),
+          name: currentUser?.name || 'Tú',
+          role: 'Fundador / Investigador Principal',
+          level: this.userLevel(),
+          contributionsCount: 1,
+          isCurrentUser: true,
+        }
+      ],
       weeklyChallenge: {
         title: `Reto Fundacional de ${name}: Resolver 3 retos de código`,
         xpReward: 350,
@@ -3450,7 +3873,7 @@ for (let paso = 1; paso <= 3; paso++) {
       recentLogs: [
         {
           author: `${currentUser?.name || 'Tú'} (Lvl ${this.userLevel()})`,
-          message: 'Fundó el clan y convocó a nuevos miembros.',
+          message: 'Fundó el semillero e inició las actividades de investigación.',
           timeAgo: 'hace un momento',
         },
       ],
