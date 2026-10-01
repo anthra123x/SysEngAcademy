@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink, Router, ActivatedRoute } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -17,206 +17,80 @@ import { AuthService } from '../../../core/services/auth.service';
           </a>
         </div>
 
-        @if (!showVerificationStep()) {
-          <h1>Crea tu cuenta</h1>
-          <p class="auth-subtitle">Únete a SysEngAcademy y aprende programando.</p>
+        <h1>Crea tu cuenta</h1>
+        <p class="auth-subtitle">Únete a SysEngAcademy y aprende programando.</p>
 
-          @if (error()) {
-            <div class="alert-error">{{ error() }}</div>
-          }
-
-          <form (ngSubmit)="submit()" #form="ngForm">
-            <div class="form-group">
-              <label>Nombre completo</label>
-              <input
-                class="input"
-                type="text"
-                name="name"
-                [(ngModel)]="name"
-                placeholder="Tu nombre completo"
-                required
-                autocomplete="name"
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Correo electrónico</label>
-              <input
-                class="input"
-                type="email"
-                name="email"
-                [(ngModel)]="email"
-                placeholder="tu@email.com"
-                required
-                autocomplete="email"
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Contraseña</label>
-              <input
-                class="input"
-                type="password"
-                name="password"
-                [(ngModel)]="password"
-                placeholder="Mínimo 8 caracteres"
-                required
-                minlength="8"
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Confirmar contraseña</label>
-              <input
-                class="input"
-                type="password"
-                name="password_confirmation"
-                [(ngModel)]="passwordConfirm"
-                placeholder="Repite tu contraseña"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              class="btn btn-primary"
-              style="width:100%; margin-top: var(--sp-2);"
-              [disabled]="loading()"
-            >
-              {{ loading() ? 'Creando cuenta...' : 'Crear Cuenta' }}
-            </button>
-          </form>
-
-          <p class="auth-link">
-            ¿Ya tienes cuenta?
-            <a routerLink="/auth/login">Inicia sesión</a>
-          </p>
-        } @else {
-          <!-- VERIFICATION EMAIL STEP -->
-          <div class="verify-step animate-fade-in">
-            <div class="verify-icon">📨</div>
-            <h1>¡Confirma tu cuenta!</h1>
-            <p class="auth-subtitle">
-              Hemos enviado un correo institucional con el código de activación a <strong>{{ email }}</strong>.
-              Debes ingresarlo a continuación para habilitar tu acceso.
-            </p>
-
-            <button
-              type="button"
-              class="btn-email-preview-trigger"
-              (click)="showEmailModal.set(true)"
-            >
-              📬 Ver el correo recibido con el código
-            </button>
-
-            @if (verificationCodeSample()) {
-              <div class="dev-hint-box">
-                <span class="hint-label">Código de activación generado:</span>
-                <strong class="hint-code">{{ verificationCodeSample() }}</strong>
-              </div>
-            }
-
-            @if (verificationSuccess()) {
-              <div class="alert-success">
-                ✅ ¡Cuenta verificada con éxito! Redirigiendo a tu examen de nivel…
-              </div>
-            } @else {
-              @if (error()) {
-                <div class="alert-error">{{ error() }}</div>
-              }
-
-              <form (ngSubmit)="confirmVerification()">
-                <div class="form-group">
-                  <label>Ingresa tu código de 6 dígitos</label>
-                  <input
-                    class="input code-input"
-                    type="text"
-                    name="code"
-                    [(ngModel)]="enteredCode"
-                    placeholder="123456"
-                    required
-                    maxlength="6"
-                    autocomplete="one-time-code"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  class="btn btn-primary btn-block"
-                  [disabled]="verifying() || !enteredCode.trim()"
-                >
-                  {{ verifying() ? 'Verificando…' : 'Activar y Confirmar Cuenta' }}
-                </button>
-              </form>
-
-              <div class="verify-actions">
-                <button
-                  type="button"
-                  class="btn-resend"
-                  (click)="resendCode()"
-                  [disabled]="resending()"
-                >
-                  {{ resending() ? 'Reenviando…' : '¿No recibiste el correo? Reenviar código' }}
-                </button>
-              </div>
-            }
-          </div>
+        @if (error()) {
+          <div class="alert-error">{{ error() }}</div>
         }
-      </div>
 
-      <!-- MODAL SIMULADOR DEL CORREO INSTITUCIONAL -->
-      @if (showEmailModal()) {
-        <div class="email-modal-backdrop" (click)="showEmailModal.set(false)">
-          <div class="email-modal-card animate-fade-in" (click)="$event.stopPropagation()">
-            <div class="email-modal-topbar">
-              <span class="email-badge-client">📥 Bandeja de Entrada — Mensaje de SysEng Academy</span>
-              <button type="button" class="btn-close-modal" (click)="showEmailModal.set(false)">✕</button>
-            </div>
-
-            <!-- CUERPO DEL CORREO IDÉNTICO A LA PLANTILLA DEL SERVIDOR -->
-            <div class="email-preview-container">
-              <div class="email-preview-header">
-                <div class="preview-logo-badge">&lt;/&gt;</div>
-                <h2 class="preview-logo-title">SysEng<span>Academy</span></h2>
-              </div>
-
-              <div class="email-preview-body">
-                <div class="preview-subject-line">
-                  <strong>Asunto:</strong> Código de Verificación: {{ currentCode() }} - SysEng Academy
-                </div>
-                <h3 class="preview-greeting">¡Hola, {{ name || 'Estudiante' }}!</h3>
-                <p class="preview-text">
-                  Bienvenido a <strong>SysEng Academy</strong>. Tu cuenta de estudiante ha sido registrada con éxito.
-                  Para validar tu correo institucional y activar tu acceso a las clases, laboratorios interactivos y evaluación de nivel, ingresa el siguiente código de activación en la plataforma:
-                </p>
-
-                <div class="preview-code-box">
-                  <span class="preview-code-label">// CÓDIGO DE ACTIVACIÓN //</span>
-                  <span class="preview-code-value">{{ currentCode() }}</span>
-                </div>
-
-                <div class="preview-security-note">
-                  ⏱ <strong>Vigencia:</strong> Este código expira en 24 horas.<br />
-                  🛡️ <strong>Seguridad:</strong> Si tú no solicitaste crear esta cuenta, puedes desestimar este mensaje.
-                </div>
-
-                <button
-                  type="button"
-                  class="btn-copy-code"
-                  (click)="applyCodeFromEmail()"
-                >
-                  Usar este código ({{ currentCode() }}) y cerrar
-                </button>
-              </div>
-
-              <div class="email-preview-footer">
-                SysEng Academy · Plataforma de Formación Práctica en Ingeniería de Software<br />
-                <em>"A programar se aprende programando."</em>
-              </div>
-            </div>
+        <form (ngSubmit)="submit()" #form="ngForm">
+          <div class="form-group">
+            <label>Nombre completo</label>
+            <input
+              class="input"
+              type="text"
+              name="name"
+              [(ngModel)]="name"
+              placeholder="Tu nombre completo"
+              required
+              autocomplete="name"
+            />
           </div>
-        </div>
-      }
+
+          <div class="form-group">
+            <label>Correo electrónico</label>
+            <input
+              class="input"
+              type="email"
+              name="email"
+              [(ngModel)]="email"
+              placeholder="tu@email.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input
+              class="input"
+              type="password"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="Mínimo 8 caracteres"
+              required
+              minlength="8"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Confirmar contraseña</label>
+            <input
+              class="input"
+              type="password"
+              name="password_confirmation"
+              [(ngModel)]="passwordConfirm"
+              placeholder="Repite tu contraseña"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="width:100%; margin-top: var(--sp-2);"
+            [disabled]="loading()"
+          >
+            {{ loading() ? 'Creando cuenta...' : 'Crear Cuenta' }}
+          </button>
+        </form>
+
+        <p class="auth-link">
+          ¿Ya tienes cuenta?
+          <a routerLink="/auth/login">Inicia sesión</a>
+        </p>
+      </div>
     </div>
   `,
   styles: [
@@ -659,47 +533,17 @@ import { AuthService } from '../../../core/services/auth.service';
     `,
   ],
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
 
   name = '';
   email = '';
   password = '';
   passwordConfirm = '';
-  enteredCode = '';
 
   loading = signal(false);
-  verifying = signal(false);
-  resending = signal(false);
   error = signal('');
-
-  showVerificationStep = signal(false);
-  verificationCodeSample = signal<string | null>(null);
-  verificationSuccess = signal(false);
-  showEmailModal = signal(false);
-
-  ngOnInit() {
-    const qp = this.route.snapshot.queryParams;
-    if (qp['verifyEmail']) {
-      this.email = qp['verifyEmail'];
-      this.showVerificationStep.set(true);
-      const code = this.auth.getStoredVerificationCode(this.email);
-      if (code) {
-        this.verificationCodeSample.set(code);
-      }
-    }
-  }
-
-  currentCode(): string {
-    return this.verificationCodeSample() || '849201';
-  }
-
-  applyCodeFromEmail() {
-    this.enteredCode = this.currentCode();
-    this.showEmailModal.set(false);
-  }
 
   submit() {
     if (this.loading()) return;
@@ -719,12 +563,9 @@ export class RegisterComponent implements OnInit {
         password_confirmation: this.passwordConfirm,
       })
       .subscribe({
-        next: (res: any) => {
+        next: (_res: any) => {
           this.loading.set(false);
-          if (res?.verification_code) {
-            this.verificationCodeSample.set(res.verification_code);
-          }
-          this.showVerificationStep.set(true);
+          this.finishRegistration();
         },
         error: err => {
           const errors = err.error?.errors;
@@ -733,43 +574,6 @@ export class RegisterComponent implements OnInit {
           this.loading.set(false);
         },
       });
-  }
-
-  confirmVerification() {
-    if (this.verifying() || !this.enteredCode.trim()) return;
-
-    this.verifying.set(true);
-    this.error.set('');
-
-    this.auth.verifyEmail(this.enteredCode.trim(), this.email).subscribe({
-      next: () => {
-        this.verifying.set(false);
-        this.verificationSuccess.set(true);
-        setTimeout(() => this.finishRegistration(), 1200);
-      },
-      error: err => {
-        this.verifying.set(false);
-        this.error.set(err.error?.message ?? 'El código no es válido o ha expirado.');
-      },
-    });
-  }
-
-  resendCode() {
-    if (this.resending()) return;
-    this.resending.set(true);
-
-    this.auth.resendVerification(this.email).subscribe({
-      next: (res: any) => {
-        this.resending.set(false);
-        if (res?.verification_code) {
-          this.verificationCodeSample.set(res.verification_code);
-        }
-        alert('Código reenviado a tu correo electrónico.');
-      },
-      error: () => {
-        this.resending.set(false);
-      },
-    });
   }
 
   finishRegistration() {
@@ -781,7 +585,7 @@ export class RegisterComponent implements OnInit {
     ) {
       this.router.navigate(['/docente']);
     } else {
-      // Redirige directamente al onboarding y examen diagnóstico
+      // Redirige directamente al onboarding y diagnóstico del estudiante
       this.router.navigate(['/onboarding']);
     }
   }

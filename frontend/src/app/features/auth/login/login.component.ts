@@ -24,54 +24,6 @@ import { AuthService } from '../../../core/services/auth.service';
           <div class="alert-error">{{ error() }}</div>
         }
 
-        <!-- BLOQUE DE ACTIVACIÓN: Si la cuenta aún no ha sido verificada -->
-        @if (isUnverified()) {
-          <div class="unverified-card animate-fade-in">
-            <div class="unverified-header">
-              <span class="unverified-icon">🔐</span>
-              <div>
-                <strong>Activación de Cuenta Requerida</strong>
-                <p>Tu usuario no puede iniciar sesión hasta verificar el correo <strong>{{ unverifiedEmail() }}</strong>.</p>
-              </div>
-            </div>
-
-            @if (verificationCodeHint()) {
-              <div class="dev-hint-pill">
-                <span>Código generado:</span>
-                <code>{{ verificationCodeHint() }}</code>
-              </div>
-            }
-
-            <div class="unverified-input-group">
-              <input
-                type="text"
-                class="input code-inline-input"
-                [(ngModel)]="verificationCode"
-                placeholder="Código de 6 dígitos"
-                maxlength="6"
-              />
-              <button
-                type="button"
-                class="btn btn-primary btn-sm"
-                (click)="verifyAndProceed()"
-                [disabled]="verifyingCode() || !verificationCode.trim()"
-              >
-                {{ verifyingCode() ? 'Validando…' : 'Activar y Entrar' }}
-              </button>
-            </div>
-
-            @if (verificationError()) {
-              <span class="unverified-err-msg">{{ verificationError() }}</span>
-            }
-
-            <div class="unverified-actions">
-              <button type="button" class="btn-link" (click)="resendCode()" [disabled]="resending()">
-                {{ resending() ? 'Reenviando…' : 'Reenviar código de activación' }}
-              </button>
-            </div>
-          </div>
-        }
-
         <form (ngSubmit)="submit()" #form="ngForm">
           <div class="form-group">
             <label>Correo electrónico</label>
@@ -390,20 +342,10 @@ export class LoginComponent {
   loading = signal(false);
   error = signal('');
 
-  // Estados de verificación estricta
-  isUnverified = signal(false);
-  unverifiedEmail = signal('');
-  verificationCode = '';
-  verifyingCode = signal(false);
-  verificationError = signal('');
-  verificationCodeHint = signal<string | null>(null);
-  resending = signal(false);
-
   submit() {
     if (this.loading()) return;
     this.loading.set(true);
     this.error.set('');
-    this.verificationError.set('');
 
     this.auth.login({ email: this.email, password: this.password }).subscribe({
       next: res => {
@@ -415,56 +357,6 @@ export class LoginComponent {
         this.loading.set(false);
         const errMsg = err.error?.message ?? 'Las credenciales no son correctas.';
         this.error.set(errMsg);
-
-        // Si la cuenta no está verificada, bloquear y desplegar el validador de código
-        if (err.error?.unverified || errMsg.toLowerCase().includes('verificar')) {
-          this.isUnverified.set(true);
-          const target = err.error?.email || this.email.trim();
-          this.unverifiedEmail.set(target);
-
-          const hint = err.error?.verification_code || this.auth.getStoredVerificationCode(target);
-          if (hint) {
-            this.verificationCodeHint.set(hint);
-          }
-        }
-      },
-    });
-  }
-
-  verifyAndProceed() {
-    if (this.verifyingCode() || !this.verificationCode.trim()) return;
-
-    this.verifyingCode.set(true);
-    this.verificationError.set('');
-
-    this.auth.verifyEmail(this.verificationCode.trim(), this.unverifiedEmail()).subscribe({
-      next: res => {
-        this.verifyingCode.set(false);
-        this.isUnverified.set(false);
-        const user = res?.user || this.auth.user();
-        this.redirectAfterAuth(user);
-      },
-      error: err => {
-        this.verifyingCode.set(false);
-        this.verificationError.set(err.error?.message ?? 'El código de 6 dígitos no es correcto.');
-      },
-    });
-  }
-
-  resendCode() {
-    if (this.resending()) return;
-    this.resending.set(true);
-
-    this.auth.resendVerification(this.unverifiedEmail()).subscribe({
-      next: (res: any) => {
-        this.resending.set(false);
-        if (res?.verification_code) {
-          this.verificationCodeHint.set(res.verification_code);
-        }
-        alert('Se ha enviado un nuevo código de activación a tu correo electrónico.');
-      },
-      error: () => {
-        this.resending.set(false);
       },
     });
   }
@@ -477,7 +369,7 @@ export class LoginComponent {
     ) {
       this.router.navigate(['/docente']);
     } else {
-      // Para estudiantes: solo cuando la cuenta sea nueva o no haya completado el diagnóstico inicial
+      // Para estudiantes: si no ha completado el diagnóstico inicial ir a onboarding
       const isDiagDone = this.auth.isDiagnosticCompleted(user?.email);
 
       if (!isDiagDone) {

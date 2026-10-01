@@ -33,122 +33,55 @@ export class AuthService {
       },
       pass: 'kimetsunoyaiBa1',
     },
-    {
-      user: {
-        id: 2,
-        name: 'Carlos Instructor',
-        email: 'instructor@sysengacademy.dev',
-        role: 'instructor',
-        avatar: undefined,
-        email_verified_at: '2026-09-27T00:00:00.000000Z',
-      },
-      pass: 'instructor1234',
-    },
-    {
-      user: {
-        id: 1,
-        name: 'Admin SysEng',
-        email: 'admin@sysengacademy.dev',
-        role: 'admin',
-        avatar: undefined,
-        email_verified_at: '2026-09-27T00:00:00.000000Z',
-      },
-      pass: 'admin1234',
-    },
-    {
-      user: {
-        id: 3,
-        name: 'Ana Estudiante (Demo)',
-        email: 'estudiante@sysengacademy.dev',
-        role: 'student',
-        avatar: undefined,
-        email_verified_at: '2026-09-27T00:00:00.000000Z',
-      },
-      pass: 'estudiante1234',
-    },
   ];
 
   register(data: { name: string; email: string; password: string; password_confirmation: string }) {
     return this.api.post<{ user: User; token: string; verification_required?: boolean; verification_code?: string }>('/auth/register', data).pipe(
       catchError(() => {
         // Fallback local registration para entornos desacoplados / producción
-        const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
         const newUser: User = {
           id: Date.now(),
           name: data.name,
           email: data.email,
           role: 'student',
-          email_verified_at: null as any,
+          email_verified_at: new Date().toISOString(),
         };
         const token = 'syseng_jwt_' + btoa(data.email) + '_' + Date.now();
-        this.saveRegisteredUser(newUser, data.password, verifyCode);
+        this.saveRegisteredUser(newUser, data.password, '000000');
         return of({ 
           user: newUser, 
           token, 
-          verification_required: true,
-          verification_code: verifyCode,
-          message: 'Cuenta creada exitosamente. Hemos enviado un mensaje de confirmación a tu correo.' 
+          verification_required: false,
+          message: 'Cuenta creada exitosamente. Bienvenido a SysEng Academy.' 
         });
       }),
       tap(res => {
-        if (res.user?.email_verified_at) {
-          this.setSession(res);
-        }
+        this.setSession(res);
       })
     );
   }
 
   login(credentials: { email: string; password: string }) {
     return this.api.post<{ user: User; token: string }>('/auth/login', credentials).pipe(
-      catchError(apiErr => {
-        // Si el backend devolvió un error de cuenta no verificada
-        if (apiErr.error?.unverified || apiErr.error?.message?.toLowerCase().includes('verificar')) {
-          return throwError(() => ({
-            error: {
-              message: apiErr.error?.message || 'Debes verificar tu cuenta con el código de 6 dígitos enviado a tu correo antes de iniciar sesión.',
-              unverified: true,
-              email: credentials.email,
-            }
-          }));
-        }
-
-        // Intentar autenticación con cuentas predeterminadas
+      catchError(_apiErr => {
         const normalizedEmail = (credentials.email || '').trim().toLowerCase();
+
+        // 1. Docente principal
         const found = this.systemAccounts.find(
-          acc => acc.user.email.toLowerCase() === normalizedEmail &&
-                 (acc.pass === credentials.password || (acc.user.email === 'estudiante@sysengacademy.dev' && credentials.password === 'password'))
+          acc => acc.user.email.toLowerCase() === normalizedEmail && acc.pass === credentials.password
         );
 
         if (found) {
-          // Si es el estudiante de prueba, asegurar que tenga datos iniciales de progreso
-          if (found.user.role === 'student' && typeof window !== 'undefined') {
-            const currentChallenges = localStorage.getItem('syseng_solved_challenges');
-            if (!currentChallenges || currentChallenges === '[]') {
-              localStorage.setItem('syseng_solved_challenges', JSON.stringify([
-                'algoritmo-1', 'algoritmo-2', 'algoritmo-3', 'balanceo-parentesis', 'invertir-cadena', 'busqueda-binaria'
-              ]));
-            }
-          }
-
           const mockToken = 'syseng_jwt_' + btoa(found.user.email) + '_' + Date.now();
           return of({ user: found.user, token: mockToken });
         }
 
-        // Buscar en usuarios creados localmente
+        // 2. Buscar en usuarios registrados localmente
         const localRecord = this.findRegisteredRecord(normalizedEmail);
         if (localRecord && localRecord.pass === credentials.password) {
-          // Si el usuario no ha colocado el código de verificación, BLOQUEAR inicio de sesión
           if (!localRecord.user.email_verified_at) {
-            return throwError(() => ({
-              error: {
-                message: 'Debes verificar tu cuenta con el código de 6 dígitos enviado a tu correo antes de iniciar sesión.',
-                unverified: true,
-                email: localRecord.user.email,
-                verification_code: localRecord.verifyCode
-              }
-            }));
+            localRecord.user.email_verified_at = new Date().toISOString();
           }
-
           const mockToken = 'syseng_jwt_' + btoa(localRecord.user.email) + '_' + Date.now();
           return of({ user: localRecord.user, token: mockToken });
         }
