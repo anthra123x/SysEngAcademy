@@ -35,37 +35,80 @@ export class AuthService {
     },
   ];
 
+  constructor() {
+    this.syncActiveSession();
+  }
+
+  private syncActiveSession(): void {
+    if (typeof window === 'undefined') return;
+    const u = this._user();
+    if (!u || !u.email || u.role === 'admin' || u.email.toLowerCase() === 'andrescamilomartinez330@gmail.com') return;
+
+    // Sincronizar en segundo plano con PostgreSQL Neon para garantizar que la cuenta
+    // esté activa en la base de datos y visible en el panel docente
+    this.api.post<{ user: User; synced: boolean }>('/auth/sync-session', {
+      name: u.name,
+      email: u.email
+    }, 20000).subscribe({
+      next: res => {
+        if (res?.user && res.user.id && res.user.id !== u.id) {
+          const updated = { ...u, id: res.user.id };
+          this._user.set(updated);
+          localStorage.setItem('syseng_user', JSON.stringify(updated));
+        }
+      },
+      error: () => {}
+    });
+  }
+
   register(data: { name: string; email: string; password: string; password_confirmation: string }) {
-    return this.api.post<{ user: User; token: string; verification_required?: boolean; verification_code?: string }>('/auth/register', data).pipe(
-      catchError(() => {
-        // Fallback local registration para entornos desacoplados / producción
-        const newUser: User = {
-          id: Date.now(),
+    return this.api.post<{ user: User; token: string; verification_required?: boolean; verification_code?: string }>('/auth/register', data, 25000).pipe(
+      tap(res => {
+        this.saveRegisteredUser(res.user, data.password, res.verification_code || '000000');
+        this.setSession(res);
+      }),
+      catchError(err => {
+        // Si el backend responde con error de validación (ej. correo ya registrado), propagar directamente
+        if (err.status === 422 || err.status === 400) {
+          return throwError(() => err);
+        }
+        // Si hay fallo transitorio de red o timeout, intentar rescate mediante /auth/sync-session
+        return this.api.post<{ user: User; token: string }>('/auth/sync-session', {
           name: data.name,
           email: data.email,
-          role: 'student',
-          email_verified_at: new Date().toISOString(),
-        };
-        const token = 'syseng_jwt_' + btoa(data.email) + '_' + Date.now();
-        this.saveRegisteredUser(newUser, data.password, '000000');
-        return of({ 
-          user: newUser, 
-          token, 
-          verification_required: false,
-          message: 'Cuenta creada exitosamente. Bienvenido a SysEng Academy.' 
-        });
-      }),
-      tap(res => {
-        this.setSession(res);
+          password: data.password
+        }, 25000).pipe(
+          tap(syncRes => {
+            this.saveRegisteredUser(syncRes.user, data.password, '000000');
+            this.setSession({
+              user: syncRes.user,
+              token: syncRes.token || ('syseng_jwt_' + btoa(data.email) + '_' + Date.now()),
+            });
+          }),
+          catchError(() => {
+            // Si la conexión definitivamente falló en el servidor, no enmascarar con cuenta fantasma
+            return throwError(() => ({
+              error: {
+                message: 'No se pudo conectar con el servidor de SysEng Academy. Por favor verifica tu conexión y vuelve a intentar el registro.'
+              }
+            }));
+          })
+        );
       })
     );
   }
 
   login(credentials: { email: string; password: string }) {
-    return this.api.post<{ user: User; token: string }>('/auth/login', credentials).pipe(
-      catchError(_apiErr => {
-        const normalizedEmail = (credentials.email || '').trim().toLowerCase();
+    const normalizedEmail = (credentials.email || '').trim().toLowerCase();
+    const localRecord = this.findRegisteredRecord(normalizedEmail);
 
+    return this.api.post<{ user: User; token: string }>('/auth/login', {
+      email: credentials.email,
+      password: credentials.password,
+      sync_account: !!localRecord,
+      name: localRecord?.user?.name
+    }, 25000).pipe(
+      catchError(apiErr => {
         // 1. Docente principal
         const found = this.systemAccounts.find(
           acc => acc.user.email.toLowerCase() === normalizedEmail && acc.pass === credentials.password
@@ -76,17 +119,24 @@ export class AuthService {
           return of({ user: found.user, token: mockToken });
         }
 
-        // 2. Buscar en usuarios registrados localmente
-        const localRecord = this.findRegisteredRecord(normalizedEmail);
+        // 2. Si el usuario existía en localRecord y coincide contraseña, rescatarlo hacia la base de datos PostgreSQL
         if (localRecord && localRecord.pass === credentials.password) {
-          if (!localRecord.user.email_verified_at) {
-            localRecord.user.email_verified_at = new Date().toISOString();
-          }
-          const mockToken = 'syseng_jwt_' + btoa(localRecord.user.email) + '_' + Date.now();
-          return of({ user: localRecord.user, token: mockToken });
+          return this.api.post<{ user: User; token: string }>('/auth/sync-session', {
+            name: localRecord.user.name,
+            email: localRecord.user.email,
+            password: localRecord.pass
+          }, 25000).pipe(
+            tap(res => {
+              this.setSession(res);
+            }),
+            catchError(() => {
+              const mockToken = 'syseng_jwt_' + btoa(localRecord.user.email) + '_' + Date.now();
+              return of({ user: localRecord.user, token: mockToken });
+            })
+          );
         }
 
-        return throwError(() => ({
+        return throwError(() => apiErr || ({
           error: { message: 'Las credenciales no son correctas. Por favor verifica tu correo y contraseña.' }
         }));
       }),

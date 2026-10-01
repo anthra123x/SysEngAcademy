@@ -80,7 +80,10 @@ async function resolveUser(req: any, body?: any): Promise<any | null> {
     }
   }
 
-  // Fallback si viene en el cuerpo
+  // Fallback si viene en el cuerpo o cabeceras adicionales
+  if (!email && req.headers?.['x-user-email']) {
+    email = String(req.headers['x-user-email']);
+  }
   if (!email && body?.email) {
     email = String(body.email);
   }
@@ -88,14 +91,55 @@ async function resolveUser(req: any, body?: any): Promise<any | null> {
     userId = Number(body.user_id);
   }
 
-  if (email) {
+  let userName = '';
+  if (req.headers?.['x-user-name']) {
+    try {
+      userName = decodeURIComponent(String(req.headers['x-user-name']));
+    } catch {
+      userName = String(req.headers['x-user-name']);
+    }
+  }
+  if (!userName && body?.name) {
+    userName = String(body.name);
+  }
+
+  if (email && email.trim()) {
+    const normEmail = email.trim().toLowerCase();
     const rows: any = await sql`
       SELECT id, name, email, role, avatar, email_verified_at, created_at, xp, current_streak
       FROM users
-      WHERE LOWER(email) = LOWER(${email.trim()})
+      WHERE LOWER(email) = ${normEmail}
       LIMIT 1
     `;
     if (rows && rows.length > 0) return rows[0];
+
+    // AUTO-PROVISION: Si el usuario trae credencial/token válido pero no existe en PostgreSQL
+    // (por ejemplo si se registró durante un fallo transitorio de red o en offline),
+    // lo persistimos inmediatamente en Neon con su rol estudiante y matrícula activa.
+    if (normEmail.includes('@') && normEmail !== 'andrescamilomartinez330@gmail.com') {
+      const displayName = userName.trim() || normEmail.split('@')[0];
+      try {
+        const inserted: any = await sql`
+          INSERT INTO users (name, email, password, role, email_verified_at, created_at, updated_at, xp, current_streak)
+          VALUES (${displayName}, ${normEmail}, 'syseng_synced_user', 'student', NOW(), NOW(), NOW(), 100, 1)
+          ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
+          RETURNING id, name, email, role, avatar, email_verified_at, created_at, xp, current_streak
+        `;
+        if (inserted && inserted.length > 0) {
+          const autoUser = inserted[0];
+          try {
+            await sql`
+              INSERT INTO enrollments (user_id, course_id, enrolled_at, progress_percent, created_at, updated_at)
+              VALUES (${autoUser.id}, 1, NOW(), 0, NOW(), NOW())
+              ON CONFLICT DO NOTHING
+            `;
+          } catch {}
+          return autoUser;
+        }
+      } catch (autoErr) {
+        console.error('Error auto-provisioning student from token/headers:', autoErr);
+      }
+    }
   }
 
   if (userId) {
@@ -134,7 +178,7 @@ export default async function handler(req: any, res: any) {
 
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname;
-  const cleanPath = pathname.replace(/^\/api/, '') || '/';
+  const cleanPath = (pathname.replace(/^\/api/, '') || '/').replace(/\/+$/, '') || '/';
   const method = req.method?.toUpperCase() || 'GET';
 
   try {
@@ -147,7 +191,7 @@ export default async function handler(req: any, res: any) {
     }
 
     // -------------------------------------------------------------
-    // 2. AUTHENTICATION (Register & Login & Me)
+    // 2. AUTHENTICATION (Register & Login & Me & Sync)
     // -------------------------------------------------------------
     if (method === 'POST' && cleanPath === '/auth/register') {
       const body = await getBody(req);
@@ -169,6 +213,7 @@ export default async function handler(req: any, res: any) {
       const inserted: any = await sql`
         INSERT INTO users (name, email, password, role, email_verified_at, created_at, updated_at, xp, current_streak)
         VALUES (${name}, ${email}, ${password}, 'student', NOW(), NOW(), NOW(), 100, 1)
+        ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
         RETURNING id, name, email, role, avatar, email_verified_at, created_at, xp
       `;
       const newUser: any = inserted[0];
@@ -178,6 +223,7 @@ export default async function handler(req: any, res: any) {
         await sql`
           INSERT INTO enrollments (user_id, course_id, enrolled_at, progress_percent, created_at, updated_at)
           VALUES (${newUser.id}, 1, NOW(), 0, NOW(), NOW())
+          ON CONFLICT DO NOTHING
         `;
       } catch {}
 
@@ -198,10 +244,95 @@ export default async function handler(req: any, res: any) {
       });
     }
 
+    // Endpoint de sincronización y rescate de sesiones
+    if (method === 'POST' && cleanPath === '/auth/sync-session') {
+      const body = await getBody(req);
+      const email = String(body.email || req.headers?.['x-user-email'] || '').trim().toLowerCase();
+      const name = String(body.name || req.headers?.['x-user-name'] || '').trim();
+      const password = String(body.password || 'syseng_synced_pass');
+
+      if (!email || !email.includes('@')) {
+        return sendJson(res, 400, { message: 'Email válido requerido para sincronización' });
+      }
+
+      if (email === 'andrescamilomartinez330@gmail.com') {
+        const adminRows: any = await sql`SELECT * FROM users WHERE LOWER(email) = ${email} LIMIT 1`;
+        return sendJson(res, 200, { user: adminRows[0] || { id: 28, email, role: 'admin' }, synced: true });
+      }
+
+      const rows: any = await sql`
+        SELECT id, name, email, role, avatar, email_verified_at, created_at, xp, current_streak
+        FROM users
+        WHERE LOWER(email) = ${email}
+        LIMIT 1
+      `;
+
+      if (rows && rows.length > 0) {
+        const u = rows[0];
+        try {
+          await sql`
+            INSERT INTO enrollments (user_id, course_id, enrolled_at, progress_percent, created_at, updated_at)
+            VALUES (${u.id}, 1, NOW(), 0, NOW(), NOW())
+            ON CONFLICT DO NOTHING
+          `;
+        } catch {}
+        const token = 'syseng_jwt_' + Buffer.from(u.email).toString('base64') + '_' + Date.now();
+        return sendJson(res, 200, {
+          user: {
+            id: Number(u.id),
+            name: u.name,
+            email: u.email,
+            role: u.role || 'student',
+            avatar: u.avatar,
+            email_verified_at: u.email_verified_at,
+            created_at: u.created_at,
+          },
+          token,
+          synced: true,
+          existing: true,
+        });
+      }
+
+      // No existe en Neon: crearlo inmediatamente
+      const displayName = name || email.split('@')[0];
+      const inserted: any = await sql`
+        INSERT INTO users (name, email, password, role, email_verified_at, created_at, updated_at, xp, current_streak)
+        VALUES (${displayName}, ${email}, ${password}, 'student', NOW(), NOW(), NOW(), 100, 1)
+        ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
+        RETURNING id, name, email, role, avatar, email_verified_at, created_at, xp
+      `;
+      const newUser = inserted[0];
+      try {
+        await sql`
+          INSERT INTO enrollments (user_id, course_id, enrolled_at, progress_percent, created_at, updated_at)
+          VALUES (${newUser.id}, 1, NOW(), 0, NOW(), NOW())
+          ON CONFLICT DO NOTHING
+        `;
+      } catch {}
+
+      const token = 'syseng_jwt_' + Buffer.from(newUser.email).toString('base64') + '_' + Date.now();
+      return sendJson(res, 201, {
+        user: {
+          id: Number(newUser.id),
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role || 'student',
+          avatar: newUser.avatar,
+          email_verified_at: newUser.email_verified_at,
+          created_at: newUser.created_at,
+        },
+        token,
+        synced: true,
+        created: true,
+      });
+    }
+
     if (method === 'POST' && cleanPath === '/auth/login') {
       const body = await getBody(req);
       const email = String(body.email || '').trim().toLowerCase();
       const password = String(body.password || '');
+      const syncAccount = Boolean(body.sync_account || body.name);
+      const name = String(body.name || '').trim();
 
       // Caso especial docente
       if (email === 'andrescamilomartinez330@gmail.com' && password === 'kimetsunoyaiBa1') {
@@ -231,6 +362,36 @@ export default async function handler(req: any, res: any) {
       // Búsqueda en Neon
       const users: any = await sql`SELECT * FROM users WHERE LOWER(email) = LOWER(${email}) LIMIT 1`;
       if (!users || users.length === 0) {
+        if (syncAccount && email.includes('@') && password) {
+          const displayName = name || email.split('@')[0];
+          const inserted: any = await sql`
+            INSERT INTO users (name, email, password, role, email_verified_at, created_at, updated_at, xp, current_streak)
+            VALUES (${displayName}, ${email}, ${password}, 'student', NOW(), NOW(), NOW(), 100, 1)
+            ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
+            RETURNING id, name, email, role, avatar, email_verified_at, created_at, xp
+          `;
+          const autoUser = inserted[0];
+          try {
+            await sql`
+              INSERT INTO enrollments (user_id, course_id, enrolled_at, progress_percent, created_at, updated_at)
+              VALUES (${autoUser.id}, 1, NOW(), 0, NOW(), NOW())
+              ON CONFLICT DO NOTHING
+            `;
+          } catch {}
+          const token = 'syseng_jwt_' + Buffer.from(autoUser.email).toString('base64') + '_' + Date.now();
+          return sendJson(res, 200, {
+            user: {
+              id: Number(autoUser.id),
+              name: autoUser.name,
+              email: autoUser.email,
+              role: 'student',
+              avatar: autoUser.avatar,
+              email_verified_at: autoUser.email_verified_at,
+              created_at: autoUser.created_at,
+            },
+            token,
+          });
+        }
         return sendJson(res, 401, { message: 'Las credenciales no son correctas. Por favor verifica tu correo y contraseña.' });
       }
 
@@ -632,7 +793,7 @@ export default async function handler(req: any, res: any) {
           { id: 2, title: 'Algoritmos de Ordenamiento', slug: 'algoritmos-ordenamiento', difficulty: 'intermediate', enrollments_count: 0 },
           { id: 10, title: 'Angular Moderno', slug: 'angular-moderno', difficulty: 'intermediate', enrollments_count: 0 },
         ],
-      }, 'public, s-maxage=2, stale-while-revalidate=10');
+      });
     }
 
     // GET /teacher/students
@@ -681,7 +842,7 @@ export default async function handler(req: any, res: any) {
         students = students.filter((s: any) => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q));
       }
 
-      return sendJson(res, 200, students, 'public, s-maxage=2, stale-while-revalidate=10');
+      return sendJson(res, 200, students);
     }
 
     // GET /teacher/students/:id

@@ -396,7 +396,7 @@ export class TeacherService {
       // Emisión instantánea (0ms)
       subscriber.next(initialOverview);
 
-      this.api.get<TeacherOverviewResponse>('/teacher/overview').subscribe({
+      this.api.get<TeacherOverviewResponse>('/teacher/overview', { _t: Date.now().toString() }, 25000).subscribe({
         next: fresh => {
           if (fresh && fresh.stats) {
             subscriber.next(fresh);
@@ -409,7 +409,9 @@ export class TeacherService {
   }
 
   getStudents(search?: string): Observable<TeacherStudent[]> {
-    const params: Record<string, string> = {};
+    const params: Record<string, string> = {
+      _t: Date.now().toString(),
+    };
     if (search && search.trim()) {
       params['search'] = search.trim();
     }
@@ -423,9 +425,12 @@ export class TeacherService {
       // Emisión instantánea (0ms)
       subscriber.next(local);
 
-      this.api.get<TeacherStudent[]>('/teacher/students', params).subscribe({
+      this.api.get<TeacherStudent[]>('/teacher/students', params, 25000).subscribe({
         next: fresh => {
           if (Array.isArray(fresh)) {
+            try {
+              localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(fresh));
+            } catch {}
             subscriber.next(fresh);
           }
           subscriber.complete();

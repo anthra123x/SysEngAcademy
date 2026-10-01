@@ -30,7 +30,7 @@ export class ApiService {
     return false;
   }
 
-  get<T>(path: string, params?: Record<string, unknown>, timeoutMs: number = 10000): Observable<T> {
+  get<T>(path: string, params?: Record<string, unknown>, timeoutMs: number = 20000): Observable<T> {
     let httpParams = new HttpParams();
     if (params) {
       Object.entries(params).forEach(([k, v]) => {
@@ -44,25 +44,25 @@ export class ApiService {
     );
   }
 
-  post<T>(path: string, body?: unknown, timeoutMs: number = 12000): Observable<T> {
+  post<T>(path: string, body?: unknown, timeoutMs: number = 25000): Observable<T> {
     return this.http.post<T>(`${this.baseUrl}${path}`, body).pipe(
       timeout(timeoutMs)
     );
   }
 
-  put<T>(path: string, body?: unknown, timeoutMs: number = 10000): Observable<T> {
+  put<T>(path: string, body?: unknown, timeoutMs: number = 20000): Observable<T> {
     return this.http.put<T>(`${this.baseUrl}${path}`, body).pipe(
       timeout(timeoutMs)
     );
   }
 
-  patch<T>(path: string, body?: unknown, timeoutMs: number = 10000): Observable<T> {
+  patch<T>(path: string, body?: unknown, timeoutMs: number = 20000): Observable<T> {
     return this.http.patch<T>(`${this.baseUrl}${path}`, body).pipe(
       timeout(timeoutMs)
     );
   }
 
-  delete<T>(path: string, timeoutMs: number = 10000): Observable<T> {
+  delete<T>(path: string, timeoutMs: number = 20000): Observable<T> {
     return this.http.delete<T>(`${this.baseUrl}${path}`).pipe(
       timeout(timeoutMs)
     );
