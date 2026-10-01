@@ -149,19 +149,47 @@ export interface CourseFilters {
 
 // === Lesson Player ===
 
-/** Bloque de contenido tipo ProseMirror doc (heading | paragraph | code | list | ...) */
+export interface DiagramStep {
+  step: string | number;
+  label: string;
+  desc: string;
+  tone?: string;
+  icon?: string;
+  codeSnippet?: string;
+}
+
+export interface DiagramCell {
+  address?: string;
+  label: string;
+  value: string;
+  type?: string;
+  color?: string;
+}
+
+/** Bloque de contenido tipo ProseMirror doc (heading | paragraph | code | list | diagram | ...) */
 export interface LessonDocBlock {
   type: string;
   level?: number;
   text?: string;
   language?: string;
   items?: string[];
-  /** Título opcional de callout / quote / keypoints. */
+  /** Título opcional de callout / quote / keypoints / diagram. */
   title?: string;
+  /** Subtítulo o leyenda pedagógica del diagrama o bloque. */
+  caption?: string;
   /** Lista ordenada. */
   ordered?: boolean;
   /** Tono del callout: info | tip | warning | danger. */
   tone?: string;
+  /** Subtipo de diagrama gráfico: 'flow' | 'memory' | 'comparison' | 'architecture' | 'svg' */
+  diagram_type?: 'flow' | 'memory' | 'comparison' | 'architecture' | 'svg';
+  steps?: DiagramStep[];
+  cells?: DiagramCell[];
+  leftLabel?: string;
+  leftItems?: string[];
+  rightLabel?: string;
+  rightItems?: string[];
+  svg_content?: string;
 }
 
 export interface LessonContentDoc {

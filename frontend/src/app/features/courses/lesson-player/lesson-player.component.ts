@@ -2143,6 +2143,29 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
 
       const lang = match[1]?.trim() || 'python';
       const code = match[2]?.trimEnd() || '';
+
+      if (lang === 'diagram' || lang === 'diagram-json') {
+        try {
+          const parsed = JSON.parse(code);
+          if (parsed && typeof parsed === 'object') {
+            blocks.push({ type: 'diagram', ...parsed });
+            lastIndex = match.index + match[0].length;
+            continue;
+          }
+        } catch {
+          // Si no es JSON válido, continua como bloque de código estándar
+        }
+      } else if (lang === 'diagram-svg' || lang === 'svg') {
+        blocks.push({
+          type: 'diagram',
+          diagram_type: 'svg',
+          svg_content: code,
+          caption: 'Diagrama técnico explicativo',
+        });
+        lastIndex = match.index + match[0].length;
+        continue;
+      }
+
       blocks.push({ type: 'code', language: lang, text: code });
 
       lastIndex = match.index + match[0].length;

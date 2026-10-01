@@ -32,6 +32,46 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "text": "<?php\n// El backend recibe una petición y devuelve una respuesta\nRoute::get('/api/usuarios', function () {\n    $usuarios = DB::table('usuarios')->get();\n\n    return response()->json([\n        'data' => $usuarios,\n    ]);\n});"
                 },
                 {
+                    "type": "diagram",
+                    "diagram_type": "architecture",
+                    "title": "🏛️ Arquitectura Cliente-Servidor Multi-Capa",
+                    "caption": "El cliente frontend delega en el backend el almacenamiento seguro y el procesamiento de reglas de negocio, comunicándose exclusivamente a través de protocolos estandarizados (HTTPS / JSON).",
+                    "steps": [
+                        {
+                            "step": 1,
+                            "label": "Cliente / Frontend",
+                            "desc": "Navegador Web / App Móvil que renderiza la interfaz y genera peticiones",
+                            "icon": "🌐",
+                            "tone": "accent",
+                            "codeSnippet": "fetch('GET /api/v1/cursos')"
+                        },
+                        {
+                            "step": 2,
+                            "label": "API Gateway & Router",
+                            "desc": "Recibe la solicitud HTTP, valida tokens Bearer y aplica rate limiting",
+                            "icon": "🛡️",
+                            "tone": "primary",
+                            "codeSnippet": "Route::middleware('auth:sanctum')"
+                        },
+                        {
+                            "step": 3,
+                            "label": "Lógica de Negocio",
+                            "desc": "Aplica reglas de dominio, cálculo de precios, roles y validaciones",
+                            "icon": "⚙️",
+                            "tone": "purple",
+                            "codeSnippet": "CourseService::enrollStudent()"
+                        },
+                        {
+                            "step": 4,
+                            "label": "Base de Datos & Cache",
+                            "desc": "PostgreSQL / Redis para persistencia transaccional y consultas de alta velocidad",
+                            "icon": "🗄️",
+                            "tone": "warning",
+                            "codeSnippet": "SELECT * FROM enrollments"
+                        }
+                    ]
+                },
+                {
                     "type": "heading",
                     "level": 2,
                     "text": "Responsabilidades del backend"
@@ -114,6 +154,64 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "type": "code",
                     "language": "bash",
                     "text": "# Recursos en plural y verbos HTTP explícitos\nGET    /api/usuarios        -> listar\nPOST   /api/usuarios        -> crear\nGET    /api/usuarios/1      -> ver uno\nPUT    /api/usuarios/1      -> reemplazar\nPATCH  /api/usuarios/1      -> actualizar parcial\nDELETE /api/usuarios/1      -> borrar"
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "comparison",
+                    "title": "⚖️ Semántica de Verbos HTTP: Idempotencia y Seguridad",
+                    "caption": "Un método es idempotente si ejecutarlo 1 vez o 100 veces produce el mismo estado final en el servidor. Comprender esto evita errores de duplicación de cobros o registros.",
+                    "leftLabel": "Lectura y Creación (GET / POST)",
+                    "leftItems": [
+                        "GET: Seguro e Idempotente. Solo lee recursos sin alterar el estado. Cacheable.",
+                        "POST: NO Seguro y NO Idempotente. Cada llamada crea un nuevo recurso secundario.",
+                        "Códigos de éxito: 200 OK (GET con datos), 201 Created (POST con cabecera Location)."
+                    ],
+                    "rightLabel": "Mutación y Borrado (PUT / PATCH / DELETE)",
+                    "rightItems": [
+                        "PUT: Idempotente. Reemplaza el recurso completo en la URI objetivo.",
+                        "PATCH: Modificación parcial. Solo actualiza los campos enviados en el payload JSON.",
+                        "DELETE: Idempotente. Eliminar un recurso 1 vez o 5 veces deja el recurso inexistente (200 o 204 No Content)."
+                    ]
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "flow",
+                    "title": "⚡ Ciclo de Vida de una Petición HTTP REST",
+                    "caption": "El cliente envía el verbo y cabeceras de negociación (Accept: application/json). El servidor valida, procesa y devuelve el recurso estructurado con el código de estado correspondiente.",
+                    "steps": [
+                        {
+                            "step": 1,
+                            "label": "Cliente emite Request",
+                            "desc": "Petición con Verbo HTTP, URI de recurso y Token Bearer en cabecera Authorization",
+                            "codeSnippet": "GET /api/v1/usuarios/42",
+                            "icon": "📤",
+                            "tone": "accent"
+                        },
+                        {
+                            "step": 2,
+                            "label": "Middleware & Router",
+                            "desc": "Inspecciona URI, valida autenticación, CORS y descodifica el token",
+                            "codeSnippet": "AuthMiddleware -> UserController@show",
+                            "icon": "🚦",
+                            "tone": "primary"
+                        },
+                        {
+                            "step": 3,
+                            "label": "Controlador & Modelo",
+                            "desc": "Ejecuta consulta a la base de datos y serializa a JSON Resource",
+                            "codeSnippet": "User::findOrFail(42) -> UserResource",
+                            "icon": "💾",
+                            "tone": "purple"
+                        },
+                        {
+                            "step": 4,
+                            "label": "Respuesta HTTP",
+                            "desc": "Devuelve código HTTP exacto, cabeceras Content-Type y payload JSON",
+                            "codeSnippet": "200 OK { id: 42, name: 'Ada' }",
+                            "icon": "📥",
+                            "tone": "accent"
+                        }
+                    ]
                 },
                 {
                     "type": "heading",
@@ -366,6 +464,76 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "type": "code",
                     "language": "bash",
                     "text": "# Un JWT se ve así: tres partes separadas por puntos\nHEADER.PAYLOAD.FIRMA\n\n# El payload es legible: solo está codificado en base64\necho \"eyJzdWIiOiIxIn0\" | base64 -d\n# {\"sub\":\"1\"}"
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "architecture",
+                    "title": "🏛️ Anatomía Estructural de un JSON Web Token (JWT)",
+                    "caption": "Un JWT consta de 3 secciones separadas por puntos (header.payload.signature). El payload es público y legible; la firma criptográfica garantiza que ningún atacante altere los datos.",
+                    "steps": [
+                        {
+                            "step": 1,
+                            "label": "1. Header (Encabezado)",
+                            "desc": "Define el algoritmo de firma criptográfica y el tipo de token",
+                            "icon": "🔴",
+                            "tone": "danger",
+                            "codeSnippet": "{ \"alg\": \"HS256\", \"typ\": \"JWT\" }"
+                        },
+                        {
+                            "step": 2,
+                            "label": "2. Payload (Carga de Datos)",
+                            "desc": "Claims o atributos públicos del usuario (sub, role, exp). ¡Codificado en Base64Url, NO cifrado!",
+                            "icon": "🟣",
+                            "tone": "purple",
+                            "codeSnippet": "{ \"sub\": 1, \"role\": \"student\", \"exp\": 1750000000 }"
+                        },
+                        {
+                            "step": 3,
+                            "label": "3. Signature (Firma Digital)",
+                            "desc": "Hash generado con la clave secreta del servidor. Si un byte cambia, la firma queda invalidada",
+                            "icon": "🔵",
+                            "tone": "accent",
+                            "codeSnippet": "HMACSHA256(header + '.' + payload, SECRET_KEY)"
+                        }
+                    ]
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "flow",
+                    "title": "⚡ Flujo de Autenticación Stateless (Sin Estado)",
+                    "caption": "El servidor no almacena sesiones en disco o memoria; valida el token matemáticamente mediante su clave secreta en cada petición entrante.",
+                    "steps": [
+                        {
+                            "step": 1,
+                            "label": "POST /api/login",
+                            "desc": "El usuario envía credenciales (email y contraseña) validadas por el backend",
+                            "icon": "🔑",
+                            "codeSnippet": "Auth::attempt(['email' => $email, 'password' => $pass])"
+                        },
+                        {
+                            "step": 2,
+                            "label": "Emisión del JWT",
+                            "desc": "El servidor firma el token con su clave secreta y lo devuelve en la respuesta",
+                            "icon": "🎟️",
+                            "tone": "accent",
+                            "codeSnippet": "return response()->json(['token' => $jwt])"
+                        },
+                        {
+                            "step": 3,
+                            "label": "Petición Protegida",
+                            "desc": "El cliente adjunta el token en la cabecera en cada solicitud subsecuente",
+                            "icon": "🚀",
+                            "codeSnippet": "Authorization: Bearer eyJhbGciOi..."
+                        },
+                        {
+                            "step": 4,
+                            "label": "Verificación Criptográfica",
+                            "desc": "El servidor recalcula la firma. Si coincide, autoriza la petición instantáneamente",
+                            "icon": "✅",
+                            "tone": "primary",
+                            "codeSnippet": "JWT::verify($token, $secretKey)"
+                        }
+                    ]
                 },
                 {
                     "type": "heading",
@@ -704,6 +872,67 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "text": "# Dockerfile mínimo\nFROM php:8.3-cli\nWORKDIR /app\nCOPY . .\nCMD [\"php\", \"artisan\", \"serve\"]"
                 },
                 {
+                    "type": "diagram",
+                    "diagram_type": "comparison",
+                    "title": "⚖️ Máquina Virtual (VM) vs Contenedor Docker",
+                    "caption": "Las máquinas virtuales virtualizan el hardware completo a través de un hipervisor; los contenedores virtualizan a nivel de sistema operativo compartiendo el kernel del host de forma ultra ligera.",
+                    "leftLabel": "Máquina Virtual (VM)",
+                    "leftItems": [
+                        "Incluye un Sistema Operativo completo e independiente (Guest OS) por VM",
+                        "Hipervisor emula procesador, memoria RAM, discos y tarjetas de red virtuales",
+                        "Tamaño pesado: de varios Gigabytes (GB) por cada imagen",
+                        "Tiempo de arranque prolongado: de 1 a varios minutos",
+                        "Aislamiento a nivel de hardware mediante virtualización"
+                    ],
+                    "rightLabel": "Contenedor Docker",
+                    "rightItems": [
+                        "Sin Guest OS: comparte directamente el Kernel del Sistema Operativo anfitrión",
+                        "Aislamiento por namespaces (procesos, red, usuarios) y cgroups (CPU, RAM)",
+                        "Tamaño ultra ligero: decenas de Megabytes (MB)",
+                        "Arranque casi instantáneo: milisegundos o segundos",
+                        "Densidad extrema: decenas de contenedores en el mismo servidor físico"
+                    ]
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "flow",
+                    "title": "⚡ Ciclo de Vida Docker: De Código a Producción",
+                    "caption": "El flujo canónico de Docker garantiza que la imagen construida y probada sea exactamente la misma que corre en producción.",
+                    "steps": [
+                        {
+                            "step": 1,
+                            "label": "1. Dockerfile",
+                            "desc": "Archivo de instrucciones declarativas paso a paso (FROM, COPY, RUN, CMD)",
+                            "icon": "📄",
+                            "codeSnippet": "docker build -t mi-app:v1 ."
+                        },
+                        {
+                            "step": 2,
+                            "label": "2. Docker Image",
+                            "desc": "Empaquetado binario inmutable compuesto por capas de sólo lectura con suma de verificación SHA",
+                            "icon": "📦",
+                            "tone": "accent",
+                            "codeSnippet": "docker images"
+                        },
+                        {
+                            "step": 3,
+                            "label": "3. Container Registry",
+                            "desc": "Repositorio remoto seguro en la nube (Docker Hub, GitHub Packages, AWS ECR)",
+                            "icon": "☁️",
+                            "tone": "purple",
+                            "codeSnippet": "docker push mi-org/mi-app:v1"
+                        },
+                        {
+                            "step": 4,
+                            "label": "4. Contenedor en Ejecución",
+                            "desc": "Instancia viva y aislada del proceso con capa escribible superior",
+                            "icon": "🐳",
+                            "tone": "primary",
+                            "codeSnippet": "docker run -d -p 8080:80 mi-app:v1"
+                        }
+                    ]
+                },
+                {
                     "type": "heading",
                     "level": 2,
                     "text": "Diferencias clave"
@@ -786,6 +1015,13 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "type": "code",
                     "language": "bash",
                     "text": "# Configuración inicial (una sola vez)\ngit config --global user.name \"Ada Lovelace\"\ngit config --global user.email \"ada@example.com\"\n\n# Crear un repositorio\ncd mi-proyecto\ngit init"
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "svg",
+                    "title": "📐 Mapa de las 4 Áreas de Trabajo en Git",
+                    "caption": "Git separa los cambios en fases estrictas: editas en el Working Directory, preparas tu selección con git add en el Staging Area, sellas el snapshot con git commit en tu repositorio local y finalmente sincronizas con el servidor remoto (GitHub) vía git push.",
+                    "svg_content": "<svg viewBox=\"0 0 760 210\" xmlns=\"http://www.w3.org/2000/svg\" style=\"font-family: system-ui, sans-serif;\"><defs><marker id=\"gitArrCyan\" viewBox=\"0 0 10 10\" refX=\"6\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 1 L 8 5 L 0 9 z\" fill=\"#00D9FF\"/></marker><marker id=\"gitArrGreen\" viewBox=\"0 0 10 10\" refX=\"6\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 1 L 8 5 L 0 9 z\" fill=\"#0AE98A\"/></marker><marker id=\"gitArrPurple\" viewBox=\"0 0 10 10\" refX=\"6\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 1 L 8 5 L 0 9 z\" fill=\"#A855F7\"/></marker></defs><rect x=\"15\" y=\"45\" width=\"150\" height=\"120\" rx=\"10\" fill=\"#161926\" stroke=\"#EF4444\" stroke-width=\"1.8\"/><rect x=\"25\" y=\"55\" width=\"130\" height=\"24\" rx=\"5\" fill=\"#EF4444\" fill-opacity=\"0.15\"/><text x=\"90\" y=\"71\" fill=\"#EF4444\" font-size=\"11\" font-weight=\"bold\" text-anchor=\"middle\">WORKING DIRECTORY</text><text x=\"90\" y=\"105\" fill=\"#F8FAFC\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"middle\">📁 Tu Editor / IDE</text><text x=\"90\" y=\"130\" fill=\"#94A3B8\" font-size=\"11\" text-anchor=\"middle\">Archivos sin seguimiento</text><text x=\"90\" y=\"148\" fill=\"#EF4444\" font-family=\"monospace\" font-size=\"10\" text-anchor=\"middle\">Untracked / Modified</text><line x1=\"165\" y1=\"105\" x2=\"215\" y2=\"105\" stroke=\"#00D9FF\" stroke-width=\"2\" marker-end=\"url(#gitArrCyan)\"/><rect x=\"167\" y=\"80\" width=\"48\" height=\"18\" rx=\"4\" fill=\"#00D9FF\" fill-opacity=\"0.2\"/><text x=\"191\" y=\"93\" fill=\"#00D9FF\" font-family=\"monospace\" font-size=\"10\" font-weight=\"bold\" text-anchor=\"middle\">git add</text><rect x=\"220\" y=\"45\" width=\"150\" height=\"120\" rx=\"10\" fill=\"#161926\" stroke=\"#00D9FF\" stroke-width=\"1.8\"/><rect x=\"230\" y=\"55\" width=\"130\" height=\"24\" rx=\"5\" fill=\"#00D9FF\" fill-opacity=\"0.15\"/><text x=\"295\" y=\"71\" fill=\"#00D9FF\" font-size=\"11\" font-weight=\"bold\" text-anchor=\"middle\">STAGING AREA</text><text x=\"295\" y=\"105\" fill=\"#F8FAFC\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"middle\">📋 Preparación</text><text x=\"295\" y=\"130\" fill=\"#94A3B8\" font-size=\"11\" text-anchor=\"middle\">Snapshot provisional</text><text x=\"295\" y=\"148\" fill=\"#00D9FF\" font-family=\"monospace\" font-size=\"10\" text-anchor=\"middle\">Staged for commit</text><line x1=\"370\" y1=\"105\" x2=\"420\" y2=\"105\" stroke=\"#0AE98A\" stroke-width=\"2\" marker-end=\"url(#gitArrGreen)\"/><rect x=\"368\" y=\"80\" width=\"58\" height=\"18\" rx=\"4\" fill=\"#0AE98A\" fill-opacity=\"0.2\"/><text x=\"397\" y=\"93\" fill=\"#0AE98A\" font-family=\"monospace\" font-size=\"9\" font-weight=\"bold\" text-anchor=\"middle\">git commit</text><rect x=\"425\" y=\"45\" width=\"150\" height=\"120\" rx=\"10\" fill=\"#161926\" stroke=\"#0AE98A\" stroke-width=\"1.8\"/><rect x=\"435\" y=\"55\" width=\"130\" height=\"24\" rx=\"5\" fill=\"#0AE98A\" fill-opacity=\"0.15\"/><text x=\"500\" y=\"71\" fill=\"#0AE98A\" font-size=\"11\" font-weight=\"bold\" text-anchor=\"middle\">LOCAL REPO</text><text x=\"500\" y=\"105\" fill=\"#F8FAFC\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"middle\">💾 Base .git Local</text><text x=\"500\" y=\"130\" fill=\"#94A3B8\" font-size=\"11\" text-anchor=\"middle\">Commits con SHA inmutable</text><text x=\"500\" y=\"148\" fill=\"#0AE98A\" font-family=\"monospace\" font-size=\"10\" text-anchor=\"middle\">HEAD -&gt; main (local)</text><line x1=\"575\" y1=\"105\" x2=\"625\" y2=\"105\" stroke=\"#A855F7\" stroke-width=\"2\" marker-end=\"url(#gitArrPurple)\"/><rect x=\"576\" y=\"80\" width=\"52\" height=\"18\" rx=\"4\" fill=\"#A855F7\" fill-opacity=\"0.2\"/><text x=\"602\" y=\"93\" fill=\"#A855F7\" font-family=\"monospace\" font-size=\"9\" font-weight=\"bold\" text-anchor=\"middle\">git push</text><rect x=\"630\" y=\"45\" width=\"115\" height=\"120\" rx=\"10\" fill=\"#161926\" stroke=\"#A855F7\" stroke-width=\"1.8\"/><rect x=\"638\" y=\"55\" width=\"99\" height=\"24\" rx=\"5\" fill=\"#A855F7\" fill-opacity=\"0.15\"/><text x=\"687\" y=\"71\" fill=\"#A855F7\" font-size=\"10\" font-weight=\"bold\" text-anchor=\"middle\">REMOTE REPO</text><text x=\"687\" y=\"105\" fill=\"#F8FAFC\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"middle\">☁️ GitHub</text><text x=\"687\" y=\"130\" fill=\"#94A3B8\" font-size=\"10\" text-anchor=\"middle\">Colaboración</text><text x=\"687\" y=\"148\" fill=\"#A855F7\" font-family=\"monospace\" font-size=\"10\" text-anchor=\"middle\">origin/main</text></svg>"
                 },
                 {
                     "type": "heading",
@@ -1361,7 +1597,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 15,
         "order": 1,
         "is_preview": true,
-        "content": "## Diferencia Real entre Git Merge y Git Rebase\n\nTanto `git merge` como `git rebase` integran cambios de una rama en otra, pero con filosofías de historial completamente distintas.\n\n### Git Merge (Integración No Destructiva)\n* Crea un nuevo **commit de unión (Merge Commit)** con dos padres.\n* Preserva la historia exacta y cronológica de cuándo se desarrollaron los commits.\n* **Desventaja:** Historial en forma de telaraña (*railroad tracks*) cuando muchos desarrolladores integran ramas.\n\n### Git Rebase (Historia Lineal y Limpia)\n* Toma los commits de tu rama de funcionalidad y los *reaplica uno a uno* sobre la punta de la rama base (ej. `main`).\n* Crea nuevos hashes SHA-1 para cada commit reubicado.\n* **Ventaja:** Historial completamente plano y legible (ideal para `git bisect` y auditoría).\n\n> **La Regla de Oro del Rebase:** **NUNCA** hagas rebase sobre una rama pública compartida (como `main` en producción). Solo haz rebase en tus ramas locales de trabajo antes de abrir el Pull Request.",
+        "content": "## Diferencia Real entre Git Merge y Git Rebase\n\nTanto `git merge` como `git rebase` integran cambios de una rama en otra, pero con filosofías de historial completamente distintas.\n\n### Git Merge (Integración No Destructiva)\n* Crea un nuevo **commit de unión (Merge Commit)** con dos padres.\n* Preserva la historia exacta y cronológica de cuándo se desarrollaron los commits.\n* **Desventaja:** Historial en forma de telaraña (*railroad tracks*) cuando muchos desarrolladores integran ramas.\n\n### Git Rebase (Historia Lineal y Limpia)\n* Toma los commits de tu rama de funcionalidad y los *reaplica uno a uno* sobre la punta de la rama base (ej. `main`).\n* Crea nuevos hashes SHA-1 para cada commit reubicado.\n* **Ventaja:** Historial completamente plano y legible (ideal para `git bisect` y auditoría).\n\n```diagram\n{\n  \"diagram_type\": \"comparison\",\n  \"title\": \"⚖️ Git Merge vs Git Rebase: Arquitectura del Historial\",\n  \"caption\": \"El merge conserva la cronología real mediante un commit de integración con 2 padres; el rebase traslada los commits a la punta de main creando una secuencia 100% lineal sin ruido.\",\n  \"leftLabel\": \"git merge (Unión No Destructiva)\",\n  \"leftItems\": [\n    \"Crea un commit adicional de merge con 2 hashes padres\",\n    \"Preserva la verdad cronológica exacta del desarrollo\",\n    \"100% seguro en ramas públicas y colaborativas\",\n    \"Ramas con múltiples cruces en el grafo (historial en telaraña)\"\n  ],\n  \"rightLabel\": \"git rebase (Reescritura Lineal)\",\n  \"rightItems\": [\n    \"Reaplica tus commits en la cima de main sin commit de merge\",\n    \"Reescribe el historial generando nuevos hashes SHA-1\",\n    \"Ideal para limpiar ramas de funcionalidad antes de abrir el Pull Request\",\n    \"Historial plano, secuencial y óptimo para git bisect\"\n  ]\n}\n```\n\n> **La Regla de Oro del Rebase:** **NUNCA** hagas rebase sobre una rama pública compartida (como `main` en producción). Solo haz rebase en tus ramas locales de trabajo antes de abrir el Pull Request.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
@@ -3532,6 +3768,62 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "text": "<?php\n// Declaración e inicialización de un array\n$lenguajes = [\"Python\", \"PHP\", \"JavaScript\", \"TypeScript\"];\n\n// Acceso directo por índice (base 0)\necho $lenguajes[0]; // Imprime: Python\necho $lenguajes[2]; // Imprime: JavaScript\n\n// Longitud del array\necho \"Total de tecnologías: \" . count($lenguajes);"
                 },
                 {
+                    "type": "diagram",
+                    "diagram_type": "memory",
+                    "title": "🧠 Disposición en Celdas Contiguas de Memoria RAM",
+                    "caption": "Fórmula de Indexación Instantánea: Dirección_Física = Base (0x1000) + (Índice * Tamaño). Gracias a este cálculo aritmético simple, el procesador accede a cualquier elemento en complejidad constante O(1) sin tener que recorrer los anteriores.",
+                    "cells": [
+                        {
+                            "address": "0x1000",
+                            "label": "$lenguajes[0]",
+                            "type": "offset +0",
+                            "value": "\"Python\"",
+                            "color": "#0AE98A"
+                        },
+                        {
+                            "address": "0x1004",
+                            "label": "$lenguajes[1]",
+                            "type": "offset +4",
+                            "value": "\"PHP\"",
+                            "color": "#00D9FF"
+                        },
+                        {
+                            "address": "0x1008",
+                            "label": "$lenguajes[2]",
+                            "type": "offset +8",
+                            "value": "\"JavaScript\"",
+                            "color": "#A855F7"
+                        },
+                        {
+                            "address": "0x100C",
+                            "label": "$lenguajes[3]",
+                            "type": "offset +12",
+                            "value": "\"TypeScript\"",
+                            "color": "#F59E0B"
+                        }
+                    ]
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "comparison",
+                    "title": "⚖️ Array Contiguo vs Lista Enlazada (Linked List)",
+                    "caption": "Los arrays priorizan lectura rápida por índice; las listas enlazadas facilitan inserciones intermedias a costa de mayor consumo en punteros y pérdida de localidad espacial.",
+                    "leftLabel": "Array / Arreglo Contiguo",
+                    "leftItems": [
+                        "Acceso aleatorio por índice en O(1) tiempo constante",
+                        "Excelente localidad de caché CPU (elementos vecinos juntos)",
+                        "Inserción/Borrado al inicio o medio en O(n) por desplazamiento",
+                        "Memoria fija o costo de realocación al crecer"
+                    ],
+                    "rightLabel": "Lista Enlazada (Linked List)",
+                    "rightItems": [
+                        "Acceso secuencial por recorrido O(n): sin índice directo",
+                        "Nodos dispersos en la memoria Heap conectados por punteros 'next'",
+                        "Inserción/Borrado O(1) conocido el nodo previo",
+                        "Sobrecarga de memoria por punteros adicionales"
+                    ]
+                },
+                {
                     "type": "heading",
                     "level": 2,
                     "text": "Operaciones comunes sobre arrays"
@@ -4404,6 +4696,62 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "text": "<?php\n// Declarar y asignar una variable\n$nombre = \"Ada\";\n$edad = 36;\n\n// Usar la variable más tarde\necho \"Hola, \" . $nombre;\necho \"Tienes \" . $edad . \" años.\";"
                 },
                 {
+                    "type": "diagram",
+                    "diagram_type": "memory",
+                    "title": "🧠 Asignación de Variables en Memoria RAM",
+                    "caption": "La memoria RAM funciona como una cuadrícula de casilleros contiguos numerados en hexadecimal (direcciones físicas). El identificador ($nombre) es el puntero simbólico que asocia tu código con el casillero físico donde se alojan los bytes de información.",
+                    "cells": [
+                        {
+                            "address": "0x7FFE0410",
+                            "label": "$nombre",
+                            "type": "string [4B]",
+                            "value": "\"Ada\"",
+                            "color": "#0AE98A"
+                        },
+                        {
+                            "address": "0x7FFE0414",
+                            "label": "$edad",
+                            "type": "int [4B]",
+                            "value": "36",
+                            "color": "#00D9FF"
+                        },
+                        {
+                            "address": "0x7FFE0418",
+                            "label": "$esEstudiante",
+                            "type": "bool [1B]",
+                            "value": "true",
+                            "color": "#A855F7"
+                        },
+                        {
+                            "address": "0x7FFE041C",
+                            "label": "$promedio",
+                            "type": "float [8B]",
+                            "value": "9.85",
+                            "color": "#F59E0B"
+                        }
+                    ]
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "comparison",
+                    "title": "⚖️ Variable vs Constante: Mutabilidad y Propósito",
+                    "caption": "Escoger adecuadamente entre mutabilidad e inmutabilidad reduce drásticamente los efectos secundarios en la ejecución del software.",
+                    "leftLabel": "Variable ($variable / let)",
+                    "leftItems": [
+                        "Valor dinámico: puede reasignarse en cualquier punto del ciclo de vida",
+                        "Ideal para acumuladores, contadores, banderas y estado de la aplicación",
+                        "Ocupa un casillero cuyo contenido se sobreescribe durante el runtime",
+                        "Mayor flexibilidad para algoritmos iterativos"
+                    ],
+                    "rightLabel": "Constante (const / define)",
+                    "rightItems": [
+                        "Valor inmutable: se fija en tiempo de inicialización y queda sellado",
+                        "Ideal para URLs de API, configuraciones maestras, factores matemáticos (PI)",
+                        "Previene bugs graves provocados por mutaciones accidentales en el flujo",
+                        "Permite al compilador optimizar referencias directamente en memoria"
+                    ]
+                },
+                {
                     "type": "heading",
                     "level": 2,
                     "text": "Reglas para nombrar variables"
@@ -4490,6 +4838,28 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "type": "code",
                     "language": "php",
                     "text": "<?php\n$entero = 42;          // int\n$precio = 19.99;       // float\n$nombre = \"Ada\";       // string\n$activo = true;        // bool\n\nvar_dump($entero, $precio, $nombre, $activo);"
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "comparison",
+                    "title": "⚖️ Tipos Primitivos (Escalares) vs Tipos Compuestos",
+                    "caption": "Los primitivos almacenan directamente el valor numérico o literal en la pila (Stack); los tipos compuestos almacenan una referencia a una estructura dinámica alojada en la memoria Heap.",
+                    "leftLabel": "Tipos Primitivos / Escalares",
+                    "leftItems": [
+                        "Enteros (int): 4 o 8 bytes de representación binaria con signo",
+                        "Decimales (float/double): IEEE 754 con mantisa y exponente",
+                        "Booleanos (bool): 1 byte (0 para false, 1 para true)",
+                        "Caracteres y Strings cortos: secuencias inmutables de bytes",
+                        "Paso por valor por defecto en la mayoría de lenguajes"
+                    ],
+                    "rightLabel": "Tipos Compuestos / Referenciales",
+                    "rightItems": [
+                        "Arrays / Listas: secuencias de múltiples valores indexados",
+                        "Objetos / Clases: entidades con estado (atributos) y comportamiento",
+                        "Mapas / Diccionarios: asociaciones clave-valor tipo hash",
+                        "Punteros / Referencias: guardan la dirección de memoria de otro dato",
+                        "Paso por referencia o puntero con recolección de basura (GC)"
+                    ]
                 },
                 {
                     "type": "heading",
@@ -4660,6 +5030,44 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "text": "<?php\n$edad = 17;\n\nif ($edad >= 18) {\n    echo \"Eres mayor de edad\";\n} elseif ($edad >= 13) {\n    echo \"Eres adolescente\";\n} else {\n    echo \"Eres niño\";\n}"
                 },
                 {
+                    "type": "diagram",
+                    "diagram_type": "svg",
+                    "title": "📐 Diagrama de Flujo: Bifurcación Condicional if-elseif-else",
+                    "caption": "El flujo de ejecución llega a un rombo de decisión. Si la condición booleana es verdadera, toma la rama TRUE y salta directo al fin, ignorando todas las ramas restantes.",
+                    "svg_content": "<svg viewBox=\"0 0 680 290\" xmlns=\"http://www.w3.org/2000/svg\" style=\"font-family: system-ui, sans-serif;\"><defs><marker id=\"arrCyan\" viewBox=\"0 0 10 10\" refX=\"6\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 1 L 8 5 L 0 9 z\" fill=\"#00D9FF\"/></marker><marker id=\"arrGreen\" viewBox=\"0 0 10 10\" refX=\"6\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 1 L 8 5 L 0 9 z\" fill=\"#0AE98A\"/></marker><marker id=\"arrRed\" viewBox=\"0 0 10 10\" refX=\"6\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 1 L 8 5 L 0 9 z\" fill=\"#EF4444\"/></marker></defs><rect x=\"20\" y=\"120\" width=\"100\" height=\"40\" rx=\"20\" fill=\"#1E2235\" stroke=\"#00D9FF\" stroke-width=\"1.8\"/><text x=\"70\" y=\"145\" fill=\"#F8FAFC\" font-size=\"12\" font-weight=\"bold\" text-anchor=\"middle\">Leer $edad</text><line x1=\"120\" y1=\"140\" x2=\"175\" y2=\"140\" stroke=\"#00D9FF\" stroke-width=\"2\" marker-end=\"url(#arrCyan)\"/><polygon points=\"245,100 315,140 245,180 175,140\" fill=\"#161926\" stroke=\"#F59E0B\" stroke-width=\"2\"/><text x=\"245\" y=\"136\" fill=\"#F8FAFC\" font-size=\"11\" font-weight=\"bold\" text-anchor=\"middle\">¿edad &gt;= 18?</text><text x=\"245\" y=\"152\" fill=\"#94A3B8\" font-size=\"9\" text-anchor=\"middle\">Condición if</text><path d=\"M 245 100 L 245 50 L 375 50\" fill=\"none\" stroke=\"#0AE98A\" stroke-width=\"2\" marker-end=\"url(#arrGreen)\"/><rect x=\"255\" y=\"65\" width=\"42\" height=\"16\" rx=\"4\" fill=\"#0AE98A\" fill-opacity=\"0.2\"/><text x=\"276\" y=\"77\" fill=\"#0AE98A\" font-size=\"10\" font-weight=\"bold\" text-anchor=\"middle\">SÍ (True)</text><rect x=\"380\" y=\"30\" width=\"145\" height=\"40\" rx=\"8\" fill=\"#161926\" stroke=\"#0AE98A\" stroke-width=\"1.5\"/><text x=\"452\" y=\"55\" fill=\"#0AE98A\" font-size=\"12\" font-weight=\"bold\" text-anchor=\"middle\">\"Mayor de edad\"</text><path d=\"M 245 180 L 245 230 L 375 230\" fill=\"none\" stroke=\"#EF4444\" stroke-width=\"2\" marker-end=\"url(#arrRed)\"/><rect x=\"255\" y=\"195\" width=\"44\" height=\"16\" rx=\"4\" fill=\"#EF4444\" fill-opacity=\"0.2\"/><text x=\"277\" y=\"207\" fill=\"#EF4444\" font-size=\"10\" font-weight=\"bold\" text-anchor=\"middle\">NO (False)</text><rect x=\"380\" y=\"210\" width=\"145\" height=\"40\" rx=\"8\" fill=\"#161926\" stroke=\"#EF4444\" stroke-width=\"1.5\"/><text x=\"452\" y=\"235\" fill=\"#EF4444\" font-size=\"12\" font-weight=\"bold\" text-anchor=\"middle\">\"Menor de edad\"</text><path d=\"M 525 50 L 590 50 L 590 120\" fill=\"none\" stroke=\"#64748B\" stroke-width=\"2\"/><path d=\"M 525 230 L 590 230 L 590 160\" fill=\"none\" stroke=\"#64748B\" stroke-width=\"2\"/><rect x=\"550\" y=\"120\" width=\"80\" height=\"40\" rx=\"20\" fill=\"#1E2235\" stroke=\"#00D9FF\" stroke-width=\"1.8\"/><text x=\"590\" y=\"145\" fill=\"#F8FAFC\" font-size=\"12\" font-weight=\"bold\" text-anchor=\"middle\">Fin if/else</text></svg>"
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "flow",
+                    "title": "⚡ Las 3 Fases del Mecanismo de Salto Condicional",
+                    "caption": "A nivel de procesador, el if se traduce en una instrucción CMP (comparar) seguida de un salto condicional (JMP / BNE).",
+                    "steps": [
+                        {
+                            "step": 1,
+                            "label": "1. Evaluación Booleana",
+                            "desc": "El procesador evalúa la expresión relacional ($edad >= 18) y activa las banderas de estado (Zero Flag)",
+                            "icon": "⚖️",
+                            "codeSnippet": "17 >= 18 -> false"
+                        },
+                        {
+                            "step": 2,
+                            "label": "2. Salto Exclusivo de Rama",
+                            "desc": "Al ser falso, el program counter salta la etiqueta del bloque if e ingresa al bloque alternativo",
+                            "icon": "🔀",
+                            "tone": "accent",
+                            "codeSnippet": "goto etiqueta_else"
+                        },
+                        {
+                            "step": 3,
+                            "label": "3. Convergencia Inmediata",
+                            "desc": "Tras ejecutar el bloque seleccionado, el programa salta más allá de todas las demás alternativas",
+                            "icon": "🎯",
+                            "tone": "primary",
+                            "codeSnippet": "continúa ejecución lineal"
+                        }
+                    ]
+                },
+                {
                     "type": "heading",
                     "level": 2,
                     "text": "Consejos para condicionales limpios"
@@ -4828,6 +5236,65 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "type": "code",
                     "language": "php",
                     "text": "<?php\n// for: número fijo de repeticiones\nfor ($i = 0; $i < 5; $i++) {\n    echo $i;\n}\n\n// while: repite mientras la condición sea verdadera\n$turnos = 0;\nwhile ($turnos < 3) {\n    echo \"Turno \" . $turnos;\n    $turnos++;\n}"
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "comparison",
+                    "title": "⚖️ for vs while: ¿Cuándo elegir cada estructura?",
+                    "caption": "Utiliza for cuando el número de iteraciones es finito y conocido de antemano; utiliza while cuando la parada depende de un evento externo o condición dinámica.",
+                    "leftLabel": "Ciclo Determinado (for)",
+                    "leftItems": [
+                        "Número de repeticiones conocido previamente (ej. recorrer un array de 10 elementos)",
+                        "La inicialización ($i = 0), condición ($i < 10) e incremento ($i++) conviven en una sola línea",
+                        "Menor riesgo de ciclo infinito accidental",
+                        "Ideal para secuencias numéricas, matrices y rangos finitos"
+                    ],
+                    "rightLabel": "Ciclo Indeterminado (while)",
+                    "rightItems": [
+                        "Número de repeticiones variable o dependiente del estado del sistema",
+                        "La variable de control debe mutar obligatoriamente dentro del bloque",
+                        "Ideal para leer streams de red, esperar entrada de usuario o procesar colas",
+                        "Riesgo de ciclo infinito si se omite el paso de avance"
+                    ]
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "flow",
+                    "title": "⚡ Las 4 Fases del Ciclo Iterativo",
+                    "caption": "El bucle se ejecuta en un círculo virtuoso: si la condición se cumple, ejecuta el cuerpo y aplica el incremento antes de volver a evaluar.",
+                    "steps": [
+                        {
+                            "step": 1,
+                            "label": "1. Inicialización (una sola vez)",
+                            "desc": "Se declara la variable contadora o de control en memoria",
+                            "icon": "🏁",
+                            "codeSnippet": "$i = 0"
+                        },
+                        {
+                            "step": 2,
+                            "label": "2. Evaluación de Parada",
+                            "desc": "Si la condición devuelve true, continúa; si devuelve false, rompe el bucle de inmediato",
+                            "icon": "🔍",
+                            "tone": "accent",
+                            "codeSnippet": "$i < 5 -> true"
+                        },
+                        {
+                            "step": 3,
+                            "label": "3. Ejecución del Cuerpo",
+                            "desc": "Se ejecutan las instrucciones principales de la iteración actual",
+                            "icon": "⚙️",
+                            "tone": "primary",
+                            "codeSnippet": "echo $i"
+                        },
+                        {
+                            "step": 4,
+                            "label": "4. Paso / Incremento",
+                            "desc": "Se actualiza el contador y el puntero regresa a la fase 2 para re-evaluar",
+                            "icon": "🔄",
+                            "tone": "purple",
+                            "codeSnippet": "$i++ (ahora $i = 1)"
+                        }
+                    ]
                 },
                 {
                     "type": "heading",
@@ -9702,6 +10169,57 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
                     "type": "code",
                     "language": "python",
                     "text": "# Mal: tres razones para cambiar en una sola clase\nclass Usuario:\n    def registrar(self, datos):\n        validar(datos)\n        guardar_en_bd(datos)\n        return formatear_bienvenida(datos)\n\n# Bien: cada pieza tiene su responsabilidad\nclass ValidadorUsuario:\n    def validar(self, datos): ...\n\nclass RepositorioUsuarios:\n    def guardar(self, usuario): ...\n\nclass GeneradorBienvenida:\n    def generar(self, usuario): ..."
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "comparison",
+                    "title": "⚖️ Anti-patrón Clase Dios vs Principio de Responsabilidad Única (SRP)",
+                    "caption": "Cuando una clase mezcla validación, persistencia SQL y formateo, cualquier cambio en la base de datos o en el diseño de emails arriesga romper toda la entidad de usuario.",
+                    "leftLabel": "Clase Monolítica / Dios (Violación SRP)",
+                    "leftItems": [
+                        "Clase 'Usuario' hace validación, persistencia SQL, envío de emails y hashing",
+                        "Múltiples razones para cambiar: cambio de reglas, cambio de ORM, cambio de plantilla",
+                        "Imposible de testear de forma aislada sin levantar la base de datos real",
+                        "Alto acoplamiento: un cambio en SQL puede romper la lógica de bienvenida"
+                    ],
+                    "rightLabel": "Arquitectura Desacoplada (Cumple SRP)",
+                    "rightItems": [
+                        "ValidadorUsuario: se encarga exclusivamente de verificar inputs (1 razón de cambio)",
+                        "RepositorioUsuarios: se encarga exclusivamente del acceso a BD/SQL (1 razón de cambio)",
+                        "NotificadorBienvenida: se encarga exclusivamente de despachar emails (1 razón de cambio)",
+                        "100% testeable con Unit Tests puros y mocks independientes"
+                    ]
+                },
+                {
+                    "type": "diagram",
+                    "diagram_type": "flow",
+                    "title": "⚡ Flujo de Colaboración Desacoplada",
+                    "caption": "Cada clase actúa como un eslabón autónomo y especializado dentro del pipeline de registro.",
+                    "steps": [
+                        {
+                            "step": 1,
+                            "label": "1. ValidadorUsuario",
+                            "desc": "Comprueba formato de email, longitud de clave y campos obligatorios",
+                            "icon": "🛡️",
+                            "codeSnippet": "validador.validar(datos)"
+                        },
+                        {
+                            "step": 2,
+                            "label": "2. RepositorioUsuarios",
+                            "desc": "Inserta el registro en la base de datos PostgreSQL de forma transaccional",
+                            "icon": "💾",
+                            "tone": "accent",
+                            "codeSnippet": "repositorio.guardar(usuario)"
+                        },
+                        {
+                            "step": 3,
+                            "label": "3. NotificadorBienvenida",
+                            "desc": "Encola el evento y envía el correo electrónico de bienvenida al usuario",
+                            "icon": "📧",
+                            "tone": "primary",
+                            "codeSnippet": "notificador.enviar(usuario)"
+                        }
+                    ]
                 },
                 {
                     "type": "heading",
@@ -17041,7 +17559,7 @@ export const FALLBACK_LESSONS: Record<string, LessonDetail> = {
         "duration_minutes": 16,
         "order": 1,
         "is_preview": true,
-        "content": "## Flexbox a Fondo: Alineación, Distribución y Wrapping\n\nFlexbox (CSS Flexible Box Layout) es el estándar unidimensional para alinear y distribuir espacio entre elementos en una fila o columna.\n\n```css\n.contenedor-flex {\n  display: flex;\n  flex-direction: row;            /* row | column */\n  justify-content: space-between; /* Eje principal: flex-start, center, space-between */\n  align-items: center;            /* Eje transversal: stretch, center, flex-start */\n  gap: 1.5rem;                    /* Espacio moderno entre elementos */\n  flex-wrap: wrap;                /* Permite saltar a la siguiente línea si no hay espacio */\n}\n```\n\n### Propiedades de los Hijos (Flex Items)\n* `flex-grow: 1`: El elemento se expande para ocupar el espacio libre disponible.\n* `flex-shrink: 0`: Evita que el elemento se comprima si falta espacio.\n* `flex-basis: 300px`: Tamaño base ideal antes de aplicar grow o shrink.",
+        "content": "## Flexbox a Fondo: Alineación, Distribución y Wrapping\n\nFlexbox (CSS Flexible Box Layout) es el estándar unidimensional para alinear y distribuir espacio entre elementos en una fila o columna.\n\n```css\n.contenedor-flex {\n  display: flex;\n  flex-direction: row;            /* row | column */\n  justify-content: space-between; /* Eje principal: flex-start, center, space-between */\n  align-items: center;            /* Eje transversal: stretch, center, flex-start */\n  gap: 1.5rem;                    /* Espacio moderno entre elementos */\n  flex-wrap: wrap;                /* Permite saltar a la siguiente línea si no hay espacio */\n}\n```\n\n```diagram\n{\n  \"diagram_type\": \"comparison\",\n  \"title\": \"📐 Los Dos Ejes de Flexbox: Eje Principal vs Eje Transversal\",\n  \"caption\": \"La regla de oro de Flexbox: el valor de flex-direction determina cuál es el Main Axis. Si es row, el Main Axis es horizontal (X). Si es column, el Main Axis es vertical (Y).\",\n  \"leftLabel\": \"Eje Principal (Main Axis) -> justify-content\",\n  \"leftItems\": [\n    \"Controla la distribución a lo largo de la dirección de flujo\",\n    \"Valores clave: flex-start, center, flex-end, space-between, space-around\",\n    \"Afecta al espaciado horizontal si flex-direction es row\",\n    \"Determina cómo se reparte el espacio sobrante en la fila/columna\"\n  ],\n  \"rightLabel\": \"Eje Transversal (Cross Axis) -> align-items\",\n  \"rightItems\": [\n    \"Controla la alineación perpendicular al flujo principal\",\n    \"Valores clave: stretch (por defecto), center, flex-start, flex-end, baseline\",\n    \"Afecta a la altura/verticalidad si flex-direction es row\",\n    \"align-self permite sobreescribir este alineamiento en un hijo específico\"\n  ]\n}\n```\n\n### Propiedades de los Hijos (Flex Items)\n* `flex-grow: 1`: El elemento se expande para ocupar el espacio libre disponible.\n* `flex-shrink: 0`: Evita que el elemento se comprima si falta espacio.\n* `flex-basis: 300px`: Tamaño base ideal antes de aplicar grow o shrink.",
         "starter_code": null,
         "solution": null,
         "test_cases": null,
