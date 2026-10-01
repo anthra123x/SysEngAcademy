@@ -190,14 +190,6 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                         </div>
 
                         <div class="sm-head__right">
-                          <button
-                            type="button"
-                            class="sm-forum-btn"
-                            (click)="openModuleForum($event, mod.id)"
-                            title="Ver debates y dudas de este módulo"
-                          >
-                            💬 Foro
-                          </button>
                           <span class="chevron" [class.is-rotated]="isModuleOpen(mod.id)">▾</span>
                         </div>
                       </header>
