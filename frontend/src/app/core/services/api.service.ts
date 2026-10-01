@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
@@ -13,6 +13,10 @@ export class ApiService {
     if (typeof window !== 'undefined') {
       const custom = (window as any).__API_URL__ || localStorage.getItem('syseng_api_url');
       if (custom) return custom;
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (!isLocal) {
+        return '/api';
+      }
     }
     return 'http://localhost:8000/api';
   }
@@ -21,17 +25,12 @@ export class ApiService {
     if (typeof window !== 'undefined') {
       const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       const custom = (window as any).__API_URL__ || localStorage.getItem('syseng_api_url');
-      // En producción en Vercel, si no hay backend remoto configurado, operamos en modo standalone de 0ms
       return !isLocal && !custom;
     }
     return false;
   }
 
-  get<T>(path: string, params?: Record<string, unknown>, timeoutMs: number = 2800): Observable<T> {
-    if (this.isStandalone) {
-      return throwError(() => new Error('SysEng: Standalone mode (zero-latency fallback active)'));
-    }
-
+  get<T>(path: string, params?: Record<string, unknown>, timeoutMs: number = 3200): Observable<T> {
     let httpParams = new HttpParams();
     if (params) {
       Object.entries(params).forEach(([k, v]) => {
@@ -45,43 +44,27 @@ export class ApiService {
     );
   }
 
-  post<T>(path: string, body?: unknown, timeoutMs: number = 3800): Observable<T> {
-    if (this.isStandalone) {
-      return throwError(() => new Error('SysEng: Standalone mode (zero-latency fallback active)'));
-    }
-
+  post<T>(path: string, body?: unknown, timeoutMs: number = 4200): Observable<T> {
     return this.http.post<T>(`${this.baseUrl}${path}`, body).pipe(
       timeout(timeoutMs)
     );
   }
 
-  put<T>(path: string, body?: unknown): Observable<T> {
-    if (this.isStandalone) {
-      return throwError(() => new Error('SysEng: Standalone mode (zero-latency fallback active)'));
-    }
-
+  put<T>(path: string, body?: unknown, timeoutMs: number = 3500): Observable<T> {
     return this.http.put<T>(`${this.baseUrl}${path}`, body).pipe(
-      timeout(3500)
+      timeout(timeoutMs)
     );
   }
 
-  patch<T>(path: string, body?: unknown): Observable<T> {
-    if (this.isStandalone) {
-      return throwError(() => new Error('SysEng: Standalone mode (zero-latency fallback active)'));
-    }
-
+  patch<T>(path: string, body?: unknown, timeoutMs: number = 3500): Observable<T> {
     return this.http.patch<T>(`${this.baseUrl}${path}`, body).pipe(
-      timeout(3500)
+      timeout(timeoutMs)
     );
   }
 
-  delete<T>(path: string): Observable<T> {
-    if (this.isStandalone) {
-      return throwError(() => new Error('SysEng: Standalone mode (zero-latency fallback active)'));
-    }
-
+  delete<T>(path: string, timeoutMs: number = 3500): Observable<T> {
     return this.http.delete<T>(`${this.baseUrl}${path}`).pipe(
-      timeout(3500)
+      timeout(timeoutMs)
     );
   }
 }

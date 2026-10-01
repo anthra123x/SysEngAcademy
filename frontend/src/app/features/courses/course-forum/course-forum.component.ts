@@ -937,8 +937,14 @@ export class CourseForumComponent implements OnInit {
 
     this.forumSvc.getCoursePosts(this.courseSlug(), filters).subscribe({
       next: (res) => {
-        this.posts.set(res.data ?? []);
-        this.totalPosts.set(res.total ?? (res.data?.length ?? 0));
+        const enriched = (res.data ?? []).map(p => {
+          if (!p.module && p.module_id) {
+            p.module = this.modules().find(m => m.id === p.module_id);
+          }
+          return p;
+        });
+        this.posts.set(enriched);
+        this.totalPosts.set(res.total ?? enriched.length);
         this.loading.set(false);
       },
       error: (err) => {
@@ -982,12 +988,13 @@ export class CourseForumComponent implements OnInit {
       module_id: this.newPost.module_id ?? undefined,
     }).subscribe({
       next: (post) => {
+        if (!post.module && post.module_id) {
+          post.module = this.modules().find(m => m.id === post.module_id);
+        }
         this.posts.update(list => [post, ...list]);
         this.totalPosts.update(t => t + 1);
         this.showComposer.set(false);
         this.submitting.set(false);
-        // Se conserva el modulo elegido para que el estudiante pueda
-        // publicar varias aportes seguidas en el mismo modulo.
         this.newPost = { title: '', content: '', category: 'question', module_id: this.newPost.module_id };
       },
       error: (err) => {

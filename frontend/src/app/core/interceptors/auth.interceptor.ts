@@ -13,7 +13,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
+      if (error.status === 401 && !token?.startsWith('syseng_jwt_')) {
         authService.clearSession(false);
       }
       return throwError(() => error);

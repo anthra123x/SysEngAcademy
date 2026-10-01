@@ -104,6 +104,17 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
             <span>Temario</span>
           </a>
 
+          <!-- Enlace al Foro de Discusión del Módulo/Curso -->
+          <a
+            [routerLink]="['/cursos', courseSlug()]"
+            [queryParams]="{ tab: 'forum', moduleId: l.module.id }"
+            class="btn-curriculum-pill"
+            title="Ir al foro y dudas de este módulo"
+          >
+            <span style="font-size: 13px; line-height: 1;">💬</span>
+            <span>Foro</span>
+          </a>
+
           <!-- User Avatar or Login (Avatar ASCII en miniatura animado sin recuadro de iniciales) -->
           @if (auth.isAuthenticated()) {
             <a

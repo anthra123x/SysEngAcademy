@@ -779,7 +779,7 @@ export interface StreakDay {
                     <span class="term-prefix">ls -la</span>
                     <span class="term-arg">/var/syseng/study-guilds</span>
                   </div>
-                  <button type="button" class="btn btn-xs btn-outline" (click)="showCreateGuildModal.set(true)">
+                  <button type="button" class="btn btn-xs btn-outline" (click)="openCreateGuildModal()">
                     + Crear Grupo de Estudio
                   </button>
                 </div>
@@ -974,6 +974,105 @@ export interface StreakDay {
                       </button>
                     </div>
                   }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ========================================================
+             MODAL / CREAR GRUPO DE ESTUDIO (CLAN)
+             ======================================================== -->
+        @if (showCreateGuildModal()) {
+          <div class="modal-backdrop" (click)="closeCreateGuildModal()">
+            <div class="ascii-modal-window" style="max-width: 540px;" (click)="$event.stopPropagation()">
+              <div class="modal-titlebar">
+                <span class="modal-cmd">groupadd -g syseng /etc/study-guilds</span>
+                <button type="button" class="modal-close-btn" (click)="closeCreateGuildModal()">✕</button>
+              </div>
+
+              <div class="modal-content">
+                <p class="modal-help-text">
+                  Funda un nuevo Clan de Ingeniería para estudiar con otros cadetes, compartir retos de código y mantener rachas grupales.
+                </p>
+
+                @if (guildActionError(); as err) {
+                  <p style="color: #ef4444; font-size: 11.5px; margin-bottom: 12px; font-family: var(--font-mono);">
+                    ⚠ {{ err }}
+                  </p>
+                }
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                      <label style="display: block; font-size: 11px; font-family: var(--font-mono); color: #94a3b8; margin-bottom: 4px;">
+                        Nombre del Clan
+                      </label>
+                      <input
+                        type="text"
+                        class="input input-sm"
+                        style="width: 100%;"
+                        placeholder="Ej: Rust & Sistemas de Baja Latencia"
+                        [ngModel]="newGuildName()"
+                        (ngModelChange)="newGuildName.set($event)"
+                      />
+                    </div>
+                    <div style="width: 110px;">
+                      <label style="display: block; font-size: 11px; font-family: var(--font-mono); color: #94a3b8; margin-bottom: 4px;">
+                        Tag / Sigla
+                      </label>
+                      <input
+                        type="text"
+                        class="input input-sm"
+                        style="width: 100%; text-transform: uppercase;"
+                        placeholder="[RUST]"
+                        [ngModel]="newGuildTag()"
+                        (ngModelChange)="newGuildTag.set($event)"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style="display: block; font-size: 11px; font-family: var(--font-mono); color: #94a3b8; margin-bottom: 4px;">
+                      Especialidad de Estudio
+                    </label>
+                    <select
+                      class="input input-sm"
+                      style="width: 100%;"
+                      [ngModel]="newGuildCategory()"
+                      (ngModelChange)="newGuildCategory.set($event)"
+                    >
+                      <option value="systems">Sistemas & Concurrencia</option>
+                      <option value="algorithms">Algoritmos & Estructuras de Datos</option>
+                      <option value="backend">Desarrollo Backend & APIs</option>
+                      <option value="frontend">Frontend & Experiencia de Usuario</option>
+                      <option value="security">Ciberseguridad & Red Teaming</option>
+                      <option value="ai">Inteligencia Artificial & Modelos</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style="display: block; font-size: 11px; font-family: var(--font-mono); color: #94a3b8; margin-bottom: 4px;">
+                      Descripción del Clan y Objetivos
+                    </label>
+                    <textarea
+                      class="input input-sm"
+                      rows="3"
+                      style="width: 100%; resize: vertical;"
+                      placeholder="Describe qué tecnologías estudiarán y qué metas técnicas persiguen en equipo..."
+                      [ngModel]="newGuildDescription()"
+                      (ngModelChange)="newGuildDescription.set($event)"
+                    ></textarea>
+                  </div>
+
+                  <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+                    <button type="button" class="btn btn-sm btn-outline" (click)="closeCreateGuildModal()">
+                      Cancelar
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary" (click)="createGuild()">
+                      + Fundar Clan
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2825,6 +2924,30 @@ for (let paso = 1; paso <= 3; paso++) {
       recentLogs: [{ author: 'Carlos (Lvl 12)', message: 'Resolví el balanceo AVL en 4ms.', timeAgo: 'hace 1h' }],
       isMember: false,
     },
+    {
+      id: 'arch',
+      name: 'Arquitectura Backend & APIs',
+      tag: '[ARCH]',
+      category: 'backend',
+      description: 'Diseño de microservicios, bases de datos distribuidas y patrones resilientes.',
+      membersCount: 31,
+      streakDays: 22,
+      weeklyChallenge: { title: 'Diseñar un Rate Limiter distribuido con Redis y Token Bucket', xpReward: 320, completed: false },
+      recentLogs: [{ author: 'Valeria (Lvl 14)', message: 'Añadí tests de carga con k6 para 10k req/s.', timeAgo: 'hace 3h' }],
+      isMember: false,
+    },
+    {
+      id: 'sec',
+      name: 'CyberSecurity & Exploit Analysis',
+      tag: '[SEC]',
+      category: 'security',
+      description: 'Auditoría de seguridad en código, sanitización estricta y criptografía aplicada.',
+      membersCount: 15,
+      streakDays: 11,
+      weeklyChallenge: { title: 'Mitigar vulnerabilidades OWASP Top 10 en endpoint de auth', xpReward: 400, completed: false },
+      recentLogs: [{ author: 'Esteban (Lvl 15)', message: 'Demostré inyección de cabeceras en proxy inverso.', timeAgo: 'hace 5h' }],
+      isMember: false,
+    },
   ]);
 
   readonly currentStudentEmail = computed(() => {
@@ -2840,6 +2963,11 @@ for (let paso = 1; paso <= 3; paso++) {
   }
 
   showCreateGuildModal = signal(false);
+  newGuildName = signal('');
+  newGuildTag = signal('');
+  newGuildCategory = signal<'systems' | 'algorithms' | 'backend' | 'frontend' | 'security' | 'ai'>('systems');
+  newGuildDescription = signal('');
+  guildActionError = signal<string | null>(null);
 
   // Recommendations
   readonly currentRecommendation = signal<PathRecommendation>({
@@ -2952,9 +3080,18 @@ for (let paso = 1; paso <= 3; paso++) {
         agentFeedback: 'Byte Copilot ha evaluado tu perfil demostrativo.',
       });
 
-      this.studyGroups.update(groups =>
-        groups.map(g => ({ ...g, isMember: g.id === 'krnl' }))
-      );
+      const savedDemoGroups = localStorage.getItem(this.getUserStorageKey('study_groups'));
+      if (savedDemoGroups) {
+        try {
+          this.studyGroups.set(JSON.parse(savedDemoGroups));
+        } catch {
+          this.studyGroups.update(groups => groups.map(g => ({ ...g, isMember: g.id === 'krnl' })));
+        }
+      } else {
+        this.studyGroups.update(groups =>
+          groups.map(g => ({ ...g, isMember: g.id === 'krnl' }))
+        );
+      }
       return;
     }
 
@@ -3266,25 +3403,114 @@ for (let paso = 1; paso <= 3; paso++) {
   }
 
   readonly myGroupName = computed(() => {
-    if (this.isDemoStudent()) return '[KRNL] Kernel & C++ Systems Hackers';
     const mine = this.studyGroups().find(g => g.isMember);
     return mine ? `${mine.tag} ${mine.name}` : 'Sin clan asignado (Explorador Independiente)';
   });
 
+  openCreateGuildModal() {
+    this.newGuildName.set('');
+    this.newGuildTag.set('');
+    this.newGuildCategory.set('systems');
+    this.newGuildDescription.set('');
+    this.guildActionError.set(null);
+    this.showCreateGuildModal.set(true);
+  }
+
+  closeCreateGuildModal() {
+    this.showCreateGuildModal.set(false);
+  }
+
+  createGuild() {
+    const name = this.newGuildName().trim();
+    const rawTag = this.newGuildTag().trim().toUpperCase();
+    const desc = this.newGuildDescription().trim();
+
+    if (!name || !rawTag || !desc) {
+      this.guildActionError.set('Por favor completa todos los campos del clan.');
+      return;
+    }
+
+    const tag = rawTag.startsWith('[') ? rawTag : `[${rawTag}]`;
+    const newId = 'clan_' + Date.now();
+    const currentUser = this.auth.user();
+
+    const createdGuild: StudyGroup = {
+      id: newId,
+      name,
+      tag,
+      category: this.newGuildCategory() as any,
+      description: desc,
+      membersCount: 1,
+      streakDays: 1,
+      weeklyChallenge: {
+        title: `Reto Fundacional de ${name}: Resolver 3 retos de código`,
+        xpReward: 350,
+        completed: false,
+      },
+      recentLogs: [
+        {
+          author: `${currentUser?.name || 'Tú'} (Lvl ${this.userLevel()})`,
+          message: 'Fundó el clan y convocó a nuevos miembros.',
+          timeAgo: 'hace un momento',
+        },
+      ],
+      isMember: true,
+    };
+
+    // Cambiar membresía al nuevo clan
+    this.studyGroups.update(groups => [
+      createdGuild,
+      ...groups.map(g => ({ ...g, isMember: false })),
+    ]);
+
+    this.saveStudyGroups();
+    this.showCreateGuildModal.set(false);
+  }
+
   joinGuild(id: string) {
     this.studyGroups.update(groups =>
-      groups.map(g => ({ ...g, isMember: g.id === id, membersCount: g.id === id ? g.membersCount + 1 : (g.isMember ? g.membersCount - 1 : g.membersCount) }))
+      groups.map(g => {
+        if (g.id === id) {
+          return {
+            ...g,
+            isMember: true,
+            membersCount: g.membersCount + 1,
+            recentLogs: [
+              {
+                author: `${this.auth.user()?.name || 'Tú'} (Lvl ${this.userLevel()})`,
+                message: 'Se unió al clan de estudio.',
+                timeAgo: 'hace un momento',
+              },
+              ...(g.recentLogs || []),
+            ].slice(0, 4),
+          };
+        }
+        if (g.isMember) {
+          return {
+            ...g,
+            isMember: false,
+            membersCount: Math.max(1, g.membersCount - 1),
+          };
+        }
+        return g;
+      })
     );
-    if (typeof window !== 'undefined' && !this.isDemoStudent()) {
-      localStorage.setItem(this.getUserStorageKey('study_groups'), JSON.stringify(this.studyGroups()));
-    }
+    this.saveStudyGroups();
   }
 
   leaveGuild(id: string) {
     this.studyGroups.update(groups =>
-      groups.map(g => g.id === id ? { ...g, isMember: false, membersCount: Math.max(1, g.membersCount - 1) } : g)
+      groups.map(g =>
+        g.id === id
+          ? { ...g, isMember: false, membersCount: Math.max(1, g.membersCount - 1) }
+          : g
+      )
     );
-    if (typeof window !== 'undefined' && !this.isDemoStudent()) {
+    this.saveStudyGroups();
+  }
+
+  private saveStudyGroups() {
+    if (typeof window !== 'undefined') {
       localStorage.setItem(this.getUserStorageKey('study_groups'), JSON.stringify(this.studyGroups()));
     }
   }
