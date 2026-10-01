@@ -1199,7 +1199,43 @@ export interface StreakDay {
                     <span class="term-prefix">gpg --verify-badges</span>
                     <span class="term-arg">/var/syseng/achievements.key</span>
                   </div>
-                  <span class="term-status-badge text-success">CERTIFICACIÓN CRIPTOGRÁFICA</span>
+                  <span class="term-status-badge text-success">CERTIFICACIÓN CRIPTOGRÁFICA ({{ unlockedBadgesCount() }}/{{ badges().length }})</span>
+                </div>
+
+                <!-- Barra interactiva de filtros de insignias -->
+                <div class="badges-filter-bar">
+                  <button
+                    type="button"
+                    class="badge-filter-btn"
+                    [class.is-active]="selectedBadgeFilter() === 'all'"
+                    (click)="selectedBadgeFilter.set('all')"
+                  >
+                    Todas ({{ badges().length }})
+                  </button>
+                  <button
+                    type="button"
+                    class="badge-filter-btn"
+                    [class.is-active]="selectedBadgeFilter() === 'unlocked'"
+                    (click)="selectedBadgeFilter.set('unlocked')"
+                  >
+                    Desbloqueadas ({{ unlockedBadgesCount() }})
+                  </button>
+                  <button
+                    type="button"
+                    class="badge-filter-btn"
+                    [class.is-active]="selectedBadgeFilter() === 'courses'"
+                    (click)="selectedBadgeFilter.set('courses')"
+                  >
+                    Cursos
+                  </button>
+                  <button
+                    type="button"
+                    class="badge-filter-btn"
+                    [class.is-active]="selectedBadgeFilter() === 'challenges'"
+                    (click)="selectedBadgeFilter.set('challenges')"
+                  >
+                    Retos &amp; Clanes
+                  </button>
                 </div>
 
                 <div class="badges-terminal-grid">
@@ -1207,14 +1243,32 @@ export interface StreakDay {
                     <div class="badge-terminal-card" [class.is-unlocked]="b.unlocked" [class.is-locked]="!b.unlocked">
                       <div class="card-top-header">
                         <span class="badge-level-pill">{{ b.level | uppercase }}</span>
-                        <span class="badge-status-tag" [class.tag-unlocked]="b.unlocked">{{ b.unlocked ? '✓ VERIFICADA' : '🔒 EN PROCESO' }}</span>
+                        <span class="badge-status-tag" [class.tag-unlocked]="b.unlocked">{{ b.unlocked ? '✓ DESBLOQUEADA' : '🔒 EN PROCESO' }}</span>
                       </div>
                       <div class="badge-body">
                         <div class="badge-icon-box"><span class="badge-icon-char">{{ b.icon }}</span></div>
                         <div class="badge-details">
                           <h4 class="badge-title">{{ b.title }}</h4>
                           <p class="badge-desc">{{ b.description }}</p>
-                          <div class="badge-fingerprint" style="margin-top: 6px; font-family: var(--font-mono); font-size: 10px; color: #475569;">
+
+                          <!-- Barra de progreso interactiva de la insignia -->
+                          <div class="badge-progress-box">
+                            <div class="badge-progress-meta font-mono">
+                              <span class="b-req">{{ b.requirement }}</span>
+                              <span class="b-pct" [style.color]="b.unlocked ? '#0ae98a' : '#38bdf8'">
+                                {{ b.currentCount }}/{{ b.targetCount }} ({{ b.progressPercent }}%)
+                              </span>
+                            </div>
+                            <div class="badge-progress-track">
+                              <div
+                                class="badge-progress-fill"
+                                [style.width.%]="b.progressPercent"
+                                [style.background]="b.unlocked ? 'linear-gradient(90deg, #0ae98a, #00d9ff)' : '#38bdf8'"
+                              ></div>
+                            </div>
+                          </div>
+
+                          <div class="badge-fingerprint" style="margin-top: 8px; font-family: var(--font-mono); font-size: 10px; color: #475569;">
                             <span>SHA256: {{ b.shaFingerprint.slice(0, 16) }}…</span>
                           </div>
                         </div>
@@ -1326,11 +1380,85 @@ export interface StreakDay {
                     <div class="rec-rationale">
                       <p class="rationale-text">{{ currentRecommendation().rationale }}</p>
                     </div>
-                    <div class="rec-action-bar">
-                      <a [routerLink]="['/cursos', currentRecommendation().suggestedCourseSlug]" class="btn btn-primary btn-lg">
+                    <div class="rec-action-bar" style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;">
+                      <a [routerLink]="['/cursos', currentRecommendation().suggestedCourseSlug]" class="btn btn-primary">
                         🚀 Empezar Esta Ruta →
                       </a>
+                      <a routerLink="/onboarding" class="btn btn-outline">
+                        ⚡ Recalibrar Diagnóstico con IA
+                      </a>
                     </div>
+                  </div>
+                </div>
+
+                <!-- CONSOLA INTERACTIVA DE CONSEJERO TÉCNICO BYTE COPILOT -->
+                <div class="advisor-chat-terminal" style="margin-top: 20px; background: #0b0e14; border: 1px solid #161f2e; border-radius: 8px; overflow: hidden;">
+                  <div class="terminal-subhead" style="background: #090c12;">
+                    <span class="term-dot" style="background: #00d9ff; box-shadow: 0 0 6px #00d9ff;"></span>
+                    <span class="term-subhead-title" style="color: #00d9ff;">CONSOLA EN VIVO: CONSULTOR TÉCNICO BYTE COPILOT</span>
+                    <a routerLink="/ai-chat" class="btn btn-xs btn-outline" style="margin-left: auto;">Abrir Sala Completa IA ↗</a>
+                  </div>
+
+                  <!-- Chips de preguntas sugeridas -->
+                  <div class="advisor-chips-row" style="padding: 12px 16px 8px; display: flex; gap: 8px; flex-wrap: wrap; background: #080a0f; border-bottom: 1px solid #141c2a;">
+                    <span style="font-size: 11px; color: #64748b; align-self: center;">Sugerencias:</span>
+                    <button type="button" class="btn-term-run" style="font-size: 11px; cursor: pointer;" (click)="askAdvisor('¿Cómo destacar y prepararme para desarrollo backend profesional?')">
+                      API Backend & PostgreSQL
+                    </button>
+                    <button type="button" class="btn-term-run" style="font-size: 11px; cursor: pointer;" (click)="askAdvisor('¿Cuál es la mejor estrategia para dominar algoritmos complejos y Big-O?')">
+                      Algoritmos & Big-O
+                    </button>
+                    <button type="button" class="btn-term-run" style="font-size: 11px; cursor: pointer;" (click)="askAdvisor('¿Cómo maximizar mi XP y mi racha de estudio diaria?')">
+                      Maximizar XP & Racha
+                    </button>
+                  </div>
+
+                  <!-- Historial de mensajes -->
+                  <div class="advisor-messages-scroll" style="max-height: 280px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                    @for (msg of advisorHistory(); track $index) {
+                      <div class="advisor-msg" [style.align-self]="msg.role === 'user' ? 'flex-end' : 'flex-start'" [style.max-width]="'88%'">
+                        <div style="font-size: 10px; font-family: var(--font-mono); margin-bottom: 3px;" [style.color]="msg.role === 'user' ? '#0ae98a' : '#00d9ff'">
+                          {{ msg.role === 'user' ? 'Tú (Estudiante)' : 'Byte Copilot' }} • {{ msg.timeAgo }}
+                        </div>
+                        <div style="padding: 10px 14px; border-radius: 6px; font-size: 13px; line-height: 1.5;"
+                             [style.background]="msg.role === 'user' ? '#141c2c' : '#0d131f'"
+                             [style.border]="msg.role === 'user' ? '1px solid #233147' : '1px solid #1a273b'"
+                             [style.color]="msg.role === 'user' ? '#f1f5f9' : '#e2e8f0'">
+                          {{ msg.text }}
+                        </div>
+                      </div>
+                    }
+
+                    @if (advisorLoading()) {
+                      <div class="advisor-msg" style="align-self: flex-start;">
+                        <div style="font-size: 10px; font-family: var(--font-mono); color: #00d9ff; margin-bottom: 3px;">Byte Copilot procesando...</div>
+                        <div style="padding: 10px 14px; border-radius: 6px; background: #0d131f; border: 1px solid #1a273b; color: #64748b; font-family: var(--font-mono); font-size: 12px;">
+                          Consultando modelo y analizando tu perfil...
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Input para enviar consulta -->
+                  <div class="advisor-input-bar" style="padding: 12px 16px; background: #080a0f; border-top: 1px solid #161f2e; display: flex; gap: 8px;">
+                    <input
+                      type="text"
+                      [ngModel]="advisorQuery()"
+                      (ngModelChange)="advisorQuery.set($event)"
+                      (keydown.enter)="askAdvisor()"
+                      placeholder="Escribe tu consulta técnica o vocacional a Byte Copilot..."
+                      style="flex: 1; background: #0d1117; border: 1px solid #1e293b; color: #f8fafc; padding: 9px 12px; border-radius: 4px; font-size: 13px; font-family: var(--font-sans);"
+                      [disabled]="advisorLoading()"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      (click)="askAdvisor()"
+                      [disabled]="advisorLoading() || !advisorQuery().trim()"
+                      style="font-size: 13px; padding: 9px 16px;"
+                    >
+                      {{ advisorLoading() ? 'Analizando...' : 'Consultar' }}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -3499,6 +3627,354 @@ export interface StreakDay {
         }
       }
     }
+
+    /* Filtros de insignias */
+    .badges-filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      &::-webkit-scrollbar { display: none; }
+
+      .badge-filter-btn {
+        background: #0E121A;
+        border: 1px solid #1E273A;
+        color: #94A3B8;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+
+        &:hover {
+          color: #F8FAFC;
+          border-color: #2D3D58;
+          background: #141A26;
+        }
+
+        &.is-active {
+          color: #0AE98A;
+          border-color: #0AE98A;
+          background: rgba(10, 233, 138, 0.08);
+          box-shadow: 0 0 10px rgba(10, 233, 138, 0.15);
+        }
+      }
+    }
+
+    /* Barra de progreso de insignia */
+    .badge-progress-box {
+      margin-top: 10px;
+
+      .badge-progress-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        margin-bottom: 4px;
+        .b-req { color: #64748B; }
+        .b-pct { font-weight: 600; }
+      }
+
+      .badge-progress-track {
+        height: 6px;
+        background: #07090E;
+        border: 1px solid #1A2234;
+        border-radius: 3px;
+        overflow: hidden;
+
+        .badge-progress-fill {
+          height: 100%;
+          border-radius: 3px;
+          transition: width 0.4s ease;
+        }
+      }
+    }
+
+    /* ==========================================================
+       RESPONSIVE MOBILE ENGINE: DESCONGESTIÓN Y ESPACIADO EN MÓVILES
+       ========================================================== */
+    @media (max-width: 768px) {
+      .profile-terminal-page {
+        padding: 12px 10px 48px;
+      }
+
+      .terminal-window {
+        border-radius: var(--radius-md);
+        margin-bottom: 24px;
+      }
+
+      .terminal-window-header {
+        padding: 10px 12px !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+
+        .terminal-actions {
+          margin-left: auto !important;
+        }
+      }
+
+      .terminal-content {
+        padding: 16px 12px;
+      }
+
+      .section-terminal-bar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        padding: 12px 14px !important;
+
+        .term-status-badge {
+          font-size: 10.5px !important;
+        }
+      }
+
+      /* Barra de navegación de pestañas tipo pill-carousel horizontal suave */
+      .terminal-nav {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        gap: 8px !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 20px !important;
+        scrollbar-width: none !important;
+        &::-webkit-scrollbar { display: none !important; }
+
+        .term-tab {
+          flex-shrink: 0 !important;
+          white-space: nowrap !important;
+          padding: 9px 15px !important;
+          font-size: 12.5px !important;
+          border-radius: 6px !important;
+          min-height: 40px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+        }
+      }
+
+      /* Neofetch Card amplio, espacioso y respirable en móviles */
+      .neofetch-card {
+        flex-direction: column !important;
+        align-items: center !important;
+        padding: 20px 16px !important;
+        gap: 20px !important;
+        margin-bottom: 20px !important;
+      }
+
+      .neofetch-logo {
+        width: 100% !important;
+        max-width: 200px !important;
+        min-height: 110px !important;
+        padding: 14px !important;
+      }
+
+      .neofetch-grid {
+        width: 100% !important;
+        gap: 10px !important;
+
+        .meta-row {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          gap: 3px !important;
+          width: 100% !important;
+          padding-bottom: 8px !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+
+          .meta-k {
+            width: 100% !important;
+            font-size: 11px !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+          }
+
+          .meta-v {
+            width: 100% !important;
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+          }
+        }
+      }
+
+      /* Sensor grid con espacio táctil */
+      .sensor-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        margin-bottom: 24px !important;
+
+        .sensor-card {
+          padding: 14px 14px !important;
+          min-height: 80px !important;
+
+          .sensor-num {
+            font-size: 20px !important;
+            margin: 4px 0 !important;
+          }
+        }
+      }
+
+      /* Tablas con scroll horizontal suave, evitando columnas comprimidas */
+      .course-process-table,
+      .leaderboard-table-shell {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin-bottom: 20px !important;
+
+        .process-table-head,
+        .process-row,
+        .leaderboard-head,
+        .leaderboard-row {
+          min-width: 620px !important;
+          padding: 12px 14px !important;
+        }
+      }
+
+      /* Podio elástico y legible en móviles */
+      .podium-section {
+        gap: 10px !important;
+        padding: 24px 8px 16px !important;
+        margin-bottom: 20px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: flex-end !important;
+
+        .podium-step {
+          flex: 1 !important;
+          max-width: 105px !important;
+          min-width: 78px !important;
+
+          .podium-avatar { font-size: 1.5rem !important; }
+          .podium-name {
+            font-size: 11px !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+          .podium-xp { font-size: 10.5px !important; font-weight: 600 !important; }
+
+          .podium-block.step-1 { height: 95px !important; font-size: 18px !important; }
+          .podium-block.step-2 { height: 75px !important; font-size: 16px !important; }
+          .podium-block.step-3 { height: 55px !important; font-size: 14px !important; }
+        }
+
+        &.is-single-leader .podium-step {
+          width: 140px !important;
+          max-width: 160px !important;
+          .podium-block.step-1 { height: 110px !important; font-size: 20px !important; }
+        }
+      }
+
+      /* Racha Hero & Matriz semanal espaciosa */
+      .streak-dashboard-layout {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+
+        .streak-hero-card {
+          padding: 24px 18px !important;
+          text-align: center !important;
+
+          .streak-counter {
+            font-size: 2.2rem !important;
+          }
+        }
+
+        .week-matrix-card {
+          padding: 20px 16px !important;
+
+          .calendar-grid {
+            gap: 6px !important;
+            justify-content: space-between !important;
+          }
+
+          .calendar-day-box {
+            flex: 1 !important;
+            min-width: 36px !important;
+            height: 52px !important;
+            padding: 6px 2px !important;
+          }
+        }
+
+        .streak-ping-action button {
+          width: 100% !important;
+          padding: 13px 18px !important;
+          justify-content: center !important;
+        }
+      }
+
+      /* Clanes / Guilds con espacio respirable */
+      .guild-workspace-layout {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+
+        .guild-card {
+          padding: 18px 16px !important;
+          margin-bottom: 14px !important;
+        }
+
+        .post-card {
+          padding: 18px 16px !important;
+          margin-bottom: 18px !important;
+        }
+
+        .post-actions-bar {
+          flex-wrap: wrap !important;
+          gap: 10px !important;
+        }
+      }
+
+      /* Badges en 1 columna cómoda con buena separación */
+      .badges-terminal-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+
+        .badge-terminal-card {
+          padding: 18px 16px !important;
+        }
+      }
+
+      /* Advisor con acciones full width y chat cómodo */
+      .advisor-output-card {
+        padding: 20px 16px !important;
+
+        .rec-action-bar {
+          flex-direction: column !important;
+          gap: 10px !important;
+          width: 100% !important;
+
+          .btn {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 12px 16px !important;
+          }
+        }
+      }
+
+      .advisor-chat-terminal {
+        .advisor-input-bar {
+          flex-direction: column !important;
+          gap: 10px !important;
+
+          .btn {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 11px 16px !important;
+          }
+        }
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sensor-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+      }
+    }
   `]
 })
 export class ProfileComponent implements OnInit, OnDestroy {
@@ -3831,9 +4307,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
   readonly maxStreak = computed(() => this.streakService.maxStreak());
   todayCheckedIn = signal(true);
 
-  // Diagnostic state
+  // Diagnostic & Advisor AI state
   diagnosticCompleted = signal(false);
   diagnosticFinished = signal(false);
+  advisorQuery = signal('');
+  advisorLoading = signal(false);
+  advisorHistory = signal<{ role: 'user' | 'assistant'; text: string; timeAgo: string }[]>([
+    {
+      role: 'assistant',
+      text: '¡Hola! Soy Byte Copilot, tu consejero técnico de ingeniería. Estoy aquí para resolver tus dudas sobre tu ruta de aprendizaje, prerrequisitos de cursos o estrategias para dominar algoritmos y sistemas distribuidos. ¿En qué puedo orientarte hoy?',
+      timeAgo: 'ahora',
+    }
+  ]);
   currentDiagQuestionIndex = signal(0);
   selectedDiagAnswer = signal<string | null>(null);
   evaluatingQuestion = signal(false);
@@ -4504,6 +4989,48 @@ for (let paso = 1; paso <= 3; paso++) {
     this.streakService.recordActivity('pulse');
   }
 
+  askAdvisor(suggestedPrompt?: string) {
+    const q = (suggestedPrompt || this.advisorQuery()).trim();
+    if (!q || this.advisorLoading()) return;
+
+    this.advisorQuery.set('');
+    this.advisorLoading.set(true);
+
+    const now = 'hace un momento';
+    this.advisorHistory.update(h => [...h, { role: 'user', text: q, timeAgo: now }]);
+
+    this.api.post<{ reply?: string; answer?: string; message?: string }>('/ai/ask', {
+      message: q,
+      context: `Estudiante: ${this.auth.user()?.name || 'Estudiante'}. Nivel: ${this.userLevel()}. Especialidad: ${this.specialization().title}. Racha: ${this.currentStreak()} días. Cursos completados: ${this.completedCount()}.`
+    }).subscribe({
+      next: (res) => {
+        this.advisorLoading.set(false);
+        const botReply = res?.reply || res?.answer || res?.message || 'He analizado tu consulta. Para tu nivel actual, te recomiendo avanzar con ejercicios de lógica de programación y completar los retos de terminal antes de pasar a arquitectura avanzada.';
+        this.advisorHistory.update(h => [...h, { role: 'assistant', text: botReply, timeAgo: 'ahora' }]);
+        this.streakService.recordActivity('pulse');
+      },
+      error: () => {
+        this.advisorLoading.set(false);
+        const fallback = this.generateAdvisorFallback(q);
+        this.advisorHistory.update(h => [...h, { role: 'assistant', text: fallback, timeAgo: 'ahora' }]);
+      }
+    });
+  }
+
+  private generateAdvisorFallback(q: string): string {
+    const lower = q.toLowerCase();
+    if (lower.includes('backend') || lower.includes('api')) {
+      return 'Para destacar en Backend, domina el diseño de APIs REST idempotentes, control transaccional en bases de datos relacionales (PostgreSQL) y manejo de concurrencia. ¡Tu siguiente paso ideal es el curso de Introducción al Backend!';
+    }
+    if (lower.includes('algoritmo') || lower.includes('reto') || lower.includes('dijkstra') || lower.includes('grafo')) {
+      return 'Los algoritmos requieren práctica continua: comienza analizando la complejidad temporal Big-O (O(1), O(log n), O(n)) y resuelve al menos un reto CLI al día para mantener tu racha activa.';
+    }
+    if (lower.includes('racha') || lower.includes('xp') || lower.includes('ranking')) {
+      return 'Para maximizar tu XP y escalar en el ranking: cada lección otorga +20 XP, los retos +50 XP, completar cursos +150 XP y mantener rachas diarias otorga bonificaciones progresivas (+25 XP por día consecutivo).';
+    }
+    return `Basado en tu perfil actual (Nivel ${this.userLevel()} - ${this.specialization().title}): te recomiendo continuar con tu curso asignado en la pestaña whoami y resolver el reto semanal en tu clan de estudio para obtener experiencia acelerada.`;
+  }
+
   readonly currentQuestion = computed(() => this.diagQuestions[this.currentDiagQuestionIndex()]);
 
   submitDiagAnswer() {
@@ -5157,6 +5684,10 @@ for (let paso = 1; paso <= 3; paso++) {
     const hasDiag = this.diagnosticCompleted();
     const challenges = this.solvedChallengesCount();
     const streak = this.currentStreak();
+    const enrollmentsCount = this.enrollments().length;
+    const completedCourses = this.completedCount();
+    const studyMins = this.todayStudyMinutes();
+    const isClanMember = this.studyGroups().some(g => g.isMember);
 
     return [
       {
@@ -5202,11 +5733,39 @@ for (let paso = 1; paso <= 3; paso++) {
         shaFingerprint: 'sha256:7f8a91b2c4e5f6a1',
       },
       {
+        id: 'challenge_master',
+        title: 'Maestro de Algoritmos',
+        category: 'challenges',
+        icon: '⚔️',
+        description: 'Superaste con éxito 3 retos de práctica y código.',
+        requirement: 'Resuelve 3 retos',
+        targetCount: 3,
+        currentCount: Math.min(3, challenges),
+        progressPercent: Math.min(100, Math.round((challenges / 3) * 100)),
+        unlocked: challenges >= 3,
+        level: 'gold',
+        shaFingerprint: 'sha256:9a8b7c6d5e4f3a2b',
+      },
+      {
+        id: 'streak_3',
+        title: 'Hábito de Código',
+        category: 'special',
+        icon: '🔥',
+        description: 'Estudiaste durante 3 días consecutivos en la plataforma.',
+        requirement: 'Racha >= 3 días',
+        targetCount: 3,
+        currentCount: Math.min(3, streak),
+        progressPercent: Math.min(100, Math.round((streak / 3) * 100)),
+        unlocked: streak >= 3,
+        level: 'bronze',
+        shaFingerprint: 'sha256:3d3e3f4a5b6c7d8e',
+      },
+      {
         id: 'streak_fire',
         title: 'Disciplina & Constancia',
         category: 'special',
-        icon: '🔥',
-        description: 'Mantuviste una racha de estudio de al menos 5 días.',
+        icon: '🚀',
+        description: 'Mantuviste una racha de estudio ininterrumpida de al menos 5 días.',
         requirement: 'Racha >= 5 días',
         targetCount: 5,
         currentCount: streak,
@@ -5215,11 +5774,74 @@ for (let paso = 1; paso <= 3; paso++) {
         level: 'silver',
         shaFingerprint: 'sha256:f5e4d3c2b1a09876',
       },
+      {
+        id: 'course_explorer',
+        title: 'Explorador Técnico',
+        category: 'courses',
+        icon: '📚',
+        description: 'Te inscribiste en al menos 2 cursos del pensum institucional.',
+        requirement: 'Inscribirse en 2 cursos',
+        targetCount: 2,
+        currentCount: Math.min(2, enrollmentsCount),
+        progressPercent: Math.min(100, Math.round((enrollmentsCount / 2) * 100)),
+        unlocked: enrollmentsCount >= 2,
+        level: 'bronze',
+        shaFingerprint: 'sha256:e1d2c3b4a5f60718',
+      },
+      {
+        id: 'course_master',
+        title: 'Graduado de Cátedra',
+        category: 'courses',
+        icon: '🏆',
+        description: 'Completaste al 100% tu primer curso oficial en SysEng Academy.',
+        requirement: 'Completar 1 curso',
+        targetCount: 1,
+        currentCount: completedCourses >= 1 ? 1 : 0,
+        progressPercent: completedCourses >= 1 ? 100 : 0,
+        unlocked: completedCourses >= 1,
+        level: 'gold',
+        shaFingerprint: 'sha256:b1a2c3d4e5f60789',
+      },
+      {
+        id: 'clan_brotherhood',
+        title: 'Pertenencia a Clan',
+        category: 'special',
+        icon: '🛡️',
+        description: 'Te uniste a un clan o semillero de investigación técnica.',
+        requirement: 'Unirte a 1 clan',
+        targetCount: 1,
+        currentCount: isClanMember ? 1 : 0,
+        progressPercent: isClanMember ? 100 : 0,
+        unlocked: isClanMember,
+        level: 'silver',
+        shaFingerprint: 'sha256:4a5b6c7d8e9f0123',
+      },
+      {
+        id: 'study_marathon',
+        title: 'Enfoque Profundo',
+        category: 'special',
+        icon: '⏱️',
+        description: 'Dedicaste más de 15 minutos de estudio y código en la plataforma.',
+        requirement: 'Estudio >= 15 min',
+        targetCount: 15,
+        currentCount: Math.min(15, studyMins),
+        progressPercent: Math.min(100, Math.round((studyMins / 15) * 100)),
+        unlocked: studyMins >= 15,
+        level: 'silver',
+        shaFingerprint: 'sha256:8f7e6d5c4b3a2019',
+      },
     ];
   });
 
   readonly unlockedBadgesCount = computed(() => this.badges().filter(b => b.unlocked).length);
-  readonly filteredBadges = computed(() => this.badges());
+  readonly filteredBadges = computed<AchievementBadge[]>(() => {
+    const filter = this.selectedBadgeFilter();
+    const all = this.badges();
+    if (filter === 'unlocked') return all.filter(b => b.unlocked);
+    if (filter === 'challenges') return all.filter(b => b.category === 'challenges');
+    if (filter === 'courses') return all.filter(b => b.category === 'courses');
+    return all;
+  });
 
   readonly leaderboard = computed<LeaderboardEntry[]>(() => {
     const remote = this.remoteLeaderboard();

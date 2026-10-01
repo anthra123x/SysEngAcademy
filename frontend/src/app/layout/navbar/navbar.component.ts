@@ -857,7 +857,9 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       }
 
       @media (max-width: 500px) {
-        display: none;
+        padding: 2px 7px;
+        font-size: 10px;
+        svg { width: 10px; height: 10px; }
       }
     }
   `]

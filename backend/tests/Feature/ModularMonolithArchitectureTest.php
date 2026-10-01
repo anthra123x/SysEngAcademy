@@ -11,6 +11,19 @@ use Tests\TestCase;
 
 class ModularMonolithArchitectureTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        User::updateOrCreate(
+            ['email' => 'estudiante@sysengacademy.dev'],
+            [
+                'name' => 'Estudiante Demo',
+                'password' => bcrypt('estudiante1234'),
+                'role' => 'student',
+            ]
+        );
+    }
+
     /**
      * Verifica que el servicio modular AuthService autentica correctamente al docente principal.
      */

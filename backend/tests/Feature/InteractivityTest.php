@@ -25,6 +25,18 @@ class InteractivityTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function studentUser(): User
+    {
+        return User::firstOrCreate(
+            ['email' => 'estudiante@sysengacademy.dev'],
+            [
+                'name' => 'Estudiante Test',
+                'password' => bcrypt('password'),
+                'role' => 'student',
+            ]
+        );
+    }
+
     protected function makeCourse(string $suffix)
     {
         return Course::create([
@@ -118,7 +130,7 @@ class InteractivityTest extends TestCase
         $good1 = $q1->answers->firstWhere('is_correct', true);
         $bad2 = $q2->answers->firstWhere('is_correct', false);
 
-        Sanctum::actingAs(User::where('email', 'estudiante@sysengacademy.dev')->firstOrFail());
+        Sanctum::actingAs($this->studentUser());
 
         $response = $this->postJson("/api/lessons/{$lesson->slug}/quiz/attempt", [
             'answers' => [
@@ -169,7 +181,7 @@ class InteractivityTest extends TestCase
         $module = Module::create(['course_id' => $course->id, 'title' => 'Módulo 1', 'order' => 1]);
         $lesson = $this->makeLesson($module, "leccion-ia-{$suffix}", 1);
 
-        Sanctum::actingAs(User::where('email', 'estudiante@sysengacademy.dev')->firstOrFail());
+        Sanctum::actingAs($this->studentUser());
 
         $response = $this->postJson('/api/ai/ask', [
             'lesson_id' => $lesson->id,
@@ -205,7 +217,7 @@ class InteractivityTest extends TestCase
         $module = Module::create(['course_id' => $course->id, 'title' => 'Módulo 1', 'order' => 1]);
         $lesson = $this->makeLesson($module, "leccion-practice-{$suffix}", 1);
 
-        Sanctum::actingAs(User::where('email', 'estudiante@sysengacademy.dev')->firstOrFail());
+        Sanctum::actingAs($this->studentUser());
 
         $response = $this->postJson('/api/ai/practice', [
             'lesson_id' => $lesson->id,

@@ -73,12 +73,26 @@ class ForumTest extends TestCase
 
     protected function student(): User
     {
-        return User::where('email', 'estudiante@sysengacademy.dev')->firstOrFail();
+        return User::firstOrCreate(
+            ['email' => 'estudiante@sysengacademy.dev'],
+            [
+                'name' => 'Estudiante Test',
+                'password' => bcrypt('password'),
+                'role' => 'student',
+            ]
+        );
     }
 
     protected function instructor(): User
     {
-        return User::where('email', 'instructor@sysengacademy.dev')->firstOrFail();
+        return User::firstOrCreate(
+            ['email' => 'instructor@sysengacademy.dev'],
+            [
+                'name' => 'Instructor Test',
+                'password' => bcrypt('password'),
+                'role' => 'instructor',
+            ]
+        );
     }
 
     public function test_index_publico_devuelve_paginacion_y_posts_del_curso(): void
