@@ -291,7 +291,7 @@ export class CoursesComponent implements OnInit {
       'devops': '🚀',
       'git': '🐙',
       'ingenieria-software': '📐',
-      'ia-desarrollo': '🤖',
+      'ia-desarrollo': '🧠',
     };
     return map[course.category?.slug ?? ''] ?? '📚';
   }

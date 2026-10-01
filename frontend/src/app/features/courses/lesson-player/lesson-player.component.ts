@@ -340,7 +340,8 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
             <!-- Acciones -->
             <div class="player-actions">
               <button class="btn btn-outline" (click)="askByte()" title="Pregunta a nuestro asistente IA">
-                🤖 Preguntar a Byte
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:6px;" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg>
+                Preguntar a Byte
               </button>
 
               <div class="player-actions__right">
@@ -2033,7 +2034,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
         url: 'https://sqlbolt.com/'
       },
       {
-        icon: '🤖',
+        icon: '🧭',
         source: 'Roadmap.sh',
         title: 'Developer Roadmaps & Computer Science Guides',
         description: 'Árboles de habilidades y mapas de aprendizaje visuales recomendados por ingenieros de software senior.',

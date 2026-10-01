@@ -33,7 +33,13 @@ import { AiConversation, AiMessage } from '../../core/models';
       <main class="chat-main">
         @if (!activeConv()) {
           <div class="chat-welcome">
-            <div class="welcome-icon">🤖</div>
+            <div class="welcome-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="ai-core-svg" aria-hidden="true">
+                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                <rect x="9" y="9" width="6" height="6"></rect>
+                <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path>
+              </svg>
+            </div>
             <h2>Asistente de IA</h2>
             <p>Soy tu asistente especializado en programación para Ingeniería de Sistemas. Puedo ayudarte con:</p>
             <div class="welcome-chips">
@@ -53,7 +59,13 @@ import { AiConversation, AiMessage } from '../../core/models';
             @for (msg of messages(); track msg.id) {
               <div [class]="'message message--' + msg.role">
                 @if (msg.role === 'assistant') {
-                  <div class="message__avatar">🤖</div>
+                  <div class="message__avatar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                      <rect x="9" y="9" width="6" height="6"></rect>
+                      <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path>
+                    </svg>
+                  </div>
                 }
                 <div class="message__bubble">
                   <div class="message__content">{{ msg.content }}</div>
@@ -64,7 +76,13 @@ import { AiConversation, AiMessage } from '../../core/models';
 
             @if (thinking()) {
               <div class="message message--assistant">
-                <div class="message__avatar">🤖</div>
+                <div class="message__avatar">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                    <rect x="9" y="9" width="6" height="6"></rect>
+                    <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path>
+                  </svg>
+                </div>
                 <div class="message__bubble">
                   @if (assistantStream()) {
                     <div class="message__content">{{ assistantStream() }}<span class="stream-cursor">▍</span></div>
@@ -164,7 +182,18 @@ import { AiConversation, AiMessage } from '../../core/models';
       padding: var(--sp-8);
       gap: var(--sp-5);
 
-      .welcome-icon { font-size: 4rem; }
+      .welcome-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #00d9ff;
+        width: 64px;
+        height: 64px;
+        margin: 0 auto;
+        background: rgba(0, 217, 255, 0.08);
+        border: 1px solid rgba(0, 217, 255, 0.25);
+        border-radius: 12px;
+      }
       h2 { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); }
       p { color: var(--text-secondary); max-width: 400px; }
     }
@@ -212,7 +241,19 @@ import { AiConversation, AiMessage } from '../../core/models';
         .message__bubble { background: var(--bg-surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm); }
       }
 
-      &__avatar { font-size: 1.5rem; flex-shrink: 0; margin-top: 4px; }
+      &__avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 4px;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: rgba(0, 217, 255, 0.1);
+        border: 1px solid rgba(0, 217, 255, 0.25);
+        color: #00d9ff;
+      }
 
       &__bubble { padding: var(--sp-4); max-width: 70%; }
 

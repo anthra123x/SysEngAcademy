@@ -278,7 +278,7 @@ export interface StreakDay {
                 >
                   <span class="term-tab__prompt">$</span>
                   <span class="term-tab__cmd">advisor</span>
-                  <span class="term-tab__flag">--faculty-ai 🤖</span>
+                  <span class="term-tab__flag">--faculty-ai</span>
                 </button>
               } @else {
                 <!-- PESTAÑAS PARA EL ESTUDIANTE -->
@@ -345,7 +345,7 @@ export interface StreakDay {
                 >
                   <span class="term-tab__prompt">$</span>
                   <span class="term-tab__cmd">advisor</span>
-                  <span class="term-tab__flag">--ai 🤖</span>
+                  <span class="term-tab__flag">--ai</span>
                 </button>
               }
             </nav>
@@ -527,7 +527,7 @@ export interface StreakDay {
                     <span class="term-prefix">byte-copilot</span>
                     <span class="term-arg">--faculty-assistant --model=gpt-4o-mini</span>
                   </div>
-                  <span class="term-status-badge text-cyan">ASISTENTE PEDAGÓGICO CONECTADO 🤖</span>
+                  <span class="term-status-badge text-cyan">ASISTENTE PEDAGÓGICO CONECTADO</span>
                 </div>
 
                 <div class="advisor-output-card" style="margin-top: 14px;">
@@ -908,7 +908,7 @@ export interface StreakDay {
                     <span class="term-prefix">byte-copilot</span>
                     <span class="term-arg">--consult-profile</span>
                   </div>
-                  <span class="term-status-badge text-purple">RECOMENDADOR DE RUTA TÉCNICA 🤖</span>
+                  <span class="term-status-badge text-purple">RECOMENDADOR DE RUTA TÉCNICA</span>
                 </div>
 
                 <div class="advisor-output-card">

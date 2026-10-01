@@ -196,7 +196,9 @@ export interface TerminalAiMessage {
           [class.is-active]="mobileActivePane() === 'ai'"
           (click)="switchToAiTab()"
         >
-          <span class="m-tab-glyph ai-spark">✨</span>
+          <span class="m-tab-glyph ai-spark">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg>
+          </span>
           <span>Byte AI</span>
           @if (hasUnreadAiAdvice()) {
             <span class="m-badge badge-unread">nuevo</span>
@@ -314,7 +316,9 @@ export interface TerminalAiMessage {
                 [class.is-active]="activeTerminalTab() === 'ai'"
                 (click)="openCopilotTab()"
               >
-                <span class="ai-spark">✨</span>
+                <span class="ai-spark">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg>
+                </span>
                 <span>Byte Copilot</span>
                 @if (hasUnreadAiAdvice()) {
                   <span class="ai-unread-badge" title="Nuevas recomendaciones disponibles">nuevo</span>
@@ -460,7 +464,9 @@ export interface TerminalAiMessage {
                     <span class="prompt-user">syseng&#64;linux</span>:<span class="prompt-dir">~</span>$&nbsp;<span class="prompt-cmd">byte-ai --interactive</span>
                   </div>
                   <div class="banner-info">
-                    <span class="ai-bot-glyph">🤖</span>
+                    <span class="ai-bot-glyph">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg>
+                    </span>
                     <span>Byte AI Copilot v2.4 (OpenAI GPT-4o Mini en vivo)</span>
                   </div>
                 </div>
@@ -2244,7 +2250,7 @@ export class InteractiveIdeComponent {
     this.recordChallengeCompleted();
     const successMsg = method === 'tests'
       ? '🏆 ¡Pruebas superadas con éxito! Ejercicio aprobado por el Sistema.'
-      : '🤖 ¡Excelente! Solución validada y aprobada automáticamente por el Agente.';
+      : '✓ ¡Excelente! Solución validada y aprobada automáticamente por el Agente.';
     this.showToast(successMsg);
     this.challengeSolved.emit({
       passed: true,
@@ -2297,7 +2303,7 @@ export class InteractiveIdeComponent {
             : '') +
           `> ✅ **Objetivo completado.** El avance ha sido registrado automáticamente y el siguiente módulo está habilitado.`;
       } else {
-        aiReplyText = `### 🤖 Revisión en Vivo del Agente (${evaluation.score}/100)\n\n` +
+        aiReplyText = `### [BYTE-AI] Revisión en Vivo del Agente (${evaluation.score}/100)\n\n` +
           `**Resumen:** ${evaluation.summary}\n\n` +
           (evaluation.what_was_wrong
             ? `**⚠️ En qué estuvo mal o qué faltó:**\n${evaluation.what_was_wrong}\n\n`
@@ -2322,7 +2328,7 @@ export class InteractiveIdeComponent {
       if (this.activeTerminalTab() !== 'ai') {
         this.hasUnreadAiAdvice.set(true);
         if (!evaluation.approved) {
-          this.showToast('🤖 Byte IA analizó tu código y dejó recomendaciones en Copilot.');
+          this.showToast('[BYTE-AI] El Agente analizó tu código y dejó recomendaciones en Copilot.');
         }
       }
     } catch (_err) {
@@ -2335,7 +2341,7 @@ export class InteractiveIdeComponent {
           (localEval.recommendations ? `**💡 Recomendaciones:**\n${localEval.recommendations}\n\n` : '') +
           `> ✅ **Excelente trabajo.** Continúa con la siguiente lección.`;
       } else {
-        aiReplyText = `### 🤖 Revisión del Agente — Ajustes Requeridos (${localEval.score || 40}/100)\n\n` +
+        aiReplyText = `### [BYTE-AI] Revisión del Agente — Ajustes Requeridos (${localEval.score || 40}/100)\n\n` +
           `**Resumen:** ${localEval.summary}\n\n` +
           (localEval.what_was_wrong ? `**⚠️ En qué estuvo mal:**\n${localEval.what_was_wrong}\n\n` : '') +
           (localEval.recommendations ? `**💡 Recomendaciones:**\n${localEval.recommendations}\n\n` : '') +
@@ -2769,7 +2775,7 @@ Reglas:
         `Verifica que todas las variables estén declaradas y los tipos de datos coincidan.`;
     }
 
-    return `### 🤖 Sugerencia de Byte AI\n\n` +
+    return `### [BYTE-AI] Recomendación del Agente\n\n` +
       `Tu código tiene buena estructura base. Asegúrate de retornar explícitamente el resultado y verificar casos extremos.\n` +
       (ctx.hint ? `Pista: *${ctx.hint}*` : '');
   }

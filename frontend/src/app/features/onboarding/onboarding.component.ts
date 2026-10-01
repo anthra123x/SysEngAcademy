@@ -432,7 +432,7 @@ export interface DiagnosticAnalysisResult {
                   @if (currentQuestionIndex() < questions.length - 1) {
                     <span>Siguiente Pregunta [Enter] →</span>
                   } @else {
-                    <span>Calibrar y Compilar Temario 🤖 →</span>
+                    <span>Calibrar y Compilar Temario →</span>
                   }
                 </button>
               </div>

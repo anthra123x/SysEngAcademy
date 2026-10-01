@@ -625,7 +625,7 @@ export class LearningPathDetailComponent implements OnInit {
       'estructuras-de-datos': '🌳', 'desarrollo-web': '🕸️',
       'desarrollo-backend': '⚙️', 'desarrollo-frontend': '🎨',
       'devops': '🚀', 'git': '🌿', 'ingenieria-software': '📐',
-      'ia-desarrollo': '🤖'
+      'ia-desarrollo': '🧠'
     };
     return map[course.category?.slug ?? ''] ?? '📚';
   }

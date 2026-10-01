@@ -1215,7 +1215,7 @@ export class HomeComponent implements OnInit {
       'estructuras-de-datos': '🌳', 'desarrollo-web': '🕸️',
       'desarrollo-backend': '⚙️', 'desarrollo-frontend': '🎨',
       'devops': '🐳', 'git': '🌿',
-      'ingenieria-software': '📋', 'ia-desarrollo': '🤖',
+      'ingenieria-software': '📋', 'ia-desarrollo': '🧠',
     };
     return map[slug] ?? '📚';
   }
