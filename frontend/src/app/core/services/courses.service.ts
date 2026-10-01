@@ -126,7 +126,19 @@ export class CoursesService {
       this.api.get<Course>(`/courses/${slug}`).subscribe({
         next: fresh => {
           if (fresh && fresh.modules && fresh.modules.length > 0) {
-            subscriber.next(this.enrichCourseWithCompletions(fresh));
+            const hasLessons = fresh.modules.some(m => m.lessons && m.lessons.length > 0);
+            if (hasLessons) {
+              subscriber.next(this.enrichCourseWithCompletions(fresh));
+            } else if (found.modules && found.modules.length > 0) {
+              const mergedModules = fresh.modules.map(fm => {
+                const existing = found.modules?.find(em => em.id === fm.id || em.order === fm.order);
+                return {
+                  ...fm,
+                  lessons: (fm.lessons && fm.lessons.length > 0) ? fm.lessons : (existing?.lessons || []),
+                };
+              });
+              subscriber.next(this.enrichCourseWithCompletions({ ...fresh, modules: mergedModules }));
+            }
           }
           subscriber.complete();
         },

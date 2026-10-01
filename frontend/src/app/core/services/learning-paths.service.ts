@@ -59,7 +59,19 @@ export class LearningPathsService {
       this.api.get<LearningPath>(`/learning-paths/${slug}`).subscribe({
         next: fresh => {
           if (fresh && fresh.levels && fresh.levels.length > 0) {
-            subscriber.next(fresh);
+            const hasCourses = fresh.levels.some(l => l.courses && l.courses.length > 0);
+            if (hasCourses) {
+              subscriber.next(fresh);
+            } else if (fallback.levels && fallback.levels.length > 0) {
+              const mergedLevels = fresh.levels.map(fl => {
+                const existing = fallback.levels?.find(el => el.id === fl.id || el.order === fl.order);
+                return {
+                  ...fl,
+                  courses: (fl.courses && fl.courses.length > 0) ? fl.courses : (existing?.courses || []),
+                };
+              });
+              subscriber.next({ ...fresh, levels: mergedLevels });
+            }
           }
           subscriber.complete();
         },

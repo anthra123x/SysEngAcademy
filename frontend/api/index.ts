@@ -844,8 +844,47 @@ export default async function handler(req: any, res: any) {
     }
 
     if (method === 'GET' && cleanPath === '/courses') {
-      const courses: any = await sql`SELECT * FROM courses ORDER BY "order" ASC, id ASC`;
-      return sendJson(res, 200, { data: courses, total: courses.length, current_page: 1, last_page: 1 }, 'public, s-maxage=30, stale-while-revalidate=120');
+      const search = url.searchParams.get('search');
+      const category = url.searchParams.get('category');
+      const difficulty = url.searchParams.get('difficulty');
+      const isFree = url.searchParams.get('is_free');
+      const pathId = url.searchParams.get('learning_path_id');
+
+      const [courseRows, catRows, countsRows]: [any, any, any] = await Promise.all([
+        sql`SELECT * FROM courses ORDER BY "order" ASC, id ASC`,
+        sql`SELECT * FROM categories ORDER BY id ASC`,
+        sql`SELECT m.course_id, count(l.id)::int as lessons_count FROM modules m JOIN lessons l ON l.module_id = m.id GROUP BY m.course_id`,
+      ]);
+
+      const catMap = new Map((catRows as any[]).map((cat: any) => [Number(cat.id), cat]));
+      const countMap = new Map((countsRows as any[]).map((r: any) => [Number(r.course_id), Number(r.lessons_count)]));
+
+      let list = (courseRows as any[]).map((c: any) => ({
+        ...c,
+        id: Number(c.id),
+        lessons_count: countMap.get(Number(c.id)) ?? 4,
+        category: c.category_id ? catMap.get(Number(c.category_id)) || null : null,
+      }));
+
+      if (search && search.trim()) {
+        const q = search.trim().toLowerCase();
+        list = list.filter((c: any) => c.title.toLowerCase().includes(q) || (c.description && c.description.toLowerCase().includes(q)));
+      }
+      if (category) {
+        list = list.filter((c: any) => c.category?.slug === category);
+      }
+      if (difficulty) {
+        list = list.filter((c: any) => c.difficulty === difficulty);
+      }
+      if (isFree !== null && isFree !== undefined && isFree !== '') {
+        const isFreeBool = isFree === 'true' || isFree === '1';
+        list = list.filter((c: any) => Boolean(c.is_free) === isFreeBool);
+      }
+      if (pathId) {
+        list = list.filter((c: any) => Number(c.learning_path_id) === Number(pathId));
+      }
+
+      return sendJson(res, 200, { data: list, total: list.length, current_page: 1, last_page: 1 }, 'public, s-maxage=30, stale-while-revalidate=120');
     }
 
     const courseDetailMatch = cleanPath.match(/^\/courses\/([^/]+)$/);
@@ -854,21 +893,94 @@ export default async function handler(req: any, res: any) {
       const courses: any = await sql`SELECT * FROM courses WHERE slug = ${slug} OR id::text = ${slug} LIMIT 1`;
       if (!courses || courses.length === 0) return sendJson(res, 404, { message: 'Curso no encontrado' });
       const c: any = courses[0];
-      const modules: any = await sql`SELECT * FROM modules WHERE course_id = ${c.id} ORDER BY "order" ASC`;
+
+      const [modules, catRows, instRows, pathRows]: [any, any, any, any] = await Promise.all([
+        sql`SELECT * FROM modules WHERE course_id = ${c.id} ORDER BY "order" ASC, id ASC`,
+        c.category_id ? sql`SELECT * FROM categories WHERE id = ${c.category_id} LIMIT 1` : Promise.resolve([]),
+        c.instructor_id ? sql`SELECT id, name, email, avatar, role FROM users WHERE id = ${c.instructor_id} LIMIT 1` : Promise.resolve([]),
+        c.learning_path_id ? sql`SELECT id, title, slug FROM learning_paths WHERE id = ${c.learning_path_id} LIMIT 1` : Promise.resolve([]),
+      ]);
+
       const moduleIds = (modules as any[]).map((m: any) => m.id);
       let lessons: any[] = [];
       if (moduleIds.length > 0) {
-        lessons = (await sql`SELECT * FROM lessons WHERE module_id = ANY(${moduleIds}::bigint[]) ORDER BY "order" ASC`) as any[];
+        lessons = (await sql`
+          SELECT id, module_id, title, slug, type, duration_minutes, is_preview, "order", language
+          FROM lessons
+          WHERE module_id = ANY(${moduleIds}::bigint[])
+          ORDER BY "order" ASC, id ASC
+        `) as any[];
       }
-      return sendJson(res, 200, { ...c, modules, lessons }, 'public, s-maxage=30, stale-while-revalidate=120');
+
+      const lessonsByModule = new Map<number, any[]>();
+      for (const l of lessons) {
+        const mid = Number(l.module_id);
+        if (!lessonsByModule.has(mid)) lessonsByModule.set(mid, []);
+        lessonsByModule.get(mid)!.push({
+          id: Number(l.id),
+          module_id: mid,
+          title: l.title,
+          slug: l.slug,
+          type: l.type || 'article',
+          duration_minutes: Number(l.duration_minutes || 15),
+          is_preview: Boolean(l.is_preview),
+          order: Number(l.order || 1),
+          language: l.language || null,
+        });
+      }
+
+      const enrichedModules = (modules as any[]).map((m: any) => ({
+        id: Number(m.id),
+        course_id: Number(m.course_id),
+        title: m.title,
+        description: m.description,
+        order: Number(m.order || 1),
+        lessons: lessonsByModule.get(Number(m.id)) || [],
+      }));
+
+      const category = (catRows as any[])[0] || null;
+      const instructor = (instRows as any[])[0] || { id: 28, name: 'Prof. Andrés Camilo Martínez', role: 'admin' };
+      const learningPath = (pathRows as any[])[0] || null;
+
+      return sendJson(res, 200, {
+        ...c,
+        id: Number(c.id),
+        category,
+        instructor,
+        learning_path: learningPath,
+        modules: enrichedModules,
+        lessons_count: lessons.length,
+      }, 'public, s-maxage=30, stale-while-revalidate=120');
     }
 
     // -------------------------------------------------------------
     // 7.1 LEARNING PATHS (Rutas de especialización)
     // -------------------------------------------------------------
     if (method === 'GET' && cleanPath === '/learning-paths') {
-      const paths: any = await sql`SELECT * FROM learning_paths ORDER BY id ASC`;
-      return sendJson(res, 200, { data: paths, total: paths.length, current_page: 1, last_page: 1 }, 'public, s-maxage=60, stale-while-revalidate=300');
+      const [pathRows, catRows, courseCountRows, levelCountRows]: [any, any, any, any] = await Promise.all([
+        sql`SELECT * FROM learning_paths ORDER BY id ASC`,
+        sql`SELECT * FROM categories ORDER BY id ASC`,
+        sql`SELECT learning_path_id, count(*)::int as courses_count FROM courses WHERE learning_path_id IS NOT NULL GROUP BY learning_path_id`,
+        sql`SELECT learning_path_id, count(*)::int as levels_count FROM learning_path_levels GROUP BY learning_path_id`,
+      ]);
+
+      const catMap = new Map((catRows as any[]).map((cat: any) => [Number(cat.id), cat]));
+      const courseCountMap = new Map((courseCountRows as any[]).map((r: any) => [Number(r.learning_path_id), Number(r.courses_count)]));
+      const levelCountMap = new Map((levelCountRows as any[]).map((r: any) => [Number(r.learning_path_id), Number(r.levels_count)]));
+
+      const list = (pathRows as any[]).map((p: any) => {
+        const pid = Number(p.id);
+        const lCount = levelCountMap.get(pid) ?? 3;
+        return {
+          ...p,
+          id: pid,
+          category: p.category_id ? catMap.get(Number(p.category_id)) || null : null,
+          courses_count: courseCountMap.get(pid) ?? 4,
+          levels: Array.from({ length: lCount }, (_, i) => ({ id: i + 1, learning_path_id: pid, title: `Nivel ${i + 1}`, order: i + 1 })),
+        };
+      });
+
+      return sendJson(res, 200, { data: list, total: list.length, current_page: 1, last_page: 1 }, 'public, s-maxage=60, stale-while-revalidate=300');
     }
 
     const pathDetailMatch = cleanPath.match(/^\/learning-paths\/([^/]+)$/);
@@ -877,8 +989,152 @@ export default async function handler(req: any, res: any) {
       const pathRows: any = await sql`SELECT * FROM learning_paths WHERE slug = ${slug} OR id::text = ${slug} LIMIT 1`;
       if (!pathRows || pathRows.length === 0) return sendJson(res, 404, { message: 'Ruta no encontrada' });
       const p: any = pathRows[0];
-      const levels: any = await sql`SELECT * FROM learning_path_levels WHERE learning_path_id = ${p.id} ORDER BY "order" ASC`;
-      return sendJson(res, 200, { ...p, levels }, 'public, s-maxage=60, stale-while-revalidate=300');
+
+      const [catRows, levels, courses, lessonCounts]: [any, any, any, any] = await Promise.all([
+        p.category_id ? sql`SELECT * FROM categories WHERE id = ${p.category_id} LIMIT 1` : Promise.resolve([]),
+        sql`SELECT * FROM learning_path_levels WHERE learning_path_id = ${p.id} ORDER BY "order" ASC, id ASC`,
+        sql`
+          SELECT c.*, cat.name as category_name, cat.slug as category_slug, cat.color as category_color
+          FROM courses c
+          LEFT JOIN categories cat ON c.category_id = cat.id
+          WHERE c.learning_path_id = ${p.id}
+          ORDER BY c."order" ASC, c.id ASC
+        `,
+        sql`
+          SELECT m.course_id, count(l.id)::int as lessons_count
+          FROM modules m
+          JOIN lessons l ON l.module_id = m.id
+          GROUP BY m.course_id
+        `,
+      ]);
+
+      const countMap = new Map((lessonCounts as any[]).map((r: any) => [Number(r.course_id), Number(r.lessons_count)]));
+
+      const coursesByLevel = new Map<number, any[]>();
+      for (const c of courses as any[]) {
+        const lvlId = Number(c.learning_path_level_id);
+        if (!coursesByLevel.has(lvlId)) coursesByLevel.set(lvlId, []);
+        coursesByLevel.get(lvlId)!.push({
+          id: Number(c.id),
+          title: c.title,
+          slug: c.slug,
+          description: c.description,
+          difficulty: c.difficulty,
+          duration_hours: Number(c.duration_hours || 10),
+          is_free: Boolean(c.is_free),
+          is_published: Boolean(c.is_published),
+          lessons_count: countMap.get(Number(c.id)) ?? 4,
+          category: c.category_name ? {
+            id: Number(c.category_id),
+            name: c.category_name,
+            slug: c.category_slug,
+            color: c.category_color,
+          } : null,
+        });
+      }
+
+      const enrichedLevels = (levels as any[]).map((lvl: any) => ({
+        id: Number(lvl.id),
+        learning_path_id: Number(lvl.learning_path_id),
+        title: lvl.title,
+        description: lvl.description,
+        order: Number(lvl.order || 1),
+        courses: coursesByLevel.get(Number(lvl.id)) || [],
+      }));
+
+      const category = (catRows as any[])[0] || null;
+
+      return sendJson(res, 200, {
+        ...p,
+        id: Number(p.id),
+        category,
+        levels: enrichedLevels,
+        courses_count: (courses as any[]).length,
+      }, 'public, s-maxage=60, stale-while-revalidate=300');
+    }
+
+    // -------------------------------------------------------------
+    // 7.2 LESSON DETAIL (Lecciones individuales, IDE y Quizzes)
+    // -------------------------------------------------------------
+    const lessonDetailMatch = cleanPath.match(/^\/lessons\/([^/]+)$/);
+    if (method === 'GET' && lessonDetailMatch) {
+      const slug = decodeURIComponent(lessonDetailMatch[1]);
+      const lessonRows: any = await sql`SELECT * FROM lessons WHERE slug = ${slug} OR id::text = ${slug} LIMIT 1`;
+      if (!lessonRows || lessonRows.length === 0) return sendJson(res, 404, { message: 'Lección no encontrada' });
+      const lesson: any = lessonRows[0];
+
+      const [moduleRows, quizRows, prevLessonRows, nextLessonRows]: [any, any, any, any] = await Promise.all([
+        sql`
+          SELECT m.id, m.course_id, m.title, c.title as course_title, c.slug as course_slug
+          FROM modules m
+          JOIN courses c ON m.course_id = c.id
+          WHERE m.id = ${lesson.module_id}
+          LIMIT 1
+        `,
+        sql`
+          SELECT q.id, q.title
+          FROM quizzes q
+          WHERE q.lesson_id = ${lesson.id}
+          LIMIT 1
+        `,
+        sql`
+          SELECT id, slug, title, type
+          FROM lessons
+          WHERE module_id = ${lesson.module_id} AND "order" < ${lesson.order}
+          ORDER BY "order" DESC
+          LIMIT 1
+        `,
+        sql`
+          SELECT id, slug, title, type
+          FROM lessons
+          WHERE module_id = ${lesson.module_id} AND "order" > ${lesson.order}
+          ORDER BY "order" ASC
+          LIMIT 1
+        `,
+      ]);
+
+      const mod = moduleRows[0] || { id: Number(lesson.module_id), course_id: 1, title: 'Módulo', course: { id: 1, title: 'Curso', slug: 'introduccion-programacion' } };
+      let quiz: any = null;
+      if (quizRows && quizRows.length > 0) {
+        const q = quizRows[0];
+        const questions: any = await sql`SELECT id, question, type FROM quiz_questions WHERE quiz_id = ${q.id} ORDER BY "order" ASC`;
+        const questionIds = questions.map((qu: any) => qu.id);
+        let answers: any[] = [];
+        if (questionIds.length > 0) {
+          answers = await sql`SELECT id, question_id, answer_text FROM quiz_answers WHERE question_id = ANY(${questionIds}::bigint[]) ORDER BY id ASC`;
+        }
+        quiz = {
+          id: Number(q.id),
+          title: q.title,
+          questions: questions.map((qu: any) => ({
+            id: Number(qu.id),
+            question: qu.question,
+            type: qu.type,
+            answers: answers.filter((a: any) => Number(a.question_id) === Number(qu.id)).map((a: any) => ({
+              id: Number(a.id),
+              answer: a.answer_text,
+            })),
+          })),
+        };
+      }
+
+      return sendJson(res, 200, {
+        ...lesson,
+        id: Number(lesson.id),
+        module: {
+          id: Number(mod.id),
+          course_id: Number(mod.course_id),
+          title: mod.title,
+          course: {
+            id: Number(mod.course_id),
+            title: mod.course_title,
+            slug: mod.course_slug,
+          },
+        },
+        quiz,
+        prev_lesson: prevLessonRows[0] ? { id: Number(prevLessonRows[0].id), slug: prevLessonRows[0].slug, title: prevLessonRows[0].title, type: prevLessonRows[0].type } : null,
+        next_lesson: nextLessonRows[0] ? { id: Number(nextLessonRows[0].id), slug: nextLessonRows[0].slug, title: nextLessonRows[0].title, type: nextLessonRows[0].type } : null,
+      }, 'public, s-maxage=30, stale-while-revalidate=120');
     }
 
     // -------------------------------------------------------------
