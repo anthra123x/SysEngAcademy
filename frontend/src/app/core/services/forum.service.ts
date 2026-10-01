@@ -45,41 +45,54 @@ export class ForumService {
     if (filters.search) params['search'] = filters.search;
     if (filters.page) params['page'] = filters.page;
 
-    return this.api.get<PaginatedForumPosts>(
-      `/courses/${encodeURIComponent(courseSlug)}/forum`,
-      params,
-      FORUM_TIMEOUT_MS
-    ).pipe(
-      map(res => {
-        const localPosts = this.getLocalPosts(courseSlug);
-        // Fusionar posts locales creados recientemente que aún no estén en backend
-        const backendIds = new Set((res.data || []).map(p => p.id));
-        const missingLocal = localPosts.filter(lp => !backendIds.has(lp.id));
-        const allPosts = [...missingLocal, ...(res.data || [])];
-        const filtered = this.applyLocalFilters(allPosts, filters);
-        return {
-          data: filtered,
-          current_page: res.current_page || 1,
-          last_page: res.last_page || 1,
-          total: (res.total || 0) + missingLocal.length,
-        };
-      }),
-      catchError(() => {
-        // Fallback local: recuperar o sembrar discusiones iniciales para este curso
-        let localPosts = this.getLocalPosts(courseSlug);
-        if (localPosts.length === 0) {
-          localPosts = this.seedCoursePosts(courseSlug);
-          this.setLocalPosts(courseSlug, localPosts);
+    // 1. Obtener o sembrar discusiones iniciales para emisión instantánea (0ms)
+    let localPosts = this.getLocalPosts(courseSlug);
+    if (localPosts.length === 0) {
+      localPosts = this.seedCoursePosts(courseSlug);
+      this.setLocalPosts(courseSlug, localPosts);
+    }
+    const initialFiltered = this.applyLocalFilters(localPosts, filters);
+    const initialResult: PaginatedForumPosts = {
+      data: initialFiltered,
+      current_page: 1,
+      last_page: 1,
+      total: initialFiltered.length,
+    };
+
+    return new Observable<PaginatedForumPosts>(subscriber => {
+      // Emisión instantánea a 0ms: la UI muestra el foro sin esperar la red ni parpadear en blanco
+      subscriber.next(initialResult);
+
+      // Revalidación y actualización en segundo plano desde Neon PostgreSQL
+      this.api.get<PaginatedForumPosts>(
+        `/courses/${encodeURIComponent(courseSlug)}/forum`,
+        params,
+        FORUM_TIMEOUT_MS
+      ).subscribe({
+        next: res => {
+          if (res && Array.isArray(res.data)) {
+            const currentLocal = this.getLocalPosts(courseSlug);
+            const backendIds = new Set((res.data || []).map(p => p.id));
+            const missingLocal = currentLocal.filter(lp => !backendIds.has(lp.id));
+            const allPosts = [...missingLocal, ...(res.data || [])];
+            this.setLocalPosts(courseSlug, allPosts);
+
+            const filtered = this.applyLocalFilters(allPosts, filters);
+            subscriber.next({
+              data: filtered,
+              current_page: res.current_page || 1,
+              last_page: res.last_page || 1,
+              total: (res.total || 0) + missingLocal.length,
+            });
+          }
+          subscriber.complete();
+        },
+        error: () => {
+          // Si la API falla, los datos locales ya fueron emitidos
+          subscriber.complete();
         }
-        const filtered = this.applyLocalFilters(localPosts, filters);
-        return of({
-          data: filtered,
-          current_page: 1,
-          last_page: 1,
-          total: filtered.length,
-        });
-      })
-    );
+      });
+    });
   }
 
   /**

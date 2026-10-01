@@ -367,70 +367,45 @@ export class TeacherService {
   }
 
   getOverview(): Observable<TeacherOverviewResponse> {
-    return this.api.get<TeacherOverviewResponse>('/teacher/overview').pipe(
-      catchError(() => {
-        const students = this.getLocalStudents();
-        const totalStudents = students.length;
-        const totalCompletions = students.reduce((sum, s) => sum + (s.completed_lessons_count || 0), 0);
-        const totalEnrollments = students.reduce((sum, s) => sum + (s.enrollments_count || 0), 0);
-        const scoredStudents = students.filter(s => s.average_quiz_score !== null && s.average_quiz_score > 0);
-        const avgScore = scoredStudents.length
-          ? Math.round((scoredStudents.reduce((sum, s) => sum + (s.average_quiz_score || 0), 0) / scoredStudents.length) * 10) / 10
-          : (students[0]?.average_quiz_score ?? 0);
+    const students = this.getLocalStudents();
+    const totalStudents = students.length;
+    const totalCompletions = students.reduce((sum, s) => sum + (s.completed_lessons_count || 0), 0);
+    const totalEnrollments = students.reduce((sum, s) => sum + (s.enrollments_count || 0), 0);
+    const scoredStudents = students.filter(s => s.average_quiz_score !== null && s.average_quiz_score > 0);
+    const avgScore = scoredStudents.length
+      ? Math.round((scoredStudents.reduce((sum, s) => sum + (s.average_quiz_score || 0), 0) / scoredStudents.length) * 10) / 10
+      : (students[0]?.average_quiz_score ?? 0);
 
-        // Actividad real de resolución si existe algún estudiante con lecciones completadas
-        const recentActivity: RecentActivityItem[] = [];
-        for (const s of students) {
-          if (s.completed_lessons_count > 0) {
-            recentActivity.push({
-              id: s.id,
-              user_name: s.name,
-              user_email: s.email,
-              lesson_title: s.courses[0]?.title ?? 'Introducción a la Programación',
-              lesson_type: 'practice',
-              score: s.average_quiz_score,
-              passed: (s.average_quiz_score ?? 100) >= 60,
-              completed_at: s.created_at || new Date().toISOString(),
-            });
+    const initialOverview: TeacherOverviewResponse = {
+      stats: {
+        total_students: totalStudents,
+        total_courses: 43,
+        total_completions: totalCompletions,
+        total_enrollments: totalEnrollments,
+        average_score: avgScore,
+      },
+      recent_activity: [],
+      popular_courses: [
+        { id: 1, title: 'Introducción a la Programación', slug: 'introduccion-programacion', difficulty: 'beginner', enrollments_count: totalEnrollments },
+        { id: 2, title: 'Algoritmos de Ordenamiento', slug: 'algoritmos-ordenamiento', difficulty: 'intermediate', enrollments_count: 0 },
+        { id: 10, title: 'Angular Moderno', slug: 'angular-moderno', difficulty: 'intermediate', enrollments_count: 0 },
+      ],
+    };
+
+    return new Observable<TeacherOverviewResponse>(subscriber => {
+      // Emisión instantánea (0ms)
+      subscriber.next(initialOverview);
+
+      this.api.get<TeacherOverviewResponse>('/teacher/overview').subscribe({
+        next: fresh => {
+          if (fresh && fresh.stats) {
+            subscriber.next(fresh);
           }
-        }
-
-        const overview: TeacherOverviewResponse = {
-          stats: {
-            total_students: totalStudents,
-            total_courses: 43,
-            total_completions: totalCompletions,
-            total_enrollments: totalEnrollments,
-            average_score: avgScore,
-          },
-          recent_activity: recentActivity,
-          popular_courses: [
-            {
-              id: 1,
-              title: 'Introducción a la Programación',
-              slug: 'introduccion-programacion',
-              difficulty: 'beginner',
-              enrollments_count: totalEnrollments,
-            },
-            {
-              id: 20,
-              title: 'Fundamentos de requerimientos',
-              slug: 'fundamentos-requerimientos',
-              difficulty: 'beginner',
-              enrollments_count: 0,
-            },
-            {
-              id: 12,
-              title: 'Integración Frontend ↔ Backend',
-              slug: 'integracion-frontend-backend',
-              difficulty: 'intermediate',
-              enrollments_count: 0,
-            },
-          ],
-        };
-        return of(overview);
-      })
-    );
+          subscriber.complete();
+        },
+        error: () => subscriber.complete(),
+      });
+    });
   }
 
   getStudents(search?: string): Observable<TeacherStudent[]> {
@@ -438,16 +413,26 @@ export class TeacherService {
     if (search && search.trim()) {
       params['search'] = search.trim();
     }
-    return this.api.get<TeacherStudent[]>('/teacher/students', params).pipe(
-      catchError(() => {
-        let students = this.getLocalStudents();
-        if (search && search.trim()) {
-          const q = search.trim().toLowerCase();
-          students = students.filter(s => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q));
-        }
-        return of(students);
-      })
-    );
+    let local = this.getLocalStudents();
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      local = local.filter(s => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q));
+    }
+
+    return new Observable<TeacherStudent[]>(subscriber => {
+      // Emisión instantánea (0ms)
+      subscriber.next(local);
+
+      this.api.get<TeacherStudent[]>('/teacher/students', params).subscribe({
+        next: fresh => {
+          if (Array.isArray(fresh)) {
+            subscriber.next(fresh);
+          }
+          subscriber.complete();
+        },
+        error: () => subscriber.complete(),
+      });
+    });
   }
 
   getStudentDetail(id: number): Observable<TeacherStudentDetail> {

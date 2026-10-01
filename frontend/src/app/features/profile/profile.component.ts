@@ -5300,13 +5300,27 @@ for (let paso = 1; paso <= 3; paso++) {
   loadClans(): void {
     const email = this.currentStudentEmail();
     const query = email ? `?email=${encodeURIComponent(email)}` : '';
-    this.api.get<StudyGroup[]>(`/clans${query}`).subscribe({
-      next: (clans) => {
-        if (Array.isArray(clans) && clans.length > 0) {
-          this.studyGroups.set(clans);
+    this.api.get<any[]>(`/clans${query}`).subscribe({
+      next: (remoteClans) => {
+        if (Array.isArray(remoteClans) && remoteClans.length > 0) {
+          const defaults = this.getDefaultStudyGroups();
+          const merged = defaults.map(def => {
+            const remote = remoteClans.find((r: any) => r.id === def.id || r.tag === def.tag);
+            if (remote) {
+              const isMem = remote.isMember ?? remote.is_member ?? def.isMember;
+              return {
+                ...def,
+                isMember: Boolean(isMem),
+                streakDays: Number(remote.streakDays ?? remote.streak_days ?? def.streakDays),
+                membersCount: Math.max(def.researchers.length, Number(remote.membersCount ?? remote.members_count ?? 1)),
+              };
+            }
+            return def;
+          });
+          this.studyGroups.set(merged);
           const currentSel = this.selectedGuild();
           if (currentSel) {
-            const updated = clans.find(c => c.id === currentSel.id);
+            const updated = merged.find(c => c.id === currentSel.id);
             if (updated) this.selectedGuild.set(updated);
           }
         }

@@ -12,13 +12,18 @@ const sql = neon(DB_URL);
 
 const OPENROUTER_API_KEY = process.env.AI_API_KEY || '';
 
-// Helper to set CORS and send JSON
-function sendJson(res: any, status: number, data: any) {
+// Helper to set CORS and send JSON with optional Edge CDN Cache-Control
+function sendJson(res: any, status: number, data: any, cacheHeader?: string) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+  if (cacheHeader) {
+    res.setHeader('Cache-Control', cacheHeader);
+  } else {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  }
   res.end(JSON.stringify(data));
 }
 
@@ -380,7 +385,7 @@ export default async function handler(req: any, res: any) {
         current_page: 1,
         last_page: 1,
         total: formattedPosts.length,
-      });
+      }, 'public, s-maxage=3, stale-while-revalidate=15');
     }
 
     // POST /courses/:slug/forum
@@ -627,7 +632,7 @@ export default async function handler(req: any, res: any) {
           { id: 2, title: 'Algoritmos de Ordenamiento', slug: 'algoritmos-ordenamiento', difficulty: 'intermediate', enrollments_count: 0 },
           { id: 10, title: 'Angular Moderno', slug: 'angular-moderno', difficulty: 'intermediate', enrollments_count: 0 },
         ],
-      });
+      }, 'public, s-maxage=2, stale-while-revalidate=10');
     }
 
     // GET /teacher/students
@@ -676,7 +681,7 @@ export default async function handler(req: any, res: any) {
         students = students.filter((s: any) => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q));
       }
 
-      return sendJson(res, 200, students);
+      return sendJson(res, 200, students, 'public, s-maxage=2, stale-while-revalidate=10');
     }
 
     // GET /teacher/students/:id
@@ -771,7 +776,7 @@ export default async function handler(req: any, res: any) {
         is_current_user: false,
       }));
 
-      return sendJson(res, 200, list);
+      return sendJson(res, 200, list, 'public, s-maxage=3, stale-while-revalidate=15');
     }
 
     // -------------------------------------------------------------
@@ -840,7 +845,7 @@ export default async function handler(req: any, res: any) {
 
     if (method === 'GET' && cleanPath === '/courses') {
       const courses: any = await sql`SELECT * FROM courses ORDER BY "order" ASC, id ASC`;
-      return sendJson(res, 200, { data: courses, total: courses.length, current_page: 1, last_page: 1 });
+      return sendJson(res, 200, { data: courses, total: courses.length, current_page: 1, last_page: 1 }, 'public, s-maxage=30, stale-while-revalidate=120');
     }
 
     const courseDetailMatch = cleanPath.match(/^\/courses\/([^/]+)$/);
@@ -855,15 +860,60 @@ export default async function handler(req: any, res: any) {
       if (moduleIds.length > 0) {
         lessons = (await sql`SELECT * FROM lessons WHERE module_id = ANY(${moduleIds}::bigint[]) ORDER BY "order" ASC`) as any[];
       }
-      return sendJson(res, 200, { ...c, modules, lessons });
+      return sendJson(res, 200, { ...c, modules, lessons }, 'public, s-maxage=30, stale-while-revalidate=120');
     }
 
     // -------------------------------------------------------------
-    // 8. CLANS & STUDY GROUPS
+    // 7.1 LEARNING PATHS (Rutas de especialización)
+    // -------------------------------------------------------------
+    if (method === 'GET' && cleanPath === '/learning-paths') {
+      const paths: any = await sql`SELECT * FROM learning_paths ORDER BY id ASC`;
+      return sendJson(res, 200, { data: paths, total: paths.length, current_page: 1, last_page: 1 }, 'public, s-maxage=60, stale-while-revalidate=300');
+    }
+
+    const pathDetailMatch = cleanPath.match(/^\/learning-paths\/([^/]+)$/);
+    if (method === 'GET' && pathDetailMatch) {
+      const slug = decodeURIComponent(pathDetailMatch[1]);
+      const pathRows: any = await sql`SELECT * FROM learning_paths WHERE slug = ${slug} OR id::text = ${slug} LIMIT 1`;
+      if (!pathRows || pathRows.length === 0) return sendJson(res, 404, { message: 'Ruta no encontrada' });
+      const p: any = pathRows[0];
+      const levels: any = await sql`SELECT * FROM learning_path_levels WHERE learning_path_id = ${p.id} ORDER BY "order" ASC`;
+      return sendJson(res, 200, { ...p, levels }, 'public, s-maxage=60, stale-while-revalidate=300');
+    }
+
+    // -------------------------------------------------------------
+    // 8. CLANS & STUDY GROUPS (Con compatibilidad camelCase)
     // -------------------------------------------------------------
     if (method === 'GET' && cleanPath === '/clans') {
       const clans: any = await sql`SELECT * FROM clans ORDER BY id ASC`;
-      return sendJson(res, 200, clans);
+      const formatted = (clans as any[]).map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        tag: c.tag,
+        category: c.category || 'systems',
+        description: c.description || '',
+        linesOfResearch: Array.isArray(c.lines_of_research) ? c.lines_of_research : ['Concurrencia y Memoria', 'Arquitectura de Sistemas'],
+        lines_of_research: Array.isArray(c.lines_of_research) ? c.lines_of_research : ['Concurrencia y Memoria', 'Arquitectura de Sistemas'],
+        streakDays: Number(c.streak_days || 4),
+        streak_days: Number(c.streak_days || 4),
+        membersCount: 1,
+        members_count: 1,
+        weeklyChallenge: c.weekly_challenge && typeof c.weekly_challenge === 'object'
+          ? c.weekly_challenge
+          : { title: 'Reto de Arquitectura y Concurrencia', xpReward: 350, completed: false },
+        weekly_challenge: c.weekly_challenge && typeof c.weekly_challenge === 'object'
+          ? c.weekly_challenge
+          : { title: 'Reto de Arquitectura y Concurrencia', xpReward: 350, completed: false },
+        recentLogs: [],
+        projects: [],
+        researchFeed: [],
+        libraryPapers: [],
+        upcomingSessions: [],
+        researchers: [{ id: '1', name: 'Director Cátedra Sistemas', role: 'Director de Semillero', avatar: null }],
+        isMember: false,
+        is_member: false,
+      }));
+      return sendJson(res, 200, formatted, 'public, s-maxage=30, stale-while-revalidate=120');
     }
 
     // -------------------------------------------------------------
@@ -910,7 +960,23 @@ export default async function handler(req: any, res: any) {
     // -------------------------------------------------------------
     if (method === 'GET' && cleanPath === '/categories') {
       const cats: any = await sql`SELECT * FROM categories ORDER BY id ASC`;
-      return sendJson(res, 200, cats);
+      return sendJson(res, 200, cats, 'public, s-maxage=60, stale-while-revalidate=300');
+    }
+
+    // -------------------------------------------------------------
+    // 11. HOME AGGREGATED ENDPOINT
+    // -------------------------------------------------------------
+    if (method === 'GET' && cleanPath === '/home') {
+      const [cats, paths, courses]: [any, any, any] = await Promise.all([
+        sql`SELECT * FROM categories ORDER BY id ASC`,
+        sql`SELECT * FROM learning_paths ORDER BY id ASC`,
+        sql`SELECT * FROM courses ORDER BY id ASC LIMIT 6`,
+      ]);
+      return sendJson(res, 200, {
+        categories: cats,
+        learning_paths: { data: paths },
+        courses: { data: courses },
+      }, 'public, s-maxage=60, stale-while-revalidate=300');
     }
 
     // Endpoint por defecto para cualquier ruta no mapeada

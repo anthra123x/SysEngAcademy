@@ -18,19 +18,35 @@ export class HomeService {
   private api = inject(ApiService);
 
   /**
-   * Carga instantánea: Si hay datos en caché, los devuelve inmediatamente (0ms).
-   * En segundo plano intenta refrescar la API. Si la API falla (producción/offline),
-   * entrega el catálogo fallback inmediatamente sin bloquear la pantalla.
+   * Carga instantánea: Emite inmediatamente (0ms) datos de caché o fallback para que
+   * la UI no espere a la red ni muestre pantalla vacía. En segundo plano consulta la API
+   * y emite los datos actualizados cuando lleguen.
    */
   getHome(): Observable<HomeData> {
     const cached = this.readCache();
+    const initial = cached || FALLBACK_HOME_DATA;
 
-    return this.api.get<HomeData>('/home').pipe(
-      tap(data => this.writeCache(data)),
-      catchError(() => {
-        return of(cached || FALLBACK_HOME_DATA);
-      })
-    );
+    return new Observable<HomeData>(subscriber => {
+      // 1. Emisión instantánea (0ms)
+      subscriber.next(initial);
+
+      // 2. Revalidación en segundo plano desde Edge CDN / backend
+      this.api.get<HomeData>('/home').subscribe({
+        next: fresh => {
+          if (
+            fresh &&
+            Array.isArray(fresh.categories) &&
+            fresh.learning_paths?.data &&
+            fresh.courses?.data
+          ) {
+            this.writeCache(fresh);
+            subscriber.next(fresh);
+          }
+          subscriber.complete();
+        },
+        error: () => subscriber.complete(),
+      });
+    });
   }
 
   private readCache(): HomeData | null {

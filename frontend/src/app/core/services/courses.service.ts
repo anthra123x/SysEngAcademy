@@ -56,52 +56,63 @@ export class CoursesService {
   getAll(filters?: CourseFilters): Observable<PaginatedResponse<Course>> {
     const cached = this.readCache();
 
-    return this.api.get<PaginatedResponse<Course>>('/courses', filters as Record<string, unknown>).pipe(
-      tap(res => {
-        if (!filters || Object.keys(filters).length === 0) {
-          this.writeCache(res);
-        }
-      }),
-      catchError(() => {
-        let filtered = [...FALLBACK_COURSES];
-        if (filters?.search) {
-          const q = filters.search.toLowerCase().trim();
-          filtered = filtered.filter(c =>
-            c.title.toLowerCase().includes(q) ||
-            (c.description && c.description.toLowerCase().includes(q))
-          );
-        }
-        if (filters?.category) {
-          filtered = filtered.filter(c => c.category?.slug === filters.category);
-        }
-        if (filters?.difficulty) {
-          filtered = filtered.filter(c => c.difficulty === filters.difficulty);
-        }
-        if (filters?.is_free !== undefined && filters?.is_free !== null && (filters?.is_free as any) !== '') {
-          const isFreeBool = String(filters.is_free) === 'true' || filters.is_free === true;
-          filtered = filtered.filter(c => c.is_free === isFreeBool);
-        }
-        if (filters?.learning_path_id) {
-          filtered = filtered.filter(c => (c as any).learning_path_id === Number(filters.learning_path_id));
-        }
+    let filtered = [...FALLBACK_COURSES];
+    if (filters?.search) {
+      const q = filters.search.toLowerCase().trim();
+      filtered = filtered.filter(c =>
+        c.title.toLowerCase().includes(q) ||
+        (c.description && c.description.toLowerCase().includes(q))
+      );
+    }
+    if (filters?.category) {
+      filtered = filtered.filter(c => c.category?.slug === filters.category);
+    }
+    if (filters?.difficulty) {
+      filtered = filtered.filter(c => c.difficulty === filters.difficulty);
+    }
+    if (filters?.is_free !== undefined && filters?.is_free !== null && (filters?.is_free as any) !== '') {
+      const isFreeBool = String(filters.is_free) === 'true' || filters.is_free === true;
+      filtered = filtered.filter(c => c.is_free === isFreeBool);
+    }
+    if (filters?.learning_path_id) {
+      filtered = filtered.filter(c => (c as any).learning_path_id === Number(filters.learning_path_id));
+    }
 
-        const page = Number(filters?.page) || 1;
-        const perPage = 16;
-        const total = filtered.length;
-        const lastPage = Math.max(1, Math.ceil(total / perPage));
-        const start = (page - 1) * perPage;
-        const paginatedData = filtered.slice(start, start + perPage);
+    const page = Number(filters?.page) || 1;
+    const perPage = 16;
+    const total = filtered.length;
+    const lastPage = Math.max(1, Math.ceil(total / perPage));
+    const start = (page - 1) * perPage;
+    const paginatedData = filtered.slice(start, start + perPage);
 
-        const fallbackRes: PaginatedResponse<Course> = {
+    const initialRes: PaginatedResponse<Course> = (!filters || Object.keys(filters).length === 0) && cached
+      ? cached
+      : {
           current_page: page,
           data: paginatedData,
           total: total,
           per_page: perPage,
           last_page: lastPage,
         };
-        return of(cached && (!filters || Object.keys(filters).length === 0) ? cached : fallbackRes);
-      })
-    );
+
+    return new Observable<PaginatedResponse<Course>>(subscriber => {
+      // 1. Emisión instantánea a 0ms (sin pantalla en blanco ni retraso perceptible)
+      subscriber.next(initialRes);
+
+      // 2. Consulta y refresco en segundo plano sin bloquear la UI
+      this.api.get<PaginatedResponse<Course>>('/courses', filters as Record<string, unknown>).subscribe({
+        next: fresh => {
+          if (fresh && Array.isArray(fresh.data) && fresh.data.length > 0) {
+            if (!filters || Object.keys(filters).length === 0) {
+              this.writeCache(fresh);
+            }
+            subscriber.next(fresh);
+          }
+          subscriber.complete();
+        },
+        error: () => subscriber.complete(),
+      });
+    });
   }
 
   getBySlug(slug: string): Observable<Course> {
