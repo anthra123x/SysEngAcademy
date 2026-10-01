@@ -13,6 +13,8 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password', 'avatar', 'role',
+        'current_streak', 'max_streak', 'last_activity_date',
+        'today_study_seconds', 'total_study_seconds', 'xp', 'specialization',
     ];
 
     protected $hidden = [
@@ -24,6 +26,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_activity_date' => 'date',
+            'current_streak' => 'integer',
+            'max_streak' => 'integer',
+            'today_study_seconds' => 'integer',
+            'total_study_seconds' => 'integer',
+            'xp' => 'integer',
         ];
     }
 
@@ -45,5 +53,21 @@ class User extends Authenticatable
     public function aiConversations()
     {
         return $this->hasMany(AiConversation::class);
+    }
+
+    public function dailyActivities()
+    {
+        return $this->hasMany(UserDailyActivity::class);
+    }
+
+    public function clanMemberships()
+    {
+        return $this->hasMany(ClanMember::class);
+    }
+
+    public function clans()
+    {
+        return $this->belongsToMany(Clan::class, 'clan_members', 'user_id', 'clan_id')
+                    ->withPivot('role', 'joined_at');
     }
 }

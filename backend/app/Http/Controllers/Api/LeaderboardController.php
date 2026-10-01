@@ -6,30 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class LeaderboardController extends Controller
 {
     /**
-     * Retorna el ranking global de estudiantes en tiempo real según XP,
-     * cursos completados, lecciones aprobadas y rendimiento en evaluaciones.
+     * Retorna el ranking global de estudiantes y miembros en tiempo real según XP,
+     * cursos completados, lecciones aprobadas, racha y telemetría de estudio.
      */
     public function index(Request $request): JsonResponse
     {
         $currentUserId = $request->user()?->id;
+        $requestedEmail = strtolower(trim($request->query('email', '')));
 
-        // Estudiantes registrados en el sistema (excluyendo docentes/administradores puros)
-        $users = User::where(function ($query) {
-            $query->where('role', 'student')
-                  ->orWhereNull('role');
-        })->get();
+        // Todos los usuarios registrados en el sistema
+        $users = User::all();
 
-        // Si no hay estudiantes con rol explícito de 'student', incluir los usuarios disponibles
-        if ($users->isEmpty()) {
-            $users = User::all();
-        }
-
-        $leaderboard = $users->map(function (User $user) use ($currentUserId) {
+        $leaderboard = $users->map(function (User $user) use ($currentUserId, $requestedEmail) {
             $user->loadMissing([
                 'enrollments.course.category',
                 'lessonProgress.lesson.module.course',
@@ -49,8 +41,18 @@ class LeaderboardController extends Controller
                 return $p->lesson && in_array($p->lesson->type, ['practice', 'challenge', 'interactive']);
             })->count();
 
-            // Puntos de experiencia (XP) base calculados en tiempo real
-            $xp = 50 + ($solvedChallenges * 50) + ($completedCourses * 150) + ($completedLessons * 20) + ($enrollments->count() * 30);
+            $streak = max(1, $user->current_streak ?: 1);
+            $totalStudyMins = (int) round(($user->total_study_seconds ?: 0) / 60);
+
+            // Fórmula de XP unificada y matemáticamente exacta
+            $xp = 50 
+                + ($solvedChallenges * 50) 
+                + ($completedCourses * 150) 
+                + ($completedLessons * 20) 
+                + ($enrollments->count() * 30) 
+                + (($streak - 1) * 25) 
+                + ((int) floor($totalStudyMins / 10) * 5);
+
             $level = max(1, (int) floor($xp / 100) + 1);
 
             $rankTitle = match (true) {
@@ -61,10 +63,17 @@ class LeaderboardController extends Controller
                 default      => 'Cadete de Sistemas',
             };
 
-            $nameParts = explode(' ', trim($user->name));
+            $nameParts = preg_split('/\s+/', trim($user->name));
             $initials = count($nameParts) >= 2
                 ? mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[1], 0, 1)
                 : mb_substr($user->name, 0, 2);
+
+            $isCurrent = false;
+            if ($currentUserId && $user->id === $currentUserId) {
+                $isCurrent = true;
+            } elseif ($requestedEmail && strtolower(trim($user->email)) === $requestedEmail) {
+                $isCurrent = true;
+            }
 
             return [
                 'id'                => $user->id,
@@ -73,15 +82,27 @@ class LeaderboardController extends Controller
                 'avatarText'        => mb_strtoupper($initials),
                 'level'             => $level,
                 'rankTitle'         => $rankTitle,
-                'specialization'    => 'Fundamentos Algorítmicos',
+                'specialization'    => $user->specialization ?: 'Fundamentos Algorítmicos & Arquitectura',
                 'completedLessons'  => $completedLessons,
+                'completedCourses'  => $completedCourses,
                 'avgQuizScore'      => $avgQuizScore,
+                'streak'            => $streak,
+                'studyMinutes'      => $totalStudyMins,
                 'xp'                => $xp,
-                'isCurrentUser'     => $currentUserId !== null && $user->id === $currentUserId,
+                'isCurrentUser'     => $isCurrent,
                 'badgePill'         => '⚡ ACTIVO',
             ];
         })
-        ->sortByDesc('xp')
+        ->sort(function ($a, $b) {
+            // Ordenar por XP desc, luego por promedio quiz desc, luego por lecciones desc
+            if ($b['xp'] !== $a['xp']) {
+                return $b['xp'] <=> $a['xp'];
+            }
+            if ($b['avgQuizScore'] !== $a['avgQuizScore']) {
+                return $b['avgQuizScore'] <=> $a['avgQuizScore'];
+            }
+            return $b['completedLessons'] <=> $a['completedLessons'];
+        })
         ->values()
         ->map(function ($entry, $idx) {
             $entry['rank'] = $idx + 1;

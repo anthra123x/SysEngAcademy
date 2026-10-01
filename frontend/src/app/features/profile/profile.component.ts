@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { CoursesService } from '../../core/services/courses.service';
+import { StreakService } from '../../core/services/streak.service';
 import { TeacherService, TeacherStudent, TeacherActivity, TeacherOverviewResponse } from '../../core/services/teacher.service';
 import { Enrollment } from '../../core/models';
 
@@ -3506,10 +3507,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  readonly streakService = inject(StreakService);
 
   enrollments = signal<Enrollment[]>([]);
   loading = signal(true);
-  todayStudyMinutes = signal(1);
+  readonly todayStudyMinutes = computed(() => this.streakService.todayStudyMinutes());
   remoteLeaderboard = signal<LeaderboardEntry[]>([]);
   private studyTimer: any = null;
   private onDiagnosticUpdated = () => this.initLocalData();
@@ -3518,6 +3520,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
   activeTab = signal<'overview' | 'streak' | 'guilds' | 'achievements' | 'leaderboard' | 'advisor'>('overview');
   activeTeacherTab = signal<'overview' | 'students' | 'activities' | 'advisor'>('overview');
   selectedBadgeFilter = signal<'all' | 'unlocked' | 'challenges' | 'courses'>('all');
+
+  constructor() {
+    effect(() => {
+      const tab = this.activeTab();
+      if (tab === 'leaderboard') this.loadLeaderboard();
+      if (tab === 'guilds') this.loadClans();
+      if (tab === 'streak') this.streakService.loadStatus();
+    });
+  }
 
   // Animated ASCII Art frame index
   currentFrame = signal(0);
@@ -3816,8 +3827,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   showAvatarModal = signal(false);
 
   // Streak state
-  currentStreak = signal(1);
-  maxStreak = signal(1);
+  readonly currentStreak = computed(() => this.streakService.currentStreak());
+  readonly maxStreak = computed(() => this.streakService.maxStreak());
   todayCheckedIn = signal(true);
 
   // Diagnostic state
@@ -4320,9 +4331,6 @@ for (let paso = 1; paso <= 3; paso++) {
 
       window.addEventListener('syseng:diagnostic_completed', this.onDiagnosticUpdated);
 
-      this.studyTimer = setInterval(() => {
-        this.trackStudyPulse();
-      }, 60000);
     }
 
     const qp = this.route.snapshot.queryParams;
@@ -4333,18 +4341,8 @@ for (let paso = 1; paso <= 3; paso++) {
 
   ngOnDestroy() {
     if (this.frameTimer) clearInterval(this.frameTimer);
-    if (this.studyTimer) clearInterval(this.studyTimer);
     if (typeof window !== 'undefined') {
       window.removeEventListener('syseng:diagnostic_completed', this.onDiagnosticUpdated);
-    }
-  }
-
-  private trackStudyPulse() {
-    this.todayStudyMinutes.update(m => m + 1);
-    if (typeof window !== 'undefined') {
-      const email = this.currentStudentEmail();
-      const today = new Date().toISOString().slice(0, 10);
-      localStorage.setItem(`syseng_${email}_study_mins_${today}`, String(this.todayStudyMinutes()));
     }
   }
 
@@ -4362,104 +4360,12 @@ for (let paso = 1; paso <= 3; paso++) {
       this.selectedAvatarId.set(pool[0].id);
     }
 
-    const today = new Date().toISOString().slice(0, 10);
-    const studyMinsKey = `syseng_${this.currentStudentEmail()}_study_mins_${today}`;
-    const savedMins = parseInt(localStorage.getItem(studyMinsKey) || '0', 10);
-    this.todayStudyMinutes.set(Math.max(savedMins, 1));
+    // Cargar datos reales y telemetría de racha
+    this.streakService.loadStatus();
+    this.loadClans();
+    this.loadLeaderboard();
 
-    if (this.isDemoStudent()) {
-      try {
-        const st = JSON.parse(localStorage.getItem('syseng_streak_data') || '{}');
-        this.currentStreak.set(st.currentStreak !== undefined ? st.currentStreak : 5);
-        this.maxStreak.set(st.maxStreak !== undefined ? st.maxStreak : 12);
-        if (st.lastCheckIn === today) this.todayCheckedIn.set(true);
-      } catch {
-        this.currentStreak.set(5);
-        this.maxStreak.set(12);
-      }
-
-      this.diagnosticCompleted.set(true);
-      this.diagnosticFinished.set(true);
-      this.diagnosticResult.set({
-        assignedLevelNumber: 4,
-        assignedLevelTitle: 'Nivel 4: Desarrollador Backend Semi-Senior',
-        recommendedSpecialty: 'Sistemas Backend & APIs Distribuidas',
-        recommendedPathTitle: 'Ruta de Desarrollo Backend & Arquitectura de APIs',
-        suggestedCourseSlug: 'backend-introduccion',
-        suggestedCourseTitle: 'Introducción al Backend & Arquitectura de Servidores',
-        score: 4,
-        agentFeedback: 'Byte Copilot ha evaluado tu perfil demostrativo.',
-      });
-
-      const savedDemoGroups = localStorage.getItem(this.getUserStorageKey('study_groups'));
-      if (savedDemoGroups) {
-        try {
-          this.studyGroups.set(this.normalizeSemilleroData(JSON.parse(savedDemoGroups)));
-        } catch {
-          this.studyGroups.update(groups => groups.map(g => ({ ...g, isMember: g.id === 'krnl' })));
-        }
-      } else {
-        this.studyGroups.update(groups =>
-          groups.map(g => ({ ...g, isMember: g.id === 'krnl' }))
-        );
-      }
-      return;
-    }
-
-    // Alumno real: Cargar datos limpios y calcular racha en tiempo real
-    const userKeyStreak = this.getUserStorageKey('streak_data');
-    const userKeyDiag = this.getUserStorageKey('diagnostic_completed');
     const userKeyDiagRes = this.getUserStorageKey('diagnostic_result');
-    const userKeyGroups = this.getUserStorageKey('study_groups');
-
-    try {
-      const streakRaw = localStorage.getItem(userKeyStreak);
-      if (streakRaw) {
-        const st = JSON.parse(streakRaw);
-        const lastCheckIn = st.lastCheckIn;
-
-        if (!lastCheckIn) {
-          this.currentStreak.set(1);
-          this.maxStreak.set(Math.max(st.maxStreak || 1, 1));
-          this.todayCheckedIn.set(true);
-          localStorage.setItem(userKeyStreak, JSON.stringify({ currentStreak: 1, maxStreak: Math.max(st.maxStreak || 1, 1), lastCheckIn: today }));
-        } else if (lastCheckIn === today) {
-          this.currentStreak.set(st.currentStreak || 1);
-          this.maxStreak.set(st.maxStreak || 1);
-          this.todayCheckedIn.set(true);
-        } else {
-          const lastDate = new Date(lastCheckIn);
-          const currDate = new Date(today);
-          const diffMs = currDate.getTime() - lastDate.getTime();
-          const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
-          if (diffDays === 1) {
-            const newStreak = (st.currentStreak || 1) + 1;
-            const newMax = Math.max(st.maxStreak || 1, newStreak);
-            this.currentStreak.set(newStreak);
-            this.maxStreak.set(newMax);
-            this.todayCheckedIn.set(true);
-            localStorage.setItem(userKeyStreak, JSON.stringify({ currentStreak: newStreak, maxStreak: newMax, lastCheckIn: today }));
-          } else {
-            const newMax = st.maxStreak || 1;
-            this.currentStreak.set(1);
-            this.maxStreak.set(newMax);
-            this.todayCheckedIn.set(true);
-            localStorage.setItem(userKeyStreak, JSON.stringify({ currentStreak: 1, maxStreak: newMax, lastCheckIn: today }));
-          }
-        }
-      } else {
-        this.currentStreak.set(1);
-        this.maxStreak.set(1);
-        this.todayCheckedIn.set(true);
-        localStorage.setItem(userKeyStreak, JSON.stringify({ currentStreak: 1, maxStreak: 1, lastCheckIn: today }));
-      }
-    } catch {
-      this.currentStreak.set(1);
-      this.maxStreak.set(1);
-      this.todayCheckedIn.set(true);
-    }
-
     const diagDone = this.auth.isDiagnosticCompleted(this.currentStudentEmail());
     this.diagnosticCompleted.set(diagDone);
     if (diagDone) {
@@ -4517,11 +4423,10 @@ for (let paso = 1; paso <= 3; paso++) {
     }
 
     try {
+      const userKeyGroups = this.getUserStorageKey('study_groups');
       const groupsRaw = localStorage.getItem(userKeyGroups);
-      if (groupsRaw) {
+      if (groupsRaw && this.studyGroups().length === 0) {
         this.studyGroups.set(this.normalizeSemilleroData(JSON.parse(groupsRaw)));
-      } else {
-        this.studyGroups.update(groups => groups.map(g => ({ ...g, isMember: false })));
       }
     } catch {}
   }
@@ -4560,11 +4465,23 @@ for (let paso = 1; paso <= 3; paso++) {
   });
 
   readonly weekDays = computed<StreakDay[]>(() => {
+    const matrix = this.streakService.weeklyMatrix();
+    if (matrix && matrix.length > 0) {
+      return matrix.map(m => {
+        const parts = m.date.split('-');
+        const shortDate = parts.length === 3 ? `${parts[2]}/${parts[1]}` : m.date;
+        return {
+          dayName: m.day.toUpperCase(),
+          shortDate,
+          completed: m.active,
+          isToday: m.is_today,
+        };
+      });
+    }
+
     const names = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
     const now = new Date();
-    const currentDayIdx = (now.getDay() + 6) % 7; // 0 = Lunes, 6 = Domingo
-    
-    // Lunes de la semana actual
+    const currentDayIdx = (now.getDay() + 6) % 7;
     const monday = new Date(now);
     monday.setDate(now.getDate() - currentDayIdx);
 
@@ -4576,32 +4493,15 @@ for (let paso = 1; paso <= 3; paso++) {
       return {
         dayName: name,
         shortDate: `${dayNum}/${monthNum}`,
-        completed: i < currentDayIdx || (i === currentDayIdx && this.todayCheckedIn()),
+        completed: i === currentDayIdx,
         isToday: i === currentDayIdx,
       };
     });
   });
 
   doDailyCheckIn() {
-    if (this.todayCheckedIn()) return;
     this.todayCheckedIn.set(true);
-    const newStreak = this.currentStreak() + 1;
-    this.currentStreak.set(newStreak);
-    this.maxStreak.set(Math.max(this.maxStreak(), newStreak));
-
-    if (typeof window !== 'undefined') {
-      const today = new Date().toISOString().slice(0, 10);
-      const data = {
-        currentStreak: newStreak,
-        maxStreak: this.maxStreak(),
-        lastCheckIn: today,
-      };
-      if (this.isDemoStudent()) {
-        localStorage.setItem('syseng_streak_data', JSON.stringify(data));
-      } else {
-        localStorage.setItem(this.getUserStorageKey('streak_data'), JSON.stringify(data));
-      }
-    }
+    this.streakService.recordActivity('pulse');
   }
 
   readonly currentQuestion = computed(() => this.diagQuestions[this.currentDiagQuestionIndex()]);
@@ -4857,6 +4757,37 @@ for (let paso = 1; paso <= 3; paso++) {
     this.showCreateGuildModal.set(false);
   }
 
+  loadLeaderboard(): void {
+    const email = this.currentStudentEmail();
+    const query = email ? `?email=${encodeURIComponent(email)}` : '';
+    this.api.get<LeaderboardEntry[]>(`/leaderboard${query}`).subscribe({
+      next: (entries) => {
+        if (Array.isArray(entries)) {
+          this.remoteLeaderboard.set(entries);
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  loadClans(): void {
+    const email = this.currentStudentEmail();
+    const query = email ? `?email=${encodeURIComponent(email)}` : '';
+    this.api.get<StudyGroup[]>(`/clans${query}`).subscribe({
+      next: (clans) => {
+        if (Array.isArray(clans) && clans.length > 0) {
+          this.studyGroups.set(clans);
+          const currentSel = this.selectedGuild();
+          if (currentSel) {
+            const updated = clans.find(c => c.id === currentSel.id);
+            if (updated) this.selectedGuild.set(updated);
+          }
+        }
+      },
+      error: () => {}
+    });
+  }
+
   openGuildWorkspace(guild: StudyGroup) {
     this.selectedGuild.set(guild);
     this.activeGuildSection.set('feed');
@@ -4867,96 +4798,33 @@ for (let paso = 1; paso <= 3; paso++) {
   }
 
   joinGuild(id: string) {
-    const currentUser = this.auth.user();
-    const myName = currentUser?.name || 'Tú';
-    const myLevel = this.userLevel();
-
-    this.studyGroups.update(groups =>
-      groups.map(g => {
-        if (g.id === id) {
-          const alreadyIn = g.researchers.some(r => r.name === myName || r.isCurrentUser);
-          const updatedResearchers = alreadyIn
-            ? g.researchers
-            : [
-                ...g.researchers,
-                {
-                  id: 'member_' + Date.now(),
-                  name: myName,
-                  role: 'Cadete Investigador Activo',
-                  level: myLevel,
-                  contributionsCount: 1,
-                  isCurrentUser: true,
-                },
-              ];
-          const updatedGuild: StudyGroup = {
-            ...g,
-            isMember: true,
-            membersCount: updatedResearchers.length,
-            researchers: updatedResearchers,
-            recentLogs: [
-              {
-                author: `${myName} (Lvl ${myLevel})`,
-                message: 'Se unió a las actividades y líneas de investigación del clan.',
-                timeAgo: 'hace un momento',
-              },
-              ...(g.recentLogs || []),
-            ].slice(0, 4),
-          };
-          if (this.selectedGuild()?.id === id) {
-            this.selectedGuild.set(updatedGuild);
-          }
-          return updatedGuild;
-        }
-        if (g.isMember) {
-          const cleanedResearchers = g.researchers.filter(r => !r.isCurrentUser && r.name !== myName);
-          const updatedOther: StudyGroup = {
-            ...g,
-            isMember: false,
-            membersCount: Math.max(1, cleanedResearchers.length),
-            researchers: cleanedResearchers,
-          };
-          if (this.selectedGuild()?.id === g.id) {
-            this.selectedGuild.set(updatedOther);
-          }
-          return updatedOther;
-        }
-        return g;
-      })
-    );
-    this.saveStudyGroups();
+    const email = this.currentStudentEmail();
+    this.api.post<{ success: boolean; message: string }>(`/clans/${id}/join`, { email }).subscribe({
+      next: () => {
+        this.loadClans();
+        this.streakService.recordActivity('pulse');
+      },
+      error: () => {
+        // Fallback local
+        this.studyGroups.update(groups =>
+          groups.map(g => ({ ...g, isMember: g.id === id }))
+        );
+      }
+    });
   }
 
   leaveGuild(id: string) {
-    const currentUser = this.auth.user();
-    const myName = currentUser?.name || 'Tú';
-
-    this.studyGroups.update(groups =>
-      groups.map(g => {
-        if (g.id === id) {
-          const cleanedResearchers = g.researchers.filter(r => !r.isCurrentUser && r.name !== myName);
-          const updated: StudyGroup = {
-            ...g,
-            isMember: false,
-            membersCount: Math.max(1, cleanedResearchers.length),
-            researchers: cleanedResearchers,
-            recentLogs: [
-              {
-                author: `${myName} (Lvl ${this.userLevel()})`,
-                message: 'Dejó de pertenecer activamente a este clan.',
-                timeAgo: 'hace un momento',
-              },
-              ...(g.recentLogs || []),
-            ].slice(0, 4),
-          };
-          if (this.selectedGuild()?.id === id) {
-            this.selectedGuild.set(updated);
-          }
-          return updated;
-        }
-        return g;
-      })
-    );
-    this.saveStudyGroups();
+    const email = this.currentStudentEmail();
+    this.api.post<{ success: boolean; message: string }>(`/clans/${id}/leave`, { email }).subscribe({
+      next: () => {
+        this.loadClans();
+      },
+      error: () => {
+        this.studyGroups.update(groups =>
+          groups.map(g => g.id === id ? { ...g, isMember: false } : g)
+        );
+      }
+    });
   }
 
   publishClanPost() {
@@ -4967,54 +4835,69 @@ for (let paso = 1; paso <= 3; paso++) {
     const content = this.newPostContent().trim();
     if (!title || !content) return;
 
-    const currentUser = this.auth.user();
-    const myName = currentUser?.name || 'Tú';
-
-    const newEntry: ResearchLogEntry = {
-      id: 'rf_' + Date.now(),
-      author: myName,
-      authorRole: guild.isMember ? 'Miembro del Clan' : 'Visitante',
-      type: this.newPostType(),
+    const email = this.currentStudentEmail();
+    const payload = {
       title,
       content,
-      codeSnippet: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCode().trim() : undefined,
-      codeLanguage: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCodeLang() : undefined,
-      upvotes: 1,
-      hasUpvoted: true,
-      comments: [],
-      timeAgo: 'hace un momento',
+      type: this.newPostType(),
+      code_snippet: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCode().trim() : undefined,
+      code_language: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCodeLang() : undefined,
+      email,
     };
 
-    const updatedFeed = [newEntry, ...(guild.researchFeed || [])];
-    const updatedGuild: StudyGroup = {
-      ...guild,
-      researchFeed: updatedFeed,
-      recentLogs: [
-        {
-          author: `${myName} (Lvl ${this.userLevel()})`,
-          message: `Publicó: "${title}"`,
+    this.api.post<{ success: boolean; post: ResearchLogEntry }>(`/clans/${guild.id}/posts`, payload).subscribe({
+      next: (res) => {
+        this.newPostTitle.set('');
+        this.newPostContent.set('');
+        this.newPostCode.set('');
+        this.showCodeInput.set(false);
+        this.loadClans();
+        if (res && res.post) {
+          const updatedFeed = [res.post, ...(guild.researchFeed || [])];
+          this.selectedGuild.set({ ...guild, researchFeed: updatedFeed });
+        }
+        this.streakService.recordActivity('pulse');
+      },
+      error: () => {
+        // Fallback local
+        const currentUser = this.auth.user();
+        const myName = currentUser?.name || 'Tú';
+        const newEntry: ResearchLogEntry = {
+          id: 'rf_' + Date.now(),
+          author: myName,
+          authorRole: 'Miembro del Clan',
+          type: this.newPostType(),
+          title,
+          content,
+          codeSnippet: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCode().trim() : undefined,
+          codeLanguage: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCodeLang() : undefined,
+          upvotes: 1,
+          hasUpvoted: true,
+          comments: [],
           timeAgo: 'hace un momento',
-        },
-        ...(guild.recentLogs || []),
-      ].slice(0, 4),
-    };
-
-    this.selectedGuild.set(updatedGuild);
-    this.studyGroups.update(groups =>
-      groups.map(g => (g.id === guild.id ? updatedGuild : g))
-    );
-    this.saveStudyGroups();
-
-    this.newPostTitle.set('');
-    this.newPostContent.set('');
-    this.newPostCode.set('');
-    this.showCodeInput.set(false);
+        };
+        const updatedFeed = [newEntry, ...(guild.researchFeed || [])];
+        const updatedGuild: StudyGroup = {
+          ...guild,
+          researchFeed: updatedFeed,
+        };
+        this.selectedGuild.set(updatedGuild);
+        this.studyGroups.update(groups =>
+          groups.map(g => (g.id === guild.id ? updatedGuild : g))
+        );
+        this.newPostTitle.set('');
+        this.newPostContent.set('');
+        this.newPostCode.set('');
+        this.showCodeInput.set(false);
+      }
+    });
   }
 
   togglePostUpvote(postId: string) {
     const guild = this.selectedGuild();
     if (!guild) return;
 
+    // Actualización optimista inmediata
     const updatedFeed = (guild.researchFeed || []).map(p => {
       if (p.id === postId) {
         const hasVoted = !p.hasUpvoted;
@@ -5027,16 +4910,18 @@ for (let paso = 1; paso <= 3; paso++) {
       return p;
     });
 
-    const updatedGuild: StudyGroup = {
-      ...guild,
-      researchFeed: updatedFeed,
-    };
-
+    const updatedGuild: StudyGroup = { ...guild, researchFeed: updatedFeed };
     this.selectedGuild.set(updatedGuild);
     this.studyGroups.update(groups =>
       groups.map(g => (g.id === guild.id ? updatedGuild : g))
     );
-    this.saveStudyGroups();
+
+    const numId = parseInt(postId.replace('rf_', ''), 10);
+    if (!isNaN(numId) && numId > 0) {
+      this.api.post<{ success: boolean; hasUpvoted: boolean; upvotes: number }>(`/clans/posts/${numId}/upvote`, {
+        email: this.currentStudentEmail(),
+      }).subscribe();
+    }
   }
 
   toggleComments(postId: string) {
@@ -5063,6 +4948,7 @@ for (let paso = 1; paso <= 3; paso++) {
     const currentUser = this.auth.user();
     const myName = currentUser?.name || 'Tú';
 
+    // Optimistic comment
     const newComment: ResearchComment = {
       id: 'c_' + Date.now(),
       author: `${myName} (Lvl ${this.userLevel()})`,
@@ -5089,12 +4975,21 @@ for (let paso = 1; paso <= 3; paso++) {
     this.studyGroups.update(groups =>
       groups.map(g => (g.id === guild.id ? updatedGuild : g))
     );
-    this.saveStudyGroups();
 
     this.commentInputMap.update(map => ({
       ...map,
       [postId]: '',
     }));
+
+    const numId = parseInt(postId.replace('rf_', ''), 10);
+    if (!isNaN(numId) && numId > 0) {
+      this.api.post<{ success: boolean; comment: any }>(`/clans/posts/${numId}/comments`, {
+        comment: text,
+        email: this.currentStudentEmail(),
+      }).subscribe({
+        next: () => this.loadClans(),
+      });
+    }
   }
 
   completeClanChallenge() {
@@ -5327,113 +5222,45 @@ for (let paso = 1; paso <= 3; paso++) {
   readonly filteredBadges = computed(() => this.badges());
 
   readonly leaderboard = computed<LeaderboardEntry[]>(() => {
-    const currentUser = this.auth.user();
-    const myEmail = this.currentStudentEmail();
-    const myName = currentUser?.name || 'Estudiante';
-    const myXp = this.totalXp();
-    const myLevel = this.userLevel();
-    const myRankTitle = this.rankTitle();
-    const mySpec = this.specialization().title;
-    const myLessons = this.completedCount();
-    const myScore = this.diagnosticCompleted()
-      ? Math.round(((this.diagnosticResult().score || 3) / 5) * 100)
-      : 0;
+    const remote = this.remoteLeaderboard();
+    const myEmail = this.currentStudentEmail().toLowerCase();
 
-    // 1. Entrada del usuario activo
-    const myEntry: LeaderboardEntry = {
+    if (remote && remote.length > 0) {
+      return remote.map((entry, idx) => {
+        const isMe = entry.email?.toLowerCase() === myEmail || entry.isCurrentUser;
+        const rank = idx + 1;
+        let badge = '⚡ ACTIVO';
+        if (rank === 1) badge = '🥇 ORO';
+        else if (rank === 2) badge = '🥈 PLATA';
+        else if (rank === 3) badge = '🥉 BRONCE';
+
+        return {
+          ...entry,
+          rank,
+          isCurrentUser: isMe,
+          badgePill: badge,
+          avatarText: entry.avatarText || (entry.name ? entry.name.slice(0, 2).toUpperCase() : 'ES'),
+        };
+      });
+    }
+
+    // Fallback inicial mientras responde la base de datos
+    const currentUser = this.auth.user();
+    const myName = currentUser?.name || 'Estudiante';
+    return [{
       rank: 1,
       name: myName,
       email: myEmail,
       avatarText: myName.slice(0, 2).toUpperCase(),
-      level: myLevel,
-      rankTitle: myRankTitle,
-      specialization: mySpec,
-      completedLessons: myLessons,
-      avgQuizScore: myScore,
-      xp: myXp,
+      level: this.userLevel(),
+      rankTitle: this.rankTitle(),
+      specialization: this.specialization().title,
+      completedLessons: this.completedCount(),
+      avgQuizScore: 100,
+      xp: this.totalXp(),
       isCurrentUser: true,
       badgePill: '🥇 ORO',
-    };
-
-    const entriesMap = new Map<string, LeaderboardEntry>();
-    entriesMap.set(myEmail.toLowerCase(), myEntry);
-
-    // 2. Estudiantes remotos del backend PostgreSQL
-    for (const rem of this.remoteLeaderboard()) {
-      const email = rem.email?.toLowerCase();
-      if (!email) continue;
-      if (email === myEmail.toLowerCase()) {
-        entriesMap.set(email, {
-          ...myEntry,
-          xp: Math.max(rem.xp || 0, myXp),
-          completedLessons: Math.max(rem.completedLessons || 0, myLessons),
-          avgQuizScore: rem.avgQuizScore || myScore,
-        });
-      } else {
-        entriesMap.set(email, {
-          ...rem,
-          isCurrentUser: false,
-          avatarText: rem.avatarText || rem.name.slice(0, 2).toUpperCase(),
-        });
-      }
-    }
-
-    // 3. Estudiantes locales registrados en el cliente
-    const localStudents = this.auth.getRegisteredStudents();
-    for (const st of localStudents) {
-      const email = st.email.toLowerCase();
-      if (email === myEmail.toLowerCase()) continue;
-      if (!entriesMap.has(email)) {
-        let studentXp = 80;
-        let studentLevel = 1;
-        let studentSpec = 'Fundamentos de Programación';
-        let studentLessons = 0;
-        let studentAvg = 0;
-
-        try {
-          const diag = this.auth.getDiagnosticResult(email);
-          if (diag) {
-            studentLevel = diag.levelNumber || diag.assignedLevelNumber || 2;
-            studentSpec = diag.recommendedSpecialty || studentSpec;
-            studentXp = 150 + studentLevel * 40;
-            studentAvg = Math.round(((diag.score || 2) / 5) * 100);
-          }
-        } catch {}
-
-        entriesMap.set(email, {
-          rank: 0,
-          name: st.name || email.split('@')[0],
-          email: st.email,
-          avatarText: (st.name || email).slice(0, 2).toUpperCase(),
-          level: studentLevel,
-          rankTitle: `Nivel ${studentLevel}`,
-          specialization: studentSpec,
-          completedLessons: studentLessons,
-          avgQuizScore: studentAvg,
-          xp: studentXp,
-          isCurrentUser: false,
-          badgePill: '⚡ ACTIVO',
-        });
-      }
-    }
-
-    // 4. Ordenar en tiempo real por XP descendente
-    const sorted = Array.from(entriesMap.values()).sort((a, b) => b.xp - a.xp);
-
-    // 5. Asignar rangos oficiales y condecoraciones de podio
-    return sorted.map((entry, idx) => {
-      const rank = idx + 1;
-      let badge = '⚡ ACTIVO';
-      if (rank === 1) badge = '🥇 ORO';
-      else if (rank === 2) badge = '🥈 PLATA';
-      else if (rank === 3) badge = '🥉 BRONCE';
-
-      return {
-        ...entry,
-        rank,
-        badgePill: badge,
-      };
-    });
+    }];
   });
 
   emoji(enr: Enrollment): string {

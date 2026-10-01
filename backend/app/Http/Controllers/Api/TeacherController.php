@@ -107,19 +107,23 @@ class TeacherController extends Controller
     {
         $this->authorizeTeacher($request);
 
-        $students = \App\Models\User::where('role', 'student')
-            ->whereNotNull('email_verified_at')
+        $students = \App\Models\User::whereNotNull('email_verified_at')
+            ->orWhere('role', 'student')
             ->get();
 
         $sentCount = 0;
         foreach ($students as $student) {
             try {
+                $streak = max(1, $student->current_streak ?: 1);
+                $lessons = $student->lessonProgress()->count();
+                $xp = max(50, $student->xp ?: 50);
+
                 \Illuminate\Support\Facades\Mail::send('emails.progress-digest', [
                     'userName'         => $student->name,
                     'userEmail'        => $student->email,
-                    'streakDays'       => rand(3, 12),
-                    'completedLessons' => rand(4, 18),
-                    'totalXp'          => rand(250, 980),
+                    'streakDays'       => $streak,
+                    'completedLessons' => $lessons,
+                    'totalXp'          => $xp,
                 ], function ($message) use ($student) {
                     $message->to($student->email)
                         ->subject('📊 Resumen de tu Progreso Académico - SysEng Academy');
@@ -137,23 +141,25 @@ class TeacherController extends Controller
     }
 
     /**
-     * Envía alertas por correo de racha inactiva o riesgo de retraso.
+     * Envía alertas por correo de racha inactiva o riesgo de retraso con datos reales.
      */
     public function sendStreakReminder(Request $request): JsonResponse
     {
         $this->authorizeTeacher($request);
 
-        $students = \App\Models\User::where('role', 'student')
-            ->whereNotNull('email_verified_at')
+        $students = \App\Models\User::whereNotNull('email_verified_at')
+            ->orWhere('role', 'student')
             ->get();
 
         $sentCount = 0;
         foreach ($students as $student) {
             try {
+                $streak = max(1, $student->current_streak ?: 1);
+
                 \Illuminate\Support\Facades\Mail::send('emails.streak-reminder', [
                     'userName'   => $student->name,
                     'userEmail'  => $student->email,
-                    'streakDays' => rand(1, 4),
+                    'streakDays' => $streak,
                 ], function ($message) use ($student) {
                     $message->to($student->email)
                         ->subject('🔥 ¡Alerta! Tu racha en SysEng Academy está por vencerse');

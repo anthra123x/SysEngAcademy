@@ -8,10 +8,12 @@ use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\ForumController;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\ClanController;
 use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\LearningPathController;
 use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\StreakController;
 use App\Http\Controllers\Api\TeacherController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +33,17 @@ Route::get('/lessons/{slug}', [LessonController::class, 'show']);
 Route::get('/courses/{course}/forum', [ForumController::class, 'index']);
 Route::get('/forum/posts/{id}', [ForumController::class, 'show']);
 Route::get('/leaderboard', [LeaderboardController::class, 'index']);
+
+// Clanes y Telemetría de Racha (público / híbrido con fallback de email o token)
+Route::get('/clans', [ClanController::class, 'index']);
+Route::post('/user/activity-ping', [StreakController::class, 'ping']);
+Route::get('/user/streak', [StreakController::class, 'status']);
+Route::post('/clans/{id}/join', [ClanController::class, 'join']);
+Route::post('/clans/{id}/leave', [ClanController::class, 'leave']);
+Route::post('/clans/{id}/posts', [ClanController::class, 'storePost']);
+Route::post('/clans/posts/{postId}/upvote', [ClanController::class, 'toggleUpvote']);
+Route::post('/clans/posts/{postId}/comments', [ClanController::class, 'storeComment']);
+Route::post('/clans', [ClanController::class, 'storeClan']);
 
 // Code execution routes (public, rate limited)
 Route::get('/languages', [CodeExecutionController::class, 'languages']);

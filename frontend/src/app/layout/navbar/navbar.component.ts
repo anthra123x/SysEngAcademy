@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, HostListener, OnInit, OnDestroy } 
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
+import { StreakService } from '../../core/services/streak.service';
 import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from '../../core/constants/ascii-avatars';
 
 @Component({
@@ -73,12 +74,11 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
               <a routerLink="/" class="btn-switch-view" title="Explorar la plataforma como estudiante">
                 <span>Vista Estudiante</span>
               </a>
-            } @else if (!isTeacher()) {
-              <a routerLink="/perfil" class="streak-nav-pill" title="Racha activa de estudio consecutivo">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.38 0 2.5-1.12 2.5-2.5 0-.61-.22-1.17-.59-1.61L12 11.83l-.91 1.06c-.37.44-.59 1-.59 1.61z"/><path d="M12 23c-4.97 0-9-4.03-9-9 0-4.14 2.8-7.63 6.64-8.66.42-.11.84.14.94.56.05.2.01.41-.1.58C9.56 7.82 9 9.35 9 11c0 .28.04.55.11.81.08.31.35.53.67.53h.08c.32-.04.57-.29.62-.61.32-2.14 1.76-3.87 3.73-4.57.41-.15.86.05 1.01.46.07.19.05.41-.05.58-.69 1.18-1.07 2.55-1.07 4 0 .38.07.75.2 1.09.12.31.42.51.75.51.11 0 .22-.02.32-.07.3-.15.48-.46.48-.8 0-1.02.3-1.99.82-2.81.25-.4.76-.53 1.16-.28.18.11.31.29.36.49 1.15 4.34-.35 9.07-3.79 11.67-.93.7-2.02 1.1-3.15 1.1z"/></svg>
-                <span class="streak-nav-count">{{ studentStreak() }}d</span>
-              </a>
             }
+            <a routerLink="/perfil" [queryParams]="{ tab: 'streak' }" class="streak-nav-pill" title="Racha activa de estudio consecutivo">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.38 0 2.5-1.12 2.5-2.5 0-.61-.22-1.17-.59-1.61L12 11.83l-.91 1.06c-.37.44-.59 1-.59 1.61z"/><path d="M12 23c-4.97 0-9-4.03-9-9 0-4.14 2.8-7.63 6.64-8.66.42-.11.84.14.94.56.05.2.01.41-.1.58C9.56 7.82 9 9.35 9 11c0 .28.04.55.11.81.08.31.35.53.67.53h.08c.32-.04.57-.29.62-.61.32-2.14 1.76-3.87 3.73-4.57.41-.15.86.05 1.01.46.07.19.05.41-.05.58-.69 1.18-1.07 2.55-1.07 4 0 .38.07.75.2 1.09.12.31.42.51.75.51.11 0 .22-.02.32-.07.3-.15.48-.46.48-.8 0-1.02.3-1.99.82-2.81.25-.4.76-.53 1.16-.28.18.11.31.29.36.49 1.15 4.34-.35 9.07-3.79 11.67-.93.7-2.02 1.1-3.15 1.1z"/></svg>
+              <span class="streak-nav-count">{{ studentStreak() }}d</span>
+            </a>
             <div class="user-chip" (click)="toggleDropdown()" [class.is-open]="dropdownOpen()" [class.user-chip--teacher]="isTeacher()">
               <div class="avatar-ascii-badge" [class.avatar-ascii-badge--teacher]="isTeacher()" title="Firma ASCII animada de tu perfil">
                 <pre class="mini-ascii-pre">{{ currentMiniFrame() }}</pre>
@@ -865,6 +865,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
 export class NavbarComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   router = inject(Router);
+  streakService = inject(StreakService);
 
   dropdownOpen = signal(false);
   mobileOpen   = signal(false);
@@ -966,18 +967,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   });
 
   readonly studentStreak = computed(() => {
-    if (typeof window === 'undefined') return 1;
-    const email = this.auth.user()?.email?.toLowerCase().trim();
-    if (!email) return 1;
-    const isDemo = email === 'estudiante@sysengacademy.dev';
-    const key = isDemo ? 'syseng_streak_data' : `syseng_${email}_streak_data`;
-    try {
-      const st = JSON.parse(localStorage.getItem(key) || '{}');
-      if (st.currentStreak !== undefined) return st.currentStreak;
-      return isDemo ? 5 : 1;
-    } catch {
-      return isDemo ? 5 : 1;
-    }
+    return this.streakService.currentStreak();
   });
 
   initials() {
