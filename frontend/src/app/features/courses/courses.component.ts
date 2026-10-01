@@ -25,8 +25,16 @@ import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/m
       </div>
 
       <div class="container courses-layout">
+        <!-- Mobile Filters Toggle -->
+        <div class="mobile-filters-trigger">
+          <button type="button" class="btn btn-outline btn-block" (click)="showMobileFilters.set(!showMobileFilters())">
+            <span>⚡ {{ showMobileFilters() ? 'Ocultar Filtros' : 'Filtrar Cursos (' + total() + ')' }}</span>
+            <span>{{ showMobileFilters() ? '▲' : '▼' }}</span>
+          </button>
+        </div>
+
         <!-- Sidebar Filters -->
-        <aside class="filters">
+        <aside class="filters" [class.is-mobile-open]="showMobileFilters()">
           <div class="filters__header">
             <h3>Filtros</h3>
             <button class="btn btn-ghost btn-sm" (click)="clearFilters()">Limpiar</button>
@@ -152,10 +160,29 @@ import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/m
       gap: var(--sp-8);
       padding-top: var(--sp-6);
       padding-bottom: var(--sp-12);
-      @media (max-width: 900px) { grid-template-columns: 1fr; }
+      @media (max-width: 900px) { grid-template-columns: 1fr; gap: var(--sp-4); }
+    }
+    .mobile-filters-trigger {
+      display: none;
+      @media (max-width: 900px) {
+        display: block;
+        margin-bottom: var(--sp-2);
+        .btn { width: 100%; justify-content: space-between; }
+      }
     }
     .filters {
       &__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-5); h3 { font-size: var(--text-base); font-weight: var(--font-semibold); color: var(--text-primary); } }
+      @media (max-width: 900px) {
+        display: none;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: var(--sp-5);
+        margin-bottom: var(--sp-4);
+        &.is-mobile-open {
+          display: block;
+        }
+      }
     }
     .filter-group {
       margin-bottom: var(--sp-5);
@@ -224,6 +251,7 @@ export class CoursesComponent implements OnInit {
   total       = signal(0);
   currentPage = signal(1);
   lastPage    = signal(1);
+  showMobileFilters = signal(false);
   onlyFree    = false;
 
   filters: CourseFilters = {};

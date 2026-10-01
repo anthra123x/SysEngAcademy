@@ -215,13 +215,12 @@ export class TeacherService {
   private readonly api = inject(ApiService);
 
   private getLocalStudents(): TeacherStudent[] {
-    if (typeof window === 'undefined') return FALLBACK_TEACHER_STUDENTS;
+    if (typeof window === 'undefined') return [];
     try {
       const stored = localStorage.getItem('syseng_teacher_students_cache');
       if (stored) return JSON.parse(stored);
-      localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(FALLBACK_TEACHER_STUDENTS));
     } catch {}
-    return FALLBACK_TEACHER_STUDENTS;
+    return [];
   }
 
   private saveLocalStudents(students: TeacherStudent[]) {

@@ -46,12 +46,12 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
 
               <h1 class="course-title">{{ course()!.title }}</h1>
 
-              <!-- Platzi-inspired Metrics & Ratings Strip -->
+              <!-- Platzi-inspired Metrics Strip -->
               <div class="course-metrics-strip">
                 <div class="metric-item metric-rating">
-                  <span class="star-icon">★</span>
-                  <span class="rating-score">4.9</span>
-                  <span class="rating-count">({{ ratingCount() }} opiniones)</span>
+                  <span class="star-icon">⚡</span>
+                  <span class="rating-score">Pensum Oficial</span>
+                  <span class="rating-count">SysEng Academy</span>
                 </div>
                 <span class="metric-divider">·</span>
                 <div class="metric-item">
@@ -538,6 +538,13 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
       .metric-divider {
         color: var(--border-hover);
         user-select: none;
+      }
+
+      @media (max-width: 640px) {
+        gap: 10px;
+        padding: var(--sp-3);
+        .metric-divider { display: none; }
+        .metric-item { font-size: var(--text-xs); }
       }
     }
 
@@ -1474,12 +1481,6 @@ export class CourseDetailComponent implements OnInit {
       }
     }
     return c.modules[0]?.lessons?.[0]?.slug ?? null;
-  });
-
-  ratingCount = computed(() => {
-    const c = this.course();
-    if (!c) return 48;
-    return 32 + ((c.id * 19) % 87);
   });
 
   completedLessonsCount = computed(() => {

@@ -1672,15 +1672,35 @@ export interface DiagnosticAnalysisResult {
           align-items: flex-start;
         }
         .pipeline-statusline {
-          flex-direction: column;
-          align-items: flex-start;
+          display: flex;
+          flex-direction: row;
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 12px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          &::-webkit-scrollbar { display: none; }
+
+          .pipe-step {
+            flex-shrink: 0;
+            white-space: nowrap;
+            font-size: 11px;
+            padding: 4px 8px;
+          }
+
+          .pipe-sep {
+            margin: 0 2px;
+          }
         }
         .induction-manifesto .manifesto-title {
-          font-size: 1.5rem;
+          font-size: 1.35rem;
         }
         .dossier-hero {
           flex-direction: column;
           align-items: flex-start;
+          gap: 12px;
         }
       }
     `

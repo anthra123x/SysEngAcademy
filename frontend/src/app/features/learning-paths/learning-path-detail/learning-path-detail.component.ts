@@ -566,6 +566,23 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
         }
       }
     }
+
+    @media (max-width: 640px) {
+      .path-stats-bar {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--sp-3);
+        padding: var(--sp-4);
+
+        .stat-divider { display: none; }
+      }
+
+      .path-hero__actions {
+        flex-direction: column;
+        align-items: stretch;
+        .btn { width: 100%; justify-content: center; }
+      }
+    }
   `]
 })
 export class LearningPathDetailComponent implements OnInit {

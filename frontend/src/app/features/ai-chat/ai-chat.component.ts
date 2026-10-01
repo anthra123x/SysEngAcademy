@@ -8,7 +8,7 @@ import { AiConversation, AiMessage } from '../../core/models';
   selector: 'app-ai-chat',
   imports: [FormsModule],
   template: `
-    <div class="ai-chat-layout">
+    <div class="ai-chat-layout" [class.has-active-conv]="!!activeConv()">
       <!-- Sidebar -->
       <aside class="chat-sidebar">
         <div class="chat-sidebar__header">
@@ -52,6 +52,7 @@ import { AiConversation, AiMessage } from '../../core/models';
           </div>
         } @else {
           <div class="chat-header">
+            <button type="button" class="btn-back-conv" (click)="activeConv.set(null)">← Volver</button>
             <h3>{{ activeConv()!.title }}</h3>
           </div>
 
@@ -112,7 +113,20 @@ import { AiConversation, AiMessage } from '../../core/models';
       display: grid;
       grid-template-columns: 280px 1fr;
       height: calc(100vh - var(--header-height));
-      @media (max-width: 768px) { grid-template-columns: 1fr; }
+    }
+
+    .btn-back-conv {
+      display: none;
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      padding: 5px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: all var(--transition-fast);
+      &:hover { color: var(--text-primary); border-color: var(--primary); }
     }
 
     .chat-sidebar {
@@ -319,6 +333,42 @@ import { AiConversation, AiMessage } from '../../core/models';
     }
 
     .send-btn { flex-shrink: 0; width: 44px; height: 44px; padding: 0; justify-content: center; font-size: 1rem; }
+
+    @media (max-width: 768px) {
+      .ai-chat-layout {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - var(--header-height));
+      }
+
+      .btn-back-conv {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .ai-chat-layout.has-active-conv .chat-sidebar {
+        display: none !important;
+      }
+
+      .chat-sidebar {
+        height: 100%;
+        width: 100%;
+      }
+
+      .message__bubble {
+        max-width: 88% !important;
+        padding: 10px 12px !important;
+      }
+
+      .messages-container {
+        padding: 12px !important;
+        gap: 12px !important;
+      }
+
+      .chat-input-area {
+        padding: 10px 12px !important;
+      }
+    }
   `]
 })
 export class AiChatComponent implements OnInit, AfterViewChecked {

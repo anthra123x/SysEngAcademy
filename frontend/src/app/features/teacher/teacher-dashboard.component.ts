@@ -143,14 +143,6 @@ import { AuthService } from '../../core/services/auth.service';
                   Pendientes
                 </button>
               </div>
-
-              <button
-                type="button"
-                class="btn-simulate-student"
-                (click)="simulateNewClassroomStudent()"
-              >
-                🎓 Simular Registro de Alumno en Clase
-              </button>
             </div>
 
             @if (loading()) {
@@ -511,41 +503,47 @@ import { AuthService } from '../../core/services/auth.service';
               }
             </div>
 
-            <!-- Diagnóstico Pedagógico de Cohorte -->
+            <!-- Diagnóstico Pedagógico de Cohorte Dinámico -->
             <div class="surface-panel">
               <div class="panel-heading-group">
                 <span class="badge badge-neutral">ANÁLISIS DE COHORTE</span>
                 <h2 class="panel-heading">Estudiantes que Requieren Refuerzo</h2>
-                <p class="panel-subtext">Seguimiento pedagógico para prevenir deserción temprana.</p>
+                <p class="panel-subtext">Seguimiento pedagógico para prevenir rezago académico.</p>
               </div>
 
-              <div class="risk-stack">
-                <div class="risk-card">
-                  <div class="risk-header">
-                    <div class="avatar-box">LR</div>
-                    <div>
-                      <div class="cell-name">Lucas Ramírez</div>
-                      <div class="cell-meta">lucas.ramirez@code.org · Pendiente de activación</div>
-                    </div>
-                  </div>
-                  <p class="risk-note">
-                    <strong>Recomendación Byte:</strong> Enviar recordatorio para activación de cuenta institucional y asignar el reto de terminal para afianzar conceptos prácticos.
-                  </p>
+              @if (studentsAtRisk().length === 0) {
+                <div class="state-block" style="padding: 2rem 1rem; text-align: center;">
+                  <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">✅</span>
+                  <p class="state-title" style="color: #0ae98a; font-weight: 600;">Cohorte al día</p>
+                  <p class="state-desc" style="color: #94a3b8; font-size: 0.85rem;">Todos los estudiantes registrados presentan actividad regular y buen rendimiento evaluativo.</p>
                 </div>
-
-                <div class="risk-card">
-                  <div class="risk-header">
-                    <div class="avatar-box">SH</div>
-                    <div>
-                      <div class="cell-name">Sofía Herrera</div>
-                      <div class="cell-meta">sofia.herrera@tech.dev · 1 curso inscrito</div>
+              } @else {
+                <div class="risk-stack">
+                  @for (st of studentsAtRisk(); track st.id) {
+                    <div class="risk-card">
+                      <div class="risk-header">
+                        <div class="avatar-box">{{ getInitials(st.name) }}</div>
+                        <div>
+                          <div class="cell-name">{{ st.name }}</div>
+                          <div class="cell-meta">
+                            {{ st.email }} · {{ !st.email_verified ? 'Cuenta pendiente de activación' : (st.completed_lessons_count + ' lecciones completadas') }}
+                          </div>
+                        </div>
+                      </div>
+                      <p class="risk-note">
+                        <strong>Diagnóstico Byte:</strong>
+                        @if (!st.email_verified) {
+                          El estudiante no ha verificado su cuenta institucional. Se sugiere enviar recordatorio de activación.
+                        } @else if (st.completed_lessons_count === 0) {
+                          Inscrito en {{ st.enrollments_count }} curso(s) sin lecciones completadas aún. Recomendado asignar reto inicial guiado.
+                        } @else {
+                          Promedio evaluativo de {{ st.average_quiz_score }}%. Se recomienda reforzar fundamentos teóricos antes del siguiente hito.
+                        }
+                      </p>
                     </div>
-                  </div>
-                  <p class="risk-note">
-                    <strong>Recomendación Byte:</strong> Buen desempeño evaluativo pero bajo ritmo de ejercicios de código. Invitarla a participar en retos guiados de cátedra.
-                  </p>
+                  }
                 </div>
-              </div>
+              }
             </div>
           </div>
         }
@@ -1862,6 +1860,128 @@ import { AuthService } from '../../core/services/auth.service';
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
+
+      /* RESPONSIVE ENGINE DOCENTE MÓVIL */
+      @media (max-width: 768px) {
+        .page-head {
+          padding: 1.25rem 0 1rem;
+        }
+
+        .head-layout {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 1rem;
+        }
+
+        .page-title {
+          font-size: 1.35rem;
+        }
+
+        .head-actions {
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          padding-bottom: 6px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          &::-webkit-scrollbar { display: none; }
+
+          .btn {
+            flex-shrink: 0;
+            white-space: nowrap;
+            font-size: 0.8rem;
+            padding: 7px 12px;
+          }
+        }
+
+        .kpi-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+          margin: 1rem 0 1.25rem;
+
+          .kpi-card {
+            padding: 1rem;
+
+            .kpi-value {
+              font-size: 1.45rem;
+            }
+          }
+        }
+
+        .surface-panel {
+          padding: 1rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .panel-head-row {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.75rem;
+        }
+
+        .panel-toolbar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.75rem;
+        }
+
+        .search-input-group {
+          width: 100%;
+          .search-box { width: 100%; }
+        }
+
+        .filter-pills {
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          padding-bottom: 4px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          &::-webkit-scrollbar { display: none; }
+
+          .filter-tab {
+            flex-shrink: 0;
+            white-space: nowrap;
+            padding: 6px 12px;
+          }
+        }
+
+        .table-wrap {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          width: 100%;
+          border-radius: 6px;
+          border: 1px solid #202436;
+        }
+
+        .data-table {
+          min-width: 680px;
+          width: 100%;
+        }
+
+        .card-grid {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        .modal-dialog {
+          width: 95vw;
+          max-width: 95vw;
+          margin: 12px auto;
+          max-height: 90vh;
+          overflow-y: auto;
+          padding: 1.25rem;
+        }
+
+        .field-row {
+          flex-direction: column;
+          gap: 10px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .kpi-grid {
+          grid-template-columns: 1fr;
+        }
+      }
     `,
   ],
 })
@@ -1967,42 +2087,6 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  simulateNewClassroomStudent() {
-    const studentNames = ['Alejandro Morales', 'Valeria Silva', 'Sebastián Restrepo', 'Daniela Ospina', 'Mateo Henao'];
-    const randomName = studentNames[Math.floor(Math.random() * studentNames.length)];
-    const randomId = Date.now();
-    const email = randomName.toLowerCase().replace(' ', '.') + '@universidad.edu.co';
-
-    const newStudent: TeacherStudent = {
-      id: randomId,
-      name: randomName,
-      email: email,
-      role: 'student',
-      email_verified: true,
-      email_verified_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      enrollments_count: 2,
-      completed_lessons_count: 2,
-      quizzes_taken_count: 1,
-      average_quiz_score: 100,
-      courses: [
-        { id: 1, title: 'Introducción a la Programación', progress_percent: 35 },
-        { id: 2, title: 'Fundamentos de Algorítmica', progress_percent: 20 },
-      ],
-    };
-
-    if (typeof window !== 'undefined') {
-      try {
-        const cache = JSON.parse(localStorage.getItem('syseng_teacher_students_cache') || '[]');
-        cache.unshift(newStudent);
-        localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(cache));
-        window.dispatchEvent(new CustomEvent('teacher:students-updated', { detail: newStudent }));
-        this.actionNotification.set(`🎓 ¡Nuevo alumno en clase! "${randomName}" creó su cuenta, verificó el código y completó el test de nivel.`);
-        setTimeout(() => this.actionNotification.set(''), 7000);
-      } catch {}
-    }
-  }
-
   setTab(tab: 'students' | 'activities' | 'activity' | 'ai') {
     this.activeTab.set(tab);
   }
@@ -2076,6 +2160,16 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
       return Math.round(avg * 10) / 10;
     }
     return this.overview()?.stats.average_score ?? 89.1;
+  });
+
+  readonly studentsAtRisk = computed(() => {
+    const list = this.students();
+    return list.filter(s => {
+      const lowQuizzes = s.quizzes_taken_count > 0 && (s.average_quiz_score ?? 100) < 70;
+      const noProgress = s.completed_lessons_count === 0 && s.enrollments_count > 0;
+      const unverified = !s.email_verified;
+      return lowQuizzes || noProgress || unverified;
+    }).slice(0, 5);
   });
 
   viewStudentDossier(id: number) {
