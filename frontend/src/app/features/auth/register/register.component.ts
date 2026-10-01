@@ -547,8 +547,34 @@ export class RegisterComponent {
 
   submit() {
     if (this.loading()) return;
+
+    const trimmedName = (this.name || '').trim();
+    const trimmedEmail = (this.email || '').trim().toLowerCase();
+    const trimmedPassword = this.password || '';
+
+    if (!trimmedName || trimmedName.length < 3) {
+      this.error.set('Por favor ingresa tu nombre completo (mínimo 3 caracteres).');
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+      this.error.set('Por favor ingresa un correo electrónico válido y completo (ejemplo: usuario@correo.com).');
+      return;
+    }
+
+    if (trimmedPassword.length < 8) {
+      this.error.set('La contraseña debe tener un mínimo de 8 caracteres.');
+      return;
+    }
+
+    if (!/[A-Za-z]/.test(trimmedPassword) || !/[0-9]/.test(trimmedPassword)) {
+      this.error.set('Por seguridad, la contraseña debe contener al menos una letra y un número.');
+      return;
+    }
+
     if (this.password !== this.passwordConfirm) {
-      this.error.set('Las contraseñas no coinciden.');
+      this.error.set('Las contraseñas no coinciden. Por favor verifica ambos campos.');
       return;
     }
 
@@ -557,9 +583,9 @@ export class RegisterComponent {
 
     this.auth
       .register({
-        name: this.name,
-        email: this.email,
-        password: this.password,
+        name: trimmedName,
+        email: trimmedEmail,
+        password: trimmedPassword,
         password_confirmation: this.passwordConfirm,
       })
       .subscribe({

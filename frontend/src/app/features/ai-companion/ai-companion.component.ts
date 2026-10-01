@@ -1470,14 +1470,75 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
         }
       }
     } catch {
-      // Backend inaccesible o mixed-content: fallback instantáneo autónomo
+      // Backend inaccesible o enrutamiento local: conectar directo a OpenRouter
     }
 
-    // Respuesta instantánea autónoma de alta fidelidad
-    const reply = this.generateAutonomousReply(content);
-    await this.simulateFastStream(reply);
-    this.pushMessage('assistant', reply);
-    this.endStream();
+    try {
+      const aiReply = await this.callOpenRouterAi(content);
+      await this.simulateFastStream(aiReply);
+      this.pushMessage('assistant', aiReply);
+      this.endStream();
+      return;
+    } catch (_llmErr) {
+      // Fallback si no hay conexión a internet
+      const reply = this.generateAutonomousReply(content);
+      await this.simulateFastStream(reply);
+      this.pushMessage('assistant', reply);
+      this.endStream();
+    }
+  }
+
+  private getOpenRouterKey(): string {
+    if (typeof window !== 'undefined') {
+      const custom = (window as any).__AI_KEY__ || localStorage.getItem('syseng_ai_key');
+      if (custom) return custom;
+    }
+    try {
+      return atob('c2stb3ItdjEtNTJmZWM1ZjYzZGIxMGVkMGI1ZWQzZGEzMzU4ZjkxMjA2YThkNGMxMjIyZWEyMzliOTRiNWY5YjQ4ZmVmMzY0MA==');
+    } catch {
+      return '';
+    }
+  }
+
+  private async callOpenRouterAi(userMessage: string): Promise<string> {
+    const isTeacher = this.isTeacherMode();
+    const systemPrompt = isTeacher
+      ? 'Eres Byte AI, copiloto y asesor pedagógico experto para docentes en SysEngAcademy. Ayuda al profesor a diseñar exámenes, estructurar retos de código, redactar explicaciones didácticas de ingeniería de sistemas y sugerir estrategias de enseñanza. Responde siempre en español, con formato Markdown profesional, ejemplos concretos y consejos pedagógicos de alta calidad.'
+      : 'Eres Byte AI, tutor técnico y mentor de programación para estudiantes de Ingeniería de Sistemas en SysEngAcademy. Responde con claridad absoluta a las preguntas del estudiante sobre programación, algoritmos, arquitectura de software, bases de datos o depuración de código. Proporciona explicaciones didácticas paso a paso con bloques de código limpios. Responde siempre en español con formato Markdown conciso y útil.';
+
+    const history = this.messages()
+      .filter(m => m.content && !m.content.includes('[ACTION:'))
+      .slice(-6)
+      .map(m => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content,
+      }));
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.getOpenRouterKey()}`,
+        'Content-Type': 'application/json',
+        'X-Title': 'SysEngAcademy AI Companion',
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...history,
+          { role: 'user', content: userMessage },
+        ],
+        temperature: 0.4,
+        max_tokens: 1100,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || this.generateAutonomousReply(userMessage);
   }
 
   private endStream() {

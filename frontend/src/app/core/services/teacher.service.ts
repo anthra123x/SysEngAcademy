@@ -118,26 +118,10 @@ export interface TeacherStudentDetail {
   }>;
 }
 
-// Correos y nombres estrictamente prohibidos (cuentas ficticias/mocks de desarrollo)
+// Correos estrictamente prohibidos (cuentas ficticias/seeds de desarrollo inicial)
 const BANNED_MOCK_EMAILS = new Set([
   'estudiante@sysengacademy.dev',
-  'carlos_test_1790540376@gmail.com',
-  'mateo.silva@alumnos.syseng.edu',
-  'sofia.herrera@tech.dev',
-  'lucas.ramirez@code.org',
-  'ana@sysengacademy.dev',
 ]);
-
-const BANNED_MOCK_NAMES = [
-  'ana estudiante',
-  'carlos prueba',
-  'mateo silva',
-  'sofía herrera',
-  'sofia herrera',
-  'lucas ramírez',
-  'lucas ramirez',
-  'estudiante demo',
-];
 
 export const FALLBACK_TEACHER_STUDENTS: TeacherStudent[] = [];
 
@@ -152,12 +136,12 @@ export class TeacherService {
   }
 
   /**
-   * Purgado preventivo e instantáneo de cualquier dato ficticio de desarrollo en el almacenamiento del navegador.
+   * Purgado preventivo de cuentas ficticias de prueba inicial.
    */
   private purgeLegacyCaches(): void {
     if (typeof window === 'undefined') return;
     try {
-      // 1. Limpiar usuarios registrados
+      // 1. Limpiar usuarios registrados sólo si coinciden con emails de prueba fija
       const rawReg = localStorage.getItem('syseng_registered_users');
       if (rawReg) {
         let list = JSON.parse(rawReg);
@@ -166,25 +150,21 @@ export class TeacherService {
             const u = item.user;
             if (!u) return false;
             const normEmail = (u.email || '').toLowerCase().trim();
-            const normName = (u.name || '').toLowerCase().trim();
             if (BANNED_MOCK_EMAILS.has(normEmail)) return false;
-            if (BANNED_MOCK_NAMES.some(bn => normName.includes(bn))) return false;
             return true;
           });
           localStorage.setItem('syseng_registered_users', JSON.stringify(cleaned));
         }
       }
 
-      // 2. Limpiar cache docente
+      // 2. Limpiar cache docente sólo de emails de prueba fija
       const rawCache = localStorage.getItem('syseng_teacher_students_cache');
       if (rawCache) {
         let cache = JSON.parse(rawCache);
         if (Array.isArray(cache)) {
           const cleaned = cache.filter((s: any) => {
             const normEmail = (s.email || '').toLowerCase().trim();
-            const normName = (s.name || '').toLowerCase().trim();
             if (BANNED_MOCK_EMAILS.has(normEmail)) return false;
-            if (BANNED_MOCK_NAMES.some(bn => normName.includes(bn))) return false;
             return true;
           });
           localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(cleaned));
@@ -335,6 +315,9 @@ export class TeacherService {
         if (Array.isArray(cachedList)) {
           for (const cached of cachedList) {
             const normEmail = (cached.email || '').toLowerCase().trim();
+            if (normEmail === 'andrescamilomartinez330@gmail.com' || deletedSet.has(normEmail) || BANNED_MOCK_EMAILS.has(normEmail)) {
+              continue;
+            }
             if (studentsMap.has(normEmail)) {
               const current = studentsMap.get(normEmail)!;
               if (cached.completed_lessons_count !== undefined) {
@@ -354,6 +337,21 @@ export class TeacherService {
                 current.courses = cached.courses;
                 current.enrollments_count = cached.courses.length;
               }
+            } else if (cached.name && cached.email) {
+              studentsMap.set(normEmail, {
+                id: cached.id || Date.now(),
+                name: cached.name,
+                email: cached.email,
+                role: 'student',
+                email_verified: !!cached.email_verified,
+                email_verified_at: cached.email_verified_at || null,
+                created_at: cached.created_at || new Date().toISOString(),
+                enrollments_count: cached.enrollments_count || 1,
+                completed_lessons_count: cached.completed_lessons_count || 0,
+                quizzes_taken_count: cached.quizzes_taken_count || 0,
+                average_quiz_score: cached.average_quiz_score || null,
+                courses: cached.courses || [{ id: 1, title: 'Introducción a la Programación', progress_percent: 0 }],
+              });
             }
           }
         }

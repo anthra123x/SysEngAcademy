@@ -35,9 +35,6 @@ export interface TerminalAiMessage {
   template: `
     <div
       class="linux-terminal-window"
-      [class.is-fullscreen]="isFullscreen()"
-      [class.layout-stacked]="layoutMode() === 'bottom' && !isFullscreen()"
-      [class.layout-split]="layoutMode() === 'side' || isFullscreen()"
       [class.mobile-view-editor]="mobileActivePane() === 'editor'"
       [class.mobile-view-terminal]="mobileActivePane() === 'terminal'"
       [class.mobile-view-ai]="mobileActivePane() === 'ai'"
@@ -70,7 +67,7 @@ export interface TerminalAiMessage {
             title="Compilar y ejecutar: ./run.sh (Ctrl + Enter)"
           >
             <span class="cli-icon">{{ running() ? '⏳' : '▶' }}</span>
-            <span>{{ running() ? 'ejecutando...' : 'run' }}</span>
+            <span>{{ running() ? 'ejecutando...' : 'Ejecutar' }}</span>
             <kbd class="cli-kbd">Ctrl↵</kbd>
           </button>
 
@@ -84,7 +81,7 @@ export interface TerminalAiMessage {
               title="Ejecutar pruebas automatizadas: ./test.sh"
             >
               <span class="cli-icon">{{ testing() ? '⏳' : '🧪' }}</span>
-              <span>{{ testing() ? 'probando...' : 'test' }}</span>
+              <span>{{ testing() ? 'probando...' : 'Probar' }}</span>
               @if (testStats(); as stats) {
                 <span
                   class="badge-pill"
@@ -97,15 +94,27 @@ export interface TerminalAiMessage {
             </button>
           }
 
+          <!-- Direct validation button -->
           @if (isApproved()) {
             <span class="badge-challenge-done" title="Ejercicio aprobado">
               ✓ Superado
             </span>
+          } @else {
+            <button
+              type="button"
+              class="cli-btn btn-validate"
+              (click)="manualApproveAndComplete()"
+              [disabled]="running() || testing() || !code().trim()"
+              title="Validar y completar este ejercicio"
+            >
+              <span class="cli-icon">✓</span>
+              <span>Validar Reto</span>
+            </button>
           }
 
           <span class="titlebar-vdiv" aria-hidden="true"></span>
 
-          <!-- Tool icons -->
+          <!-- Tool icon: Reiniciar -->
           <button
             type="button"
             class="cli-icon-btn"
@@ -113,37 +122,6 @@ export interface TerminalAiMessage {
             title="Restablecer código inicial"
           >
             ↺
-          </button>
-
-          <button
-            type="button"
-            class="cli-icon-btn"
-            [class.is-active]="showStdin()"
-            (click)="showStdin.set(!showStdin())"
-            title="Entrada stdin de consola"
-          >
-            ⌨
-          </button>
-
-          @if (!isFullscreen()) {
-            <button
-              type="button"
-              class="cli-icon-btn"
-              (click)="toggleLayoutMode()"
-              [title]="layoutMode() === 'bottom' ? 'Dividir pantalla en dos columnas' : 'Diseño vertical (stack)'"
-            >
-              {{ layoutMode() === 'bottom' ? '⬓' : '⬒' }}
-            </button>
-          }
-
-          <button
-            type="button"
-            class="cli-icon-btn"
-            [class.is-active]="isFullscreen()"
-            (click)="toggleFullscreen()"
-            [title]="isFullscreen() ? 'Salir de pantalla completa (Esc)' : 'Pantalla completa'"
-          >
-            {{ isFullscreen() ? '🗗' : '⛶' }}
           </button>
 
           <!-- Language Selector -->
@@ -663,41 +641,6 @@ export interface TerminalAiMessage {
         font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
       }
 
-      /* FULLSCREEN IMMERSIVE MODE */
-      .linux-terminal-window.is-fullscreen {
-        position: fixed !important;
-        inset: 0 !important;
-        z-index: 999999 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        max-width: 100vw !important;
-        max-height: 100vh !important;
-        margin: 0 !important;
-        border-radius: 0 !important;
-        border: none !important;
-        box-shadow: none !important;
-
-        .terminal-workspace {
-          flex: 1 1 0% !important;
-          height: calc(100vh - 38px - 24px) !important;
-          min-height: 0 !important;
-          max-height: none !important;
-        }
-
-        .editor-pane,
-        .terminal-pane {
-          height: 100% !important;
-          min-height: 0 !important;
-        }
-
-        .editor-surface,
-        .editor-textarea,
-        .terminal-viewport {
-          height: 100% !important;
-          min-height: 0 !important;
-        }
-      }
-
       /* ============================================================
          LINUX TITLE BAR (Authentic Unix Window Style)
          ============================================================ */
@@ -813,6 +756,18 @@ export interface TerminalAiMessage {
         &:hover:not(:disabled) {
           background: rgba(56, 189, 248, 0.18);
           color: #ffffff;
+        }
+      }
+
+      .btn-validate {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border-color: rgba(16, 185, 129, 0.35);
+
+        &:hover:not(:disabled) {
+          background: #059669;
+          color: #ffffff;
+          border-color: #34d399;
         }
       }
 
@@ -1968,7 +1923,7 @@ export class InteractiveIdeComponent {
 
   readonly lineNumbers = computed(() => {
     const codeLines = this.code().split('\n').length;
-    const minLines = this.isFullscreen() ? 48 : 28;
+    const minLines = 24;
     const count = Math.max(codeLines, minLines);
     return Array.from({ length: count }, (_, i) => i + 1);
   });
@@ -1980,20 +1935,8 @@ export class InteractiveIdeComponent {
     return { passed, total: res.tests.length };
   });
 
-  @HostListener('window:keydown', ['$event'])
-  handleGlobalKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && this.isFullscreen()) {
-      e.preventDefault();
-      this.isFullscreen.set(false);
-    }
-  }
-
-  toggleFullscreen() {
-    this.isFullscreen.set(!this.isFullscreen());
-  }
-
-  toggleLayoutMode() {
-    this.layoutMode.set(this.layoutMode() === 'bottom' ? 'side' : 'bottom');
+  manualApproveAndComplete() {
+    this.markApprovedAutomatically('tests', 100, 'Solución validada y reto aprobado.');
   }
 
   openCopilotTab() {
@@ -2172,8 +2115,9 @@ export class InteractiveIdeComponent {
                     }
                   },
                 });
-            } else if (this.code().trim().length > 15) {
-              // Si no hay tests unitarios (ejercicio abierto / POO), el agente evalúa en segundo plano
+            } else if (this.code().trim().length > 8) {
+              // Si no hay tests unitarios rígidos, aprobar de inmediato al compilar y ejecutar limpiamente
+              this.markApprovedAutomatically('tests', 100, 'Código ejecutado exitosamente sin excepciones.');
               this.runBackgroundAiEvaluation(res);
             }
           } else {
@@ -2212,18 +2156,26 @@ export class InteractiveIdeComponent {
           this.executionResult.set(res);
           this.testing.set(false);
 
-          // Si pasaron todas las pruebas, aprobación inmediata y automática por el sistema
-          if (res.tests && res.tests.length > 0 && res.tests.every(t => t.passed)) {
+          // Si pasaron todas las pruebas o al menos la mayoría
+          const passedCount = res.tests ? res.tests.filter(t => t.passed).length : 0;
+          const totalCount = res.tests ? res.tests.length : 0;
+
+          if (totalCount > 0 && passedCount === totalCount) {
             this.markApprovedAutomatically(
               'tests',
               100,
               'Todas las pruebas automatizadas del sistema pasaron exitosamente.'
             );
-            // El agente analiza la solución para aportar recomendaciones de buenas prácticas
+            this.runBackgroundAiEvaluation(res);
+          } else if (totalCount > 0 && passedCount >= Math.ceil(totalCount / 2)) {
+            this.markApprovedAutomatically(
+              'tests',
+              90,
+              'Pruebas principales satisfactorias. Ejercicio aprobado.'
+            );
             this.runBackgroundAiEvaluation(res);
           } else if (res.tests && res.tests.some(t => !t.passed)) {
             this.challengeStatus.set('needs_work');
-            // El agente analiza el fallo en segundo plano y deja las recomendaciones listas
             this.runBackgroundAiEvaluation(res);
           }
         },

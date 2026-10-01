@@ -5845,11 +5845,11 @@ for (let paso = 1; paso <= 3; paso++) {
 
   readonly leaderboard = computed<LeaderboardEntry[]>(() => {
     const remote = this.remoteLeaderboard();
-    const myEmail = this.currentStudentEmail().toLowerCase();
+    const myEmail = this.currentStudentEmail().toLowerCase().trim();
 
     if (remote && remote.length > 0) {
       return remote.map((entry, idx) => {
-        const isMe = entry.email?.toLowerCase() === myEmail || entry.isCurrentUser;
+        const isMe = entry.email?.toLowerCase().trim() === myEmail || entry.isCurrentUser;
         const rank = idx + 1;
         let badge = '⚡ ACTIVO';
         if (rank === 1) badge = '🥇 ORO';
@@ -5866,23 +5866,146 @@ for (let paso = 1; paso <= 3; paso++) {
       });
     }
 
-    // Fallback inicial mientras responde la base de datos
+    // Generar ranking en tiempo real con TODOS los estudiantes registrados en el sistema
+    const studentsMap = new Map<string, { name: string; email: string; xp: number; completedCount: number; avgQuiz: number }>();
+
+    // 1. Estudiante activo en sesión
     const currentUser = this.auth.user();
-    const myName = currentUser?.name || 'Estudiante';
-    return [{
-      rank: 1,
-      name: myName,
-      email: myEmail,
-      avatarText: myName.slice(0, 2).toUpperCase(),
-      level: this.userLevel(),
-      rankTitle: this.rankTitle(),
-      specialization: this.specialization().title,
-      completedLessons: this.completedCount(),
-      avgQuizScore: 100,
-      xp: this.totalXp(),
-      isCurrentUser: true,
-      badgePill: '🥇 ORO',
-    }];
+    if (currentUser && currentUser.email) {
+      const email = currentUser.email.toLowerCase().trim();
+      studentsMap.set(email, {
+        name: currentUser.name || 'Estudiante',
+        email,
+        xp: this.totalXp() || 50,
+        completedCount: this.completedCount() || 0,
+        avgQuiz: 100,
+      });
+    }
+
+    // 2. Alumnos registrados en el sistema
+    if (typeof window !== 'undefined') {
+      try {
+        const rawReg = localStorage.getItem('syseng_registered_users');
+        if (rawReg) {
+          const list = JSON.parse(rawReg);
+          if (Array.isArray(list)) {
+            for (const item of list) {
+              const u = item.user;
+              if (!u || !u.email) continue;
+              const email = u.email.toLowerCase().trim();
+              if (email === 'andrescamilomartinez330@gmail.com') continue; // Docente
+              if (email === 'estudiante@sysengacademy.dev') continue; // Mock
+
+              if (!studentsMap.has(email)) {
+                let completed = 0;
+                const compRaw = localStorage.getItem(`syseng_${email}_completed_lessons`);
+                if (compRaw) {
+                  try { completed = JSON.parse(compRaw).length; } catch {}
+                }
+
+                let score = 85;
+                const diagRaw = localStorage.getItem(`syseng_${email}_diagnostic_result`);
+                if (diagRaw) {
+                  try {
+                    const diag = JSON.parse(diagRaw);
+                    if (diag && typeof diag.score === 'number') {
+                      score = Math.round((diag.score / 3) * 100);
+                    }
+                  } catch {}
+                }
+
+                const studentXp = 50 + (completed * 80) + Math.round((score / 100) * 40);
+                studentsMap.set(email, {
+                  name: u.name || 'Estudiante',
+                  email,
+                  xp: studentXp,
+                  completedCount: completed,
+                  avgQuiz: score,
+                });
+              }
+            }
+          }
+        }
+
+        // 3. Alumnos en cache docente
+        const rawCache = localStorage.getItem('syseng_teacher_students_cache');
+        if (rawCache) {
+          const cacheList = JSON.parse(rawCache);
+          if (Array.isArray(cacheList)) {
+            for (const st of cacheList) {
+              if (!st.email) continue;
+              const email = st.email.toLowerCase().trim();
+              if (email === 'andrescamilomartinez330@gmail.com' || email === 'estudiante@sysengacademy.dev') continue;
+
+              const existing = studentsMap.get(email);
+              const doneCount = st.completed_lessons_count || 0;
+              const avg = st.average_quiz_score || 80;
+              const calculatedXp = 50 + (doneCount * 80) + Math.round((avg / 100) * 40);
+
+              if (existing) {
+                existing.completedCount = Math.max(existing.completedCount, doneCount);
+                existing.xp = Math.max(existing.xp, calculatedXp);
+              } else {
+                studentsMap.set(email, {
+                  name: st.name || 'Estudiante',
+                  email,
+                  xp: calculatedXp,
+                  completedCount: doneCount,
+                  avgQuiz: avg,
+                });
+              }
+            }
+          }
+        }
+      } catch {}
+    }
+
+    const sortedList = Array.from(studentsMap.values()).sort((a, b) => b.xp - a.xp);
+    if (sortedList.length === 0) {
+      const myName = currentUser?.name || 'Estudiante';
+      return [{
+        rank: 1,
+        name: myName,
+        email: myEmail,
+        avatarText: myName.slice(0, 2).toUpperCase(),
+        level: this.userLevel(),
+        rankTitle: this.rankTitle(),
+        specialization: this.specialization().title,
+        completedLessons: this.completedCount(),
+        avgQuizScore: 100,
+        xp: this.totalXp() || 50,
+        isCurrentUser: true,
+        badgePill: '🥇 ORO',
+      }];
+    }
+
+    return sortedList.map((st, idx) => {
+      const rank = idx + 1;
+      const isMe = st.email === myEmail;
+      let badge = '⚡ ACTIVO';
+      if (rank === 1) badge = '🥇 ORO';
+      else if (rank === 2) badge = '🥈 PLATA';
+      else if (rank === 3) badge = '🥉 BRONCE';
+
+      const level = Math.max(1, Math.min(5, Math.floor(st.xp / 150) + 1));
+      const rankTitles = ['Junior Dev', 'Algorithmic Solver', 'Systems Builder', 'Junior Engineer', 'Master Architect'];
+      const rankTitle = rankTitles[level - 1] || 'Junior Dev';
+
+      return {
+        rank,
+        name: st.name,
+        email: st.email,
+        avatarText: st.name.slice(0, 2).toUpperCase(),
+        level: isMe ? this.userLevel() : level,
+        rankTitle: isMe ? this.rankTitle() : rankTitle,
+        specialization: isMe ? this.specialization().title : 'Ingeniería de Software',
+        completedLessons: st.completedCount,
+        avgQuizScore: st.avgQuiz,
+        xp: st.xp,
+        isCurrentUser: isMe,
+        badgePill: badge,
+      };
+    });
   });
 
   emoji(enr: Enrollment): string {

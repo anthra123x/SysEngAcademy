@@ -335,22 +335,13 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
 
               <div class="player-actions__right">
                 @if (!completed()) {
-                  @if (hasPractice()) {
-                    <div class="exercise-live-agent-badge" aria-label="Validación automática del agente">
-                      <span class="pulse-agent-dot" aria-hidden="true"></span>
-                      <span class="agent-badge-text">
-                        <strong>Agente activo</strong> · Validación automática al compilar tu código en la terminal
-                      </span>
-                    </div>
-                  } @else {
-                    <button
-                      class="btn btn-primary"
-                      (click)="markComplete()"
-                      [disabled]="completing() || !canComplete()"
-                    >
-                      {{ completing() ? 'Guardando…' : '✓ Marcar como completada' }}
-                    </button>
-                  }
+                  <button
+                    class="btn btn-primary"
+                    (click)="markComplete()"
+                    [disabled]="completing() || !canComplete()"
+                  >
+                    {{ completing() ? 'Guardando…' : (hasPractice() ? '✓ Validar y Marcar Completada' : '✓ Marcar como completada') }}
+                  </button>
                 } @else {
                   <span class="done-chip">
                     @if (hasPractice()) {
@@ -2250,6 +2241,9 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   readonly isNextLessonAccessible = computed<boolean>(() => {
     const next = this.nextLesson();
     if (!next) return false;
+    // Si la lección actual ya fue completada, siempre habilitar el avance a la siguiente lección
+    if (this.completed()) return true;
+
     const modules = this.course()?.modules ?? [];
     if (modules.length === 0) return true;
     const isPrivileged = this.isTeacher() || this.auth.isInstructor() || this.auth.isAdmin();

@@ -254,13 +254,79 @@ export class AuthService {
     if (typeof window === 'undefined') return;
     try {
       const list = JSON.parse(localStorage.getItem('syseng_registered_users') || '[]');
-      const existing = list.findIndex((item: any) => item.user?.email?.toLowerCase() === user.email.toLowerCase());
+      const normEmail = (user.email || '').toLowerCase().trim();
+      const existing = list.findIndex((item: any) => item.user?.email?.toLowerCase().trim() === normEmail);
       if (existing >= 0) {
         list[existing] = { user, pass, verifyCode: verifyCode || list[existing].verifyCode };
       } else {
         list.push({ user, pass, verifyCode });
       }
       localStorage.setItem('syseng_registered_users', JSON.stringify(list));
+
+      // Quitar de lista de eliminados si se vuelve a registrar
+      const delRaw = localStorage.getItem('syseng_deleted_students');
+      if (delRaw) {
+        try {
+          const dels = JSON.parse(delRaw);
+          if (Array.isArray(dels)) {
+            const newDels = dels.filter((x: any) => String(x).toLowerCase().trim() !== normEmail && String(x) !== String(user.id));
+            localStorage.setItem('syseng_deleted_students', JSON.stringify(newDels));
+          }
+        } catch {}
+      }
+
+      // Sincronizar de inmediato con la caché del panel docente
+      const rawCache = localStorage.getItem('syseng_teacher_students_cache');
+      let teacherCache: any[] = rawCache ? JSON.parse(rawCache) : [];
+      if (!Array.isArray(teacherCache)) teacherCache = [];
+      const cacheIdx = teacherCache.findIndex((s: any) => s.email?.toLowerCase().trim() === normEmail);
+      const studentEntry = {
+        id: user.id || Date.now(),
+        name: user.name,
+        email: user.email,
+        role: 'student',
+        email_verified: !!user.email_verified_at,
+        email_verified_at: user.email_verified_at || new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        enrollments_count: 1,
+        completed_lessons_count: 0,
+        quizzes_taken_count: 0,
+        average_quiz_score: null,
+        courses: [{ id: 1, title: 'Introducción a la Programación', progress_percent: 0 }],
+      };
+
+      if (cacheIdx >= 0) {
+        teacherCache[cacheIdx] = { ...teacherCache[cacheIdx], ...studentEntry };
+      } else {
+        teacherCache.push(studentEntry);
+      }
+      localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(teacherCache));
+
+      // Inicializar inscripción por defecto para este estudiante
+      const enrKey = `syseng_user_enrollments_${normEmail}`;
+      if (!localStorage.getItem(enrKey)) {
+        localStorage.setItem(
+          enrKey,
+          JSON.stringify([
+            {
+              id: Date.now(),
+              user_id: user.id || 1,
+              course_id: 1,
+              enrolled_at: new Date().toISOString(),
+              progress_percent: 0,
+              course: {
+                id: 1,
+                title: 'Introducción a la Programación',
+                slug: 'introduccion-programacion',
+                difficulty: 'beginner',
+              },
+            },
+          ])
+        );
+      }
+
+      window.dispatchEvent(new CustomEvent('teacher:students-updated', { detail: { email: user.email } }));
+      window.dispatchEvent(new Event('storage'));
     } catch {}
   }
 
