@@ -311,6 +311,10 @@ interface SnakeSeg {
       overflow: hidden;
       background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(10,233,138,0.06) 0%, transparent 70%);
 
+      @media (max-width: 768px) {
+        padding: var(--sp-10) 0 var(--sp-8);
+      }
+
       &__bg-grid {
         position: absolute;
         inset: 0;
@@ -332,34 +336,43 @@ interface SnakeSeg {
 
         @media (max-width: 900px) {
           grid-template-columns: 1fr;
+          gap: var(--sp-8);
           .hero__code { display: none; }
         }
       }
 
       &__title {
-        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-size: clamp(2rem, 6.5vw, 3.5rem);
         font-weight: var(--font-bold);
-        line-height: 1.1;
+        line-height: 1.15;
         color: var(--text-primary);
-        margin-bottom: var(--sp-5);
+        margin-bottom: var(--sp-4);
 
         span { color: var(--primary); }
       }
 
       &__subtitle {
-        font-size: var(--text-lg);
+        font-size: var(--text-base);
         color: var(--text-secondary);
-        line-height: 1.7;
-        margin-bottom: var(--sp-8);
+        line-height: 1.65;
+        margin-bottom: var(--sp-6);
         max-width: 520px;
       }
 
       &__actions {
         display: flex;
         gap: var(--sp-4);
-        margin-bottom: var(--sp-10);
+        margin-bottom: var(--sp-8);
 
-        @media (max-width: 480px) { flex-direction: column; }
+        @media (max-width: 540px) {
+          flex-direction: column;
+          width: 100%;
+
+          .btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
       }
 
       &__stats {
@@ -368,6 +381,17 @@ interface SnakeSeg {
         gap: var(--sp-6);
         padding-top: var(--sp-8);
         border-top: 1px solid var(--border);
+
+        @media (max-width: 640px) {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+          padding-top: var(--sp-5);
+
+          .stat__divider {
+            display: none;
+          }
+        }
       }
     }
 
@@ -847,11 +871,73 @@ interface SnakeSeg {
     }
 
     @media (max-width: 920px) {
+      .snake {
+        padding: var(--sp-4) 0;
+      }
+
+      .snake__svg {
+        display: none !important;
+      }
+
+      .snake__track {
+        gap: var(--sp-6);
+      }
+
+      .snake__station {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--sp-3) !important;
+        width: 100% !important;
+        opacity: 1 !important;
+      }
+
+      .station-center {
+        justify-content: flex-start !important;
+        align-items: center;
+        order: 1;
+      }
+
+      .snake__node {
+        width: 44px;
+        height: 44px;
+
+        .snake__emoji {
+          font-size: 1.15rem;
+        }
+
+        .snake__num {
+          position: static;
+          margin-left: 8px;
+          font-size: 11px;
+          background: var(--bg-surface-2);
+          border: 1px solid var(--border);
+          padding: 2px 7px;
+          border-radius: var(--radius-sm);
+        }
+      }
+
+      .station-side,
+      .station-side--left,
+      .station-side--right {
+        order: 2;
+        width: 100% !important;
+        display: block !important;
+      }
+
+      .snake__card {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      .snake__milestone-badge {
+        display: none !important;
+      }
+
       .snake__row {
         display: flex;
         flex-direction: column;
-        gap: 28px;
-        padding: 20px 0;
+        gap: 20px;
+        padding: 10px 0;
       }
 
       .snake__stop,
@@ -860,14 +946,9 @@ interface SnakeSeg {
         width: 100%;
         grid-column: auto;
         justify-self: auto;
-        flex-direction: row;
-        gap: var(--sp-4);
+        flex-direction: column;
+        gap: var(--sp-3);
       }
-
-      .snake__node { width: 42px; height: 42px; }
-      .snake__emoji { font-size: 1.05rem; }
-      .snake__card { width: 100%; }
-      .snake__num { top: calc(100% + 8px); font-size: 9px; }
     }
 
     /* FEATURED CATALOG CTA BANNER */
@@ -936,8 +1017,13 @@ interface SnakeSeg {
     /* UDEMY / PLATZI COURSE CARDS GRID */
     .courses-grid-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: var(--sp-6);
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: var(--sp-5);
+
+      @media (max-width: 540px) {
+        grid-template-columns: 1fr;
+        gap: var(--sp-4);
+      }
     }
 
     .udemy-course-card {

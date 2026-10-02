@@ -218,6 +218,16 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
       gap: var(--sp-4);
       margin-top: var(--sp-6);
       flex-wrap: wrap;
+
+      @media (max-width: 540px) {
+        flex-direction: column;
+        width: 100%;
+
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
+      }
     }
 
     .path-title {
@@ -261,6 +271,17 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
       border-radius: var(--radius-lg);
       padding: var(--sp-3) var(--sp-5);
       flex-wrap: wrap;
+
+      @media (max-width: 640px) {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 12px 14px;
+
+        .stat-divider {
+          display: none;
+        }
+      }
     }
 
     .stat-box {
@@ -344,6 +365,10 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
       align-items: center;
       flex-shrink: 0;
       width: 48px;
+
+      @media (max-width: 640px) {
+        width: 36px;
+      }
     }
 
     .station-node {
@@ -363,6 +388,14 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
         font-weight: var(--font-bold);
         font-family: var(--font-mono);
         color: var(--primary);
+      }
+
+      @media (max-width: 640px) {
+        width: 36px;
+        height: 36px;
+        .station-num {
+          font-size: 0.72rem;
+        }
       }
     }
 
@@ -390,6 +423,10 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
       &__header {
         padding: var(--sp-6);
         border-bottom: 1px solid var(--border);
+
+        @media (max-width: 640px) {
+          padding: var(--sp-4);
+        }
       }
     }
 
@@ -437,6 +474,11 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: var(--sp-4);
       padding: var(--sp-6);
+
+      @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+        padding: var(--sp-4);
+      }
     }
 
     .path-course-card {

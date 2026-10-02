@@ -484,6 +484,12 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       gap: var(--sp-4);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
 
+      @media (max-width: 640px) {
+        height: 54px;
+        padding: 0 12px;
+        gap: 8px;
+      }
+
       @media (min-width: 1400px) {
         padding: 0 var(--sp-8);
       }
@@ -502,6 +508,10 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       align-items: center;
       gap: var(--sp-3);
       flex-shrink: 0;
+
+      @media (max-width: 640px) {
+        gap: 6px;
+      }
     }
 
     /* Curriculum Drawer (Mobile & Tablet off-canvas) */
@@ -1370,6 +1380,34 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       border-top: 1px solid var(--border);
 
       &__right { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+
+      @media (max-width: 640px) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--sp-3);
+
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
+
+        &__right {
+          flex-direction: column;
+          align-items: stretch;
+          width: 100%;
+          gap: var(--sp-3);
+
+          .btn {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .done-chip {
+            justify-content: center;
+            text-align: center;
+          }
+        }
+      }
     }
 
     .exercise-live-agent-badge {

@@ -1816,6 +1816,18 @@ export interface TerminalAiMessage {
           height: 460px;
           min-height: 380px;
         }
+
+        .session-host {
+          display: none !important;
+        }
+
+        .titlebar-vdiv {
+          display: none !important;
+        }
+
+        .editor-textarea {
+          font-size: 14px;
+        }
       }
     `,
   ],

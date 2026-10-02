@@ -506,6 +506,23 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
       border-radius: var(--radius-lg);
       margin-bottom: var(--sp-5);
 
+      @media (max-width: 640px) {
+        gap: 8px;
+        padding: 10px 12px;
+        font-size: var(--text-xs);
+
+        .metric-divider {
+          display: none;
+        }
+
+        .metric-item {
+          background: var(--bg-surface-2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          padding: 4px 8px;
+        }
+      }
+
       .metric-item {
         display: inline-flex;
         align-items: center;
@@ -930,6 +947,10 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
         color: var(--accent);
         border: 1px solid rgba(0, 217, 255, 0.28);
         border-radius: var(--radius-full);
+
+        @media (max-width: 500px) {
+          display: none;
+        }
       }
     }
 
@@ -1160,6 +1181,24 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
           background: var(--primary-dim);
           color: var(--primary);
           border-color: var(--primary);
+        }
+      }
+
+      @media (max-width: 540px) {
+        padding: 10px 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+
+        .sl-left {
+          width: 100%;
+        }
+
+        .sl-right {
+          margin-left: 36px;
+          gap: var(--sp-2);
+          width: calc(100% - 36px);
+          justify-content: space-between;
         }
       }
     }

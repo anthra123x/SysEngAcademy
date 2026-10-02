@@ -163,22 +163,22 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
           <nav class="mobile-nav-links">
             @if (isTeacherDocenteZone()) {
               @if (isDocenteRoute()) {
-                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" (click)="mobileOpen.set(false)">Alumnos</a>
-                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" (click)="mobileOpen.set(false)">Actividades &amp; Quizzes</a>
-                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" (click)="mobileOpen.set(false)">Rendimiento</a>
-                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" (click)="mobileOpen.set(false)">Byte Asistente IA</a>
+                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" [class.active]="currentTeacherTab() === 'students'" (click)="mobileOpen.set(false)">Alumnos</a>
+                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" [class.active]="currentTeacherTab() === 'activities'" (click)="mobileOpen.set(false)">Actividades &amp; Quizzes</a>
+                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" [class.active]="currentTeacherTab() === 'activity'" (click)="mobileOpen.set(false)">Rendimiento</a>
+                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" [class.active]="currentTeacherTab() === 'ai'" (click)="mobileOpen.set(false)">Byte Asistente IA</a>
               } @else {
-                <a routerLink="/docente" (click)="mobileOpen.set(false)">Panel Docente</a>
+                <a routerLink="/docente" routerLinkActive="active" (click)="mobileOpen.set(false)">Panel Docente</a>
               }
-              <a routerLink="/perfil" (click)="mobileOpen.set(false)">Mi Perfil</a>
+              <a routerLink="/perfil" routerLinkActive="active" (click)="mobileOpen.set(false)">Mi Perfil</a>
               <a routerLink="/" (click)="mobileOpen.set(false)" class="mobile-switch-link">Vista Estudiante</a>
             } @else {
               @if (isTeacher()) {
-                <a routerLink="/docente" (click)="mobileOpen.set(false)">Panel Docente</a>
+                <a routerLink="/docente" routerLinkActive="active" (click)="mobileOpen.set(false)">Panel Docente</a>
               }
-              <a routerLink="/" (click)="mobileOpen.set(false)">Inicio</a>
-              <a routerLink="/rutas" (click)="mobileOpen.set(false)">Rutas de Aprendizaje</a>
-              <a routerLink="/cursos" (click)="mobileOpen.set(false)">Cursos</a>
+              <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="mobileOpen.set(false)">Inicio</a>
+              <a routerLink="/rutas" routerLinkActive="active" (click)="mobileOpen.set(false)">Rutas de Aprendizaje</a>
+              <a routerLink="/cursos" routerLinkActive="active" (click)="mobileOpen.set(false)">Cursos</a>
             }
           </nav>
 
@@ -330,6 +330,20 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       @media (max-width: 768px) {
         display: flex;
         justify-content: space-between;
+        padding: 0 16px;
+      }
+
+      @media (max-width: 480px) {
+        padding: 0 12px;
+
+        .logo-title {
+          font-size: 0.88rem;
+        }
+
+        .portal-badge--teacher {
+          padding: 1px 5px;
+          font-size: 8.5px;
+        }
       }
     }
 
@@ -488,7 +502,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
         transition: transform 0.15s ease, color 0.15s ease;
       }
 
-      @media (max-width: 500px) {
+      @media (max-width: 768px) {
         padding: 3px;
         gap: 0;
 
@@ -626,26 +640,40 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes drawer-slide {
+      from { transform: translateX(100%); }
+      to   { transform: translateX(0); }
+    }
+
     /* Mobile Hamburger */
     .hamburger-btn {
       display: none;
       flex-direction: column;
       justify-content: center;
-      gap: 4px;
-      width: 32px;
-      height: 32px;
-      padding: 6px;
-      background: transparent;
-      border: none;
+      align-items: center;
+      gap: 5px;
+      width: 40px;
+      height: 40px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
       cursor: pointer;
+      flex-shrink: 0;
+      transition: all var(--transition-fast);
 
       .ham-line {
         display: block;
-        width: 18px;
+        width: 20px;
         height: 2px;
         background: var(--text-primary);
         border-radius: 2px;
         transition: all 0.2s ease;
+      }
+
+      &:hover {
+        background: var(--bg-surface-2);
+        border-color: var(--border-hover);
       }
 
       @media (max-width: 768px) {
@@ -672,6 +700,8 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
         display: flex;
         flex-direction: column;
         gap: var(--sp-4);
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+        animation: drawer-slide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       &__head {
@@ -682,11 +712,22 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
         border-bottom: 1px solid var(--border);
 
         .close-btn {
-          background: none;
-          border: none;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
           color: var(--text-muted);
-          font-size: 1.2rem;
+          width: 36px;
+          height: 36px;
+          display: grid;
+          place-items: center;
+          font-size: 1.1rem;
           cursor: pointer;
+          transition: all var(--transition-fast);
+
+          &:hover {
+            color: var(--text-primary);
+            background: var(--bg-surface-2);
+          }
         }
       }
 
@@ -717,10 +758,19 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
           font-weight: var(--font-medium);
           border-radius: var(--radius-md);
           transition: all var(--transition-fast);
+          display: flex;
+          align-items: center;
 
           &:hover {
             background: var(--bg-surface-2);
             color: var(--text-primary);
+          }
+
+          &.active {
+            background: rgba(10, 233, 138, 0.12);
+            color: var(--primary);
+            font-weight: 600;
+            border-left: 3px solid var(--primary);
           }
         }
       }
@@ -799,6 +849,10 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
         color: var(--text-primary, #F8FAFC);
         background: var(--bg-surface-2, #161926);
         border-color: var(--border-hover, #2E344E);
+      }
+
+      @media (max-width: 768px) {
+        display: none;
       }
     }
 

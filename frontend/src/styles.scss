@@ -359,15 +359,30 @@ pre, code {
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-6); }
 
 @media (max-width: 1024px) {
-  .grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); gap: var(--sp-5); }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); gap: var(--sp-5); }
 }
 @media (max-width: 640px) {
-  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
-  .container { padding: 0 14px; }
-  .section { padding: var(--sp-8) 0; }
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; gap: var(--sp-4); }
+  .container { padding: 0 16px; }
+  .section { padding: var(--sp-10) 0; }
   .section-header { margin-bottom: var(--sp-6); }
   .section-title { font-size: var(--text-2xl); }
+  .input { font-size: 16px; } // Prevents iOS Safari auto-zoom on focus
+}
+
+.btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile { display: none !important; }
+  .show-on-mobile { display: block !important; }
+}
+
+@media (min-width: 769px) {
+  .show-on-mobile { display: none !important; }
 }
 
 // === SKELETON LOADING ===

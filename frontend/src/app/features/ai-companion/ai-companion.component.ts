@@ -1205,14 +1205,44 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
     }
 
     /* Mobile */
-    @media (max-width: 560px) {
-      .byte-freewalk-zone { right: 12px; bottom: 8px; }
-      .byte-panel {
+    @media (max-width: 768px) {
+      .byte-freewalk-zone {
         right: 8px;
-        left: 8px;
-        bottom: 130px;
-        width: auto;
-        max-width: none;
+        bottom: 8px;
+        transform: scale(0.78);
+        transform-origin: bottom right;
+      }
+
+      .byte-speech-bubble {
+        max-width: 210px;
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        margin-right: 6px;
+        margin-bottom: 4px;
+
+        .bubble-icon {
+          font-size: 0.95rem;
+        }
+
+        .bubble-tag {
+          font-size: 0.6rem;
+        }
+      }
+
+      .byte-panel {
+        position: fixed;
+        inset: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        border: none !important;
+        z-index: 3000 !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        left: 0 !important;
+        top: 0 !important;
       }
     }
   `],
@@ -1294,6 +1324,7 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   quizScore      = signal<{ correct: number; total: number } | null>(null);
 
   private routerSub?: Subscription;
+  private resizeHandler = () => this.syncRoute();
   private companionHandler: EventListener = (event: Event) => {
     const detail = (event as CustomEvent<{ lesson_id?: number; lesson_title?: string }>).detail ?? {};
     this.onCompanionOpen(detail);
@@ -1304,6 +1335,7 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(() => this.syncRoute());
     window.addEventListener('ai-companion:open', this.companionHandler);
+    window.addEventListener('resize', this.resizeHandler);
     this.syncRoute();
 
     this.bubbleTimer = setInterval(() => {
@@ -1314,6 +1346,7 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   ngOnDestroy() {
     this.routerSub?.unsubscribe();
     window.removeEventListener('ai-companion:open', this.companionHandler);
+    window.removeEventListener('resize', this.resizeHandler);
     if (this.bubbleTimer) clearInterval(this.bubbleTimer);
   }
 
@@ -1328,7 +1361,9 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   private syncRoute() {
     const url = this.router.url;
     const isTeacherRoute = url.startsWith('/docente') || (url.startsWith('/perfil') && this.isTeacherMode());
-    const shouldHide = url.startsWith('/asistente') || url.startsWith('/auth') || isTeacherRoute;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const isLessonMobile = url.includes('/leccion/') && isMobile;
+    const shouldHide = url.startsWith('/asistente') || url.startsWith('/auth') || isTeacherRoute || isLessonMobile;
     this.hidden.set(shouldHide);
     if (shouldHide) this.closePanel();
     this.lessonContext.set(null);

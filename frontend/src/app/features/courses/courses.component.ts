@@ -135,11 +135,27 @@ import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/m
   styles: [`
     .page-header {
       padding: var(--sp-8) 0 var(--sp-6);
-      h1 { font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--text-primary); letter-spacing: -0.02em; span { color: var(--primary); } }
+      h1 {
+        font-size: var(--text-3xl);
+        font-weight: var(--font-bold);
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+        span { color: var(--primary); }
+
+        @media (max-width: 640px) {
+          font-size: var(--text-2xl);
+        }
+      }
       p { color: var(--text-secondary); margin-top: var(--sp-2); max-width: 60ch; }
       &__row {
         display: flex; align-items: flex-end; justify-content: space-between;
         gap: var(--sp-4); flex-wrap: wrap;
+
+        @media (max-width: 640px) {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
       }
     }
     .breadcrumb {
@@ -238,7 +254,22 @@ import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/m
       }
       .meta { font-size: var(--text-xs); color: var(--text-muted); display: flex; gap: var(--sp-2); font-family: var(--font-mono); }
     }
-    .pagination { display: flex; align-items: center; justify-content: center; gap: var(--sp-4); margin-top: var(--sp-8); font-size: var(--text-sm); color: var(--text-secondary); }
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-4);
+      margin-top: var(--sp-8);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      flex-wrap: wrap;
+
+      @media (max-width: 480px) {
+        gap: var(--sp-2);
+        font-size: var(--text-xs);
+        .btn { padding: 6px 12px; }
+      }
+    }
   `]
 })
 export class CoursesComponent implements OnInit {
