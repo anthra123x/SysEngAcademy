@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import {
@@ -170,9 +170,12 @@ export class CoursesService {
     });
   }
 
-  enroll(courseId: number): Observable<Enrollment> {
-    return this.api.post<Enrollment>('/enrollments', { course_id: courseId }).pipe(
-      catchError(() => {
+  enroll(courseId: number, checkoutToken?: string): Observable<Enrollment> {
+    return this.api.post<Enrollment>('/enrollments', { course_id: courseId, checkout_token: checkoutToken }).pipe(
+      catchError((err) => {
+        if (err?.status === 401 || err?.status === 402 || err?.status === 403) {
+          return throwError(() => err);
+        }
         const fakeEnrollment: Enrollment = {
           id: Date.now(),
           user_id: 1,

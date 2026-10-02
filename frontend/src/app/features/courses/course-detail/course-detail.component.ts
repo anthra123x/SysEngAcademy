@@ -1602,7 +1602,10 @@ export class CourseDetailComponent implements OnInit {
   }
 
   enroll() {
-    if (!this.auth.isAuthenticated()) return;
+    if (!this.auth.isAuthenticated()) {
+      this.showAuthModal.set(true);
+      return;
+    }
     const id = this.course()?.id;
     if (!id) return;
     this.enrolling.set(true);
@@ -1611,7 +1614,15 @@ export class CourseDetailComponent implements OnInit {
         this.course.update(c => c ? { ...c, enrolled: true, progress_percent: 0 } : c);
         this.enrolling.set(false);
       },
-      error: () => this.enrolling.set(false),
+      error: (err) => {
+        this.enrolling.set(false);
+        if (err?.status === 402) {
+          this.lockedToast.set('Este curso es de nivel profesional y requiere suscripción activa o confirmación de matrícula.');
+          setTimeout(() => this.lockedToast.set(null), 5500);
+        } else if (err?.status === 401) {
+          this.showAuthModal.set(true);
+        }
+      },
     });
   }
 

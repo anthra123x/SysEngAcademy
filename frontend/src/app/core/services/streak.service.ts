@@ -42,6 +42,8 @@ export class StreakService implements OnDestroy {
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private readonly PING_INTERVAL_MS = 30000; // Cada 30 segundos de estudio activo
   private lastPingTimestamp = Date.now();
+  private lastPulseSentAt = 0;
+  private readonly MIN_PULSE_INTERVAL_MS = 25000; // Mínimo 25 segundos entre pulsos rutinarios
 
   constructor() {
     this.restoreLocalCache();
@@ -139,6 +141,11 @@ export class StreakService implements OnDestroy {
    */
   sendPulse(action: 'pulse' | 'lesson_complete' | 'quiz_pass' | 'challenge_solve' = 'pulse'): void {
     const now = Date.now();
+    // Throttling: evitar tormentas de peticiones por eventos continuos de tab/focus
+    if (action === 'pulse' && (now - this.lastPulseSentAt) < this.MIN_PULSE_INTERVAL_MS) {
+      return;
+    }
+    this.lastPulseSentAt = now;
     const elapsedSeconds = Math.min(120, Math.max(5, Math.round((now - this.lastPingTimestamp) / 1000)));
     this.lastPingTimestamp = now;
 
