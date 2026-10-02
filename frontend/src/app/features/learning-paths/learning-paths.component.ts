@@ -3,10 +3,11 @@ import { RouterLink } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 import { LearningPathsService } from '../../core/services/learning-paths.service';
 import { LearningPath } from '../../core/models';
+import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-learning-paths',
-  imports: [RouterLink, SlicePipe],
+  imports: [RouterLink, SlicePipe, AppIconComponent],
   template: `
     <div class="paths-page">
       <div class="page-header">
@@ -25,7 +26,9 @@ import { LearningPath } from '../../core/models';
           </div>
         } @else if (paths().length === 0) {
           <div class="empty-state">
-            <div class="empty-icon">🗺️</div>
+            <div class="empty-icon">
+              <app-icon name="map" [size]="48" color="var(--text-muted)" />
+            </div>
             <h3>Próximamente</h3>
             <p>Las rutas de aprendizaje están siendo preparadas. ¡Vuelve pronto!</p>
           </div>
@@ -35,7 +38,9 @@ import { LearningPath } from '../../core/models';
               <a [routerLink]="['/rutas', path.slug]" class="path-card">
                 <div class="path-card__header">
                   <div class="header-top">
-                    <span class="path-emoji">{{ getEmoji(path.category?.slug) }}</span>
+                    <span class="path-card__icon">
+                      <app-icon [category]="path.category?.slug" [size]="28" [color]="path.category?.color || '#0AE98A'" [strokeWidth]="2" />
+                    </span>
                     <div [class]="'badge badge-' + path.difficulty">{{ diffLabel(path.difficulty) }}</div>
                   </div>
                   @if (path.category) {
@@ -46,9 +51,9 @@ import { LearningPath } from '../../core/models';
                   <h3>{{ path.title }}</h3>
                   <p>{{ path.description | slice:0:110 }}{{ path.description.length > 110 ? '...' : '' }}</p>
                   <div class="path-meta">
-                    <span class="meta-item">📚 {{ path.courses_count ?? (path.levels ? countCourses(path) : 0) }} cursos</span>
-                    <span class="meta-item">⏱ {{ path.estimated_hours }}h</span>
-                    <span class="meta-item">🏆 {{ path.levels?.length ?? 0 }} niveles</span>
+                    <span class="meta-item"><app-icon name="book" [size]="13" /> {{ path.courses_count ?? (path.levels ? countCourses(path) : 0) }} cursos</span>
+                    <span class="meta-item"><app-icon name="clock" [size]="13" /> {{ path.estimated_hours }}h</span>
+                    <span class="meta-item"><app-icon name="trophy" [size]="13" /> {{ path.levels?.length ?? 0 }} niveles</span>
                   </div>
                 </div>
                 <div class="path-card__footer">
@@ -120,8 +125,15 @@ import { LearningPath } from '../../core/models';
         align-items: center;
       }
 
-      .path-emoji {
-        font-size: 1.6rem;
+      .path-card__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform var(--transition-fast);
+      }
+
+      &:hover .path-card__icon {
+        transform: scale(1.1);
       }
 
       &__body {
@@ -209,18 +221,6 @@ export class LearningPathsComponent implements OnInit {
 
   diffLabel(d: string): string {
     return { beginner: 'Principiante', intermediate: 'Intermedio', advanced: 'Avanzado', expert: 'Experto' }[d] ?? d;
-  }
-
-  getEmoji(slug?: string): string {
-    const map: Record<string, string> = {
-      'programacion-basica': '💡', 'algoritmos': '⚡', 'poo': '🧩',
-      'bases-de-datos': '🗄️', 'redes': '🌐', 'sistemas-operativos': '🖥️',
-      'estructuras-de-datos': '🌳', 'desarrollo-web': '🕸️',
-      'desarrollo-backend': '⚙️', 'desarrollo-frontend': '🎨',
-      'devops': '🚀', 'git': '🌿', 'ingenieria-software': '📐',
-      'ia-desarrollo': '🧠'
-    };
-    return map[slug ?? ''] ?? '🗺️';
   }
 
   countCourses(path: LearningPath): number {

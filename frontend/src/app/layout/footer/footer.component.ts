@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-footer',
-  imports: [RouterLink],
+  imports: [RouterLink, AppIconComponent],
   template: `
     <footer class="footer">
       <div class="container footer__container">
@@ -54,7 +55,7 @@ import { RouterLink } from '@angular/router';
               <li><a routerLink="/auth/login">Iniciar Sesión</a></li>
               <li><a routerLink="/auth/registro">Crear Cuenta</a></li>
               <li><a routerLink="/perfil">Mi Perfil &amp; Progreso</a></li>
-              <li><span class="copilot-hint">💡 Consulta a Byte en la terminal</span></li>
+              <li><span class="copilot-hint" style="display:inline-flex; align-items:center; gap:6px;"><app-icon name="sparkles" [size]="12" color="var(--primary)" /> Consulta a Byte en la terminal</span></li>
             </ul>
           </div>
         </div>

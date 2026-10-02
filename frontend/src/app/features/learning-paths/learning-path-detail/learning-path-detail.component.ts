@@ -2,10 +2,11 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { LearningPathsService } from '../../../core/services/learning-paths.service';
 import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
+import { AppIconComponent } from '../../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-learning-path-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, AppIconComponent],
   template: `
     @if (loading()) {
       <div class="container" style="padding: var(--sp-16) 0;">
@@ -120,7 +121,7 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
                           <a [routerLink]="['/cursos', course.slug]" class="path-course-card">
                             <div class="pcc-header">
                               <div class="pcc-icon">
-                                <span>{{ courseEmoji(course) }}</span>
+                                <app-icon [category]="course.category?.slug" [size]="20" [color]="path()?.category?.color || '#0AE98A'" [strokeWidth]="2" />
                               </div>
                               <div class="pcc-badge-wrap">
                                 <span [class]="'badge badge-' + course.difficulty">{{ diffLabel(course.difficulty) }}</span>
@@ -137,8 +138,8 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
 
                             <div class="pcc-footer">
                               <div class="pcc-meta">
-                                <span class="pcc-time">⏱ {{ course.duration_hours }}h</span>
-                                <span class="pcc-lessons">· {{ course.lessons_count ?? 0 }} lecciones</span>
+                                <span class="pcc-time"><app-icon name="clock" [size]="12" /> {{ course.duration_hours }}h</span>
+                                <span class="pcc-lessons">· <app-icon name="book" [size]="12" /> {{ course.lessons_count ?? 0 }} lecciones</span>
                               </div>
                               <span class="pcc-action">Ir al curso →</span>
                             </div>
@@ -147,7 +148,9 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
                       </div>
                     } @else {
                       <div class="station-empty">
-                        <div class="empty-icon">🚧</div>
+                        <div class="empty-icon">
+                          <app-icon name="construction" [size]="36" color="#FFB800" />
+                        </div>
                         <div class="empty-content">
                           <h4>Contenido en preparación para este hito</h4>
                           <p>Los módulos y proyectos avanzados de esta etapa se están actualizando para la mejor experiencia interactiva.</p>
@@ -173,7 +176,9 @@ import { LearningPath, LearningPathLevel, Course } from '../../../core/models';
     } @else {
       <div class="container" style="padding: var(--sp-20) var(--sp-4); text-align: center; min-height: 60vh; display: flex; align-items: center; justify-content: center;">
         <div class="empty-state-card" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: var(--sp-12); max-width: 520px; width: 100%; box-shadow: var(--shadow-xl);">
-          <div style="font-size: 3.5rem; margin-bottom: var(--sp-4);">🗺️</div>
+          <div style="margin-bottom: var(--sp-4); display: flex; justify-content: center;">
+            <app-icon name="map" [size]="52" color="var(--text-muted)" />
+          </div>
           <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--sp-3);">Ruta no encontrada</h2>
           <p style="color: var(--text-secondary); margin-bottom: var(--sp-6); line-height: 1.6;">La ruta de aprendizaje a la que intentas acceder no existe o está en proceso de diseño.</p>
           <div style="display: flex; gap: var(--sp-3); justify-content: center; flex-wrap: wrap;">
@@ -675,17 +680,5 @@ export class LearningPathDetailComponent implements OnInit {
 
   formatOrder(num: number): string {
     return num < 10 ? `0${num}` : `${num}`;
-  }
-
-  courseEmoji(course: { category?: { slug?: string } }): string {
-    const map: Record<string, string> = {
-      'programacion-basica': '💡', 'algoritmos': '⚡', 'poo': '🧩',
-      'bases-de-datos': '🗄️', 'redes': '🌐', 'sistemas-operativos': '🖥️',
-      'estructuras-de-datos': '🌳', 'desarrollo-web': '🕸️',
-      'desarrollo-backend': '⚙️', 'desarrollo-frontend': '🎨',
-      'devops': '🚀', 'git': '🌿', 'ingenieria-software': '📐',
-      'ia-desarrollo': '🧠'
-    };
-    return map[course.category?.slug ?? ''] ?? '📚';
   }
 }

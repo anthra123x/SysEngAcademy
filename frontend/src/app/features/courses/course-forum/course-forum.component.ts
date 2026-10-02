@@ -5,16 +5,20 @@ import { DatePipe, SlicePipe } from '@angular/common';
 import { ForumService, ForumFilters } from '../../../core/services/forum.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../core/models';
+import { AppIconComponent } from '../../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-course-forum',
-  imports: [FormsModule, RouterLink, DatePipe, SlicePipe],
+  imports: [FormsModule, RouterLink, DatePipe, SlicePipe, AppIconComponent],
   template: `
     <div class="course-forum">
       <!-- Forum Top Bar -->
       <div class="forum-topbar">
         <div class="forum-topbar__titles">
-          <h3>💬 Foro y Discusión de la Comunidad</h3>
+          <h3 style="display:flex; align-items:center; gap:8px;">
+            <app-icon name="chat" [size]="20" color="var(--primary)" />
+            Foro y Discusión de la Comunidad
+          </h3>
           <p>Comparte soluciones, haz preguntas sobre el temario o exámenes y colabora con estudiantes e instructores.</p>
         </div>
 
@@ -58,10 +62,10 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
                 <div class="form-group w-auto">
                   <label>Categoría</label>
                   <select class="input" [(ngModel)]="newPost.category" name="postCategory">
-                    <option value="question">❓ Pregunta / Duda</option>
-                    <option value="solution">💻 Solución Compartida</option>
-                    <option value="exam">📝 Duda de Examen / Quiz</option>
-                    <option value="discussion">💬 Debate General</option>
+                    <option value="question">Pregunta / Duda</option>
+                    <option value="solution">Solución Compartida</option>
+                    <option value="exam">Duda de Examen / Quiz</option>
+                    <option value="discussion">Debate General</option>
                   </select>
                 </div>
 
@@ -116,7 +120,7 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
             [class.is-active]="selectedCategory() === 'question'"
             (click)="setCategory('question')"
           >
-            ❓ Preguntas
+            <app-icon name="help-circle" [size]="13" /> Preguntas
           </button>
           <button
             type="button"
@@ -124,7 +128,7 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
             [class.is-active]="selectedCategory() === 'solution'"
             (click)="setCategory('solution')"
           >
-            💻 Soluciones
+            <app-icon name="code" [size]="13" /> Soluciones
           </button>
           <button
             type="button"
@@ -132,7 +136,7 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
             [class.is-active]="selectedCategory() === 'exam'"
             (click)="setCategory('exam')"
           >
-            📝 Exámenes / Quizzes
+            <app-icon name="file-text" [size]="13" /> Exámenes / Quizzes
           </button>
           <button
             type="button"
@@ -140,7 +144,7 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
             [class.is-active]="selectedCategory() === 'discussion'"
             (click)="setCategory('discussion')"
           >
-            💬 Debates
+            <app-icon name="chat" [size]="13" /> Debates
           </button>
         </div>
 
@@ -171,14 +175,18 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
         </div>
       } @else if (loadError(); as err) {
         <div class="forum-empty">
-          <div class="empty-icon">⚠️</div>
+          <div class="empty-icon">
+            <app-icon name="help-circle" [size]="40" color="#FFB800" />
+          </div>
           <h4>No pudimos cargar las discusiones</h4>
           <p>{{ err }}</p>
           <button class="btn btn-outline btn-sm" (click)="loadPosts()">Reintentar</button>
         </div>
       } @else if (posts().length === 0) {
         <div class="forum-empty">
-          <div class="empty-icon">💡</div>
+          <div class="empty-icon">
+            <app-icon name="lightbulb" [size]="40" color="var(--text-muted)" />
+          </div>
           <h4>No hay discusiones en este filtro todavía</h4>
           <p>Sé el primero en hacer una pregunta, compartir tu enfoque o debatir una solución para este curso.</p>
           <button class="btn btn-outline btn-sm" (click)="showComposer.set(true)">Crear la primera publicación</button>
@@ -213,7 +221,7 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
                   }
 
                   @if (post.is_solved) {
-                    <span class="solved-pill">✓ Solución Aceptada</span>
+                    <span class="solved-pill"><app-icon name="check" [size]="12" /> Solución Aceptada</span>
                   }
                 </div>
 
@@ -237,8 +245,8 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
                   </div>
 
                   <button type="button" class="thread-toggle-btn" (click)="toggleThread(post.id)">
-                    💬 {{ post.replies_count ?? 0 }} {{ (post.replies_count === 1) ? 'respuesta' : 'respuestas' }}
-                    <span class="chevron" [class.is-rotated]="openThreadId() === post.id">▾</span>
+                    <app-icon name="chat" [size]="13" /> {{ post.replies_count ?? 0 }} {{ (post.replies_count === 1) ? 'respuesta' : 'respuestas' }}
+                    <span class="chevron" [class.is-rotated]="openThreadId() === post.id"><app-icon name="chevron-down" [size]="12" /></span>
                   </button>
                 </div>
 
@@ -257,7 +265,7 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
                           <div class="reply-card" [class.is-solution]="reply.is_solution">
                             @if (reply.is_solution) {
                               <div class="solution-banner">
-                                <span>✓ Solución verificada</span>
+                                <span><app-icon name="check" [size]="13" /> Solución verificada</span>
                               </div>
                             }
 
@@ -279,7 +287,7 @@ import { CourseModule, ForumCategory, ForumPost, ForumReply } from '../../../cor
                             @if (!reply.is_solution && (isPostOwner(post) || isStaff())) {
                               <div class="reply-actions">
                                 <button type="button" class="btn-solution" (click)="markAsSolution(reply.id)">
-                                  ✓ Marcar como solución
+                                  <app-icon name="check" [size]="12" /> Marcar como solución
                                 </button>
                               </div>
                             }
@@ -1107,11 +1115,11 @@ export class CourseForumComponent implements OnInit {
 
   categoryLabel(cat: ForumCategory): string {
     switch (cat) {
-      case 'question': return '❓ Pregunta';
-      case 'solution': return '💻 Solución';
-      case 'exam': return '📝 Examen / Quiz';
-      case 'discussion': return '💬 Debate';
-      default: return '💬 Discusión';
+      case 'question': return 'Pregunta';
+      case 'solution': return 'Solución';
+      case 'exam': return 'Examen / Quiz';
+      case 'discussion': return 'Debate';
+      default: return 'Discusión';
     }
   }
 

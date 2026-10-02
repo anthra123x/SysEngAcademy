@@ -18,10 +18,11 @@ import {
   QuizAttemptResult,
 } from '../../../core/models';
 import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from '../../../core/constants/ascii-avatars';
+import { AppIconComponent } from '../../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-lesson-player',
-  imports: [RouterLink, FormsModule, LessonContentComponent, CourseCurriculumComponent, InteractiveIdeComponent],
+  imports: [RouterLink, FormsModule, LessonContentComponent, CourseCurriculumComponent, InteractiveIdeComponent, AppIconComponent],
   template: `
     @if (loading()) {
       <div class="container player">
@@ -33,7 +34,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
     } @else if (forbidden()) {
       <div class="container player">
         <div class="status-card">
-          <div class="status-card__icon">🔒</div>
+          <div class="status-card__icon"><app-icon name="lock" [size]="36" /></div>
           <h2>Esta lección requiere inscripción</h2>
           <p>Debes inscribirte en el curso o iniciar sesión para poder acceder al contenido completo de esta lección.</p>
           <div style="display: flex; gap: var(--sp-3); justify-content: center; margin-top: var(--sp-4); flex-wrap: wrap;">
@@ -45,7 +46,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
     } @else if (error()) {
       <div class="container player">
         <div class="status-card status-card--error">
-          <div class="status-card__icon">⚠️</div>
+          <div class="status-card__icon"><app-icon name="alert-triangle" [size]="36" /></div>
           <h2>No pudimos cargar la lección</h2>
           <p>{{ error() }}</p>
           <a class="btn btn-outline" [routerLink]="['/cursos', paramSlug()]">Volver al curso</a>
@@ -116,7 +117,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
             </a>
           } @else {
             <a routerLink="/auth/login" class="btn-login-unified" title="Iniciar sesión para acceder a tu perfil y guardar insignias">
-              <span class="login-user-icon">👤</span>
+              <span class="login-user-icon"><app-icon name="user" [size]="14" /></span>
               <span class="login-btn-label">Iniciar Sesión</span>
             </a>
           }
@@ -150,12 +151,12 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
               <div class="lesson-header-card">
                 <div class="lesson-meta-row">
                   <span class="badge badge-primary">{{ typeLabel(l.type) }}</span>
-                  <span class="meta-item">⏱ {{ l.duration_minutes }} min</span>
+                  <span class="meta-item" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="clock" [size]="12" /> {{ l.duration_minutes }} min</span>
                   @if (l.is_preview) {
                     <span class="badge badge-accent">Vista previa libre</span>
                   }
                   @if (completed()) {
-                    <span class="badge badge-success">✓ Completada</span>
+                    <span class="badge badge-success" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="check" [size]="12" /> Completada</span>
                   }
                 </div>
                 <h1 class="lesson-headline">{{ l.title }}</h1>
@@ -163,7 +164,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
 
               @if (isCurrentModuleLocked()) {
                 <div class="module-lock-banner" role="alert">
-                  <div class="lock-shield-icon">🔒</div>
+                  <div class="lock-shield-icon"><app-icon name="lock" [size]="24" /></div>
                   <div class="lock-body">
                     <h3>Módulo {{ currentModuleIndex() + 1 }} Bloqueado: {{ currentModule()?.title }}</h3>
                     <p>
@@ -186,7 +187,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
               <div class="exercise-validation-banner" [class.is-done]="completed()">
                 @if (!completed()) {
                   <div class="evb-content">
-                    <span class="evb-icon">🎯</span>
+                    <span class="evb-icon"><app-icon name="target" [size]="20" /></span>
                     <div class="evb-text">
                       <h4>Condición de Desbloqueo de este Módulo</h4>
                       <p>
@@ -197,7 +198,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                   </div>
                 } @else {
                   <div class="evb-content is-success">
-                    <span class="evb-icon">🎉</span>
+                    <span class="evb-icon"><app-icon name="trophy" [size]="20" /></span>
                     <div class="evb-text">
                       <h4>¡Ejercicio Aprobado con Éxito!</h4>
                       <p>
@@ -211,10 +212,10 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
               <section class="practice-section" aria-label="Zona de práctica de programación">
                 <div class="practice-header">
                   <div class="practice-header__info">
-                    <span class="practice-tag">💻 Práctica Guiada</span>
+                    <span class="practice-tag" style="display:inline-flex; align-items:center; gap:6px;"><app-icon name="code" [size]="14" /> Práctica Guiada</span>
                     @if (l.hint) {
                       <div class="practice-hint">
-                        <span class="hint-icon">💡</span>
+                        <span class="hint-icon"><app-icon name="lightbulb" [size]="14" /></span>
                         <span class="hint-text"><strong>Pista:</strong> {{ l.hint }}</span>
                       </div>
                     }
@@ -240,7 +241,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
             @if (l.quiz && l.quiz.questions.length > 0) {
               <section class="quiz" aria-label="Quiz de la lección">
                 <div class="quiz-head">
-                  <h2>❓ Quiz: {{ l.quiz.title ?? 'Comprueba lo aprendido' }}</h2>
+                  <h2 style="display:inline-flex; align-items:center; gap:8px;"><app-icon name="help-circle" [size]="20" /> Quiz: {{ l.quiz.title ?? 'Comprueba lo aprendido' }}</h2>
                   <p>Selecciona tus respuestas y compruébalas al final.</p>
                 </div>
 
@@ -343,11 +344,11 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                     {{ completing() ? 'Guardando…' : (hasPractice() ? '✓ Validar y Marcar Completada' : '✓ Marcar como completada') }}
                   </button>
                 } @else {
-                  <span class="done-chip">
+                  <span class="done-chip" style="display:inline-flex; align-items:center; gap:6px;">
                     @if (hasPractice()) {
-                      🏆 Ejercicio Aprobado y Completado
+                      <app-icon name="trophy" [size]="16" /> Ejercicio Aprobado y Completado
                     } @else {
-                      ✓ Lección completada
+                      <app-icon name="check" [size]="16" /> Lección completada
                     }
                   </span>
                   @if (nextLesson()) {
@@ -383,7 +384,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                   </a>
                 } @else {
                   <div class="lesson-nav__item lesson-nav__item--next is-locked-nav" (click)="triggerLockedNotice()" role="button" tabindex="0">
-                    <span class="lesson-nav__dir">🔒 Siguiente (Bloqueada)</span>
+                    <span class="lesson-nav__dir" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="lock" [size]="14" /> Siguiente (Bloqueada)</span>
                     <span class="lesson-nav__title">{{ nextLessonLockedReason() }}</span>
                   </div>
                 }
@@ -395,7 +396,7 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
             @if (officialResources().length > 0) {
               <section class="lesson-docs-refs" aria-label="Documentación Oficial de Referencia">
                 <div class="lesson-docs-refs__head">
-                  <span class="refs-icon">📚</span>
+                  <span class="refs-icon"><app-icon name="book-open" [size]="20" /></span>
                   <div>
                     <h3 class="refs-title">Documentación Oficial & Referencias</h3>
                     <p class="refs-subtitle">Fuentes técnicas canónicas para profundizar en los conceptos de esta lección.</p>
@@ -404,13 +405,13 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
                 <div class="resources-grid-list">
                   @for (res of officialResources(); track res.title) {
                     <a [href]="res.url" target="_blank" rel="noopener noreferrer" class="doc-resource-card">
-                      <div class="drc-icon">{{ res.icon }}</div>
+                      <div class="drc-icon"><app-icon [name]="res.icon" [size]="20" /></div>
                       <div class="drc-body">
                         <span class="drc-source">{{ res.source }}</span>
                         <h4 class="drc-title">{{ res.title }}</h4>
                         <p class="drc-desc">{{ res.description }}</p>
                       </div>
-                      <span class="drc-arrow">↗</span>
+                      <span class="drc-arrow"><app-icon name="external-link" [size]="14" /></span>
                     </a>
                   }
                 </div>
@@ -1933,28 +1934,28 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     if (slug.includes('html') || slug.includes('css') || slug.includes('web') || lang === 'javascript' || lang === 'html' || lang === 'css') {
       return [
         {
-          icon: '🌐',
+          icon: 'globe',
           source: 'MDN Web Docs (Mozilla)',
           title: 'JavaScript Reference & Guía de APIs Web',
           description: 'Documentación canónica sobre sintaxis, Promesas, async/await, Fetch API y manipulación del DOM con el estándar ECMAScript.',
           url: 'https://developer.mozilla.org/es/docs/Web/JavaScript'
         },
         {
-          icon: '🎨',
+          icon: 'palette',
           source: 'MDN Web Docs',
           title: 'Guía de CSS Moderno, Flexbox y Grid',
           description: 'Aprende los modelos de maquetación estándar, selectores avanzados, variables CSS y diseño responsive accesible.',
           url: 'https://developer.mozilla.org/es/docs/Learn/CSS'
         },
         {
-          icon: '⚡',
+          icon: 'zap',
           source: 'JavaScript.info',
           title: 'El Tutorial Moderno de JavaScript',
           description: 'Explicaciones profundas desde lo básico hasta el Event Loop, microtasks vs macrotasks, closures y prototipos.',
           url: 'https://es.javascript.info/'
         },
         {
-          icon: '🛡️',
+          icon: 'shield',
           source: 'W3C / Web Accessibility Initiative',
           title: 'Estándares Web y Accesibilidad WCAG',
           description: 'Pautas oficiales para construir interfaces semánticas, accesibles con teclado y lectores de pantalla.',
@@ -1966,28 +1967,28 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     if (slug.includes('poo') || slug.includes('python') || lang === 'python') {
       return [
         {
-          icon: '🐍',
+          icon: 'code',
           source: 'Python Software Foundation',
           title: 'Documentación Oficial de Python 3',
           description: 'Manual de referencia oficial del lenguaje Python, biblioteca estándar, estructuras de datos y buenas prácticas.',
           url: 'https://docs.python.org/es/3/'
         },
         {
-          icon: '🧩',
+          icon: 'boxes',
           source: 'Python Docs',
           title: 'Tutorial de Clases, Herencia y Métodos',
           description: 'Capítulo oficial dedicado a clases, encapsulamiento, polimorfismo, decoradores e iteradores en Python.',
           url: 'https://docs.python.org/es/3/tutorial/classes.html'
         },
         {
-          icon: '📐',
+          icon: 'layout',
           source: 'Refactoring Guru',
           title: 'Catálogo de Patrones de Diseño',
           description: 'Guía visual completa con diagramas y código en Python de patrones creacionales, estructurales y comportamentales.',
           url: 'https://refactoring.guru/es/design-patterns'
         },
         {
-          icon: '✨',
+          icon: 'sparkles',
           source: 'Python PEPs',
           title: 'PEP 8 — Guía de Estilo Oficial para Python',
           description: 'El estándar de convenciones adoptado universalmente en la industria de desarrollo de software con Python.',
@@ -1999,28 +2000,28 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     if (slug.includes('backend') || slug.includes('laravel') || lang === 'php') {
       return [
         {
-          icon: '⚙️',
+          icon: 'settings',
           source: 'Laravel Documentation',
           title: 'Documentación Oficial de Laravel',
           description: 'Manual oficial del framework backend líder: Enrutamiento, Middleware, Controladores, Eloquent ORM y APIs REST.',
           url: 'https://laravel.com/docs'
         },
         {
-          icon: '🐘',
+          icon: 'server',
           source: 'PHP The Right Way',
           title: 'PHP The Right Way (Estándares PSR)',
           description: 'Guía comunitaria de referencia sobre buenas prácticas, inyección de dependencias y arquitectura moderna en PHP.',
           url: 'https://phptherightway.com/'
         },
         {
-          icon: '📡',
+          icon: 'network',
           source: 'IETF / RFC 7231',
           title: 'Especificación HTTP/1.1 y Códigos de Estado',
           description: 'Definición formal de los verbos HTTP (GET, POST, PUT, DELETE), headers y códigos de respuesta en APIs.',
           url: 'https://httpwg.org/specs/rfc7231.html'
         },
         {
-          icon: '🔒',
+          icon: 'lock',
           source: 'OWASP Foundation',
           title: 'OWASP Top 10 API Security Risks',
           description: 'Estándar global sobre las vulnerabilidades de seguridad más críticas en APIs REST y cómo prevenirlas.',
@@ -2031,28 +2032,28 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
 
     return [
       {
-        icon: '💡',
+        icon: 'lightbulb',
         source: 'Harvard OpenCourseWare / CS50',
         title: 'Fundamentos de Ciencias de la Computación',
         description: 'Material de referencia gratuito sobre algoritmos, memoria, tipos de datos y resolución analítica de problemas.',
         url: 'https://cs50.harvard.edu/x/'
       },
       {
-        icon: '🗄️',
+        icon: 'database',
         source: 'PostgreSQL Global Development Group',
         title: 'Manual Oficial de PostgreSQL',
         description: 'Documentación técnica completa sobre el motor de base de datos relacional estándar en la industria.',
         url: 'https://www.postgresql.org/docs/'
       },
       {
-        icon: '⚡',
+        icon: 'zap',
         source: 'SQLBolt',
         title: 'Tutoriales Interactivos de SQL',
         description: 'Ejercicios paso a paso en el navegador para dominar consultas relacionales, JOINs, agrupaciones y filtrado.',
         url: 'https://sqlbolt.com/'
       },
       {
-        icon: '🧭',
+        icon: 'compass',
         source: 'Roadmap.sh',
         title: 'Developer Roadmaps & Computer Science Guides',
         description: 'Árboles de habilidades y mapas de aprendizaje visuales recomendados por ingenieros de software senior.',
@@ -2348,7 +2349,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
 
   triggerLockedNotice(): void {
     const reason = this.nextLessonLockedReason();
-    alert(`🔒 Módulo Bloqueado: ${reason}`);
+    alert(`Módulo Bloqueado: ${reason}`);
   }
 
   // ===== Lifecycle =====
@@ -2579,9 +2580,9 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   }
 
   scoreTitle(score: number): string {
-    if (score === 100) return '¡Perfecto! 🏆';
-    if (score >= 80) return '¡Excelente trabajo! 🎉';
-    if (score >= 60) return '¡Bien hecho! ✅';
+    if (score === 100) return '¡Perfecto!';
+    if (score >= 80) return '¡Excelente trabajo!';
+    if (score >= 60) return '¡Bien hecho!';
     if (score >= 40) return 'Vas por buen camino';
     return 'Sigue practicando';
   }
@@ -2591,7 +2592,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     if (score >= 80) return 'Tienes un dominio sólido del tema.';
     if (score >= 60) return 'Tienes una buena base; revisa las explicaciones para afianzar.';
     if (score >= 40) return 'Repasa el contenido y vuelve a intentarlo.';
-    return 'El aprendizaje es un proceso: relee la lección y reintenta cuando estés listo. 🌱';
+    return 'El aprendizaje es un proceso: relee la lección y reintenta cuando estés listo.';
   }
 
   // ===== Code challenge =====
@@ -2630,14 +2631,14 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
 
   typeLabel(type: string): string {
     return {
-      video: '📹 Video',
-      article: '📄 Artículo',
-      quiz: '❓ Quiz',
-      code_challenge: '💻 Desafío de código',
-    }[type] ?? '📄 Lección';
+      video: 'Video',
+      article: 'Artículo',
+      quiz: 'Quiz',
+      code_challenge: 'Desafío de código',
+    }[type] ?? 'Lección';
   }
 
   lessonIcon(type: string): string {
-    return { video: '▶️', article: '📄', quiz: '❓', code_challenge: '💻' }[type] ?? '📄';
+    return { video: 'video', article: 'file-text', quiz: 'help-circle', code_challenge: 'code' }[type] ?? 'book';
   }
 }

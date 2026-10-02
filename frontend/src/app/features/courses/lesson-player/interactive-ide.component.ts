@@ -19,6 +19,7 @@ import {
   SupportedLanguage,
   TestCase,
 } from '../../../core/services/code-execution.service';
+import { AppIconComponent } from '../../../shared/components/app-icon.component';
 
 export interface TerminalAiMessage {
   id: string;
@@ -31,7 +32,7 @@ export interface TerminalAiMessage {
 @Component({
   selector: 'app-interactive-ide',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppIconComponent],
   template: `
     <div
       class="linux-terminal-window"
@@ -80,7 +81,7 @@ export interface TerminalAiMessage {
               [disabled]="running() || testing() || !code().trim()"
               title="Ejecutar pruebas automatizadas: ./test.sh"
             >
-              <span class="cli-icon">{{ testing() ? '⏳' : '🧪' }}</span>
+              <span class="cli-icon"><app-icon [name]="testing() ? 'refresh-cw' : 'flask'" [size]="14" /></span>
               <span>{{ testing() ? 'probando...' : 'Probar' }}</span>
               @if (testStats(); as stats) {
                 <span
@@ -147,7 +148,7 @@ export interface TerminalAiMessage {
           [class.is-active]="mobileActivePane() === 'editor'"
           (click)="mobileActivePane.set('editor')"
         >
-          <span class="m-tab-glyph">📁</span>
+          <span class="m-tab-glyph"><app-icon name="folder" [size]="14" /></span>
           <span>Editor</span>
         </button>
         <button
@@ -156,7 +157,7 @@ export interface TerminalAiMessage {
           [class.is-active]="mobileActivePane() === 'terminal'"
           (click)="switchToTerminalTab()"
         >
-          <span class="m-tab-glyph">💻</span>
+          <span class="m-tab-glyph"><app-icon name="terminal" [size]="14" /></span>
           <span>Terminal</span>
           @if (testStats(); as stats) {
             <span
@@ -191,7 +192,7 @@ export interface TerminalAiMessage {
             <span class="prompt-user">syseng&#64;linux</span>:<span class="prompt-dir">~</span>$&nbsp;<span class="prompt-cmd">cat hint.txt</span>
           </div>
           <div class="hint-output">
-            <span class="hint-icon">💡</span>
+            <span class="hint-icon"><app-icon name="lightbulb" [size]="14" /></span>
             <span>{{ hint() }}</span>
             <button type="button" class="hint-dismiss-btn" (click)="showHintBar.set(false)" title="Ocultar pista">✕</button>
           </div>
@@ -275,7 +276,7 @@ export interface TerminalAiMessage {
                   [class.is-active]="activeTerminalTab() === 'tests'"
                   (click)="activeTerminalTab.set('tests')"
                 >
-                  <span>🧪 Pruebas</span>
+                  <span style="display:inline-flex; align-items:center; gap:5px;"><app-icon name="flask" [size]="13" /> Pruebas</span>
                   @if (testStats(); as stats) {
                     <span
                       class="test-score-badge"
@@ -314,7 +315,7 @@ export interface TerminalAiMessage {
                   (click)="showHintBar.set(!showHintBar())"
                   title="Ver pista técnica"
                 >
-                  <span>💡 Pista</span>
+                  <span style="display:inline-flex; align-items:center; gap:5px;"><app-icon name="lightbulb" [size]="13" /> Pista</span>
                 </button>
               }
             </div>
@@ -322,7 +323,7 @@ export interface TerminalAiMessage {
             <!-- Terminal Controls -->
             <div class="terminal-meta-controls">
               @if (executionResult()?.execution_time_ms !== undefined) {
-                <span class="term-time-stat">⚡ {{ executionResult()!.execution_time_ms }}ms</span>
+                <span class="term-time-stat" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="zap" [size]="11" /> {{ executionResult()!.execution_time_ms }}ms</span>
               }
               @if (executionResult()) {
                 <button
@@ -498,7 +499,7 @@ export interface TerminalAiMessage {
                         o responder cualquier duda técnica que tengas sobre este reto.
                       </p>
                       <p class="welcome-sub">
-                        👉 <em>Haz clic en uno de los comandos rápidos arriba o escribe abajo en el prompt.</em>
+                        <em>Haz clic en uno de los comandos rápidos arriba o escribe abajo en el prompt.</em>
                       </p>
                     </div>
                   }
@@ -520,7 +521,7 @@ export interface TerminalAiMessage {
                             (click)="applySnippetToEditor(msg.codeSnippet)"
                             title="Reemplazar el buffer de código con este fragmento"
                           >
-                            📥 aplicar al código
+                            <span style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="download" [size]="12" /> aplicar al código</span>
                           </button>
                           <button
                             type="button"
@@ -528,7 +529,7 @@ export interface TerminalAiMessage {
                             (click)="copySnippet(msg.codeSnippet)"
                             title="Copiar código al portapapeles"
                           >
-                            📋 copiar
+                            <span style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="copy" [size]="12" /> copiar</span>
                           </button>
                         </div>
                       }
@@ -587,7 +588,7 @@ export interface TerminalAiMessage {
       <footer class="terminal-statusbar font-mono" aria-label="Estado de la terminal">
         <div class="status-left">
           <span class="status-item">
-            <span class="status-sym">🐧</span> <span class="status-hide-mobile">Linux Sandbox (x86_64)</span>
+            <span class="status-sym" style="display:inline-flex; align-items:center;"><app-icon name="terminal" [size]="12" /></span> <span class="status-hide-mobile">Linux Sandbox (x86_64)</span>
           </span>
           <span class="status-item status-hide-mobile">
             <span class="status-sym">⎇</span> main*
@@ -2213,8 +2214,8 @@ export class InteractiveIdeComponent {
     this.challengeStatus.set(method === 'tests' ? 'passed_tests' : 'passed_ai');
     this.recordChallengeCompleted();
     const successMsg = method === 'tests'
-      ? '🏆 ¡Pruebas superadas con éxito! Ejercicio aprobado por el Sistema.'
-      : '✓ ¡Excelente! Solución validada y aprobada automáticamente por el Agente.';
+      ? '¡Pruebas superadas con éxito! Ejercicio aprobado por el Sistema.'
+      : '¡Excelente! Solución validada y aprobada automáticamente por el Agente.';
     this.showToast(successMsg);
     this.challengeSolved.emit({
       passed: true,
@@ -2232,7 +2233,7 @@ export class InteractiveIdeComponent {
       if (!stored.includes(challengeKey)) {
         stored.push(challengeKey);
         localStorage.setItem('syseng_solved_challenges', JSON.stringify(stored));
-        this.showToast('🏆 ¡Reto completado! Has desbloqueado progreso para tus insignias');
+        this.showToast('¡Reto completado! Has desbloqueado progreso para tus insignias');
       }
     } catch {}
   }
@@ -2260,25 +2261,25 @@ export class InteractiveIdeComponent {
       if (evaluation.approved) {
         this.markApprovedAutomatically('ai', evaluation.score ?? 100, evaluation.summary);
 
-        aiReplyText = `### 🏆 ¡Solución Validada y Aprobada! (${evaluation.score}/100)\n\n` +
+        aiReplyText = `### ¡Solución Validada y Aprobada! (${evaluation.score}/100)\n\n` +
           `**Resumen:** ${evaluation.summary}\n\n` +
           (evaluation.recommendations
-            ? `**💡 Recomendaciones de Calidad y Buenas Prácticas:**\n${evaluation.recommendations}\n\n`
+            ? `**Recomendaciones de Calidad y Buenas Prácticas:**\n${evaluation.recommendations}\n\n`
             : '') +
-          `> ✅ **Objetivo completado.** El avance ha sido registrado automáticamente y el siguiente módulo está habilitado.`;
+          `> **Objetivo completado.** El avance ha sido registrado automáticamente y el siguiente módulo está habilitado.`;
       } else {
         aiReplyText = `### [BYTE-AI] Revisión en Vivo del Agente (${evaluation.score}/100)\n\n` +
           `**Resumen:** ${evaluation.summary}\n\n` +
           (evaluation.what_was_wrong
-            ? `**⚠️ En qué estuvo mal o qué faltó:**\n${evaluation.what_was_wrong}\n\n`
-            : (evaluation.feedback ? `**⚠️ Observaciones:**\n${evaluation.feedback}\n\n` : '')) +
+            ? `**En qué estuvo mal o qué faltó:**\n${evaluation.what_was_wrong}\n\n`
+            : (evaluation.feedback ? `**Observaciones:**\n${evaluation.feedback}\n\n` : '')) +
           (evaluation.recommendations
-            ? `**💡 Recomendaciones para mejorar:**\n${evaluation.recommendations}\n\n`
+            ? `**Recomendaciones para mejorar:**\n${evaluation.recommendations}\n\n`
             : '') +
           (evaluation.next_step
-            ? `**🚀 Siguiente paso sugerido:**\n${evaluation.next_step}\n\n`
+            ? `**Siguiente paso sugerido:**\n${evaluation.next_step}\n\n`
             : '') +
-          `> 💡 *Ajusta tu código en el editor y presiona [▶ run] para revalidar automáticamente.*`;
+          `> *Ajusta tu código en el editor y presiona [▶ run] para revalidar automáticamente.*`;
       }
 
       const aiMsg: TerminalAiMessage = {
@@ -2300,17 +2301,17 @@ export class InteractiveIdeComponent {
       let aiReplyText = '';
       if (localEval.approved) {
         this.markApprovedAutomatically('ai', localEval.score || 100, localEval.summary);
-        aiReplyText = `### 🏆 ¡Solución Aprobada por el Sistema y el Agente! (100/100)\n\n` +
+        aiReplyText = `### ¡Solución Aprobada por el Sistema y el Agente! (100/100)\n\n` +
           `**Resumen:** ${localEval.summary}\n\n` +
-          (localEval.recommendations ? `**💡 Recomendaciones:**\n${localEval.recommendations}\n\n` : '') +
-          `> ✅ **Excelente trabajo.** Continúa con la siguiente lección.`;
+          (localEval.recommendations ? `**Recomendaciones:**\n${localEval.recommendations}\n\n` : '') +
+          `> **Excelente trabajo.** Continúa con la siguiente lección.`;
       } else {
         aiReplyText = `### [BYTE-AI] Revisión del Agente — Ajustes Requeridos (${localEval.score || 40}/100)\n\n` +
           `**Resumen:** ${localEval.summary}\n\n` +
-          (localEval.what_was_wrong ? `**⚠️ En qué estuvo mal:**\n${localEval.what_was_wrong}\n\n` : '') +
-          (localEval.recommendations ? `**💡 Recomendaciones:**\n${localEval.recommendations}\n\n` : '') +
-          (localEval.next_step ? `**🚀 Siguiente paso:**\n${localEval.next_step}\n\n` : '') +
-          `> 💡 *Ajusta tu código y presiona [▶ run] para revalidar.*`;
+          (localEval.what_was_wrong ? `**En qué estuvo mal:**\n${localEval.what_was_wrong}\n\n` : '') +
+          (localEval.recommendations ? `**Recomendaciones:**\n${localEval.recommendations}\n\n` : '') +
+          (localEval.next_step ? `**Siguiente paso:**\n${localEval.next_step}\n\n` : '') +
+          `> *Ajusta tu código y presiona [▶ run] para revalidar.*`;
       }
 
       const aiMsg: TerminalAiMessage = {
@@ -2569,7 +2570,7 @@ Responde EXCLUSIVAMENTE un JSON válido con estas claves:
       score: 40,
       summary: 'El código requiere revisión para satisfacer el problema.',
       what_was_wrong: 'La solución actual no produce la salida o estructura esperada para este reto.',
-      recommendations: 'Revisa la pista técnica proporcionada en la pestaña 💡 Pista y asegúrate de imprimir o retornar el valor solicitado.',
+      recommendations: 'Revisa la pista técnica proporcionada en la pestaña Pista y asegúrate de imprimir o retornar el valor solicitado.',
       next_step: 'Haz los cambios necesarios en el editor y presiona [▶ run].',
       feedback: 'Ejecuta ./test.sh o revisa la salida en terminal para verificar tus resultados.',
     };
@@ -2710,7 +2711,7 @@ Reglas:
     const failedTests = ctx.lastExecution?.tests?.filter((t: any) => !t.passed) || [];
 
     if (qLower.includes('empezar') || qLower.includes('inicio') || qLower.includes('cómo')) {
-      let advice = `### 💡 Guía para iniciar "${ctx.lesson}"\n\n`;
+      let advice = `### Guía para iniciar "${ctx.lesson}"\n\n`;
       advice += `1. **Identifica entradas y salidas:** Analiza qué parámetros recibe la función y qué debe retornar.\n`;
       if (ctx.hint) {
         advice += `2. **Pista clave:** ${ctx.hint}\n`;
@@ -2725,7 +2726,7 @@ Reglas:
 
     if (failedTests.length > 0) {
       const f = failedTests[0];
-      return `### 🔍 Diagnóstico de Prueba Fallida\n\n` +
+      return `### Diagnóstico de Prueba Fallida\n\n` +
         `Tu código falló con entrada \`${f.input}\`:\n` +
         `- **Esperado:** \`${f.expected}\`\n` +
         `- **Obtenido:** \`${f.actual || '(vacío)'}\`\n\n` +
@@ -2733,7 +2734,7 @@ Reglas:
     }
 
     if (hasStderr) {
-      return `### ⚠️ Diagnóstico de Error en Terminal\n\n` +
+      return `### Diagnóstico de Error en Terminal\n\n` +
         `Error en tiempo de ejecución:\n` +
         `\`\`\`\n${hasStderr}\n\`\`\`\n` +
         `Verifica que todas las variables estén declaradas y los tipos de datos coincidan.`;
@@ -2749,13 +2750,13 @@ Reglas:
     this.code.set(snippet);
     this.isModified.set(true);
     this.updateCursorPos();
-    this.showToast('✓ Código aplicado al buffer de edición');
+    this.showToast('Código aplicado al buffer de edición');
   }
 
   copySnippet(snippet: string) {
     if (!snippet) return;
     navigator.clipboard.writeText(snippet).then(() => {
-      this.showToast('📋 Código copiado al portapapeles');
+      this.showToast('Código copiado al portapapeles');
     });
   }
 

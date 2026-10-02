@@ -5,10 +5,11 @@ import { SlicePipe } from '@angular/common';
 import { CoursesService } from '../../core/services/courses.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/models';
+import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-courses',
-  imports: [RouterLink, FormsModule, SlicePipe],
+  imports: [RouterLink, FormsModule, SlicePipe, AppIconComponent],
   template: `
     <div class="courses-page">
       <!-- Introducción: se integra con el contenido, sin banda que duplique el navbar -->
@@ -28,8 +29,11 @@ import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/m
         <!-- Mobile Filters Toggle -->
         <div class="mobile-filters-trigger">
           <button type="button" class="btn btn-outline btn-block" (click)="showMobileFilters.set(!showMobileFilters())">
-            <span>⚡ {{ showMobileFilters() ? 'Ocultar Filtros' : 'Filtrar Cursos (' + total() + ')' }}</span>
-            <span>{{ showMobileFilters() ? '▲' : '▼' }}</span>
+            <span style="display:inline-flex; align-items:center; gap:6px;">
+              <app-icon name="zap" [size]="14" color="var(--primary)" />
+              {{ showMobileFilters() ? 'Ocultar Filtros' : 'Filtrar Cursos (' + total() + ')' }}
+            </span>
+            <app-icon [name]="showMobileFilters() ? 'chevron-up' : 'chevron-down'" [size]="14" />
           </button>
         </div>
 
@@ -85,7 +89,9 @@ import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/m
             </div>
           } @else if (courses().length === 0) {
             <div class="empty-state">
-              <div class="empty-icon">🔍</div>
+              <div class="empty-icon">
+                <app-icon name="search" [size]="44" color="var(--text-muted)" />
+              </div>
               <h3>Sin resultados</h3>
               <p>No hay cursos que coincidan con tu búsqueda. Intenta con otros filtros.</p>
             </div>
@@ -94,7 +100,9 @@ import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/m
               @for (course of courses(); track course.id) {
                 <a [routerLink]="['/cursos', course.slug]" class="course-card">
                   <div class="course-card__thumb">
-                    <span class="emoji">{{ emoji(course) }}</span>
+                    <span class="course-thumb__icon">
+                      <app-icon [category]="course.category?.slug" [size]="38" [color]="course.category?.color || '#0AE98A'" [strokeWidth]="1.8" />
+                    </span>
                     @if (course.is_free) {
                       <span class="free-tag">GRATIS</span>
                     }
@@ -111,8 +119,8 @@ import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/m
                     <h3>{{ course.title }}</h3>
                     <p>{{ course.description | slice:0:85 }}...</p>
                     <div class="meta">
-                      <span>⏱ {{ course.duration_hours }}h</span>
-                      <span>· 📚 {{ course.lessons_count ?? 0 }} lecciones</span>
+                      <span><app-icon name="clock" [size]="12" /> {{ course.duration_hours }}h</span>
+                      <span>· <app-icon name="book" [size]="12" /> {{ course.lessons_count ?? 0 }} lecciones</span>
                     </div>
                   </div>
                 </a>
@@ -227,8 +235,8 @@ import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/m
         background: linear-gradient(180deg, var(--bg-surface-2) 0%, var(--bg-surface) 100%);
         border-bottom: 1px solid var(--border);
       }
-      .emoji { font-size: 2.6rem; transition: transform var(--transition-fast); }
-      &:hover .emoji { transform: scale(1.1); }
+      .course-thumb__icon { display: flex; align-items: center; justify-content: center; transition: transform var(--transition-fast); }
+      &:hover .course-thumb__icon { transform: scale(1.12); }
       .free-tag {
         position: absolute;
         top: 10px;
@@ -333,25 +341,5 @@ export class CoursesComponent implements OnInit {
 
   diffLabel(d: string): string {
     return { beginner: 'Principiante', intermediate: 'Intermedio', advanced: 'Avanzado', expert: 'Experto' }[d] ?? d;
-  }
-
-  emoji(course: Course): string {
-    const map: Record<string, string> = {
-      'programacion-basica': '💡',
-      'algoritmos': '⚡',
-      'poo': '🧩',
-      'bases-de-datos': '🗄️',
-      'redes': '🌐',
-      'sistemas-operativos': '🖥️',
-      'estructuras-de-datos': '🌳',
-      'desarrollo-web': '🕸️',
-      'desarrollo-backend': '⚙️',
-      'desarrollo-frontend': '🎨',
-      'devops': '🚀',
-      'git': '🐙',
-      'ingenieria-software': '📐',
-      'ia-desarrollo': '🧠',
-    };
-    return map[course.category?.slug ?? ''] ?? '📚';
   }
 }

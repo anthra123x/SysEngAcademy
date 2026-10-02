@@ -3,10 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { AiChatService } from '../../core/services/ai-chat.service';
 import { AiConversation, AiMessage } from '../../core/models';
+import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-ai-chat',
-  imports: [FormsModule],
+  imports: [FormsModule, AppIconComponent],
   template: `
     <div class="ai-chat-layout" [class.has-active-conv]="!!activeConv()">
       <!-- Sidebar -->
@@ -19,7 +20,7 @@ import { AiConversation, AiMessage } from '../../core/models';
         <div class="conversations-list">
           @for (conv of conversations(); track conv.id) {
             <button class="conv-item" [class.active]="activeConv()?.id === conv.id" (click)="loadConversation(conv)">
-              <span class="conv-icon">💬</span>
+              <span class="conv-icon"><app-icon name="chat" [size]="14"/></span>
               <span class="conv-title">{{ conv.title }}</span>
             </button>
           }
@@ -101,7 +102,7 @@ import { AiConversation, AiMessage } from '../../core/models';
             <textarea class="chat-input" [(ngModel)]="inputText" placeholder="Escribe tu pregunta..."
               (keydown.enter)="onEnter($event)" rows="1" [disabled]="thinking()"></textarea>
             <button class="btn btn-primary send-btn" (click)="sendMessage()" [disabled]="!inputText.trim() || thinking()">
-              ➤
+              <app-icon name="send" [size]="14"/>
             </button>
           </div>
         }

@@ -47,10 +47,12 @@ export interface DiagnosticAnalysisResult {
   completedAt: string;
 }
 
+import { AppIconComponent } from '../../shared/components/app-icon.component';
+
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, AppIconComponent],
   template: `
     <div class="terminal-workspace">
       <!-- LINUX WINDOW FRAME -->
@@ -186,7 +188,7 @@ export interface DiagnosticAnalysisResult {
                   </div>
                   <h3 class="cli-card-title">Sandboxes Linux Interactivos</h3>
                   <p class="cli-card-body">
-                    Escribe código en C++, Python, PSeInt y JS con compiladores integrados en el navegador. Ejecuta con <code>[▶ run]</code> y valida casos de prueba con <code>[🧪 test]</code> sin configuraciones locales.
+                    Escribe código en C++, Python, PSeInt y JS con compiladores integrados en el navegador. Ejecuta con <code>[run]</code> y valida casos de prueba con <code>[test]</code> sin configuraciones locales.
                   </p>
                   <div class="cli-card-meta font-mono">
                     <span class="meta-item">&gt;_ Runtime nativo</span>
@@ -239,7 +241,7 @@ export interface DiagnosticAnalysisResult {
                   <span class="btn-prefix">$</span> ./view-platform-guide.sh
                 </button>
                 <button type="button" class="term-btn term-btn-primary" (click)="goToAssessment()">
-                  <span class="btn-prefix">$</span> ./start-calibration.sh --now ⚡
+                  <span class="btn-prefix">$</span> ./start-calibration.sh --now <app-icon name="zap" [size]="14"/>
                 </button>
               </div>
             </section>
@@ -336,7 +338,7 @@ export interface DiagnosticAnalysisResult {
                   ← Volver a Inducción
                 </button>
                 <button type="button" class="term-btn term-btn-primary" (click)="goToAssessment()">
-                  <span class="btn-prefix">$</span> ./run-diagnostic-matrix.sh ⚡
+                  <span class="btn-prefix">$</span> ./run-diagnostic-matrix.sh <app-icon name="zap" [size]="14"/>
                 </button>
               </div>
             </section>
@@ -458,7 +460,7 @@ export interface DiagnosticAnalysisResult {
                     <span class="exec-tick">✔</span> [0.15s] Enviando matriz de respuestas al Agente Byte IA... <span class="txt-green">[OK]</span>
                   </div>
                   <div class="exec-log-line is-active">
-                    <span class="exec-pulse">⚡</span> Byte IA está analizando tus fortalezas, debilidades y preferencia técnica... <span class="txt-cyan">[PROCESANDO]</span>
+                    <span class="exec-pulse"><app-icon name="zap" [size]="12"/></span> Byte IA está analizando tus fortalezas, debilidades y preferencia técnica... <span class="txt-cyan">[PROCESANDO]</span>
                   </div>
                   <div class="exec-log-line">
                     <span class="exec-wait">○</span> Generando retroalimentación personalizada y temario en 3 fases... <span class="txt-muted">[EN COLA]</span>
@@ -494,9 +496,9 @@ export interface DiagnosticAnalysisResult {
                     </div>
                     <h1 class="dossier-level-title">{{ analysisResult()!.levelTitle }}</h1>
                     <div class="dossier-tags font-mono">
-                      <span class="d-tag tag-score">🎯 {{ analysisResult()!.score }}/{{ analysisResult()!.totalTechnical }} ACIERTOS TÉCNICOS</span>
-                      <span class="d-tag tag-spec">💼 ESPECIALIDAD: {{ analysisResult()!.recommendedSpecialty }}</span>
-                      <span class="d-tag tag-xp">🎁 +200 XP DE BIENVENIDA</span>
+                      <span class="d-tag tag-score"><app-icon name="target" [size]="13"/> {{ analysisResult()!.score }}/{{ analysisResult()!.totalTechnical }} ACIERTOS TÉCNICOS</span>
+                      <span class="d-tag tag-spec"><app-icon name="award" [size]="13"/> ESPECIALIDAD: {{ analysisResult()!.recommendedSpecialty }}</span>
+                      <span class="d-tag tag-xp"><app-icon name="sparkles" [size]="13"/> +200 XP DE BIENVENIDA</span>
                     </div>
                   </div>
 

@@ -4,6 +4,8 @@ import { CourseModule, Lesson } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { isModuleFullyCompleted, isModuleUnlockedForStudent } from '../../../core/services/courses.service';
 
+import { AppIconComponent } from '../../../shared/components/app-icon.component';
+
 /** Forma mínima que el panel necesita del curso (el detalle del player es parcial). */
 export interface CurriculumCourse {
   id: number;
@@ -20,7 +22,7 @@ export interface CurriculumCourse {
 @Component({
   selector: 'app-course-curriculum',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, AppIconComponent],
   template: `
     <div class="panel">
       <header class="panel__head">
@@ -47,7 +49,7 @@ export interface CurriculumCourse {
 
       @if (lockedMessage()) {
         <div class="lock-toast" role="alert">
-          <span class="toast-icon">🔒</span>
+          <span class="toast-icon"><app-icon name="lock" [size]="16" /></span>
           <span class="toast-text">{{ lockedMessage() }}</span>
           <button type="button" class="toast-close" (click)="lockedMessage.set(null)">×</button>
         </div>
@@ -57,23 +59,23 @@ export interface CurriculumCourse {
         @for (section of sections(); track section.id; let si = $index) {
           <section class="section" [class.is-open]="isOpen(section.id)" [class.is-locked-module]="!isSectionUnlocked(si)">
             <button
-              type="button"
-              class="section__head"
-              (click)="toggle(section.id)"
-              [attr.aria-expanded]="isOpen(section.id)"
+               type="button"
+               class="section__head"
+               (click)="toggle(section.id)"
+               [attr.aria-expanded]="isOpen(section.id)"
             >
               <span class="section__index" [class.is-done]="isSectionCompleted(section)" [class.is-locked]="!isSectionUnlocked(si)">
-                @if (!isSectionUnlocked(si)) { 🔒 }
-                @else if (isSectionCompleted(section)) { ✓ }
+                @if (!isSectionUnlocked(si)) { <app-icon name="lock" [size]="14" /> }
+                @else if (isSectionCompleted(section)) { <app-icon name="check" [size]="14" /> }
                 @else { {{ si + 1 }} }
               </span>
               <span class="section__titles">
                 <span class="section__name">{{ section.title }}</span>
                 <span class="section__meta">
                   @if (!isSectionUnlocked(si)) {
-                    <span class="lock-pill-text">🔒 Bloqueado · Completa Módulo {{ si }}</span>
+                    <span class="lock-pill-text" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="lock" [size]="12" /> Bloqueado · Completa Módulo {{ si }}</span>
                   } @else if (isSectionCompleted(section)) {
-                    <span class="done-pill-text">✓ Completado ({{ lessonCount(section) }} lecciones)</span>
+                    <span class="done-pill-text" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="check" [size]="12" /> Completado ({{ lessonCount(section) }} lecciones)</span>
                   } @else {
                     <span>{{ lessonCount(section) }} lecciones · {{ sectionDone(section) }}/{{ lessonCount(section) }}</span>
                   }
@@ -94,7 +96,7 @@ export interface CurriculumCourse {
                         [routerLink]="['/cursos', course()?.slug, 'leccion', lesson.slug]"
                       >
                         <span class="lesson__state" aria-hidden="true">
-                          @if (lesson.completed) { ✓ }
+                          @if (lesson.completed) { <app-icon name="check" [size]="12" /> }
                           @else { {{ typeIcon(lesson.type) }} }
                         </span>
                         <span class="lesson__title">{{ lesson.title }}</span>
@@ -110,7 +112,7 @@ export interface CurriculumCourse {
                         tabindex="0"
                         [title]="'Módulo ' + (si + 1) + ' bloqueado: completa primero el módulo anterior para acceder'"
                       >
-                        <span class="lesson__state is-lock" aria-hidden="true">🔒</span>
+                        <span class="lesson__state is-lock" aria-hidden="true"><app-icon name="lock" [size]="12" /></span>
                         <span class="lesson__title">{{ lesson.title }}</span>
                         <span class="lesson__lock-pill">Bloqueado</span>
                       </div>
@@ -354,7 +356,7 @@ export class CourseCurriculumComponent {
     const prevIdx = si > 0 ? si - 1 : 0;
     const prevTitle = sections[prevIdx]?.title ? `«${sections[prevIdx].title}»` : `Módulo ${prevIdx + 1}`;
     this.lockedMessage.set(
-      `🔒 Módulo Bloqueado: Para acceder al Módulo ${si + 1} («${sections[si]?.title || 'este módulo'}»), primero debes completar todas las clases del Módulo ${prevIdx + 1}: ${prevTitle}.`
+      `Módulo Bloqueado: Para acceder al Módulo ${si + 1} («${sections[si]?.title || 'este módulo'}»), primero debes completar todas las clases del Módulo ${prevIdx + 1}: ${prevTitle}.`
     );
     setTimeout(() => this.lockedMessage.set(null), 5500);
   }

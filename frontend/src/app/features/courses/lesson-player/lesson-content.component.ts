@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { LessonDocBlock } from '../../../core/models';
+import { AppIconComponent } from '../../../shared/components/app-icon.component';
 
 /**
  * Lector de contenido de lección — experiencia de lectura editorial.
@@ -15,6 +16,7 @@ import { LessonDocBlock } from '../../../core/models';
 @Component({
   selector: 'app-lesson-content',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [AppIconComponent],
   template: `
     <div class="prose">
       @for (block of blocks(); track $index) {
@@ -66,7 +68,7 @@ import { LessonDocBlock } from '../../../core/models';
           @case ('callout') {
             @let tone = toneOf(block);
             <aside class="callout" [attr.data-tone]="tone">
-              <span class="callout__icon" aria-hidden="true">{{ iconOf(tone) }}</span>
+              <span class="callout__icon" aria-hidden="true"><app-icon [name]="iconOf(tone)" [size]="18" /></span>
               <div class="callout__body">
                 @if (block.title) { <p class="callout__title">{{ block.title }}</p> }
                 <p class="callout__text">{{ block.text }}</p>
@@ -97,7 +99,7 @@ import { LessonDocBlock } from '../../../core/models';
               @if (block.title) {
                 <div class="diagram-figure__header">
                   <div class="diagram-figure__header-left">
-                    <span class="diagram-figure__icon" aria-hidden="true">{{ diagramIcon(block.diagram_type) }}</span>
+                    <span class="diagram-figure__icon" aria-hidden="true"><app-icon [name]="diagramIcon(block.diagram_type)" [size]="16" /></span>
                     <h4 class="diagram-figure__title">{{ block.title }}</h4>
                   </div>
                   @if (block.diagram_type) {
@@ -208,7 +210,7 @@ import { LessonDocBlock } from '../../../core/models';
                     <div class="arch-pipeline">
                       @for (st of block.steps ?? []; track $index) {
                         <div class="arch-node" [attr.data-tone]="st.tone || 'primary'">
-                          <div class="arch-node__icon">{{ st.icon || '📦' }}</div>
+                          <div class="arch-node__icon"><app-icon [name]="st.icon || 'boxes'" [size]="18" /></div>
                           <div class="arch-node__body">
                             <span class="arch-node__label">{{ st.label }}</span>
                             <span class="arch-node__desc">{{ st.desc }}</span>
@@ -242,7 +244,7 @@ import { LessonDocBlock } from '../../../core/models';
 
               @if (block.caption) {
                 <figcaption class="diagram-figure__caption">
-                  <span class="caption-light" aria-hidden="true">💡</span>
+                  <span class="caption-light" aria-hidden="true"><app-icon name="lightbulb" [size]="14" /></span>
                   <span class="caption-text">{{ block.caption }}</span>
                 </figcaption>
               }
@@ -254,7 +256,7 @@ import { LessonDocBlock } from '../../../core/models';
               @if (block.title) {
                 <div class="diagram-figure__header">
                   <div class="diagram-figure__header-left">
-                    <span class="diagram-figure__icon" aria-hidden="true">📐</span>
+                    <span class="diagram-figure__icon" aria-hidden="true"><app-icon name="layout" [size]="16" /></span>
                     <h4 class="diagram-figure__title">{{ block.title }}</h4>
                   </div>
                   <span class="diagram-figure__badge">Ilustración Técnica</span>
@@ -269,7 +271,7 @@ import { LessonDocBlock } from '../../../core/models';
               </div>
               @if (block.caption) {
                 <figcaption class="diagram-figure__caption">
-                  <span class="caption-light" aria-hidden="true">💡</span>
+                  <span class="caption-light" aria-hidden="true"><app-icon name="lightbulb" [size]="14" /></span>
                   <span class="caption-text">{{ block.caption }}</span>
                 </figcaption>
               }
@@ -697,12 +699,12 @@ export class LessonContentComponent {
 
   diagramIcon(type?: string): string {
     switch (type) {
-      case 'memory': return '🧠';
-      case 'flow': return '⚡';
-      case 'comparison': return '⚖️';
-      case 'architecture': return '🏛️';
-      case 'svg': return '📐';
-      default: return '📊';
+      case 'memory': return 'monitor';
+      case 'flow': return 'zap';
+      case 'comparison': return 'layers';
+      case 'architecture': return 'server';
+      case 'svg': return 'layout';
+      default: return 'file-text';
     }
   }
 
@@ -731,10 +733,10 @@ export class LessonContentComponent {
 
   iconOf(tone: string): string {
     switch (tone) {
-      case 'danger': return '⚠️';
-      case 'warning': return '⚠️';
-      case 'tip': return '💡';
-      default: return 'ℹ️';
+      case 'danger': return 'alert-triangle';
+      case 'warning': return 'alert-triangle';
+      case 'tip': return 'lightbulb';
+      default: return 'help-circle';
     }
   }
 

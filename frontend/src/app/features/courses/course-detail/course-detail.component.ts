@@ -4,10 +4,11 @@ import { CoursesService, isModuleFullyCompleted, isModuleUnlockedForStudent } fr
 import { AuthService } from '../../../core/services/auth.service';
 import { Course, CourseModule, Lesson } from '../../../core/models';
 import { CourseForumComponent } from '../course-forum/course-forum.component';
+import { AppIconComponent } from '../../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-course-detail',
-  imports: [RouterLink, CourseForumComponent],
+  imports: [RouterLink, CourseForumComponent, AppIconComponent],
   template: `
     @if (loading()) {
       <div class="container" style="padding: var(--sp-16) 0; text-align: center;">
@@ -49,29 +50,29 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
               <!-- Platzi-inspired Metrics Strip -->
               <div class="course-metrics-strip">
                 <div class="metric-item metric-rating">
-                  <span class="star-icon">⚡</span>
+                  <span class="star-icon"><app-icon name="zap" [size]="14" color="#FFB800" /></span>
                   <span class="rating-score">Pensum Oficial</span>
                   <span class="rating-count">SysEng Academy</span>
                 </div>
                 <span class="metric-divider">·</span>
                 <div class="metric-item">
-                  <span class="metric-icon">📚</span>
+                  <span class="metric-icon"><app-icon name="layers" [size]="16" color="var(--primary)" /></span>
                   <span><strong>{{ course()!.modules?.length ?? 0 }}</strong> módulos</span>
                 </div>
                 <span class="metric-divider">·</span>
                 <div class="metric-item">
-                  <span class="metric-icon">📖</span>
+                  <span class="metric-icon"><app-icon name="book-open" [size]="16" color="#00C8FF" /></span>
                   <span><strong>{{ course()!.lessons_count ?? 0 }}</strong> lecciones</span>
                 </div>
                 <span class="metric-divider">·</span>
                 <div class="metric-item">
-                  <span class="metric-icon">⏱</span>
+                  <span class="metric-icon"><app-icon name="clock" [size]="16" color="#FFB800" /></span>
                   <span><strong>{{ course()!.duration_hours }}h</strong> de práctica</span>
                 </div>
                 @if (totalChallenges() > 0) {
                   <span class="metric-divider">·</span>
                   <div class="metric-item">
-                    <span class="metric-icon">💻</span>
+                    <span class="metric-icon"><app-icon name="code" [size]="16" color="#9d4edd" /></span>
                     <span><strong>{{ totalChallenges() }}</strong> retos en vivo</span>
                   </div>
                 }
@@ -90,7 +91,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                 [attr.aria-selected]="activeTab() === 'curriculum'"
                 (click)="setTab('curriculum')"
               >
-                <span class="tab-btn__icon">📚</span>
+                <span class="tab-btn__icon"><app-icon name="book-open" [size]="16" /></span>
                 <span class="tab-btn__text">Temario y Contenido</span>
                 <span class="tab-btn__badge">{{ course()!.modules?.length ?? 0 }}</span>
               </button>
@@ -102,7 +103,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                 [attr.aria-selected]="activeTab() === 'forum'"
                 (click)="setTab('forum')"
               >
-                <span class="tab-btn__icon">💬</span>
+                <span class="tab-btn__icon"><app-icon name="chat" [size]="16" /></span>
                 <span class="tab-btn__text">Foro y Discusiones</span>
                 <span class="tab-btn__pill">Comunidad & Soluciones</span>
               </button>
@@ -112,7 +113,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
               <!-- Learning Objectives Highlights -->
               <section class="highlights-card">
                 <div class="highlights-card__head">
-                  <span class="highlights-icon">🎯</span>
+                  <span class="highlights-icon"><app-icon name="target" [size]="20" color="var(--primary)" /></span>
                   <div>
                     <h2>Lo que dominarás en este curso</h2>
                     <p>Metodología autodidacta guiada: lectura técnica exhaustiva, práctica interactiva y asistencia IA.</p>
@@ -120,19 +121,19 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                 </div>
                 <div class="highlights-grid">
                   <div class="highlight-item">
-                    <span class="hi-check">✓</span>
+                    <span class="hi-check"><app-icon name="check" [size]="13" color="var(--primary)" /></span>
                     <span>Documentación técnica detallada con ejemplos prácticos y sintaxis explicada a fondo.</span>
                   </div>
                   <div class="highlight-item">
-                    <span class="hi-check">✓</span>
+                    <span class="hi-check"><app-icon name="check" [size]="13" color="var(--primary)" /></span>
                     <span>Retos de programación con consola y evaluación automática en servidores SysEng.</span>
                   </div>
                   <div class="highlight-item">
-                    <span class="hi-check">✓</span>
+                    <span class="hi-check"><app-icon name="check" [size]="13" color="var(--primary)" /></span>
                     <span>Evaluaciones formativas (quizzes) por módulo para afianzar conceptos clave.</span>
                   </div>
                   <div class="highlight-item">
-                    <span class="hi-check">✓</span>
+                    <span class="hi-check"><app-icon name="check" [size]="13" color="var(--primary)" /></span>
                     <span>Asistencia con Inteligencia Artificial (Byte) para resolver dudas en cada tema.</span>
                   </div>
                 </div>
@@ -158,7 +159,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
 
                 @if (lockedToast()) {
                   <div class="lock-toast-banner" role="alert">
-                    <span class="toast-icon">🔒</span>
+                    <span class="toast-icon"><app-icon name="lock" [size]="16" color="#FF5252" /></span>
                     <span class="toast-text">{{ lockedToast() }}</span>
                     <button type="button" class="toast-close" (click)="lockedToast.set(null)">×</button>
                   </div>
@@ -172,25 +173,29 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                       <header class="syllabus-module__head" (click)="toggleModule(mod.id)">
                         <div class="sm-head__left">
                           <span class="sm-index-badge" [class.is-completed]="isModuleCompleted(mod)" [class.is-locked]="isModuleLocked(idx)">
-                            @if (isModuleLocked(idx)) { 🔒 }
-                            @else if (isModuleCompleted(mod)) { ✓ }
-                            @else { Módulo {{ idx + 1 }} }
+                            @if (isModuleLocked(idx)) {
+                              <app-icon name="lock" [size]="13" color="var(--text-muted)" />
+                            } @else if (isModuleCompleted(mod)) {
+                              <app-icon name="check" [size]="13" color="var(--primary)" />
+                            } @else {
+                              Módulo {{ idx + 1 }}
+                            }
                           </span>
                           <div class="sm-title-group">
                             <h3 class="sm-title">{{ mod.title }}</h3>
                             <span class="sm-meta">
                               {{ mod.lessons?.length ?? 0 }} clases · {{ moduleDuration(mod) }} min de práctica
                               @if (isModuleLocked(idx)) {
-                                <span class="sm-locked-tag">· 🔒 Bloqueado (Completa el Módulo {{ idx }})</span>
+                                <span class="sm-locked-tag">· <app-icon name="lock" [size]="11" /> Bloqueado (Completa el Módulo {{ idx }})</span>
                               } @else if (isModuleCompleted(mod)) {
-                                <span class="sm-completed-tag">· Completado ✓</span>
+                                <span class="sm-completed-tag">· Completado <app-icon name="check" [size]="11" /></span>
                               }
                             </span>
                           </div>
                         </div>
 
                         <div class="sm-head__right">
-                          <span class="chevron" [class.is-rotated]="isModuleOpen(mod.id)">▾</span>
+                          <span class="chevron" [class.is-rotated]="isModuleOpen(mod.id)"><app-icon name="chevron-down" [size]="14" /></span>
                         </div>
                       </header>
 
@@ -206,12 +211,10 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                                [class.is-locked-guest]="!auth.isAuthenticated()">
                               <div class="sl-left">
                                 <span class="sl-num" [class.is-completed]="lesson.completed" [class.is-locked]="isModuleLocked(idx)">
-                                  @if (!auth.isAuthenticated()) {
-                                    🔒
-                                  } @else if (isModuleLocked(idx)) {
-                                    🔒
+                                  @if (!auth.isAuthenticated() || isModuleLocked(idx)) {
+                                    <app-icon name="lock" [size]="12" color="var(--text-muted)" />
                                   } @else if (lesson.completed) {
-                                    ✓
+                                    <app-icon name="check" [size]="12" color="var(--primary)" />
                                   } @else {
                                     {{ lIdx + 1 }}
                                   }
@@ -225,7 +228,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                                     @if (!auth.isAuthenticated()) {
                                       <span class="sl-free-tag sl-lock-tag">Requiere Cuenta</span>
                                     } @else if (isModuleLocked(idx)) {
-                                      <span class="sl-free-tag sl-lock-tag">🔒 Módulo Bloqueado</span>
+                                      <span class="sl-free-tag sl-lock-tag"><app-icon name="lock" [size]="11" /> Módulo Bloqueado</span>
                                     } @else if (lesson.is_preview) {
                                       <span class="sl-free-tag">Acceso libre</span>
                                     }
@@ -234,8 +237,11 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                               </div>
 
                               <div class="sl-right">
-                                <span class="sl-duration">⏱ {{ lesson.duration_minutes || 10 }} min</span>
-                                <span class="sl-arrow">{{ (!isModuleLocked(idx) && auth.isAuthenticated()) ? '→' : '🔒' }}</span>
+                                <span class="sl-duration"><app-icon name="clock" [size]="11" /> {{ lesson.duration_minutes || 10 }} min</span>
+                                <span class="sl-arrow">
+                                  @if (!isModuleLocked(idx) && auth.isAuthenticated()) { → }
+                                  @else { <app-icon name="lock" [size]="12" /> }
+                                </span>
                               </div>
                             </a>
                           }
@@ -261,7 +267,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
               <div class="action-card">
                 @if (!auth.isAuthenticated()) {
                   <div class="auth-gate-box">
-                    <div class="gate-icon-wrap">🔒</div>
+                    <div class="gate-icon-wrap"><app-icon name="lock" [size]="28" color="#FF5252" /></div>
                     <h3 class="gate-title">Contenido Exclusivo</h3>
                     <p class="gate-desc">
                       Inicia sesión o regístrate para acceder al reproductor interactivo, terminal Linux en la nube y retos de código.
@@ -306,7 +312,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
               <!-- Methodology Card (Documentation-first) -->
               <div class="methodology-card">
                 <div class="methodology-card__header">
-                  <span class="m-icon">⚡</span>
+                  <span class="m-icon"><app-icon name="zap" [size]="18" color="var(--primary)" /></span>
                   <div>
                     <h3 class="m-title">Metodología SysEng</h3>
                     <p class="m-sub">Aprendizaje guiado por documentación técnica y práctica activa</p>
@@ -315,7 +321,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
 
                 <ul class="methodology-list">
                   <li class="m-item">
-                    <span class="m-item__icon">📖</span>
+                    <span class="m-item__icon"><app-icon name="book-open" [size]="20" color="#00C8FF" /></span>
                     <div class="m-item__content">
                       <strong>Documentación Profunda</strong>
                       <p>Lecturas técnicas estructuradas y detalladas, sin videos pasivos que te quiten tiempo.</p>
@@ -331,21 +337,21 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
                     </div>
                   </li>
                   <li class="m-item">
-                    <span class="m-item__icon">💻</span>
+                    <span class="m-item__icon"><app-icon name="code" [size]="20" color="var(--primary)" /></span>
                     <div class="m-item__content">
                       <strong>Retos de Código</strong>
                       <p>Entorno interactivo con terminal y evaluación automatizada en servidor.</p>
                     </div>
                   </li>
                   <li class="m-item">
-                    <span class="m-item__icon">❓</span>
+                    <span class="m-item__icon"><app-icon name="help-circle" [size]="20" color="#FFB800" /></span>
                     <div class="m-item__content">
                       <strong>Quizzes de Consolidación</strong>
                       <p>Preguntas al final de cada módulo para certificar tu comprensión técnica.</p>
                     </div>
                   </li>
                   <li class="m-item">
-                    <span class="m-item__icon">🏆</span>
+                    <span class="m-item__icon"><app-icon name="trophy" [size]="20" color="#FFD700" /></span>
                     <div class="m-item__content">
                       <strong>Certificado de Finalización</strong>
                       <p>Acreditación al aprobar todos los módulos y retos del curso.</p>
@@ -376,7 +382,7 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
         <div class="modal-backdrop" (click)="showAuthModal.set(false)">
           <div class="auth-gate-modal" (click)="$event.stopPropagation()">
             <button type="button" class="modal-close-btn" (click)="showAuthModal.set(false)">✕</button>
-            <div class="gate-modal-icon">🔐</div>
+            <div class="gate-modal-icon"><app-icon name="lock" [size]="32" color="var(--primary)" /></div>
             <h2>Acceso exclusivo para estudiantes</h2>
             <p>
               Para acceder a las lecciones prácticas, terminal interactiva en la nube, retos de código con evaluación automática y guardar tu progreso con insignias, necesitas una cuenta en <strong>SysEng Academy</strong>.
@@ -395,7 +401,9 @@ import { CourseForumComponent } from '../course-forum/course-forum.component';
     } @else {
       <div class="container" style="padding: var(--sp-20) var(--sp-4); text-align: center; min-height: 60vh; display: flex; align-items: center; justify-content: center;">
         <div class="empty-state-card" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: var(--sp-12); max-width: 520px; width: 100%; box-shadow: var(--shadow-xl);">
-          <div style="font-size: 3.5rem; margin-bottom: var(--sp-4);">🔍</div>
+          <div style="margin-bottom: var(--sp-4); display: flex; justify-content: center;">
+            <app-icon name="search" [size]="52" color="var(--text-muted)" />
+          </div>
           <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--sp-3);">Curso no encontrado</h2>
           <p style="color: var(--text-secondary); margin-bottom: var(--sp-6); line-height: 1.6;">El curso al que intentas acceder no existe o no está disponible en este momento.</p>
           <div style="display: flex; gap: var(--sp-3); justify-content: center; flex-wrap: wrap;">
@@ -1655,11 +1663,11 @@ export class CourseDetailComponent implements OnInit {
 
   lessonTypeBadge(type: string): string {
     return {
-      code_challenge: '💻 Reto de Código',
-      quiz: '❓ Quiz',
-      article: '📖 Lectura',
-      video: '🎥 Video'
-    }[type] ?? '📖 Lectura';
+      code_challenge: 'Reto de Código',
+      quiz: 'Quiz Evaluativo',
+      article: 'Lectura Técnica',
+      video: 'Video Explicativo'
+    }[type] ?? 'Lectura Técnica';
   }
 
   goToFirstLesson() {
@@ -1691,7 +1699,7 @@ export class CourseDetailComponent implements OnInit {
       event.stopPropagation();
       const prevIdx = moduleIndex > 0 ? moduleIndex - 1 : 0;
       const prevTitle = this.course()?.modules?.[prevIdx]?.title ? `«${this.course()!.modules![prevIdx].title}»` : `Módulo ${prevIdx + 1}`;
-      this.lockedToast.set(`🔒 Módulo Bloqueado: Para acceder al Módulo ${moduleIndex + 1} («${this.course()?.modules?.[moduleIndex]?.title || ''}»), debes completar primero todas las clases del Módulo ${prevIdx + 1}: ${prevTitle}.`);
+      this.lockedToast.set(`Módulo Bloqueado: Para acceder al Módulo ${moduleIndex + 1} («${this.course()?.modules?.[moduleIndex]?.title || ''}»), debes completar primero todas las clases del Módulo ${prevIdx + 1}: ${prevTitle}.`);
       setTimeout(() => this.lockedToast.set(null), 5500);
     }
   }

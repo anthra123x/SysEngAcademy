@@ -8,6 +8,7 @@ import { CoursesService } from '../../core/services/courses.service';
 import { StreakService } from '../../core/services/streak.service';
 import { TeacherService, TeacherStudent, TeacherActivity, TeacherOverviewResponse } from '../../core/services/teacher.service';
 import { Enrollment } from '../../core/models';
+import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 export interface AsciiAvatar {
   id: string;
@@ -155,7 +156,7 @@ export interface StreakDay {
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, AppIconComponent],
   template: `
     <div class="profile-page">
       <div class="container">
@@ -166,7 +167,7 @@ export interface StreakDay {
         @if (!isTeacher() && !diagnosticCompleted()) {
           <div class="onboarding-notice-bar animate-fade-in">
             <div class="onboarding-notice-left">
-              <span class="pulse-icon">⚡</span>
+              <span class="pulse-icon"><app-icon name="zap" [size]="14"/></span>
               <div class="notice-text">
                 <strong>[CALIBRACIÓN PENDIENTE]</strong>
                 <span>Realiza tu calibración inicial con Byte IA para desbloquear tu ruta y temario de ingeniería personalizado.</span>
@@ -190,7 +191,7 @@ export interface StreakDay {
               <span class="dot dot-maximize"></span>
             </div>
             <div class="terminal-title">
-              <span class="terminal-icon">{{ isTeacher() ? '🎓' : '🐧' }}</span>
+              <span class="terminal-icon"><app-icon [name]="isTeacher() ? 'graduation-cap' : 'terminal'" [size]="16" /></span>
               <span>syseng-profile — {{ auth.user()?.email || 'user' }}&#64;{{ isTeacher() ? 'syseng-faculty' : 'syseng-box' }}: ~/{{ isTeacher() ? 'faculty-portal' : 'profile' }} (bash)</span>
             </div>
             <div class="terminal-sys-status">
@@ -215,7 +216,7 @@ export interface StreakDay {
               <div class="neofetch-logo" (click)="openAvatarModal()" [title]="isTeacher() ? 'Personalizar Mascota y Firma de Cátedra' : 'Personalizar avatar ASCII animado'">
                 <pre class="ascii-art">{{ currentAsciiFrame() }}</pre>
                 <div class="ascii-hover-overlay">
-                  <span>[ ⚙ {{ isTeacher() ? 'Cambiar Mascota Docente' : 'Cambiar ASCII' }} ]</span>
+                  <span>[ <app-icon name="settings" [size]="12"/> {{ isTeacher() ? 'Cambiar Mascota Docente' : 'Cambiar ASCII' }} ]</span>
                 </div>
                 <div class="ascii-motion-indicator">
                   <span class="motion-dot"></span>
@@ -231,7 +232,7 @@ export interface StreakDay {
                   <span class="prompt-host">{{ isTeacher() ? 'faculty-council' : 'syseng-academy' }}</span>
                   <button type="button" class="btn-avatar-chip" (click)="openAvatarModal()">
                     <span>avatar: {{ currentAsciiAvatar().name }}</span>
-                    <span class="btn-avatar-icon">✎</span>
+                    <span class="btn-avatar-icon"><app-icon name="edit" [size]="11"/></span>
                   </button>
                 </div>
                 <div class="neofetch-divider">────────────────────────────────────────────────</div>
@@ -274,12 +275,12 @@ export interface StreakDay {
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Especialidad:</span>
-                      <span class="meta-v spec-tag">{{ specialization().icon }} {{ specialization().title }}</span>
+                      <span class="meta-v spec-tag" style="display:inline-flex; align-items:center; gap:6px;"><app-icon [name]="specialization().icon" [size]="14" /> {{ specialization().title }}</span>
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Racha Activa:</span>
                       <span class="meta-v streak-tag">
-                        <strong>🔥 {{ currentStreak() }} {{ currentStreak() === 1 ? 'día consecutivo' : 'días consecutivos' }}</strong>
+                        <strong style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="flame" [size]="14" /> {{ currentStreak() }} {{ currentStreak() === 1 ? 'día consecutivo' : 'días consecutivos' }}</strong>
                         <span class="streak-boost">({{ streakMultiplier() }}x XP Boost)</span>
                       </span>
                     </div>
@@ -372,7 +373,7 @@ export interface StreakDay {
                 >
                   <span class="term-tab__prompt">$</span>
                   <span class="term-tab__cmd">streak</span>
-                  <span class="term-tab__flag">🔥 {{ currentStreak() }}d</span>
+                  <span class="term-tab__flag" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="flame" [size]="12" /> {{ currentStreak() }}d</span>
                 </button>
 
                 <button
@@ -527,7 +528,7 @@ export interface StreakDay {
                       </span>
                       <span class="lcol-spec">
                         <span class="cat-chip" [style.color]="st.email_verified ? '#0ae98a' : '#ff9d33'">
-                          {{ st.email_verified ? '✓ Verificado' : '⏳ Pendiente' }}
+                          {{ st.email_verified ? '✓ Verificado' : 'Pendiente' }}
                         </span>
                       </span>
                       <span class="lcol-level">
@@ -567,7 +568,7 @@ export interface StreakDay {
                       </div>
                       <div class="badge-body">
                         <div class="badge-icon-box">
-                          <span class="badge-icon-char">{{ act.type === 'quiz' ? '📝' : (act.type === 'terminal' ? '💻' : '⚡') }}</span>
+                          <span class="badge-icon-char"><app-icon [name]="act.type === 'quiz' ? 'file-text' : (act.type === 'terminal' ? 'terminal' : 'code')" [size]="16" /></span>
                         </div>
                         <div class="badge-details">
                           <h4 class="badge-title">{{ act.title }}</h4>
@@ -611,8 +612,8 @@ export interface StreakDay {
                     <div class="rec-path-box">
                       <span class="rec-eyebrow">DIAGNÓSTICO AUTOMATIZADO DE COHORTE:</span>
                       <h2 class="rec-title">Rendimiento Sobresaliente en Algorítmica y Backend</h2>
-                      <span class="rec-milestone-pill">
-                        🎯 Recomendación: Diseñar un nuevo taller de Concurrencia y Mutex en C++
+                      <span class="rec-milestone-pill" style="display:inline-flex; align-items:center; gap:6px;">
+                        <app-icon name="target" [size]="14" /> Recomendación: Diseñar un nuevo taller de Concurrencia y Mutex en C++
                       </span>
                     </div>
 
@@ -624,8 +625,8 @@ export interface StreakDay {
                     </div>
 
                     <div class="rec-action-bar">
-                      <a routerLink="/docente" [queryParams]="{ tab: 'ai' }" class="btn btn-primary btn-lg">
-                        🚀 Abrir Generador de Quizzes &amp; Retos con IA →
+                      <a routerLink="/docente" [queryParams]="{ tab: 'ai' }" class="btn btn-primary btn-lg" style="display:inline-flex; align-items:center; gap:8px;">
+                        <app-icon name="sparkles" [size]="16" /> Abrir Generador de Quizzes &amp; Retos con IA →
                       </a>
                     </div>
                   </div>
@@ -655,7 +656,7 @@ export interface StreakDay {
                       <span class="sensor-label">RACHA DE ESTUDIO</span>
                       <span class="sensor-code">[STREAK_OK]</span>
                     </div>
-                    <div class="sensor-num text-orange">🔥 {{ currentStreak() }}d</div>
+                    <div class="sensor-num text-orange" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="flame" [size]="18" /> {{ currentStreak() }}d</div>
                     <div class="sensor-footer">
                       <span class="sensor-sub">Récord: {{ maxStreak() }} días</span>
                     </div>
@@ -733,7 +734,9 @@ export interface StreakDay {
                         <div class="process-row">
                           <span class="col-pid">10{{ 40 + i }}</span>
                           <span class="col-title">
-                            <span class="proc-icon">{{ emoji(enr) }}</span>
+                            <span class="proc-icon">
+                              <app-icon [category]="enr.course?.category?.slug" [size]="14" [color]="enr.course?.category?.color || '#0AE98A'" [strokeWidth]="2" />
+                            </span>
                             <strong>{{ enr.course?.title }}</strong>
                           </span>
                           <span class="col-cat">
@@ -751,7 +754,7 @@ export interface StreakDay {
                             @if (enr.completed_at || enr.progress_percent === 100) {
                               <span class="status-pill status-pill--done">✓ GRADUADO</span>
                             } @else {
-                              <span class="status-pill status-pill--running">⚡ EN EJECUCIÓN</span>
+                              <span class="status-pill status-pill--running"><app-icon name="zap" [size]="12"/> EN EJECUCIÓN</span>
                             }
                           </span>
                           <span class="col-action">
@@ -774,13 +777,13 @@ export interface StreakDay {
                     <span class="term-prefix">systemctl status</span>
                     <span class="term-arg">student-streak.service</span>
                   </div>
-                  <span class="term-status-badge text-orange">🔥 RACHA CONSECUTIVA ACTIVA</span>
+                  <span class="term-status-badge text-orange" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="flame" [size]="14" /> RACHA CONSECUTIVA ACTIVA</span>
                 </div>
 
                 <div class="streak-dashboard-layout">
                   <div class="streak-hero-card">
                     <div class="streak-flame-box">
-                      <span class="flame-big">🔥</span>
+                      <span class="flame-big"><app-icon name="flame" [size]="36" /></span>
                       <div class="flame-counter">
                         <span class="counter-num">{{ currentStreak() }}</span>
                         <span class="counter-lbl">DÍAS CONSECUTIVOS</span>
@@ -823,7 +826,7 @@ export interface StreakDay {
                           <span class="day-name">{{ day.dayName }}</span>
                           <span class="day-date font-mono" style="font-size: 10px; color: #64748b; margin-top: 2px;">{{ day.shortDate }}</span>
                           <div class="day-indicator" style="margin-top: 4px;">
-                            @if (day.completed) { <span>🔥</span> } @else if (day.isToday) { <span>⚡</span> } @else { <span>·</span> }
+                            @if (day.completed) { <span><app-icon name="flame" [size]="14" /></span> } @else if (day.isToday) { <span><app-icon name="zap" [size]="14" /></span> } @else { <span>·</span> }
                           </div>
                           <span class="day-status-txt">
                             @if (day.completed) { OK } @else if (day.isToday) { HOY } @else { PEND }
@@ -856,12 +859,12 @@ export interface StreakDay {
                         <div class="guild-card" [class.is-my-guild]="guild.isMember" (click)="openGuildWorkspace(guild)">
                           <div class="guild-header">
                             <div class="guild-badge-tag">{{ guild.tag }}</div>
-                            <span class="guild-streak">🔥 {{ guild.streakDays }}d racha grupal</span>
+                            <span class="guild-streak" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="flame" [size]="14" /> {{ guild.streakDays }}d racha grupal</span>
                           </div>
                           <h3 class="guild-title">{{ guild.name }}</h3>
                           <p class="guild-desc">{{ guild.description }}</p>
                           <div class="guild-footer">
-                            <span class="guild-members-count">👥 {{ guild.researchers.length }} miembros</span>
+                            <span class="guild-members-count" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="user" [size]="14" /> {{ guild.researchers.length }} miembros</span>
                             <div class="guild-card-actions" (click)="$event.stopPropagation()">
                               @if (guild.isMember) {
                                 <button type="button" class="btn btn-sm btn-outline-danger" (click)="leaveGuild(guild.id)">✓ Miembro (Salir)</button>
@@ -909,8 +912,8 @@ export interface StreakDay {
                         <div class="gh-tag-row">
                           <span class="guild-badge-tag">{{ selectedGuild()!.tag }}</span>
                           <span class="category-pill">{{ selectedGuild()!.category | uppercase }}</span>
-                          <span class="guild-streak">🔥 {{ selectedGuild()!.streakDays }}d racha</span>
-                          <span class="guild-members-count">👥 {{ selectedGuild()!.researchers.length }} miembros reales</span>
+                          <span class="guild-streak" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="flame" [size]="14" /> {{ selectedGuild()!.streakDays }}d racha</span>
+                          <span class="guild-members-count" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="user" [size]="14" /> {{ selectedGuild()!.researchers.length }} miembros reales</span>
                         </div>
                         <h2 class="gh-name">{{ selectedGuild()!.name }}</h2>
                         <p class="gh-desc">{{ selectedGuild()!.description }}</p>
@@ -951,26 +954,26 @@ export interface StreakDay {
                         <!-- FORMULARIO DE NUEVA PUBLICACIÓN -->
                         <div class="clan-post-creator">
                           <div class="cpc-header">
-                            <span class="cpc-title">📝 Iniciar Debate o Compartir Hallazgo</span>
+                            <span class="cpc-title" style="display:inline-flex; align-items:center; gap:6px;"><app-icon name="file-text" [size]="14" /> Iniciar Debate o Compartir Hallazgo</span>
                             <div class="cpc-types">
                               <button
                                 type="button"
                                 class="cpc-type-btn"
                                 [class.is-selected]="newPostType() === 'hallazgo'"
                                 (click)="newPostType.set('hallazgo')"
-                              >💡 Hallazgo</button>
+                              >Hallazgo</button>
                               <button
                                 type="button"
                                 class="cpc-type-btn"
                                 [class.is-selected]="newPostType() === 'pregunta'"
                                 (click)="newPostType.set('pregunta')"
-                              >❓ Pregunta</button>
+                              >Pregunta</button>
                               <button
                                 type="button"
                                 class="cpc-type-btn"
                                 [class.is-selected]="newPostType() === 'benchmark'"
                                 (click)="newPostType.set('benchmark')"
-                              >⚡ Benchmark</button>
+                              >Benchmark</button>
                             </div>
                           </div>
 
@@ -1004,8 +1007,9 @@ export interface StreakDay {
                               class="btn btn-sm btn-primary"
                               [disabled]="!newPostTitle().trim() || !newPostContent().trim()"
                               (click)="publishClanPost()"
+                              style="display:inline-flex; align-items:center; gap:6px;"
                             >
-                              🚀 Publicar en el Clan
+                              <app-icon name="send" [size]="14" /> Publicar en el Clan
                             </button>
                           </div>
 
@@ -1080,8 +1084,9 @@ export interface StreakDay {
                                   type="button"
                                   class="post-action-btn font-mono"
                                   (click)="toggleComments(post.id)"
+                                  style="display:inline-flex; align-items:center; gap:5px;"
                                 >
-                                  💬 {{ post.comments?.length || 0 }} Respuestas
+                                  <app-icon name="chat" [size]="13" /> {{ post.comments?.length || 0 }} Respuestas
                                 </button>
                               </div>
 
@@ -1160,7 +1165,7 @@ export interface StreakDay {
                     @if (activeGuildSection() === 'projects') {
                       <div class="guild-section-pane animate-fade-in">
                         <div class="weekly-challenge-box">
-                          <div class="wcb-badge font-mono">🔥 OBJETIVO SEMANAL DEL CLAN</div>
+                          <div class="wcb-badge font-mono" style="display:inline-flex; align-items:center; gap:6px;"><app-icon name="flame" [size]="14" /> OBJETIVO SEMANAL DEL CLAN</div>
                           <h3 class="wcb-title">{{ selectedGuild()!.weeklyChallenge.title }}</h3>
                           <p class="wcb-desc">
                             Resolver este objetivo grupal otorga bonificación de experiencia directa a todos los miembros activos del clan en el ranking general.
@@ -1180,7 +1185,7 @@ export interface StreakDay {
                                 class="btn btn-primary"
                                 (click)="completeClanChallenge()"
                               >
-                                ⚡ Marcar Reto como Superado (+{{ selectedGuild()!.weeklyChallenge.xpReward }} XP)
+                                <app-icon name="zap" [size]="14"/> Marcar Reto como Superado (+{{ selectedGuild()!.weeklyChallenge.xpReward }} XP)
                               </button>
                             }
                           </div>
@@ -1243,10 +1248,12 @@ export interface StreakDay {
                     <div class="badge-terminal-card" [class.is-unlocked]="b.unlocked" [class.is-locked]="!b.unlocked">
                       <div class="card-top-header">
                         <span class="badge-level-pill">{{ b.level | uppercase }}</span>
-                        <span class="badge-status-tag" [class.tag-unlocked]="b.unlocked">{{ b.unlocked ? '✓ DESBLOQUEADA' : '🔒 EN PROCESO' }}</span>
+                        <span class="badge-status-tag" [class.tag-unlocked]="b.unlocked" style="display:inline-flex; align-items:center; gap:4px;">
+                          <app-icon [name]="b.unlocked ? 'check' : 'lock'" [size]="12" /> {{ b.unlocked ? 'DESBLOQUEADA' : 'EN PROCESO' }}
+                        </span>
                       </div>
                       <div class="badge-body">
-                        <div class="badge-icon-box"><span class="badge-icon-char">{{ b.icon }}</span></div>
+                        <div class="badge-icon-box"><span class="badge-icon-char"><app-icon [name]="b.icon" [size]="24" /></span></div>
                         <div class="badge-details">
                           <h4 class="badge-title">{{ b.title }}</h4>
                           <p class="badge-desc">{{ b.description }}</p>
@@ -1292,7 +1299,7 @@ export interface StreakDay {
                 <div class="podium-section" [class.is-single-leader]="leaderboard().length === 1">
                   @if (leaderboard().length >= 2) {
                     <div class="podium-step podium-silver" [class.is-me]="leaderboard()[1].isCurrentUser">
-                      <div class="podium-avatar">🥈</div>
+                      <div class="podium-avatar"><app-icon name="medal" [size]="28" color="#94a3b8" /></div>
                       <div class="podium-name">
                         {{ leaderboard()[1].name }}
                         @if (leaderboard()[1].isCurrentUser) { <span class="podium-tu-tag">(Tú)</span> }
@@ -1303,8 +1310,7 @@ export interface StreakDay {
                   }
                   @if (leaderboard().length >= 1) {
                     <div class="podium-step podium-gold" [class.is-me]="leaderboard()[0].isCurrentUser">
-                      <div class="podium-crown">👑</div>
-                      <div class="podium-avatar">🥇</div>
+                      <div class="podium-avatar"><app-icon name="trophy" [size]="32" color="#eab308" /></div>
                       <div class="podium-name">
                         {{ leaderboard()[0].name }}
                         @if (leaderboard()[0].isCurrentUser) { <span class="podium-tu-tag">(Tú)</span> }
@@ -1315,7 +1321,7 @@ export interface StreakDay {
                   }
                   @if (leaderboard().length >= 3) {
                     <div class="podium-step podium-bronze" [class.is-me]="leaderboard()[2].isCurrentUser">
-                      <div class="podium-avatar">🥉</div>
+                      <div class="podium-avatar"><app-icon name="medal" [size]="24" color="#d97706" /></div>
                       <div class="podium-name">
                         {{ leaderboard()[2].name }}
                         @if (leaderboard()[2].isCurrentUser) { <span class="podium-tu-tag">(Tú)</span> }
@@ -1373,19 +1379,19 @@ export interface StreakDay {
                     <div class="rec-path-box">
                       <span class="rec-eyebrow">RUTA TÉCNICA ASIGNADA:</span>
                       <h2 class="rec-title">{{ currentRecommendation().pathTitle }}</h2>
-                      <span class="rec-milestone-pill">
-                        🎯 Estación: Hito {{ currentRecommendation().milestoneOrder }} ({{ currentRecommendation().targetLevelName }})
+                      <span class="rec-milestone-pill" style="display:inline-flex; align-items:center; gap:6px;">
+                        <app-icon name="target" [size]="14" /> Estación: Hito {{ currentRecommendation().milestoneOrder }} ({{ currentRecommendation().targetLevelName }})
                       </span>
                     </div>
                     <div class="rec-rationale">
                       <p class="rationale-text">{{ currentRecommendation().rationale }}</p>
                     </div>
                     <div class="rec-action-bar" style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;">
-                      <a [routerLink]="['/cursos', currentRecommendation().suggestedCourseSlug]" class="btn btn-primary">
-                        🚀 Empezar Esta Ruta →
+                      <a [routerLink]="['/cursos', currentRecommendation().suggestedCourseSlug]" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
+                        <app-icon name="sparkles" [size]="16" /> Empezar Esta Ruta →
                       </a>
-                      <a routerLink="/onboarding" class="btn btn-outline">
-                        ⚡ Recalibrar Diagnóstico con IA
+                      <a routerLink="/onboarding" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+                        <app-icon name="zap" [size]="16" /> Recalibrar Diagnóstico con IA
                       </a>
                     </div>
                   </div>
@@ -1523,8 +1529,8 @@ export interface StreakDay {
                 </p>
 
                 @if (guildActionError(); as err) {
-                  <p style="color: #ef4444; font-size: 11.5px; margin-bottom: 12px; font-family: var(--font-mono);">
-                    ⚠ {{ err }}
+                  <p style="color: #ef4444; font-size: 11.5px; margin-bottom: 12px; font-family: var(--font-mono); display: flex; align-items: center; gap: 6px;">
+                    <app-icon name="alert-triangle" [size]="13"/> {{ err }}
                   </p>
                 }
 
@@ -4103,7 +4109,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       frames: [
         `      .---.
      /     \\
-    | [o] [o]|  🎓
+    | [o] [o]|  [*]
     |   _    | /
      \\  -   /
      /|===|\\
@@ -4111,7 +4117,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
    GRAND MENTOR`,
         `      .---.
      /     \\
-    | [-] [-]|  🎓
+    | [-] [-]|  [*]
     |   _    | /
      \\  -   /
      /|===|\\
@@ -4119,7 +4125,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
    GRAND MENTOR`,
         `      .---.
      /     \\
-    | [^] [^]|  🎓
+    | [^] [^]|  [*]
     |   o    | /
      \\  -   /
      /|===|\\
@@ -5628,18 +5634,18 @@ for (let paso = 1; paso <= 3; paso++) {
 
   readonly specialization = computed(() => {
     if (this.isDemoStudent()) {
-      return { title: 'Sistemas Backend & APIs Distribuidas', icon: '⚙️' };
+      return { title: 'Sistemas Backend & APIs Distribuidas', icon: 'server' };
     }
     if (this.diagnosticCompleted()) {
       const spec = this.diagnosticResult().recommendedSpecialty || 'Fundamentos de Programación';
-      let icon = '🚀';
+      let icon = 'terminal';
       const s = spec.toLowerCase();
-      if (s.includes('backend') || s.includes('servidor')) icon = '⚙️';
-      else if (s.includes('frontend') || s.includes('web')) icon = '🎨';
-      else if (s.includes('algo') || s.includes('lógica')) icon = '🧩';
+      if (s.includes('backend') || s.includes('servidor')) icon = 'server';
+      else if (s.includes('frontend') || s.includes('web')) icon = 'layout';
+      else if (s.includes('algo') || s.includes('lógica')) icon = 'zap';
       return { title: spec, icon };
     }
-    return { title: 'Por definir (Prueba Diagnóstica Pendiente)', icon: '📝' };
+    return { title: 'Por definir (Prueba Diagnóstica Pendiente)', icon: 'file-text' };
   });
 
   myRank(): number {
@@ -5654,7 +5660,7 @@ for (let paso = 1; paso <= 3; paso++) {
           id: 'welcome_cadet',
           title: 'Bienvenido a la Academia',
           category: 'special',
-          icon: '🎓',
+          icon: 'graduation-cap',
           description: 'Creaste y activaste tu cuenta de estudiante.',
           requirement: 'Cuenta verificada',
           targetCount: 1,
@@ -5668,7 +5674,7 @@ for (let paso = 1; paso <= 3; paso++) {
           id: 'challenge_1',
           title: 'Primer Algoritmo CLI',
           category: 'challenges',
-          icon: '🥉',
+          icon: 'code',
           description: 'Compilaste tu primer reto interactivo.',
           requirement: 'Resuelve 1 reto',
           targetCount: 1,
@@ -5682,7 +5688,7 @@ for (let paso = 1; paso <= 3; paso++) {
           id: 'streak_fire',
           title: 'Disciplina & Constancia',
           category: 'special',
-          icon: '🔥',
+          icon: 'flame',
           description: 'Mantuviste una racha de estudio de al menos 5 días.',
           requirement: 'Racha >= 5 días',
           targetCount: 5,
@@ -5708,7 +5714,7 @@ for (let paso = 1; paso <= 3; paso++) {
         id: 'welcome_cadet',
         title: 'Bienvenido a la Academia',
         category: 'special',
-        icon: '🎓',
+        icon: 'graduation-cap',
         description: 'Creaste y activaste tu cuenta de estudiante en SysEng.',
         requirement: 'Registro y activación',
         targetCount: 1,
@@ -5722,7 +5728,7 @@ for (let paso = 1; paso <= 3; paso++) {
         id: 'diagnostic_done',
         title: 'Calibración de Nivel',
         category: 'special',
-        icon: '⚡',
+        icon: 'zap',
         description: 'Completaste la prueba diagnóstica y definiste tu ruta inicial.',
         requirement: 'Completar examen inicial',
         targetCount: 1,
@@ -5736,7 +5742,7 @@ for (let paso = 1; paso <= 3; paso++) {
         id: 'challenge_1',
         title: 'Primer Algoritmo CLI',
         category: 'challenges',
-        icon: '🥉',
+        icon: 'code',
         description: 'Compilaste tu primer reto interactivo en la terminal.',
         requirement: 'Resuelve 1 reto',
         targetCount: 1,
@@ -5750,7 +5756,7 @@ for (let paso = 1; paso <= 3; paso++) {
         id: 'challenge_master',
         title: 'Maestro de Algoritmos',
         category: 'challenges',
-        icon: '⚔️',
+        icon: 'target',
         description: 'Superaste con éxito 3 retos de práctica y código.',
         requirement: 'Resuelve 3 retos',
         targetCount: 3,
@@ -5764,7 +5770,7 @@ for (let paso = 1; paso <= 3; paso++) {
         id: 'streak_3',
         title: 'Hábito de Código',
         category: 'special',
-        icon: '🔥',
+        icon: 'flame',
         description: 'Estudiaste durante 3 días consecutivos en la plataforma.',
         requirement: 'Racha >= 3 días',
         targetCount: 3,
@@ -5778,7 +5784,7 @@ for (let paso = 1; paso <= 3; paso++) {
         id: 'streak_fire',
         title: 'Disciplina & Constancia',
         category: 'special',
-        icon: '🚀',
+        icon: 'flame',
         description: 'Mantuviste una racha de estudio ininterrumpida de al menos 5 días.',
         requirement: 'Racha >= 5 días',
         targetCount: 5,
@@ -5792,7 +5798,7 @@ for (let paso = 1; paso <= 3; paso++) {
         id: 'course_explorer',
         title: 'Explorador Técnico',
         category: 'courses',
-        icon: '📚',
+        icon: 'book-open',
         description: 'Te inscribiste en al menos 2 cursos del pensum institucional.',
         requirement: 'Inscribirse en 2 cursos',
         targetCount: 2,
@@ -5806,7 +5812,7 @@ for (let paso = 1; paso <= 3; paso++) {
         id: 'course_master',
         title: 'Graduado de Cátedra',
         category: 'courses',
-        icon: '🏆',
+        icon: 'trophy',
         description: 'Completaste al 100% tu primer curso oficial en SysEng Academy.',
         requirement: 'Completar 1 curso',
         targetCount: 1,
@@ -5820,7 +5826,7 @@ for (let paso = 1; paso <= 3; paso++) {
         id: 'clan_brotherhood',
         title: 'Pertenencia a Clan',
         category: 'special',
-        icon: '🛡️',
+        icon: 'shield',
         description: 'Te uniste a un clan o semillero de investigación técnica.',
         requirement: 'Unirte a 1 clan',
         targetCount: 1,
@@ -5834,7 +5840,7 @@ for (let paso = 1; paso <= 3; paso++) {
         id: 'study_marathon',
         title: 'Enfoque Profundo',
         category: 'special',
-        icon: '⏱️',
+        icon: 'clock',
         description: 'Dedicaste más de 15 minutos de estudio y código en la plataforma.',
         requirement: 'Estudio >= 15 min',
         targetCount: 15,
@@ -5865,10 +5871,10 @@ for (let paso = 1; paso <= 3; paso++) {
       return remote.map((entry, idx) => {
         const isMe = entry.email?.toLowerCase().trim() === myEmail || entry.isCurrentUser;
         const rank = idx + 1;
-        let badge = '⚡ ACTIVO';
-        if (rank === 1) badge = '🥇 ORO';
-        else if (rank === 2) badge = '🥈 PLATA';
-        else if (rank === 3) badge = '🥉 BRONCE';
+        let badge = 'ACTIVO';
+        if (rank === 1) badge = 'ORO';
+        else if (rank === 2) badge = 'PLATA';
+        else if (rank === 3) badge = 'BRONCE';
 
         return {
           ...entry,
@@ -5989,17 +5995,17 @@ for (let paso = 1; paso <= 3; paso++) {
         avgQuizScore: 100,
         xp: this.totalXp() || 50,
         isCurrentUser: true,
-        badgePill: '🥇 ORO',
+        badgePill: 'ORO',
       }];
     }
 
     return sortedList.map((st, idx) => {
       const rank = idx + 1;
       const isMe = st.email === myEmail;
-      let badge = '⚡ ACTIVO';
-      if (rank === 1) badge = '🥇 ORO';
-      else if (rank === 2) badge = '🥈 PLATA';
-      else if (rank === 3) badge = '🥉 BRONCE';
+      let badge = 'ACTIVO';
+      if (rank === 1) badge = 'ORO';
+      else if (rank === 2) badge = 'PLATA';
+      else if (rank === 3) badge = 'BRONCE';
 
       const level = Math.max(1, Math.min(5, Math.floor(st.xp / 150) + 1));
       const rankTitles = ['Junior Dev', 'Algorithmic Solver', 'Systems Builder', 'Junior Engineer', 'Master Architect'];
@@ -6021,8 +6027,4 @@ for (let paso = 1; paso <= 3; paso++) {
       };
     });
   });
-
-  emoji(enr: Enrollment): string {
-    return '📚';
-  }
 }

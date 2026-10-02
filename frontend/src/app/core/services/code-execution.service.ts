@@ -41,7 +41,7 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
     id: 'python',
     name: 'Python',
     version: '3.12',
-    icon: '🐍',
+    icon: 'code',
     extension: '.py',
     defaultTemplate: `# SysEngAcademy - Sandbox Python
 def saludar(nombre: str) -> str:
@@ -58,7 +58,7 @@ print("Suma:", sum(numeros))
     id: 'javascript',
     name: 'JavaScript',
     version: 'Node.js LTS',
-    icon: '🟨',
+    icon: 'code',
     extension: '.js',
     defaultTemplate: `// SysEngAcademy - Sandbox JavaScript
 function calcularFibonacci(n) {
@@ -73,7 +73,7 @@ console.log("Fibonacci(7):", calcularFibonacci(7));
     id: 'typescript',
     name: 'TypeScript',
     version: '5.x',
-    icon: '🔷',
+    icon: 'code',
     extension: '.ts',
     defaultTemplate: `// SysEngAcademy - Sandbox TypeScript
 interface Usuario {
@@ -90,7 +90,7 @@ console.log("Usuario:", u.nombre);
     id: 'pseint',
     name: 'PSeInt (Pseudocódigo)',
     version: '2023',
-    icon: '📝',
+    icon: 'terminal',
     extension: '.psc',
     defaultTemplate: `Algoritmo Saludo
     Definir nombre Como Caracter
@@ -103,7 +103,7 @@ FinAlgoritmo
     id: 'cpp',
     name: 'C++',
     version: 'GCC 13',
-    icon: '⚡',
+    icon: 'zap',
     extension: '.cpp',
     defaultTemplate: `#include <iostream>
 using namespace std;
@@ -118,7 +118,7 @@ int main() {
     id: 'java',
     name: 'Java',
     version: 'OpenJDK 21',
-    icon: '☕',
+    icon: 'coffee',
     extension: '.java',
     defaultTemplate: `public class Main {
     public static void main(String[] args) {
@@ -131,7 +131,7 @@ int main() {
     id: 'php',
     name: 'PHP',
     version: '8.3',
-    icon: '🐘',
+    icon: 'server',
     extension: '.php',
     defaultTemplate: `<?php
 echo "SysEng Academy - PHP 8.3\n";
@@ -145,7 +145,7 @@ foreach ($items as $item) {
     id: 'sql',
     name: 'PostgreSQL / SQL',
     version: '16',
-    icon: '🐘',
+    icon: 'database',
     extension: '.sql',
     defaultTemplate: `-- SysEngAcademy - Sandbox SQL
 CREATE TABLE IF NOT EXISTS demo (

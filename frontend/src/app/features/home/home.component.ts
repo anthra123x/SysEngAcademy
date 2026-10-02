@@ -3,12 +3,12 @@ import { RouterLink } from '@angular/router';
 import { NgIf, SlicePipe } from '@angular/common';
 import { HomeService } from '../../core/services/home.service';
 import { LearningPath, Course, Category } from '../../core/models';
+import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 interface SnakeStop {
   path: LearningPath;
   color: string;   // color de la categoría (identidad del nodo)
   name: string;    // nombre de la categoría
-  emoji: string;
   isRight: boolean;  // si la tarjeta va del lado derecho (alternante)
   num: number;     // posición en el recorrido (01..09)
   delay: number;   // stagger de entrada (s)
@@ -26,7 +26,7 @@ interface SnakeSeg {
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, SlicePipe],
+  imports: [RouterLink, SlicePipe, AppIconComponent],
   template: `
     <!-- HERO -->
     <section class="hero">
@@ -85,7 +85,7 @@ interface SnakeSeg {
         completar(nivel.lecciones)
         practicar(nivel.ejercicios)
 
-    <span class="k">return</span> <span class="s">"Ingeniero de Sistemas 🎓"</span>
+    <span class="k">return</span> <span class="s">"Ingeniero de Sistemas"</span>
 
 <span class="f">aprender_programacion</span>()</code></pre>
           </div>
@@ -98,7 +98,7 @@ interface SnakeSeg {
       <div class="container">
         <div class="section-header">
           <div class="section-eyebrow">
-            <span>🗺️</span> Línea de Tiempo Profesional
+            <app-icon name="map" [size]="15" color="var(--primary)" /> Línea de Tiempo Profesional
           </div>
           <h2 class="section-title">Rutas de <span>Aprendizaje Interactivas</span></h2>
           <p class="section-subtitle">Sigue la trayectoria paso a paso desde los fundamentos hasta especializaciones avanzadas con retroalimentación en tiempo real.</p>
@@ -150,9 +150,9 @@ interface SnakeSeg {
                         <h3 class="snake__title">{{ stop.path.title }}</h3>
                         <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
                         <div class="snake__meta">
-                          <span>📚 {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
                           <span>·</span>
-                          <span>⏱ {{ stop.path.estimated_hours }}h estimadas</span>
+                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h estimadas</span>
                         </div>
                         <span class="snake__cta">Explorar Ruta →</span>
                       </a>
@@ -164,9 +164,9 @@ interface SnakeSeg {
                         </div>
                         <span class="milestone-badge__desc">{{ stop.milestoneTitle }}</span>
                         <div class="milestone-badge__stats">
-                          <span>📚 {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
                           <span>·</span>
-                          <span>⏱ {{ stop.path.estimated_hours }}h de formación</span>
+                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h de formación</span>
                         </div>
                       </div>
                     }
@@ -177,7 +177,9 @@ interface SnakeSeg {
                     <div class="snake__node"
                          [style.background]="getPathGradient(stop.path)"
                          [style.border-color]="stop.color">
-                      <span class="snake__emoji">{{ stop.emoji }}</span>
+                      <span class="snake__icon">
+                        <app-icon [category]="stop.path.category?.slug" [size]="24" [color]="stop.color" [strokeWidth]="2" />
+                      </span>
                       <span class="snake__num">{{ ('0' + stop.num).slice(-2) }}</span>
                     </div>
                   </div>
@@ -193,9 +195,9 @@ interface SnakeSeg {
                         <h3 class="snake__title">{{ stop.path.title }}</h3>
                         <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
                         <div class="snake__meta">
-                          <span>📚 {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
                           <span>·</span>
-                          <span>⏱ {{ stop.path.estimated_hours }}h estimadas</span>
+                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h estimadas</span>
                         </div>
                         <span class="snake__cta">Explorar Ruta →</span>
                       </a>
@@ -207,9 +209,9 @@ interface SnakeSeg {
                         </div>
                         <span class="milestone-badge__desc">{{ stop.milestoneTitle }}</span>
                         <div class="milestone-badge__stats">
-                          <span>📚 {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
                           <span>·</span>
-                          <span>⏱ {{ stop.path.estimated_hours }}h de formación</span>
+                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h de formación</span>
                         </div>
                       </div>
                     }
@@ -232,7 +234,7 @@ interface SnakeSeg {
       <div class="container">
         <div class="section-header">
           <div class="section-eyebrow">
-            <span>⚡</span> Selección de la Academia
+            <app-icon name="zap" [size]="15" color="#FFB800" /> Selección de la Academia
           </div>
           <h2 class="section-title">Cursos <span>Destacados</span></h2>
           <p class="section-subtitle">Una selección de cursos esenciales con proyectos paso a paso y retos interactivos evaluados por IA para impulsar tu carrera técnica.</p>
@@ -243,7 +245,9 @@ interface SnakeSeg {
           @for (course of displayedCourses(); track course.id) {
             <a [routerLink]="['/cursos', course.slug]" class="udemy-course-card">
               <div class="card-thumb">
-                <span class="card-thumb__emoji">{{ getCourseEmoji(course) }}</span>
+                <span class="card-thumb__icon">
+                  <app-icon [category]="course.category?.slug" [size]="42" [color]="course.category?.color || '#0AE98A'" [strokeWidth]="1.8" />
+                </span>
                 @if (course.is_free) {
                   <span class="card-thumb__free">GRATIS</span>
                 }
@@ -255,7 +259,7 @@ interface SnakeSeg {
               <div class="card-body">
                 <div class="card-tags-row">
                   <span [class]="'badge badge-' + course.difficulty">{{ difficultyLabel(course.difficulty) }}</span>
-                  <span class="rating-badge">★ 4.9 <small>(1.4k+)</small></span>
+                  <span class="rating-badge"><app-icon name="star" [size]="12" color="#FFB800" /> 4.9 <small>(1.4k+)</small></span>
                 </div>
 
                 <h3 class="card-title">{{ course.title }}</h3>
@@ -263,16 +267,16 @@ interface SnakeSeg {
 
                 <!-- Value features checklist -->
                 <div class="card-features">
-                  <span>💻 Retos con IA</span>
-                  <span>❓ Quizzes</span>
-                  <span>💬 Foro activo</span>
+                  <span><app-icon name="sparkles" [size]="12" color="#0AE98A" /> Retos con IA</span>
+                  <span><app-icon name="file-text" [size]="12" color="#00C8FF" /> Quizzes</span>
+                  <span><app-icon name="chat" [size]="12" color="#9d4edd" /> Foro activo</span>
                 </div>
 
                 <div class="card-footer">
                   <div class="meta-stats">
-                    <span>⏱ {{ course.duration_hours }}h</span>
+                    <span><app-icon name="clock" [size]="12" /> {{ course.duration_hours }}h</span>
                     <span>·</span>
-                    <span>📚 {{ course.modules?.length ?? 3 }} módulos</span>
+                    <span><app-icon name="book" [size]="12" /> {{ course.modules?.length ?? 3 }} módulos</span>
                   </div>
                   <span class="card-cta">Explorar →</span>
                 </div>
@@ -295,7 +299,7 @@ interface SnakeSeg {
               <p>Filtra por tecnologías, nivel de dificultad y categorías para encontrar tu próxima especialización técnica.</p>
             </div>
             <a routerLink="/cursos" class="btn btn-primary btn-lg">
-              <span>📚</span>
+              <app-icon name="book-open" [size]="18" />
               <span>Ir al Catálogo de Cursos (43) →</span>
             </a>
           </div>
@@ -636,8 +640,10 @@ interface SnakeSeg {
       cursor: default;
     }
 
-    .snake__emoji {
-      font-size: 1.4rem;
+    .snake__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       line-height: 1;
     }
 
@@ -901,8 +907,10 @@ interface SnakeSeg {
         width: 44px;
         height: 44px;
 
-        .snake__emoji {
-          font-size: 1.15rem;
+        .snake__icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .snake__num {
@@ -1046,6 +1054,10 @@ interface SnakeSeg {
           color: var(--primary);
           transform: translateX(4px);
         }
+
+        .card-thumb__icon {
+          transform: scale(1.1);
+        }
       }
 
       .card-thumb {
@@ -1057,7 +1069,12 @@ interface SnakeSeg {
         background: linear-gradient(180deg, var(--bg-surface-2) 0%, var(--bg-surface) 100%);
         border-bottom: 1px solid var(--border);
 
-        &__emoji { font-size: 2.75rem; }
+        &__icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform var(--transition-fast);
+        }
 
         &__free {
           position: absolute;
@@ -1224,7 +1241,6 @@ export class HomeComponent implements OnInit {
         path: p,
         color: p.category?.color ?? '#0AE98A',
         name: p.category?.name ?? 'Ruta',
-        emoji: this.getPathEmoji(p),
         isRight: idx % 2 === 1,
         num: idx + 1,
         delay: Math.round(idx * 0.12 * 10) / 10,
@@ -1291,27 +1307,6 @@ export class HomeComponent implements OnInit {
       advanced: 'Avanzado', expert: 'Experto',
     };
     return map[d] ?? d;
-  }
-
-  getCategoryEmoji(slug: string): string {
-    const map: Record<string, string> = {
-      'programacion-basica': '💡', 'algoritmos': '⚡',
-      'poo': '🧩', 'bases-de-datos': '🗄️',
-      'redes': '🌐', 'sistemas-operativos': '🖥️',
-      'estructuras-de-datos': '🌳', 'desarrollo-web': '🕸️',
-      'desarrollo-backend': '⚙️', 'desarrollo-frontend': '🎨',
-      'devops': '🐳', 'git': '🌿',
-      'ingenieria-software': '📋', 'ia-desarrollo': '🧠',
-    };
-    return map[slug] ?? '📚';
-  }
-
-  getCourseEmoji(course: Course): string {
-    return this.getCategoryEmoji(course.category?.slug ?? '');
-  }
-
-  getPathEmoji(path: LearningPath): string {
-    return this.getCategoryEmoji(path.category?.slug ?? '');
   }
 
   getPathGradient(path: LearningPath): string {

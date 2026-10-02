@@ -17,6 +17,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { AiChatService } from '../../core/services/ai-chat.service';
 import { AiPracticeQuiz } from '../../core/models';
 import { ByteRobot3dComponent } from './byte-robot-3d.component';
+import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 /** Mensaje local del panel */
 interface PanelMsg {
@@ -34,7 +35,7 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
 @Component({
   selector: 'app-ai-companion',
   standalone: true,
-  imports: [FormsModule, RouterLink, ByteRobot3dComponent],
+  imports: [FormsModule, RouterLink, ByteRobot3dComponent, AppIconComponent],
   template: `
     <!-- ===== FAB / 3D ACTOR ===== -->
     @if (!hidden()) {
@@ -48,7 +49,7 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
             [attr.aria-label]="'Consejo de Byte: ' + currentBubbleMessage()!.text"
             title="Haz clic para abrir Byte Console"
           >
-            <span class="bubble-icon" aria-hidden="true">{{ currentBubbleMessage()!.icon }}</span>
+            <span class="bubble-icon" aria-hidden="true"><app-icon [name]="currentBubbleMessage()!.icon" [size]="16"/></span>
             <div class="bubble-content">
               <span class="bubble-tag">{{ isTeacherMode() ? 'Docente & Admin' : 'Tip de Ingeniería' }}</span>
               <span class="bubble-text">{{ currentBubbleMessage()!.text }}</span>
@@ -83,7 +84,7 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
         <!-- Windows Terminal Titlebar / Tab Strip -->
         <header class="term-tab-strip">
           <div class="term-tab term-tab--active" [class.term-tab--teacher]="isTeacherMode()">
-            <span class="tab-glyph" aria-hidden="true">{{ isTeacherMode() ? '⚡' : '🐧' }}</span>
+            <span class="tab-glyph" aria-hidden="true"><app-icon [name]="isTeacherMode() ? 'zap' : 'terminal'" [size]="13"/></span>
             <span class="tab-label">{{ isTeacherMode() ? 'PowerShell (Docente)' : 'Ubuntu-WSL: byte@syseng' }}</span>
             <span class="tab-status-dot" [class.is-busy]="busy()" title="Conexión activa"></span>
           </div>
@@ -1291,19 +1292,19 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   });
 
   readonly studentTips = [
-    { icon: '💡', text: 'Un algoritmo es una receta paso a paso para resolver un problema de forma determinista.' },
-    { icon: '⚡', text: 'Clean Code: Nombra tus variables por su propósito de negocio (ej: activeUsers vs a).' },
-    { icon: '🐛', text: 'Tip: Cuando depures, aísla el error reproduciendo la entrada mínima que falla.' },
-    { icon: '🚀', text: 'A programar se aprende programando: resuelve ejercicios en el simulador interactivo.' },
-    { icon: '☕', text: '¿Dudas con bucles, arrays o POO? Abre la consola y te guiaré con pistas socráticas.' },
-    { icon: '🛡️', text: 'Regla de oro: Valida siempre los datos de entrada en tus endpoints y funciones.' },
+    { icon: 'lightbulb', text: 'Un algoritmo es una receta paso a paso para resolver un problema de forma determinista.' },
+    { icon: 'zap', text: 'Clean Code: Nombra tus variables por su propósito de negocio (ej: activeUsers vs a).' },
+    { icon: 'alert-triangle', text: 'Tip: Cuando depures, aísla el error reproduciendo la entrada mínima que falla.' },
+    { icon: 'sparkles', text: 'A programar se aprende programando: resuelve ejercicios en el simulador interactivo.' },
+    { icon: 'coffee', text: '¿Dudas con bucles, arrays o POO? Abre la consola y te guiaré con pistas socráticas.' },
+    { icon: 'shield', text: 'Regla de oro: Valida siempre los datos de entrada en tus endpoints y funciones.' },
   ];
 
   readonly teacherTips = [
-    { icon: '🎓', text: 'La evaluación formativa con retroalimentación inmediata eleva la retención de los alumnos un 40%.' },
-    { icon: '📊', text: 'Supervisa el progreso y promedio evaluativo en tiempo real desde el Panel Docente.' },
-    { icon: '📝', text: '¿Necesitas redactar un quiz o examen? Pídemelo en consola y lo estructuro al instante.' },
-    { icon: '💡', text: 'El IDE interactivo permite evaluar código y test cases en vivo de los estudiantes.' },
+    { icon: 'graduation-cap', text: 'La evaluación formativa con retroalimentación inmediata eleva la retención de los alumnos un 40%.' },
+    { icon: 'chart', text: 'Supervisa el progreso y promedio evaluativo en tiempo real desde el Panel Docente.' },
+    { icon: 'file-text', text: '¿Necesitas redactar un quiz o examen? Pídemelo en consola y lo estructuro al instante.' },
+    { icon: 'lightbulb', text: 'El IDE interactivo permite evaluar código y test cases en vivo de los estudiantes.' },
   ];
 
   currentBubbleMessage = computed(() => {
@@ -1436,12 +1437,12 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
       if (this.isTeacherMode()) {
         this.pushMessage(
           'assistant',
-          '**Byte Académico** inicializado [Modo Docente & Admin] 🎓.\n\nPuedo apoyarte con analítica de estudiantes, diseño de evaluaciones técnicas y sugerencias pedagógicas para tus rutas. ¿En qué gestión académica colaboramos hoy?'
+          '**Byte Académico** inicializado [Modo Docente & Admin].\n\nPuedo apoyarte con analítica de estudiantes, diseño de evaluaciones técnicas y sugerencias pedagógicas para tus rutas. ¿En qué gestión académica colaboramos hoy?'
         );
       } else {
         this.pushMessage(
           'assistant',
-          '**Byte IA** listo [Consola de Mentoría] 🚀.\n\nEspecializado en algoritmos, estructuras de datos, clean code y depuración de software. Pregúntame sobre cualquier concepto o pide una pista socrática para tu código.'
+          '**Byte IA** listo [Consola de Mentoría].\n\nEspecializado en algoritmos, estructuras de datos, clean code y depuración de software. Pregúntame sobre cualquier concepto o pide una pista socrática para tu código.'
         );
       }
     }
@@ -1595,31 +1596,31 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
 
     if (this.isTeacherMode()) {
       if (q.includes('rendimiento') || q.includes('analizar') || q.includes('métrica')) {
-        return '### 📊 Informe Analítico de Rendimiento\n\n- **Estudiantes Activos**: 24 alumnos en plataforma.\n- **Promedio de Evaluaciones**: 84.5% de aprobación en quizzes.\n- **Lecciones Completadas**: 182 actividades prácticas superadas.\n\n**Recomendación Pedagógica**: Los estudiantes presentan excelente retención en fundamentos básicos, pero un 18% tiene dudas en estructuras iterativas complejas (bucles anidados). Se recomienda reforzar con un laboratorio práctico.';
+        return '### Informe Analítico de Rendimiento\n\n- **Estudiantes Activos**: 24 alumnos en plataforma.\n- **Promedio de Evaluaciones**: 84.5% de aprobación en quizzes.\n- **Lecciones Completadas**: 182 actividades prácticas superadas.\n\n**Recomendación Pedagógica**: Los estudiantes presentan excelente retención en fundamentos básicos, pero un 18% tiene dudas en estructuras iterativas complejas (bucles anidados). Se recomienda reforzar con un laboratorio práctico.';
       }
       if (q.includes('quiz') || q.includes('evaluación') || q.includes('examen')) {
-        return '### 📝 Propuesta de Evaluación: Fundamentos y Lógica\n\n1. **¿Cuál es la complejidad temporal de una búsqueda binaria en un array ordenado?**\n   - A) O(n) | B) O(log n) [Correcta] | C) O(n²) | D) O(1)\n2. **¿Qué diferencia a una lista enlazada de un array tradicional?**\n   - Asignación dinámica no contigua en memoria vs memoria contigua de tamaño fijo.\n3. **Desafío Práctico**:\n```python\ndef invertir_cadena(s: str) -> str:\n    # Complejidad O(n)\n    return s[::-1]\n```';
+        return '### Propuesta de Evaluación: Fundamentos y Lógica\n\n1. **¿Cuál es la complejidad temporal de una búsqueda binaria en un array ordenado?**\n   - A) O(n) | B) O(log n) [Correcta] | C) O(n²) | D) O(1)\n2. **¿Qué diferencia a una lista enlazada de un array tradicional?**\n   - Asignación dinámica no contigua en memoria vs memoria contigua de tamaño fijo.\n3. **Desafío Práctico**:\n```python\ndef invertir_cadena(s: str) -> str:\n    # Complejidad O(n)\n    return s[::-1]\n```';
       }
       if (q.includes('riesgo') || q.includes('alumnos') || q.includes('motivar')) {
-        return '### ⚠️ Estrategias de Retención para Alumnos Rezagados\n\n1. **Pistas Socráticas Graduales**: Dividir los retos de código en 3 submódulos para reducir la fricción inicial.\n2. **Gamificación**: Otorgar insignias al completar los primeros 3 quizzes consecutivos.\n3. **Sesiones de Dudas Asíncronas**: Incentivar el uso del Foro del Curso para debates técnicos entre pares.';
+        return '### Estrategias de Retención para Alumnos Rezagados\n\n1. **Pistas Socráticas Graduales**: Dividir los retos de código en 3 submódulos para reducir la fricción inicial.\n2. **Gamificación**: Otorgar insignias al completar los primeros 3 quizzes consecutivos.\n3. **Sesiones de Dudas Asíncronas**: Incentivar el uso del Foro del Curso para debates técnicos entre pares.';
       }
       return `Como copiloto docente en SysEngAcademy, he registrado tu consulta sobre "${query}". Puedes estructurar esta materia agregando retos interactivos al catálogo o revisando las notas de tus alumnos en el [ACTION:NAVIGATE:/docente:Panel Docente].`;
     }
 
     // Modo Estudiante
     if (q.includes('ruta') || q.includes('curso') || q.includes('empezar')) {
-      return '### 🧭 Recomendación de Ruta Formativa\n\nPara dominar la Ingeniería de Sistemas, te sugiero el siguiente recorrido:\n\n1. **Fundamentos de Programación** (Algoritmos, Pseudocódigo y Python básico).\n2. **Programación Orientada a Objetos** (Clases, herencia, encapsulamiento).\n3. **Bases de Datos y SQL** (Modelado y consultas relacionales).\n\n[ACTION:NAVIGATE:/rutas:Explorar Rutas de Aprendizaje]';
+      return '### Recomendación de Ruta Formativa\n\nPara dominar la Ingeniería de Sistemas, te sugiero el siguiente recorrido:\n\n1. **Fundamentos de Programación** (Algoritmos, Pseudocódigo y Python básico).\n2. **Programación Orientada a Objetos** (Clases, herencia, encapsulamiento).\n3. **Bases de Datos y SQL** (Modelado y consultas relacionales).\n\n[ACTION:NAVIGATE:/rutas:Explorar Rutas de Aprendizaje]';
     }
 
     if (q.includes('error') || q.includes('bug') || q.includes('depur')) {
-      return '### 🐛 Técnica de Depuración en 4 Pasos\n\n1. **Lee el traceback**: Identifica el archivo y el número de línea exacto del fallo.\n2. **Imprime estados**: Utiliza `print()` o un debugger para verificar qué valor tienen las variables justo antes del error.\n3. **Aísla el caso mínimo**: Crea una función pequeña con la entrada que provoca la excepción.\n4. **Prueba hipótesis**: Modifica una sola condición a la vez.';
+      return '### Técnica de Depuración en 4 Pasos\n\n1. **Lee el traceback**: Identifica el archivo y el número de línea exacto del fallo.\n2. **Imprime estados**: Utiliza `print()` o un debugger para verificar qué valor tienen las variables justo antes del error.\n3. **Aísla el caso mínimo**: Crea una función pequeña con la entrada que provoca la excepción.\n4. **Prueba hipótesis**: Modifica una sola condición a la vez.';
     }
 
     if (q.includes('desafío') || q.includes('reto') || q.includes('ejercicio')) {
-      return '### 🎯 Desafío de Código: Palíndromo Limpio\n\n**Enunciado**: Escribe una función que determine si una cadena de texto es un palíndromo, ignorando espacios y mayúsculas.\n\n```python\ndef es_palindromo(cadena: str) -> bool:\n    limpia = "".join(c.lower() for c in cadena if c.isalnum())\n    return limpia == limpia[::-1]\n\n# Prueba:\nprint(es_palindromo("Anita lava la tina")) # True\n```';
+      return '### Desafío de Código: Palíndromo Limpio\n\n**Enunciado**: Escribe una función que determine si una cadena de texto es un palíndromo, ignorando espacios y mayúsculas.\n\n```python\ndef es_palindromo(cadena: str) -> bool:\n    limpia = "".join(c.lower() for c in cadena if c.isalnum())\n    return limpia == limpia[::-1]\n\n# Prueba:\nprint(es_palindromo("Anita lava la tina")) # True\n```';
     }
 
-    return `### 💡 Mentoría Byte\n\nExcelente pregunta sobre **${query}**.\n\nEn Ingeniería de Software, la clave es descomponer los problemas en partes más pequeñas. Te recomiendo probar tu código en el simulador o revisar el catálogo formativo:\n\n[ACTION:NAVIGATE:/cursos:Ver Catálogo de Cursos]`;
+    return `### Mentoría Byte\n\nExcelente pregunta sobre **${query}**.\n\nEn Ingeniería de Software, la clave es descomponer los problemas en partes más pequeñas. Te recomiendo probar tu código en el simulador o revisar el catálogo formativo:\n\n[ACTION:NAVIGATE:/cursos:Ver Catálogo de Cursos]`;
   }
 
   // Acciones Rápidas

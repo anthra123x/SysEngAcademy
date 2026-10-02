@@ -12,11 +12,12 @@ import {
   QuizQuestion,
 } from '../../core/services/teacher.service';
 import { AuthService } from '../../core/services/auth.service';
+import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-teacher-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppIconComponent],
   template: `
     <div class="teacher-page">
       <!-- CABECERA PRINCIPAL DOCENTE -->
@@ -32,19 +33,32 @@ import { AuthService } from '../../core/services/auth.service';
 
           <div class="head-actions">
             <button type="button" class="btn btn-ghost" (click)="loadAllData()" [disabled]="loading()">
-              <span>{{ loading() ? 'Sincronizando…' : '🔄 Sincronizar' }}</span>
+              <span style="display:inline-flex; align-items:center; gap:6px;">
+                <app-icon name="refresh-cw" [size]="14" />
+                {{ loading() ? 'Sincronizando…' : 'Sincronizar' }}
+              </span>
             </button>
             <button type="button" class="btn btn-outline" (click)="triggerProgressDigest()" [disabled]="sendingDigest()">
-              <span>{{ sendingDigest() ? 'Enviando…' : '📧 Enviar Resumen Progreso' }}</span>
+              <span style="display:inline-flex; align-items:center; gap:6px;">
+                <app-icon name="mail" [size]="14" />
+                {{ sendingDigest() ? 'Enviando…' : 'Enviar Resumen Progreso' }}
+              </span>
             </button>
             <button type="button" class="btn btn-outline" (click)="triggerStreakReminder()" [disabled]="sendingStreak()">
-              <span>{{ sendingStreak() ? 'Enviando…' : '🔥 Alertas de Racha' }}</span>
+              <span style="display:inline-flex; align-items:center; gap:6px;">
+                <app-icon name="flame" [size]="14" color="#FF8A00" />
+                {{ sendingStreak() ? 'Enviando…' : 'Alertas de Racha' }}
+              </span>
             </button>
             <button type="button" class="btn btn-outline" (click)="openCreateModal('challenge')">
-              <span>➕ Nuevo Reto</span>
+              <span style="display:inline-flex; align-items:center; gap:6px;">
+                <app-icon name="plus" [size]="14" /> Nuevo Reto
+              </span>
             </button>
             <button type="button" class="btn btn-primary" (click)="openCreateModal('quiz')">
-              <span>📝 Crear Quiz</span>
+              <span style="display:inline-flex; align-items:center; gap:6px;">
+                <app-icon name="file-text" [size]="14" /> Crear Quiz
+              </span>
             </button>
           </div>
         </div>
@@ -104,7 +118,7 @@ import { AuthService } from '../../core/services/auth.service';
 
             <div class="panel-toolbar">
               <div class="search-input-group">
-                <span class="search-icon">🔍</span>
+                <span class="search-icon"><app-icon name="search" [size]="14" color="var(--text-muted)" /></span>
                 <input
                   type="text"
                   class="search-box"
@@ -306,7 +320,7 @@ import { AuthService } from '../../core/services/auth.service';
                   </div>
 
                   <h3 class="item-card__title">{{ act.title }}</h3>
-                  <div class="item-card__course">📚 {{ act.course_name }}</div>
+                  <div class="item-card__course" style="display:inline-flex; align-items:center; gap:6px;"><app-icon name="book" [size]="13" /> {{ act.course_name }}</div>
                   <p class="item-card__desc">{{ act.description }}</p>
 
                   @if (act.quiz_questions && act.quiz_questions.length > 0) {
@@ -513,7 +527,7 @@ import { AuthService } from '../../core/services/auth.service';
 
               @if (studentsAtRisk().length === 0) {
                 <div class="state-block" style="padding: 2rem 1rem; text-align: center;">
-                  <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">✅</span>
+                  <span style="display: flex; justify-content: center; margin-bottom: 0.5rem;"><app-icon name="check-circle" [size]="32" color="#0ae98a" /></span>
                   <p class="state-title" style="color: #0ae98a; font-weight: 600;">Cohorte al día</p>
                   <p class="state-desc" style="color: #94a3b8; font-size: 0.85rem;">Todos los estudiantes registrados presentan actividad regular y buen rendimiento evaluativo.</p>
                 </div>
@@ -642,8 +656,8 @@ import { AuthService } from '../../core/services/auth.service';
                 <div class="quiz-builder">
                   <div class="quiz-builder__head">
                     <label class="field-label">Preguntas del Quiz ({{ quizQuestionsList().length }})</label>
-                    <button type="button" class="btn btn-ghost btn-sm" (click)="addQuestionToDraft()">
-                      ➕ Añadir Pregunta
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="addQuestionToDraft()" style="display:inline-flex; align-items:center; gap:6px;">
+                      <app-icon name="plus" [size]="13" /> Añadir Pregunta
                     </button>
                   </div>
 
@@ -2068,7 +2082,7 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     this.teacherSvc.sendProgressDigest().subscribe({
       next: res => {
         this.sendingDigest.set(false);
-        this.actionNotification.set('📨 ' + res.message);
+        this.actionNotification.set(res.message);
         setTimeout(() => this.actionNotification.set(''), 6000);
       },
       error: () => this.sendingDigest.set(false),
@@ -2080,7 +2094,7 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     this.teacherSvc.sendStreakReminder().subscribe({
       next: res => {
         this.sendingStreak.set(false);
-        this.actionNotification.set('🔥 ' + res.message);
+        this.actionNotification.set(res.message);
         setTimeout(() => this.actionNotification.set(''), 6000);
       },
       error: () => this.sendingStreak.set(false),
