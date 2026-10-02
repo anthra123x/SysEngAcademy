@@ -252,7 +252,8 @@ interface SnakeSeg {
                   <span class="card-thumb__free">GRATIS</span>
                 }
                 <div class="card-thumb__category">
-                  {{ course.category?.name ?? 'Curso' }}
+                  <app-icon [category]="course.category?.slug" [size]="12" [strokeWidth]="2" />
+                  <span>{{ course.category?.name ?? 'Curso' }}</span>
                 </div>
               </div>
 
@@ -1093,6 +1094,9 @@ interface SnakeSeg {
           position: absolute;
           bottom: 8px;
           left: 12px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
           font-size: 10px;
           font-weight: var(--font-semibold);
           color: var(--text-secondary);

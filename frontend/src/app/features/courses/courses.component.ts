@@ -111,7 +111,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
                     <div class="card-badges">
                       @if (course.category) {
                         <span class="card-cat-tag">
-                          {{ course.category.name }}
+                          <app-icon [category]="course.category.slug" [size]="12" [strokeWidth]="2" />
+                          <span>{{ course.category.name }}</span>
                         </span>
                       }
                       <div [class]="'badge badge-' + course.difficulty">{{ diffLabel(course.difficulty) }}</div>
@@ -251,6 +252,9 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       &__body { flex: 1; padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-2);
         .card-badges { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-bottom: 2px; }
         .card-cat-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
           font-size: 0.7rem;
           font-weight: var(--font-bold);
           text-transform: uppercase;

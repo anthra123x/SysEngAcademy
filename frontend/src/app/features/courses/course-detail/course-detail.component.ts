@@ -37,8 +37,9 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
             <header class="course-header">
               <div class="course-header__badges">
                 @if (course()!.category) {
-                  <span class="badge badge-primary">
-                    {{ course()!.category!.name }}
+                  <span class="badge badge-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <app-icon [category]="course()!.category!.slug" [size]="13" [strokeWidth]="2" />
+                    <span>{{ course()!.category!.name }}</span>
                   </span>
                 }
                 <span [class]="'badge badge-' + course()!.difficulty">{{ diffLabel(course()!.difficulty) }}</span>

@@ -44,7 +44,10 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
                     <div [class]="'badge badge-' + path.difficulty">{{ diffLabel(path.difficulty) }}</div>
                   </div>
                   @if (path.category) {
-                    <span class="cat-tag">{{ path.category.name }}</span>
+                    <span class="cat-tag">
+                      <app-icon [category]="path.category.slug" [size]="12" [strokeWidth]="2" />
+                      <span>{{ path.category.name }}</span>
+                    </span>
                   }
                 </div>
                 <div class="path-card__body">
@@ -167,6 +170,9 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     }
 
     .cat-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       font-size: 0.7rem;
       font-weight: var(--font-bold);
       color: var(--primary);
