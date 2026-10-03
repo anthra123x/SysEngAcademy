@@ -101,7 +101,7 @@ export class CourseDetailComponent implements OnInit {
             this.loading.set(false);
             // Abrir todos los módulos por defecto para que el estudiante vea todo el temario y lecciones inmediatamente
             if (c?.modules && c.modules.length > 0) {
-              this.openModules.set(new Set<number>(c.modules.map(m => m.id)));
+              this.openModules.set(new Set<number>(c.modules.map(m => Number(m.id))));
             }
           },
           error: () => {
@@ -163,13 +163,14 @@ export class CourseDetailComponent implements OnInit {
   }
 
   isModuleOpen(id: number): boolean {
-    return this.openModules().has(id);
+    return this.openModules().has(Number(id));
   }
 
   toggleModule(id: number) {
+    const numId = Number(id);
     this.openModules.update(set => {
       const next = new Set(set);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(numId)) next.delete(numId); else next.add(numId);
       return next;
     });
   }
@@ -180,7 +181,7 @@ export class CourseDetailComponent implements OnInit {
     if (this.allExpanded()) {
       this.openModules.set(new Set());
     } else {
-      this.openModules.set(new Set(c.modules.map(m => m.id)));
+      this.openModules.set(new Set(c.modules.map(m => Number(m.id))));
     }
   }
 

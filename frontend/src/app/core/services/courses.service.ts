@@ -123,7 +123,7 @@ export class CoursesService {
       const raw = localStorage.getItem(key);
       if (raw) {
         const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) return new Set(arr);
+        if (Array.isArray(arr)) return new Set(arr.map(Number));
       }
     } catch (e) {
       console.warn('Error reading completed lessons from localStorage', e);
@@ -133,7 +133,7 @@ export class CoursesService {
 
   isLessonCompleted(lessonId: number, lessonSlug?: string): boolean {
     const ids = this.getCompletedLessonIds();
-    if (ids.has(lessonId)) return true;
+    if (ids.has(Number(lessonId))) return true;
     if (lessonSlug && typeof window !== 'undefined') {
       const email = this.getUserEmail();
       const slugKey = `syseng_${email}_completed_lesson_slugs`;
@@ -152,7 +152,7 @@ export class CoursesService {
     const email = this.getUserEmail();
     const key = `syseng_${email}_completed_lessons`;
     const set = this.getCompletedLessonIds();
-    set.add(lessonId);
+    set.add(Number(lessonId));
     try {
       localStorage.setItem(key, JSON.stringify(Array.from(set)));
       if (lessonSlug) {
@@ -163,7 +163,7 @@ export class CoursesService {
           localStorage.setItem(slugKey, JSON.stringify(slugRaw));
         }
       }
-      window.dispatchEvent(new CustomEvent('lesson-completed-updated', { detail: { lessonId, lessonSlug, email } }));
+      window.dispatchEvent(new CustomEvent('lesson-completed-updated', { detail: { lessonId: Number(lessonId), lessonSlug, email } }));
     } catch (e) {
       console.warn('Error saving completed lesson to localStorage', e);
     }
@@ -172,24 +172,48 @@ export class CoursesService {
   enrichCourseWithCompletions(course: Course): Course {
     if (!course || !course.modules) return course;
     const completedIds = this.getCompletedLessonIds();
+
+    // Sincronizar en localStorage cualquier progreso proveniente de PostgreSQL
+    for (const mod of course.modules) {
+      for (const lesson of mod.lessons ?? []) {
+        if (lesson.completed) {
+          completedIds.add(Number(lesson.id));
+          this.saveCompletedLesson(Number(lesson.id), lesson.slug);
+        }
+      }
+    }
+
     return {
       ...course,
+      id: Number(course.id),
       modules: course.modules.map(mod => ({
         ...mod,
-        lessons: (mod.lessons ?? []).map(lesson => ({
-          ...lesson,
-          completed: !!lesson.completed || completedIds.has(lesson.id) || this.isLessonCompleted(lesson.id, lesson.slug),
-        })),
+        id: Number(mod.id),
+        course_id: Number(mod.course_id),
+        lessons: (mod.lessons ?? []).map(lesson => {
+          const isDone = !!lesson.completed || completedIds.has(Number(lesson.id)) || this.isLessonCompleted(Number(lesson.id), lesson.slug);
+          return {
+            ...lesson,
+            id: Number(lesson.id),
+            module_id: Number(lesson.module_id),
+            completed: isDone,
+          };
+        }),
       })),
     };
   }
 
   enrichLessonWithCompletions(lesson: LessonDetail): LessonDetail {
     if (!lesson) return lesson;
-    const isComp = this.isLessonCompleted(lesson.id, lesson.slug);
+    const numId = Number(lesson.id);
+    if (lesson.completed) {
+      this.saveCompletedLesson(numId, lesson.slug);
+    }
+    const isComp = !!lesson.completed || this.isLessonCompleted(numId, lesson.slug);
     return {
       ...lesson,
-      completed: !!lesson.completed || isComp,
+      id: numId,
+      completed: isComp,
     };
   }
 

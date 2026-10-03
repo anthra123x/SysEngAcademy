@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { LearningPath, PaginatedResponse } from '../models';
+import { LearningPath, PaginatedResponse, Course } from '../models';
 
 const PATHS_CACHE_KEY = 'syseng_cache_paths_v3';
 
@@ -40,7 +41,22 @@ export class LearningPathsService {
   }
 
   getBySlug(slug: string): Observable<LearningPath> {
-    return this.api.get<LearningPath>(`/learning-paths/${slug}`);
+    return this.api.get<LearningPath>(`/learning-paths/${slug}`).pipe(
+      map(path => {
+        if (!path) return path;
+        const allCourses = path.courses || [];
+        if (Array.isArray(path.levels)) {
+          const levels = path.levels.map(l => ({
+            ...l,
+            courses: (Array.isArray(l.courses) && l.courses.length > 0)
+              ? l.courses
+              : allCourses.filter((c: Course) => Number(c.learning_path_level_id) === Number(l.id)),
+          }));
+          return { ...path, levels };
+        }
+        return path;
+      })
+    );
   }
 
   private readCache(): PaginatedResponse<LearningPath> | null {

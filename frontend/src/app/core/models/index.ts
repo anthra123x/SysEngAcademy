@@ -29,6 +29,7 @@ export interface LearningPath {
   is_published: boolean;
   estimated_hours: number;
   levels?: LearningPathLevel[];
+  courses?: Course[];
   courses_count?: number;
 }
 

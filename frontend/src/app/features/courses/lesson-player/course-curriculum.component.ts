@@ -363,17 +363,19 @@ export class CourseCurriculumComponent {
 
   isOpen(id: number): boolean {
     // La sección que contiene la lección actual siempre queda abierta.
-    const current = this.currentLessonId();
+    const numId = Number(id);
+    const current = this.currentLessonId() != null ? Number(this.currentLessonId()) : null;
     if (current != null) {
-      const owner = this.sections().find((m) => (m.lessons ?? []).some((l) => l.id === current));
-      if (owner && owner.id === id) return true;
+      const owner = this.sections().find((m) => (m.lessons ?? []).some((l) => Number(l.id) === current));
+      if (owner && Number(owner.id) === numId) return true;
     }
-    return !this.collapsed().has(id);
+    return !this.collapsed().has(numId);
   }
 
   toggle(id: number): void {
+    const numId = Number(id);
     const next = new Set(this.collapsed());
-    next.has(id) ? next.delete(id) : next.add(id);
+    next.has(numId) ? next.delete(numId) : next.add(numId);
     this.collapsed.set(next);
   }
 
