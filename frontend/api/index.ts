@@ -2340,7 +2340,7 @@ export default async function handler(req: any, res: any) {
       const teacherName = user?.name || 'Docente de Cátedra';
       const teacherId = user?.id || null;
 
-      const body = await readBody(req);
+      const body = await getBody(req);
       const type = body.type || 'pedagogical'; // 'pedagogical', 'praise', 'warning_mild', 'warning_strict'
       const title = body.title ? String(body.title).trim() : 'Retroalimentación Docente';
       const message = body.message ? String(body.message).trim() : '';
