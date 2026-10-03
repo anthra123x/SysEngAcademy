@@ -1203,13 +1203,13 @@
             }
 
             @if (!isTeacher() && activeTab() === 'advisor') {
-              <div class="tab-pane animate-fade-in">
+              <div class="tab-pane tab-pane--advisor animate-fade-in">
                 <div class="section-terminal-bar">
                   <div class="terminal-bar-title">
                     <span class="term-prefix">feedback-hub</span>
                     <span class="term-arg">--ia-docente</span>
                   </div>
-                  <span class="term-status-badge text-purple">EXPEDIENTE & RETROALIMENTACIÓN INTEGRAL</span>
+                  <span class="term-status-badge text-purple">EXPEDIENTE &amp; RETROALIMENTACIÓN INTEGRAL</span>
                 </div>
 
                 <!-- ALERTA DISCIPLINARIA SI HAY LLAMADOS DE ATENCIÓN ACTIVOS -->
@@ -1235,24 +1235,49 @@
                 <!-- MÉTRICAS RÁPIDAS DEL EXPEDIENTE DE RETROALIMENTACIÓN -->
                 <div class="feedback-kpis-grid">
                   <div class="feedback-kpi-card">
-                    <span class="kpi-num">{{ studentFeedbacks().length }}</span>
-                    <span class="kpi-label">Comunicados de Cátedra</span>
+                    <div class="kpi-header">
+                      <span class="kpi-icon-wrap icon-info"><app-icon name="mail" [size]="15" /></span>
+                      <span class="kpi-label">Comunicados Cátedra</span>
+                    </div>
+                    <div class="kpi-num">{{ studentFeedbacks().length }}</div>
+                    <div class="kpi-sub">Mensajes del cuerpo docente</div>
                   </div>
+
                   <div class="feedback-kpi-card" [class.is-alert]="activeWarnings().length > 0">
-                    <span class="kpi-num" [style.color]="activeWarnings().length > 0 ? '#EF4444' : '#0AE98A'">
+                    <div class="kpi-header">
+                      <span class="kpi-icon-wrap" [class.icon-alert]="activeWarnings().length > 0" [class.icon-success]="activeWarnings().length === 0">
+                        <app-icon [name]="activeWarnings().length > 0 ? 'alert-triangle' : 'shield'" [size]="15" />
+                      </span>
+                      <span class="kpi-label">Llamados de Atención</span>
+                    </div>
+                    <div class="kpi-num" [style.color]="activeWarnings().length > 0 ? '#EF4444' : '#0AE98A'">
                       {{ activeWarnings().length }}
-                    </span>
-                    <span class="kpi-label">Llamados de Atención</span>
+                    </div>
+                    <div class="kpi-sub">
+                      {{ activeWarnings().length === 0 ? 'Expediente limpio y al día' : 'Advertencias vigentes' }}
+                    </div>
                   </div>
+
                   <div class="feedback-kpi-card">
-                    <span class="kpi-num" [style.color]="(totalBonusXp() - totalPenalizedXp()) >= 0 ? '#0AE98A' : '#EF4444'">
+                    <div class="kpi-header">
+                      <span class="kpi-icon-wrap icon-xp"><app-icon name="zap" [size]="15" /></span>
+                      <span class="kpi-label">Balance Gamificado</span>
+                    </div>
+                    <div class="kpi-num" [style.color]="(totalBonusXp() - totalPenalizedXp()) >= 0 ? '#0AE98A' : '#EF4444'">
                       {{ (totalBonusXp() - totalPenalizedXp()) >= 0 ? '+' : '' }}{{ totalBonusXp() - totalPenalizedXp() }} XP
-                    </span>
-                    <span class="kpi-label">Balance Gamificado</span>
+                    </div>
+                    <div class="kpi-sub">Impacto neto en tu ranking</div>
                   </div>
+
                   <div class="feedback-kpi-card">
-                    <span class="kpi-num" style="color: #9d4edd;">{{ currentRecommendation().matchScore }}%</span>
-                    <span class="kpi-label">Afinidad Cognitiva IA</span>
+                    <div class="kpi-header">
+                      <span class="kpi-icon-wrap icon-ai"><app-icon name="sparkles" [size]="15" /></span>
+                      <span class="kpi-label">Afinidad Cognitiva IA</span>
+                    </div>
+                    <div class="kpi-num" style="color: #c084fc;">
+                      {{ currentRecommendation().matchScore }}%
+                    </div>
+                    <div class="kpi-sub">Diagnóstico de Byte AI</div>
                   </div>
                 </div>
 
