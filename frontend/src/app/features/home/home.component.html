@@ -241,9 +241,6 @@
                 <span class="card-thumb__icon">
                   <app-icon [category]="course.category?.slug" [size]="42" [color]="course.category?.color || '#0AE98A'" [strokeWidth]="1.8" />
                 </span>
-                @if (course.is_free) {
-                  <span class="card-thumb__free">GRATIS</span>
-                }
                 <div class="card-thumb__category">
                   <app-icon [category]="course.category?.slug" [size]="12" [strokeWidth]="2" />
                   <span>{{ course.category?.name ?? 'Curso' }}</span>

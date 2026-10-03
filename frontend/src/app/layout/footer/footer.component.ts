@@ -43,7 +43,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
             <ul class="col-links">
               <li><a routerLink="/cursos">Catálogo Completo (43 Cursos)</a></li>
               <li><a routerLink="/rutas">9 Rutas de Carrera</a></li>
-              <li><a routerLink="/cursos" [queryParams]="{ is_free: true }">Cursos Gratuitos</a></li>
+              <li><a routerLink="/cursos">Proyectos &amp; Retos Prácticos</a></li>
               <li><a routerLink="/docente">Panel Docente</a></li>
             </ul>
           </div>

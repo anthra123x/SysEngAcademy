@@ -125,9 +125,6 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
                               </div>
                               <div class="pcc-badge-wrap">
                                 <span [class]="'badge badge-' + course.difficulty">{{ diffLabel(course.difficulty) }}</span>
-                                @if (course.is_free) {
-                                  <span class="badge badge-success">GRATIS</span>
-                                }
                               </div>
                             </div>
 
