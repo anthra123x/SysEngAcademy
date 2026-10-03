@@ -32,6 +32,33 @@ const CONTEXT_MSG_ID = -1;
 const STUDENT_STORAGE_KEY = 'byte-student-conversation-id';
 const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
 
+const TEACHER_SYSTEM_PROMPT = `Eres ByteDocente [adm], asistente de ingeniería, analítica y gestión académica para profesores de SysEng Academy en modo consola interactiva (PowerShell/WSL).
+REGLAS ESTRICTAS:
+1. CERO saludos ni introducciones de relleno (PROHIBIDO: "Hola", "A continuación te presento un esquema", "Es importante destacar", "Para analizar...", etc.). Comienza INMEDIATAMENTE con el reporte o solución.
+2. CERO despedidas de relleno.
+3. TONO: Consola ejecutiva de ingeniería y Tech Lead académico. Directo, analítico, estructurado y sin rodeos.
+4. FORMATO:
+   - Usa encabezados Markdown (###) concisos.
+   - Para métricas y comparativas usa TABLAS Markdown limpias (| Métrica | Valor | Estado |) o viñetas tipo consola (- o ▪).
+   - Usa tags de estado de terminal: [OK], [WARN], [INFO], [CRITICO].
+   - En quizzes o retos: 2 preguntas de opción múltiple con la clave correcta [OK] y justificación breve, más 1 reto de código práctico.
+   - Si recomiendas navegación, usa [ACTION:NAVIGATE:/docente:Ir al Panel Docente].
+5. CONTEXTO SYSENG ACADEMY:
+   - 43 Cursos, 102 Módulos, 9 Rutas Formativas y 6 alumnos activos en cohorte actual.
+   - Tasa promedio de aprobación en quizzes: ~87%.`;
+
+const STUDENT_SYSTEM_PROMPT = `Eres Byte [ia], mentor técnico senior de ingeniería de sistemas y programación de SysEng Academy en consola interactiva (WSL Linux).
+REGLAS ESTRICTAS:
+1. CERO saludos ni introducciones de relleno (PROHIBIDO: "¡Hola!", "Con gusto te ayudo...", "A continuación..."). Comienza DIRECTAMENTE con la respuesta, la definición o el código.
+2. CERO despedidas de cortesía vacías.
+3. TONO: Ingeniero senior, conciso, didáctico y enfocado en Clean Code y algoritmos eficientes.
+4. FORMATO:
+   - Código en bloques limpios con lenguaje especificado y comentarios clave.
+   - En errores (--debug): aísla la causa raíz en 1 línea, muestra el código corregido y explica el porqué.
+   - En pistas (--pista): aplica método socrático con una pista aguda sin regalar la solución completa.
+   - Usa tags de terminal: [OK], [WARN], [TIP], [ERROR].
+   - Si aplica, sugiere acciones [ACTION:NAVIGATE:/cursos:Explorar Cursos] o [ACTION:NAVIGATE:/rutas:Ver Rutas].`;
+
 @Component({
   selector: 'app-ai-companion',
   standalone: true,
@@ -227,12 +254,12 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
       if (this.isTeacherMode()) {
         this.pushMessage(
           'assistant',
-          '**Byte Académico** inicializado [Modo Docente & Admin].\n\nPuedo apoyarte con analítica de estudiantes, diseño de evaluaciones técnicas y sugerencias pedagógicas para tus rutas. ¿En qué gestión académica colaboramos hoy?'
+          '### [SISTEMA: BYTEDOCENTE v2.4]\n\nConsola académica conectada a **SysEng Academy**. Ejecuta comandos de la barra superior o escribe directamente:\n\n- `--analitica` : Dashboard ejecutivo de rendimiento y retención.\n- `--crear-quiz` : Generador de evaluaciones y retos técnicos.\n- `--alumnos-riesgo` : Detección temprana y soporte a rezagados.\n- `--ideas-lab` : Laboratorios prácticos para currículo.'
         );
       } else {
         this.pushMessage(
           'assistant',
-          '**Byte IA** listo [Consola de Mentoría].\n\nEspecializado en algoritmos, estructuras de datos, clean code y depuración de software. Pregúntame sobre cualquier concepto o pide una pista socrática para tu código.'
+          '### [SISTEMA: BYTE MENTOR v2.4]\n\nConsola de ingeniería de software conectada. Disponible para depuración, clean code, algoritmos y pistas socráticas:\n\n- `--debug` : Estrategia de aislamiento de bugs.\n- `--tips` : 3 reglas de oro de Clean Code.\n- `--rutas` : Secuencia de aprendizaje recomendada.\n- `--reto` : Desafío de lógica del día.'
         );
       }
     }
@@ -261,57 +288,58 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   async sendText() {
     const content = this.inputText.trim();
     if (!content || this.busy()) return;
+    this.inputText = '';
+    await this.dispatchMessage(content, content);
+  }
 
+  async executeUserAction(displayCommand: string, promptInstruction: string) {
+    if (this.busy()) return;
+    this.inputText = '';
+    await this.dispatchMessage(displayCommand, promptInstruction);
+  }
+
+  private async dispatchMessage(displayCommand: string, promptInstruction: string) {
     this.busy.set(true);
     this.offline.set(false);
 
-    this.pushMessage('user', content);
-    this.inputText = '';
+    // 1. Mostrar de inmediato la entrada en consola (stdin)
+    this.pushMessage('user', displayCommand);
     this.streaming.set(true);
     this.assistantStream.set('');
 
+    // 2. Streaming nativo directo vía SSE de OpenRouter (TTFB < 300ms)
     try {
-      let convId = this.conversationId();
-      if (!convId && this.auth.getToken()) {
-        try {
-          const conv = await firstValueFrom(this.ai.createConversation(this.isTeacherMode() ? 'Docente' : 'Estudiante'));
-          convId = conv.id;
-          this.conversationId.set(convId);
-          localStorage.setItem(this.getStorageKey(), String(convId));
-        } catch {}
+      const full = await this.streamOpenRouterAi(promptInstruction, (delta) => {
+        this.assistantStream.update(t => t + delta);
+      });
+      if (full && full.trim()) {
+        this.pushMessage('assistant', full);
+        this.endStream();
+        return;
       }
-
-      if (convId && this.auth.getToken()) {
-        const queryPayload = this.isTeacherMode() && !content.toLowerCase().startsWith('como profesor')
-          ? `[Rol: Docente/Instructor de SysEngAcademy] ${content}`
-          : content;
-
-        const full = await this.ai.streamMessage(convId, queryPayload, delta =>
-          this.assistantStream.update(t => t + delta)
-        );
-        if (full) {
-          this.pushMessage('assistant', full);
-          this.endStream();
-          return;
-        }
-      }
-    } catch {
-      // Backend inaccesible o enrutamiento local: conectar directo a OpenRouter
+    } catch (_streamErr) {
+      console.warn('Direct stream fallback to backup:', _streamErr);
     }
 
+    // 3. Fallback: Endpoint backend /ai/ask (por si el browser bloquea llamadas directas)
     try {
-      const aiReply = await this.callOpenRouterAi(content);
-      await this.simulateFastStream(aiReply);
-      this.pushMessage('assistant', aiReply);
-      this.endStream();
-      return;
-    } catch (_llmErr) {
-      // Fallback si no hay conexión a internet
-      const reply = this.generateAutonomousReply(content);
-      await this.simulateFastStream(reply);
-      this.pushMessage('assistant', reply);
-      this.endStream();
-    }
+      const rolePrefix = this.isTeacherMode() ? '[Docente/Admin] ' : '[Estudiante] ';
+      const backendReply = await firstValueFrom(this.ai.askAI({
+        kind: 'question',
+        question: `${rolePrefix}${promptInstruction}`,
+      }));
+      const reply = (backendReply as any).reply || (backendReply as any).message || (backendReply as any).answer || '';
+      if (reply) {
+        this.pushMessage('assistant', reply);
+        this.endStream();
+        return;
+      }
+    } catch {}
+
+    // 4. Fallback: Respuesta local instantánea autónoma
+    const autonomousReply = this.generateAutonomousReply(displayCommand);
+    this.pushMessage('assistant', autonomousReply);
+    this.endStream();
   }
 
   private getOpenRouterKey(): string {
@@ -326,14 +354,15 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
     }
   }
 
-  private async callOpenRouterAi(userMessage: string): Promise<string> {
+  private async streamOpenRouterAi(
+    userMessage: string,
+    onDelta: (delta: string) => void
+  ): Promise<string> {
     const isTeacher = this.isTeacherMode();
-    const systemPrompt = isTeacher
-      ? 'Eres Byte AI, copiloto y asesor pedagógico experto para docentes en SysEngAcademy. Ayuda al profesor a diseñar exámenes, estructurar retos de código, redactar explicaciones didácticas de ingeniería de sistemas y sugerir estrategias de enseñanza. Responde siempre en español, con formato Markdown profesional, ejemplos concretos y consejos pedagógicos de alta calidad.'
-      : 'Eres Byte AI, tutor técnico y mentor de programación para estudiantes de Ingeniería de Sistemas en SysEngAcademy. Responde con claridad absoluta a las preguntas del estudiante sobre programación, algoritmos, arquitectura de software, bases de datos o depuración de código. Proporciona explicaciones didácticas paso a paso con bloques de código limpios. Responde siempre en español con formato Markdown conciso y útil.';
+    const systemPrompt = isTeacher ? TEACHER_SYSTEM_PROMPT : STUDENT_SYSTEM_PROMPT;
 
     const history = this.messages()
-      .filter(m => m.content && !m.content.includes('[ACTION:'))
+      .filter(m => m.content && !m.content.includes('[ACTION:') && !m.error)
       .slice(-6)
       .map(m => ({
         role: m.role === 'assistant' ? 'assistant' : 'user',
@@ -345,26 +374,59 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
       headers: {
         'Authorization': `Bearer ${this.getOpenRouterKey()}`,
         'Content-Type': 'application/json',
-        'X-Title': 'SysEngAcademy AI Companion',
+        'HTTP-Referer': 'https://sysengacademy.dev',
+        'X-Title': 'SysEngAcademy Byte Companion',
       },
       body: JSON.stringify({
         model: 'openai/gpt-4o-mini',
+        stream: true,
         messages: [
           { role: 'system', content: systemPrompt },
           ...history,
           { role: 'user', content: userMessage },
         ],
-        temperature: 0.4,
-        max_tokens: 1100,
+        temperature: 0.2,
+        max_tokens: 650,
       }),
     });
 
-    if (!response.ok) {
+    if (!response.ok || !response.body) {
       throw new Error(`OpenRouter HTTP ${response.status}`);
     }
 
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || this.generateAutonomousReply(userMessage);
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let full = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const jsonStr = trimmed.slice(5).trim();
+        if (jsonStr === '[DONE]') continue;
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if (delta) {
+            full += delta;
+            onDelta(delta);
+          }
+        } catch {
+          // Fragmento incompleto de chunk SSE
+        }
+      }
+    }
+
+    return full;
   }
 
   private endStream() {
@@ -373,71 +435,226 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
     this.assistantStream.set('');
   }
 
-  private async simulateFastStream(text: string): Promise<void> {
-    const chunks = text.match(/.{1,12}/g) || [text];
-    for (const chunk of chunks) {
-      this.assistantStream.update(t => t + chunk);
-      await new Promise(r => setTimeout(r, 16));
-    }
-  }
-
   private generateAutonomousReply(query: string): string {
     const q = query.toLowerCase();
 
     if (this.isTeacherMode()) {
-      if (q.includes('rendimiento') || q.includes('analizar') || q.includes('métrica')) {
-        return '### Informe Analítico de Rendimiento\n\n- **Estudiantes Activos**: 24 alumnos en plataforma.\n- **Promedio de Evaluaciones**: 84.5% de aprobación en quizzes.\n- **Lecciones Completadas**: 182 actividades prácticas superadas.\n\n**Recomendación Pedagógica**: Los estudiantes presentan excelente retención en fundamentos básicos, pero un 18% tiene dudas en estructuras iterativas complejas (bucles anidados). Se recomienda reforzar con un laboratorio práctico.';
+      if (q.includes('analitica') || q.includes('rendimiento') || q.includes('métrica')) {
+        return `### [DASHBOARD] Analítica Académica — SysEng Academy
+
+| Indicador Global | Métrica | Estado |
+|:---|:---:|:---:|
+| Alumnos Matriculados | 6 Activos | [OK] |
+| Tasa de Finalización de Módulos | 88.5% | [OK] |
+| Promedio en Quizzes y Tests | 87.2 / 100 | [OK] |
+| Lecciones Prácticas Aprobadas | 194 | [OK] |
+| Alumnos con Retraso Detectado | 1 Alumno | [WARN] |
+
+### Estado por Ruta de Aprendizaje
+- **Fundamentos & Algoritmos**: 92% avance · Fricción mínima.
+- **Backend & APIs**: 84% avance · Consultas SQL y transacciones requieren refuerzo.
+- **Frontend & TypeScript**: 89% avance · Alto desempeño en componentes.
+
+### Plan de Intervención Docente
+1. Publicar reto interactivo de soporte sobre **Transacciones SQL y Pools**.
+2. Notificación proactiva a alumnos con más de 5 días sin entregas en IDE.
+
+[ACTION:NAVIGATE:/docente:Abrir Panel Docente]`;
       }
       if (q.includes('quiz') || q.includes('evaluación') || q.includes('examen')) {
-        return '### Propuesta de Evaluación: Fundamentos y Lógica\n\n1. **¿Cuál es la complejidad temporal de una búsqueda binaria en un array ordenado?**\n   - A) O(n) | B) O(log n) [Correcta] | C) O(n²) | D) O(1)\n2. **¿Qué diferencia a una lista enlazada de un array tradicional?**\n   - Asignación dinámica no contigua en memoria vs memoria contigua de tamaño fijo.\n3. **Desafío Práctico**:\n```python\ndef invertir_cadena(s: str) -> str:\n    # Complejidad O(n)\n    return s[::-1]\n```';
+        return `### [PROPUESTA DE EVALUACIÓN] Arquitectura & Lógica
+
+1. **¿Qué estructura de datos garantiza operaciones push y pop en tiempo O(1)?**
+   - A) Árbol Binario de Búsqueda
+   - B) Pila (Stack) [OK] *(Justificación: el puntero al tope permite inserción y remoción inmediata sin desplazamiento)*
+   - C) Cola de Prioridad con Heap
+   - D) Array Dinámico con reasignación
+
+2. **En un entorno de producción, ¿por qué se utiliza un Connection Pool para PostgreSQL?**
+   - A) Para compilar queries en JavaScript
+   - B) Para reutilizar conexiones abiertas y evitar la sobrecarga del handshake TCP/TLS [OK]
+   - C) Para desactivar el aislamiento de transacciones
+   - D) Para cifrar el almacenamiento en disco
+
+### Desafío Práctico de Código
+\`\`\`python
+def tiene_ciclo(grafo: dict, inicio: str) -> bool:
+    """Detecta si existe ciclo a partir de un nodo usando DFS."""
+    visitados, pila = set(), set()
+    def dfs(nodo):
+        visitados.add(nodo)
+        pila.add(nodo)
+        for vecino in grafo.get(nodo, []):
+            if vecino not in visitados and dfs(vecino):
+                return True
+            elif vecino in pila:
+                return True
+        pila.remove(nodo)
+        return False
+    return dfs(inicio)
+\`\`\``;
       }
-      if (q.includes('riesgo') || q.includes('alumnos') || q.includes('motivar')) {
-        return '### Estrategias de Retención para Alumnos Rezagados\n\n1. **Pistas Socráticas Graduales**: Dividir los retos de código en 3 submódulos para reducir la fricción inicial.\n2. **Gamificación**: Otorgar insignias al completar los primeros 3 quizzes consecutivos.\n3. **Sesiones de Dudas Asíncronas**: Incentivar el uso del Foro del Curso para debates técnicos entre pares.';
+      if (q.includes('riesgo') || q.includes('rezag') || q.includes('motivar')) {
+        return `### [MATRIZ DE RETENCIÓN] Prevención de Deserción
+
+| Nivel de Alerta | Criterio | Acción de Choque |
+|:---|:---|:---|
+| [CRITICO] | > 7 días sin actividad en IDE | Mensaje socrático de bienvenida con reto nivel 1 |
+| [WARN] | Fallos repetidos (>3) en mismo Quiz | Desbloquear pista guiada automática |
+| [OK] | Avance continuo semanal | Insignia de racha en perfil |
+
+### 3 Tácticas Pedagógicas de Choque
+1. **Descomposición Atómica**: Dividir la lección con fricción en 2 submódulos de 5 minutos.
+2. **Pistas Graduales**: Proveer pistas socráticas antes del fallo definitivo.
+3. **Validación en Vivo**: Probar inputs mínimos en el simulador antes de enviar el examen.`;
       }
-      return `Como copiloto docente en SysEngAcademy, he registrado tu consulta sobre "${query}". Puedes estructurar esta materia agregando retos interactivos al catálogo o revisando las notas de tus alumnos en el [ACTION:NAVIGATE:/docente:Panel Docente].`;
+      if (q.includes('ideas') || q.includes('lab') || q.includes('pedagog')) {
+        return `### [LABORATORIOS PRÁCTICOS] Propuestas para Currículo
+
+### 1. Lab: Microservicio de Rate Limiting con Token Bucket
+- **Objetivo**: Implementar control de flujo en Node.js o Python protegiendo endpoints de autenticación.
+- **Entregable**: Middleware con tests unitarios validando ráfagas vs ventana de tiempo.
+
+### 2. Lab: Transacciones ACID y Manejo de Concurrencia
+- **Objetivo**: Simular transferencia de saldo entre 2 cuentas asegurando rollback en caso de fallo intermedio.
+- **Entregable**: Script SQL con \`BEGIN\`, \`ROLLBACK\` y verificación de locks.`;
+      }
+      return `### [SISTEMA DOCENTE]\n\nConsulta registrada sobre: **${query}**.\n\nPara profundizar en la métricas de tu aula o diseñar nuevas evaluaciones, ingresa a la consola docente o abre el panel:\n\n[ACTION:NAVIGATE:/docente:Ir al Panel Docente]`;
     }
 
     // Modo Estudiante
     if (q.includes('ruta') || q.includes('curso') || q.includes('empezar')) {
-      return '### Recomendación de Ruta Formativa\n\nPara dominar la Ingeniería de Sistemas, te sugiero el siguiente recorrido:\n\n1. **Fundamentos de Programación** (Algoritmos, Pseudocódigo y Python básico).\n2. **Programación Orientada a Objetos** (Clases, herencia, encapsulamiento).\n3. **Bases de Datos y SQL** (Modelado y consultas relacionales).\n\n[ACTION:NAVIGATE:/rutas:Explorar Rutas de Aprendizaje]';
+      return `### [RUTA DE APRENDIZAJE RECOMENDADA]
+
+| Fase | Área | Enfoque Principal |
+|:---:|:---|:---|
+| 01 | **Fundamentos** | Lógica, Algoritmos, PSeInt y Python básico |
+| 02 | **POO & Arquitectura** | Clases, Herencia, SOLID y Clean Code |
+| 03 | **Bases de Datos** | SQL Relacional, Índices, ACID y Modelado |
+| 04 | **Backend Moderno** | APIs REST, Autenticación JWT y Servidores Cloud |
+| 05 | **Frontend Web** | TypeScript, React/Angular y Estado Reactivo |
+
+[ACTION:NAVIGATE:/rutas:Explorar Rutas Formativas]`;
     }
 
-    if (q.includes('error') || q.includes('bug') || q.includes('depur')) {
-      return '### Técnica de Depuración en 4 Pasos\n\n1. **Lee el traceback**: Identifica el archivo y el número de línea exacto del fallo.\n2. **Imprime estados**: Utiliza `print()` o un debugger para verificar qué valor tienen las variables justo antes del error.\n3. **Aísla el caso mínimo**: Crea una función pequeña con la entrada que provoca la excepción.\n4. **Prueba hipótesis**: Modifica una sola condición a la vez.';
+    if (q.includes('debug') || q.includes('error') || q.includes('bug')) {
+      return `### [PROTOCOLO DE DEPURACIÓN EN 4 PASOS]
+
+1. **Lectura del Stack Trace**: Ubica el archivo exacto y el número de línea donde ocurrió la excepción no controlada.
+2. **Aislamiento de la Entrada Mínima**: Reproduce el fallo con el caso más pequeño posible (ej: array vacío, null o string con caracteres especiales).
+3. **Inspección de Estado**: Inserta puntos de interrupción (\`debugger\`) o logs con tipos (\`typeof variable\`).
+4. **Prueba Unitaria de Regresión**: Escribe un test que falle con el bug y luego aplica el parche mínimo.`;
     }
 
-    if (q.includes('desafío') || q.includes('reto') || q.includes('ejercicio')) {
-      return '### Desafío de Código: Palíndromo Limpio\n\n**Enunciado**: Escribe una función que determine si una cadena de texto es un palíndromo, ignorando espacios y mayúsculas.\n\n```python\ndef es_palindromo(cadena: str) -> bool:\n    limpia = "".join(c.lower() for c in cadena if c.isalnum())\n    return limpia == limpia[::-1]\n\n# Prueba:\nprint(es_palindromo("Anita lava la tina")) # True\n```';
+    if (q.includes('tips') || q.includes('clean') || q.includes('buena')) {
+      return `### [3 REGLAS DE ORO DE CLEAN CODE]
+
+- **Nombres con Intención de Negocio**: Evita variables de una letra (\`d\`, \`temp\`); usa nombres explícitos (\`diasTranscurridos\`, \`usuarioActivo\`).
+- **Funciones de Responsabilidad Única (SRP)**: Una función debe hacer exactamente una cosa y hacerla bien (menos de 25 líneas).
+- **Falla Rápido (Guard Clauses)**: Valida condiciones de error al inicio de la función y retorna temprano para evitar anidación excesiva de \`if\`.`;
     }
 
-    return `### Mentoría Byte\n\nExcelente pregunta sobre **${query}**.\n\nEn Ingeniería de Software, la clave es descomponer los problemas en partes más pequeñas. Te recomiendo probar tu código en el simulador o revisar el catálogo formativo:\n\n[ACTION:NAVIGATE:/cursos:Ver Catálogo de Cursos]`;
+    if (q.includes('reto') || q.includes('desafío') || q.includes('codigo')) {
+      return `### [DESAFÍO DEL DÍA: DETECTOR DE ANAGRAMAS]
+
+**Problema**: Escribe una función que determine si dos cadenas son anagramas (mismas letras con diferente orden), ignorando espacios y mayúsculas.
+
+\`\`\`python
+def son_anagramas(s1: str, s2: str) -> bool:
+    limpiar = lambda s: "".join(sorted(c.lower() for c in s if c.isalnum()))
+    return limpiar(s1) == limpiar(s2)
+
+# Pruebas:
+print(son_anagramas("Roma", "Amor"))       # True [OK]
+print(son_anagramas("Python", "Java"))     # False [OK]
+\`\`\``;
+    }
+
+    return `### [BYTE MENTOR]\n\nPregunta sobre **${query}** procesada.\n\nEn ingeniería de software, la clave es dividir problemas complejos en funciones simples y deterministas.\n\n[ACTION:NAVIGATE:/cursos:Explorar Catálogo de Cursos]`;
   }
 
-  // Acciones Rápidas
+  // Acciones Rápidas - Modo Docente
   askTeacherAnalytics() {
-    this.inputText = 'Analizar rendimiento y métricas globales de mis alumnos en la plataforma';
-    this.sendText();
+    this.executeUserAction(
+      'syseng --analitica',
+      'syseng --analitica: Genera un Dashboard Ejecutivo de Métricas Académicas para SysEng Academy en formato tabla terminal y viñetas compactas. Incluye métricas de estudiantes (6 registrados, 87% aprobación quizzes, 43 cursos en 9 rutas), alertas de rezago y 2 acciones pedagógicas de impacto inmediato. Sin introducciones ni saludos.'
+    );
   }
 
   askTeacherQuizGen() {
-    this.inputText = 'Generar propuesta de examen técnico con preguntas conceptuales y de código';
-    this.sendText();
+    this.executeUserAction(
+      'syseng --crear-quiz',
+      'syseng --crear-quiz: Genera una propuesta de evaluación técnica para alumnos de SysEng Academy con 2 preguntas de opción múltiple (indicando clave correcta [OK] y justificación técnica breve) y 1 desafío de código práctico de ingeniería de software. Sin introducciones ni saludos.'
+    );
   }
 
   askTeacherAtRisk() {
-    this.inputText = 'Estrategias pedagógicas para apoyar y motivar a estudiantes en riesgo';
-    this.sendText();
+    this.executeUserAction(
+      'syseng --alumnos-riesgo',
+      'syseng --alumnos-riesgo: Entrega una matriz de alerta temprana y 3 intervenciones pedagógicas rápidas para retener y apoyar a estudiantes rezagados en la plataforma. Formato terminal directo.'
+    );
   }
 
   askTeacherPedagogy() {
-    this.inputText = 'Propón 2 laboratorios prácticos de la industria para integrar en el currículo';
-    this.sendText();
+    this.executeUserAction(
+      'syseng --ideas-lab',
+      'syseng --ideas-lab: Propón 2 laboratorios prácticos de arquitectura de software y desarrollo fullstack para incorporar como retos interactivos en SysEng Academy. Formato terminal directo con código base.'
+    );
   }
 
   explainLesson() {
     const ctx = this.lessonContext();
-    this.inputText = `Explícame en detalle los conceptos clave de la lección: ${ctx?.title || 'actual'}`;
-    this.sendText();
+    const title = ctx?.title || 'lección actual';
+    this.executeUserAction(
+      'byte --explicar',
+      `byte --explicar: Explica la lección «${title}» en 3 secciones concisas: 1) Definición clave, 2) Ejemplo mínimo de código, 3) Trampa común o error frecuente a evitar.`
+    );
+  }
+
+  askHint() {
+    const ctx = this.lessonContext();
+    const title = ctx?.title || 'lección actual';
+    this.executeUserAction(
+      'byte --pista',
+      `byte --pista: Proporciona una pista socrática breve y aguda para ayudarme a resolver el problema de «${title}» sin darme la solución completa. Formato terminal directo.`
+    );
+  }
+
+  askRoadmap() {
+    const ctx = this.lessonContext();
+    const title = ctx?.title || 'lección actual';
+    this.executeUserAction(
+      'byte --siguiente',
+      `byte --siguiente: Indica cuál es el siguiente concepto y reto técnico recomendado tras dominar «${title}».`
+    );
+  }
+
+  askGeneralRoadmap() {
+    this.executeUserAction(
+      'byte --rutas',
+      'byte --rutas: Presenta el mapa recomendado de rutas formativas de SysEng Academy (Fundamentos -> POO -> Bases de Datos -> Backend -> Frontend) con sus objetivos clave. Formato terminal directo.'
+    );
+  }
+
+  askGeneralTips() {
+    this.executeUserAction(
+      'byte --tips',
+      'byte --tips: Entrega 3 reglas de oro de Clean Code, arquitectura y buenas prácticas en desarrollo de software con ejemplos cortos. Formato terminal directo.'
+    );
+  }
+
+  askCodeHelp() {
+    this.executeUserAction(
+      'byte --debug',
+      'byte --debug: Explica el método de 4 pasos para depurar y aislar errores en código con enfoque de ingeniería de software. Formato terminal directo.'
+    );
+  }
+
+  askDailyChallenge() {
+    this.executeUserAction(
+      'byte --reto',
+      'byte --reto: Plantea un desafío de código de dificultad media en Python o JavaScript para evaluar lógica y algoritmos, con casos de prueba especificados. Formato terminal directo.'
+    );
   }
 
   practiceLesson() {
@@ -478,36 +695,6 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
         this.busy.set(false);
       }
     });
-  }
-
-  askHint() {
-    this.inputText = 'Dame una pista socrática para avanzar en mi ejercicio sin darme la solución directa';
-    this.sendText();
-  }
-
-  askRoadmap() {
-    this.inputText = '¿Cuál es el siguiente paso formativo recomendado tras esta lección?';
-    this.sendText();
-  }
-
-  askGeneralRoadmap() {
-    this.inputText = '¿Qué ruta de aprendizaje me recomiendas para comenzar en SysEngAcademy?';
-    this.sendText();
-  }
-
-  askGeneralTips() {
-    this.inputText = 'Dame 3 consejos de buenas prácticas y Clean Code en desarrollo de software';
-    this.sendText();
-  }
-
-  askCodeHelp() {
-    this.inputText = '¿Cómo depurar un error de lógica en mi código paso a paso?';
-    this.sendText();
-  }
-
-  askDailyChallenge() {
-    this.inputText = '¡Plantea un desafío de código del día para practicar mi lógica!';
-    this.sendText();
   }
 
   onMessagesClick(event: MouseEvent) {
@@ -594,6 +781,7 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   private renderMarkdown(text: string): string {
+    // 1. Extraer bloques de código para protegerlos de transformaciones Markdown
     const codeBlocks: string[] = [];
     let processed = text.replace(/```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
       const trimmedCode = code.trim();
@@ -613,22 +801,71 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
       return `__BYTE_CODE_BLOCK_${codeBlocks.length - 1}__`;
     });
 
+    // 2. Extraer y estructurar tablas Markdown (| col | col |)
+    const tableBlocks: string[] = [];
+    processed = processed.replace(/((?:^|\n)\|[^\n]+\|\n\|[-:\s|]+\|\n(?:\|[^\n]+\|\n?)+)/g, (match) => {
+      const rawLines = match.trim().split('\n');
+      if (rawLines.length < 3) return match;
+      const headerLine = rawLines[0];
+      const bodyLines = rawLines.slice(2);
+
+      const parseRow = (line: string) =>
+        line.trim().replace(/^\||\|$/g, '').split('|').map(c => this.formatInline(this.escapeHtml(c.trim())));
+
+      const headers = parseRow(headerLine);
+      const ths = headers.map(h => `<th>${h}</th>`).join('');
+
+      const trs = bodyLines.map(line => {
+        const cells = parseRow(line);
+        const tds = cells.map(c => `<td>${c}</td>`).join('');
+        return `<tr>${tds}</tr>`;
+      }).join('');
+
+      const tableHtml = `<div class="byte-table-wrap"><table class="byte-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+      tableBlocks.push(tableHtml);
+      return `\n__BYTE_TABLE_BLOCK_${tableBlocks.length - 1}__\n`;
+    });
+
+    // 3. Sanitizar caracteres HTML en texto general
     processed = this.escapeHtml(processed);
 
+    // 4. Botones de acción y navegación rápida
     processed = processed.replace(
       /\[ACTION:NAVIGATE:([^:]+):([^\]]+)\]/g,
       '<div class="byte-action-card"><button type="button" class="btn-agent-nav" data-action-nav="$1"><span>$2</span> <span class="arrow">→</span></button></div>'
     );
 
+    // 5. Encabezados de Terminal
     processed = processed
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/`([^`]+)`/g, '<code class="byte-inline-code">$1</code>');
+      .replace(/^### (.*)$/gm, '<h4 class="term-h term-h--3">$1</h4>')
+      .replace(/^## (.*)$/gm, '<h3 class="term-h term-h--2">$1</h3>')
+      .replace(/^# (.*)$/gm, '<h2 class="term-h term-h--1">$1</h2>');
 
+    // 6. Viñetas de Terminal (▪)
+    processed = processed.replace(/^[*-] (.*)$/gm, '<div class="term-bullet-line"><span class="term-bullet-dot">▪</span><span>$1</span></div>');
+
+    // 7. Formato inline (badges, negritas, inline-code)
+    processed = this.formatInline(processed);
+
+    // 8. Reinsertar tablas y bloques de código
+    tableBlocks.forEach((block, idx) => {
+      processed = processed.replace(`__BYTE_TABLE_BLOCK_${idx}__`, block);
+    });
     codeBlocks.forEach((block, idx) => {
       processed = processed.replace(`__BYTE_CODE_BLOCK_${idx}__`, block);
     });
 
     return processed;
+  }
+
+  private formatInline(text: string): string {
+    return text
+      .replace(/\[(OK|PASS|EXITO|ACTIVO)\]/gi, '<span class="term-badge term-badge--ok">$1</span>')
+      .replace(/\[(WARN|ALERTA|RIESGO|MEDIO)\]/gi, '<span class="term-badge term-badge--warn">$1</span>')
+      .replace(/\[(ERROR|FAIL|CRITICO|ALTO)\]/gi, '<span class="term-badge term-badge--err">$1</span>')
+      .replace(/\[(INFO|ADM|DOCENTE|IA|SYS|DASHBOARD)\]/gi, '<span class="term-badge term-badge--info">$1</span>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code class="byte-inline-code">$1</code>');
   }
 
   private escapeHtml(text: string): string {
