@@ -1,0 +1,800 @@
+<div class="teacher-page">
+      <!-- CABECERA PRINCIPAL DOCENTE -->
+      <div class="page-head">
+        <div class="container head-layout">
+          <div>
+            <div class="sub-badge">CÁTEDRA &amp; SUPERVISIÓN</div>
+            <h1 class="page-title">Panel de Control Docente</h1>
+            <p class="page-subtitle">
+              Profesor <strong>{{ auth.user()?.name || 'Docente' }}</strong> — Supervisión académica, diseño de actividades evaluativas y analíticas de cohorte.
+            </p>
+          </div>
+
+          <div class="head-actions">
+            <button type="button" class="btn btn-ghost" (click)="loadAllData()" [disabled]="loading()">
+              <span style="display:inline-flex; align-items:center; gap:6px;">
+                <app-icon name="refresh-cw" [size]="14" />
+                {{ loading() ? 'Sincronizando…' : 'Sincronizar' }}
+              </span>
+            </button>
+            <button type="button" class="btn btn-outline" (click)="triggerProgressDigest()" [disabled]="sendingDigest()">
+              <span style="display:inline-flex; align-items:center; gap:6px;">
+                <app-icon name="mail" [size]="14" />
+                {{ sendingDigest() ? 'Enviando…' : 'Enviar Resumen Progreso' }}
+              </span>
+            </button>
+            <button type="button" class="btn btn-outline" (click)="triggerStreakReminder()" [disabled]="sendingStreak()">
+              <span style="display:inline-flex; align-items:center; gap:6px;">
+                <app-icon name="flame" [size]="14" color="#FF8A00" />
+                {{ sendingStreak() ? 'Enviando…' : 'Alertas de Racha' }}
+              </span>
+            </button>
+            <button type="button" class="btn btn-outline" (click)="openCreateModal('challenge')">
+              <span style="display:inline-flex; align-items:center; gap:6px;">
+                <app-icon name="plus" [size]="14" /> Nuevo Reto
+              </span>
+            </button>
+            <button type="button" class="btn btn-primary" (click)="openCreateModal('quiz')">
+              <span style="display:inline-flex; align-items:center; gap:6px;">
+                <app-icon name="file-text" [size]="14" /> Crear Quiz
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      @if (actionNotification()) {
+        <div class="container" style="margin-top: 1rem;">
+          <div class="action-toast animate-fade-in">
+            <span>{{ actionNotification() }}</span>
+            <button type="button" class="btn-toast-close" (click)="actionNotification.set('')">✕</button>
+          </div>
+        </div>
+      }
+
+      <div class="container dashboard-container">
+        <!-- KPIS MÉTRICAS NEUTRAS -->
+        @if (overview()) {
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Estudiantes Registrados</span>
+              <span class="kpi-value">{{ totalStudentsCount() }}</span>
+              <span class="kpi-meta">Alumnos en catálogo docente</span>
+            </div>
+
+            <div class="kpi-card">
+              <span class="kpi-label">Actividades &amp; Quizzes</span>
+              <span class="kpi-value">{{ activities().length }}</span>
+              <span class="kpi-meta">Creados por la cátedra</span>
+            </div>
+
+            <div class="kpi-card">
+              <span class="kpi-label">Lecciones Completadas</span>
+              <span class="kpi-value">{{ totalLessonsCompleted() }}</span>
+              <span class="kpi-meta">Superadas por alumnos</span>
+            </div>
+
+            <div class="kpi-card">
+              <span class="kpi-label">Promedio de Quizzes</span>
+              <span class="kpi-value">{{ averageQuizScore() }}%</span>
+              <span class="kpi-meta">Rendimiento evaluativo global</span>
+            </div>
+          </div>
+        }
+
+        <!-- PESTAÑA 1: DIRECTORIO DE ESTUDIANTES -->
+        @if (activeTab() === 'students') {
+          <div class="surface-panel">
+            <div class="panel-head-row">
+              <div>
+                <h2 class="panel-heading">Directorio de Alumnos Matriculados</h2>
+                <p class="panel-subtext">Supervisión en tiempo real de progreso académico, lecciones completadas y calificaciones.</p>
+              </div>
+              <div class="head-count-badge">
+                <span>{{ filteredStudents().length }} estudiantes registrados</span>
+              </div>
+            </div>
+
+            <div class="panel-toolbar">
+              <div class="search-input-group">
+                <span class="search-icon"><app-icon name="search" [size]="14" color="var(--text-muted)" /></span>
+                <input
+                  type="text"
+                  class="search-box"
+                  placeholder="Buscar alumno por nombre o correo…"
+                  [ngModel]="searchQuery()"
+                  (ngModelChange)="onSearchChange($event)"
+                />
+                @if (searchQuery()) {
+                  <button type="button" class="btn-clear" (click)="onSearchChange('')">✕</button>
+                }
+              </div>
+
+              <div class="filter-pills">
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="statusFilter() === 'all'"
+                  (click)="statusFilter.set('all')"
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="statusFilter() === 'verified'"
+                  (click)="statusFilter.set('verified')"
+                >
+                  Verificados
+                </button>
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="statusFilter() === 'unverified'"
+                  (click)="statusFilter.set('unverified')"
+                >
+                  Pendientes
+                </button>
+              </div>
+            </div>
+
+            @if (loading()) {
+              <div class="state-block">
+                <div class="loading-spinner"></div>
+                <p>Cargando información de estudiantes…</p>
+              </div>
+            } @else if (filteredStudents().length === 0) {
+              <div class="state-block">
+                <p class="state-title">No se encontraron estudiantes</p>
+                <p class="state-desc">Prueba ajustando los filtros o la búsqueda.</p>
+              </div>
+            } @else {
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Estudiante</th>
+                      <th>Estado</th>
+                      <th>Cursos</th>
+                      <th>Lecciones</th>
+                      <th>Promedio</th>
+                      <th>Fecha Registro</th>
+                      <th class="text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (st of filteredStudents(); track st.id) {
+                      <tr>
+                        <td>
+                          <div class="student-cell">
+                            <div class="avatar-box">{{ getInitials(st.name) }}</div>
+                            <div>
+                              <div class="cell-name">{{ st.name }}</div>
+                              <div class="cell-meta">{{ st.email }}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          @if (st.email_verified) {
+                            <span class="badge badge-success">Verificado</span>
+                          } @else {
+                            <span class="badge badge-warning">Pendiente</span>
+                          }
+                        </td>
+                        <td>
+                          <span class="cell-primary">{{ st.enrollments_count }} cursos</span>
+                          @if (st.courses.length > 0) {
+                            <small class="cell-sub">{{ st.courses[0].title }}</small>
+                          }
+                        </td>
+                        <td>
+                          <span class="mono-value">{{ st.completed_lessons_count }}</span>
+                        </td>
+                        <td>
+                          @if (st.average_quiz_score !== null) {
+                            <span class="mono-value">{{ st.average_quiz_score }}%</span>
+                            <small class="cell-sub">({{ st.quizzes_taken_count }} evaluados)</small>
+                          } @else {
+                            <span class="cell-muted">—</span>
+                          }
+                        </td>
+                        <td>
+                          <span class="cell-muted">{{ formatDate(st.created_at) }}</span>
+                        </td>
+                        <td>
+                          <div class="action-btn-group">
+                            <button
+                              type="button"
+                              class="action-btn"
+                              (click)="viewStudentDossier(st.id)"
+                              title="Ver expediente académico"
+                            >
+                              Ver
+                            </button>
+                            @if (!st.email_verified) {
+                              <button
+                                type="button"
+                                class="action-btn action-btn--success"
+                                (click)="verifyStudentAccount(st)"
+                                title="Verificar correo manualmente"
+                              >
+                                Activar
+                              </button>
+                            }
+                            <button
+                              type="button"
+                              class="action-btn action-btn--danger"
+                              (click)="deleteStudentAccount(st)"
+                              title="Eliminar cuenta"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- PESTAÑA 2: GESTOR DE ACTIVIDADES & QUIZZES -->
+        @if (activeTab() === 'activities') {
+          <div class="surface-panel">
+            <div class="panel-head-row">
+              <div>
+                <h2 class="panel-heading">Actividades y Evaluaciones de Cátedra</h2>
+                <p class="panel-subtext">Diseña retos prácticos de código y evaluaciones teóricas de opción múltiple.</p>
+              </div>
+
+              <div class="filter-pills">
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="activityTypeFilter() === 'all'"
+                  (click)="activityTypeFilter.set('all')"
+                >
+                  Todas ({{ activities().length }})
+                </button>
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="activityTypeFilter() === 'challenge'"
+                  (click)="activityTypeFilter.set('challenge')"
+                >
+                  Retos Código
+                </button>
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="activityTypeFilter() === 'quiz'"
+                  (click)="activityTypeFilter.set('quiz')"
+                >
+                  Quizzes
+                </button>
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="activityTypeFilter() === 'terminal'"
+                  (click)="activityTypeFilter.set('terminal')"
+                >
+                  Terminal
+                </button>
+              </div>
+            </div>
+
+            <div class="card-grid">
+              @for (act of filteredActivities(); track act.id) {
+                <div class="item-card">
+                  <div class="item-card__head">
+                    <div class="badge-group">
+                      <span class="badge badge-neutral">
+                        {{ act.type === 'quiz' ? 'Quiz Evaluativo' : act.type === 'terminal' ? 'Terminal Linux' : 'Reto Código' }}
+                      </span>
+                      <span class="badge badge-subtle">{{ act.difficulty }}</span>
+                    </div>
+                    <span class="item-xp">+{{ act.xp_reward }} XP</span>
+                  </div>
+
+                  <h3 class="item-card__title">{{ act.title }}</h3>
+                  <div class="item-card__course" style="display:inline-flex; align-items:center; gap:6px;"><app-icon name="book" [size]="13" /> {{ act.course_name }}</div>
+                  <p class="item-card__desc">{{ act.description }}</p>
+
+                  @if (act.quiz_questions && act.quiz_questions.length > 0) {
+                    <div class="quiz-info-box">
+                      <span class="quiz-count">{{ act.quiz_questions.length }} preguntas evaluativas</span>
+                      <ul class="quiz-preview-list">
+                        @for (q of act.quiz_questions.slice(0, 2); track q.question) {
+                          <li>• {{ q.question }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+
+                  @if (act.expected_output) {
+                    <div class="terminal-preview-box">
+                      <span class="term-tag">Salida esperada:</span>
+                      <code>{{ act.expected_output }}</code>
+                    </div>
+                  }
+
+                  <div class="item-card__footer">
+                    <div class="meta-row">
+                      <span>{{ act.author_name }}</span>
+                      <span>· {{ act.submissions_count }} entregas</span>
+                      <span>· {{ act.pass_rate }}% éxito</span>
+                    </div>
+
+                    <button type="button" class="btn-delete-item" (click)="deleteActivity(act.id)" title="Eliminar actividad">
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- PESTAÑA 3: RENDIMIENTO & ANALÍTICAS -->
+        @if (activeTab() === 'activity' && overview()) {
+          <div class="grid-two-cols">
+            <!-- Feed de Actividad Reciente -->
+            <div class="surface-panel">
+              <h2 class="panel-heading">Resoluciones Recientes</h2>
+              <p class="panel-subtext">Historial de actividades entregadas en tiempo real.</p>
+
+              @if (overview()!.recent_activity.length === 0) {
+                <p class="cell-muted" style="padding: 1.5rem 0;">No hay actividad registrada en las últimas horas.</p>
+              } @else {
+                <div class="activity-feed">
+                  @for (act of overview()!.recent_activity; track act.id) {
+                    <div class="feed-item">
+                      <div class="feed-dot" [class.dot-success]="act.passed" [class.dot-danger]="!act.passed"></div>
+                      <div class="feed-body">
+                        <div class="feed-head">
+                          <span class="cell-primary">{{ act.user_name }}</span>
+                          <span class="cell-muted">{{ formatTime(act.completed_at) }}</span>
+                        </div>
+                        <div class="feed-meta">
+                          <span>Completó: <em>{{ act.lesson_title }}</em></span>
+                          @if (act.score !== null) {
+                            <span class="mono-value" [class.text-success]="act.passed" [class.text-danger]="!act.passed">
+                              {{ act.score }}%
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Cursos con Mayor Demanda -->
+            <div class="surface-panel">
+              <h2 class="panel-heading">Demanda de Asignaturas</h2>
+              <p class="panel-subtext">Distribución de estudiantes inscritos.</p>
+
+              <div class="demand-table">
+                @for (c of overview()!.popular_courses; track c.id) {
+                  <div class="demand-row">
+                    <div class="demand-info">
+                      <span class="cell-primary">{{ c.title }}</span>
+                      <span class="badge badge-subtle">{{ c.difficulty }}</span>
+                    </div>
+                    <div class="demand-bar-wrap">
+                      <div class="demand-progress-bg">
+                        <div class="demand-progress-fill" [style.width.%]="(c.enrollments_count / 1500) * 100"></div>
+                      </div>
+                      <span class="mono-value">{{ c.enrollments_count }} alumnos</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- PESTAÑA 4: ASISTENTE BYTE DOCENTE IA -->
+        @if (activeTab() === 'ai') {
+          <div class="grid-two-cols">
+            <!-- Creador de Quizzes con IA -->
+            <div class="surface-panel">
+              <div class="panel-heading-group">
+                <span class="badge badge-neutral">BYTE TEACHER IA</span>
+                <h2 class="panel-heading">Generador Técnico de Evaluaciones</h2>
+                <p class="panel-subtext">Ingresa un tema técnico y la IA generará preguntas con opciones y justificación.</p>
+              </div>
+
+              <div class="form-layout">
+                <div class="field-group">
+                  <label class="field-label">Tema de Evaluación</label>
+                  <div class="quick-topics">
+                    <button type="button" class="topic-chip" (click)="aiTopic.set('Docker y Contenedores')">Docker</button>
+                    <button type="button" class="topic-chip" (click)="aiTopic.set('Linux Shell y Bash')">Linux Shell</button>
+                    <button type="button" class="topic-chip" (click)="aiTopic.set('Git y Control de Versiones')">Git</button>
+                    <button type="button" class="topic-chip" (click)="aiTopic.set('Punteros y Memoria en C')">Punteros C</button>
+                    <button type="button" class="topic-chip" (click)="aiTopic.set('SQL y Normalización')">SQL</button>
+                  </div>
+                  <input
+                    type="text"
+                    class="field-input"
+                    placeholder="Ej. Algoritmos de Grafos, Concurrencia en Go…"
+                    [ngModel]="aiTopic()"
+                    (ngModelChange)="aiTopic.set($event)"
+                  />
+                </div>
+
+                <div class="field-row">
+                  <div class="field-group">
+                    <label class="field-label">Dificultad</label>
+                    <select class="field-select" [ngModel]="aiDifficulty()" (ngModelChange)="aiDifficulty.set($event)">
+                      <option value="Principiante">Principiante</option>
+                      <option value="Intermedio">Intermedio</option>
+                      <option value="Avanzado">Avanzado</option>
+                    </select>
+                  </div>
+
+                  <div class="field-group">
+                    <label class="field-label">Curso Destino</label>
+                    <select class="field-select" [ngModel]="aiTargetCourse()" (ngModelChange)="aiTargetCourse.set($event)">
+                      <option value="Introducción a la Programación">Introducción a la Programación</option>
+                      <option value="Estructuras de Datos y Algoritmos">Estructuras de Datos y Algoritmos</option>
+                      <option value="Sistemas Operativos y Linux">Sistemas Operativos y Linux</option>
+                      <option value="Bases de Datos Relacionales">Bases de Datos Relacionales</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn btn-primary btn-block"
+                  (click)="generateQuizWithAi()"
+                  [disabled]="aiGenerating() || !aiTopic().trim()"
+                >
+                  <span>{{ aiGenerating() ? 'Generando Preguntas con IA…' : 'Generar Quiz con Byte IA' }}</span>
+                </button>
+              </div>
+
+              <!-- Resultados Generados -->
+              @if (aiGeneratedQuestions().length > 0) {
+                <div class="generated-results">
+                  <div class="results-head">
+                    <span class="cell-primary">Preguntas generadas: {{ aiTopic() }}</span>
+                    <button type="button" class="btn btn-outline btn-sm" (click)="saveAiQuizToActivities()">
+                      Guardar en Catálogo
+                    </button>
+                  </div>
+
+                  <div class="questions-stack">
+                    @for (q of aiGeneratedQuestions(); track q.question; let idx = $index) {
+                      <div class="q-card">
+                        <span class="q-label">Pregunta #{{ idx + 1 }}</span>
+                        <p class="q-text">{{ q.question }}</p>
+
+                        <div class="options-list">
+                          @for (opt of q.options; track opt; let optIdx = $index) {
+                            <div class="option-row" [class.is-correct]="optIdx === q.correct_index">
+                              <span class="opt-letter">{{ ['A', 'B', 'C', 'D'][optIdx] }}</span>
+                              <span>{{ opt }}</span>
+                              @if (optIdx === q.correct_index) {
+                                <span class="badge badge-success" style="margin-left: auto;">Correcta</span>
+                              }
+                            </div>
+                          }
+                        </div>
+
+                        <div class="explanation-box">
+                          <strong>Justificación:</strong> {{ q.explanation }}
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Diagnóstico Pedagógico de Cohorte Dinámico -->
+            <div class="surface-panel">
+              <div class="panel-heading-group">
+                <span class="badge badge-neutral">ANÁLISIS DE COHORTE</span>
+                <h2 class="panel-heading">Estudiantes que Requieren Refuerzo</h2>
+                <p class="panel-subtext">Seguimiento pedagógico para prevenir rezago académico.</p>
+              </div>
+
+              @if (studentsAtRisk().length === 0) {
+                <div class="state-block" style="padding: 2rem 1rem; text-align: center;">
+                  <span style="display: flex; justify-content: center; margin-bottom: 0.5rem;"><app-icon name="check-circle" [size]="32" color="#0ae98a" /></span>
+                  <p class="state-title" style="color: #0ae98a; font-weight: 600;">Cohorte al día</p>
+                  <p class="state-desc" style="color: #94a3b8; font-size: 0.85rem;">Todos los estudiantes registrados presentan actividad regular y buen rendimiento evaluativo.</p>
+                </div>
+              } @else {
+                <div class="risk-stack">
+                  @for (st of studentsAtRisk(); track st.id) {
+                    <div class="risk-card">
+                      <div class="risk-header">
+                        <div class="avatar-box">{{ getInitials(st.name) }}</div>
+                        <div>
+                          <div class="cell-name">{{ st.name }}</div>
+                          <div class="cell-meta">
+                            {{ st.email }} · {{ !st.email_verified ? 'Cuenta pendiente de activación' : (st.completed_lessons_count + ' lecciones completadas') }}
+                          </div>
+                        </div>
+                      </div>
+                      <p class="risk-note">
+                        <strong>Diagnóstico Byte:</strong>
+                        @if (!st.email_verified) {
+                          El estudiante no ha verificado su cuenta institucional. Se sugiere enviar recordatorio de activación.
+                        } @else if (st.completed_lessons_count === 0) {
+                          Inscrito en {{ st.enrollments_count }} curso(s) sin lecciones completadas aún. Recomendado asignar reto inicial guiado.
+                        } @else {
+                          Promedio evaluativo de {{ st.average_quiz_score }}%. Se recomienda reforzar fundamentos teóricos antes del siguiente hito.
+                        }
+                      </p>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- MODAL CREACIÓN ACTIVIDAD / QUIZ -->
+      @if (showCreateModal()) {
+        <div class="modal-backdrop" (click)="closeCreateModal()">
+          <div class="modal-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3 class="modal-title">
+                {{ modalType() === 'quiz' ? 'Crear Nuevo Quiz' : 'Crear Reto de Código' }}
+              </h3>
+              <button type="button" class="btn-close" (click)="closeCreateModal()">✕</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="field-group">
+                <label class="field-label">Título de la Actividad *</label>
+                <input
+                  type="text"
+                  class="field-input"
+                  placeholder="Ej. Implementación de Árbol AVL en C++"
+                  [ngModel]="newActivityTitle()"
+                  (ngModelChange)="newActivityTitle.set($event)"
+                />
+              </div>
+
+              <div class="field-row">
+                <div class="field-group">
+                  <label class="field-label">Curso Destino</label>
+                  <select class="field-select" [ngModel]="newActivityCourse()" (ngModelChange)="newActivityCourse.set($event)">
+                    <option value="Introducción a la Programación">Introducción a la Programación</option>
+                    <option value="Estructuras de Datos y Algoritmos">Estructuras de Datos y Algoritmos</option>
+                    <option value="Sistemas Operativos y Linux">Sistemas Operativos y Linux</option>
+                    <option value="Bases de Datos Relacionales">Bases de Datos Relacionales</option>
+                  </select>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Dificultad</label>
+                  <select class="field-select" [ngModel]="newActivityDifficulty()" (ngModelChange)="newActivityDifficulty.set($event)">
+                    <option value="Principiante">Principiante</option>
+                    <option value="Intermedio">Intermedio</option>
+                    <option value="Avanzado">Avanzado</option>
+                  </select>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Recompensa XP</label>
+                  <input
+                    type="number"
+                    class="field-input"
+                    [ngModel]="newActivityXp()"
+                    (ngModelChange)="newActivityXp.set($event)"
+                  />
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Descripción / Instrucciones *</label>
+                <textarea
+                  class="field-textarea"
+                  rows="3"
+                  placeholder="Objetivos pedagógicos y pautas técnicas para el estudiante…"
+                  [ngModel]="newActivityDescription()"
+                  (ngModelChange)="newActivityDescription.set($event)"
+                ></textarea>
+              </div>
+
+              @if (modalType() === 'challenge') {
+                <div class="field-group">
+                  <label class="field-label">Código Inicial Starter</label>
+                  <textarea
+                    class="field-textarea mono-font"
+                    rows="3"
+                    placeholder="// Código base que verá el estudiante al iniciar..."
+                    [ngModel]="newActivityStarterCode()"
+                    (ngModelChange)="newActivityStarterCode.set($event)"
+                  ></textarea>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Salida Esperada / Test Case</label>
+                  <input
+                    type="text"
+                    class="field-input mono-font"
+                    placeholder="Ej. 10 20 30 40 50"
+                    [ngModel]="newActivityExpectedOutput()"
+                    (ngModelChange)="newActivityExpectedOutput.set($event)"
+                  />
+                </div>
+              }
+
+              @if (modalType() === 'quiz') {
+                <div class="quiz-builder">
+                  <div class="quiz-builder__head">
+                    <label class="field-label">Preguntas del Quiz ({{ quizQuestionsList().length }})</label>
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="addQuestionToDraft()" style="display:inline-flex; align-items:center; gap:6px;">
+                      <app-icon name="plus" [size]="13" /> Añadir Pregunta
+                    </button>
+                  </div>
+
+                  @for (q of quizQuestionsList(); track $index; let qIdx = $index) {
+                    <div class="draft-box">
+                      <div class="draft-head">
+                        <span class="mono-value">Pregunta #{{ qIdx + 1 }}</span>
+                        @if (quizQuestionsList().length > 1) {
+                          <button type="button" class="btn-delete-q" (click)="removeQuestionFromDraft(qIdx)">Eliminar</button>
+                        }
+                      </div>
+
+                      <input
+                        type="text"
+                        class="field-input"
+                        placeholder="Enunciado de la pregunta…"
+                        [(ngModel)]="q.question"
+                      />
+
+                      <div class="draft-options">
+                        @for (opt of q.options; track $index; let optIdx = $index) {
+                          <div class="draft-opt-row">
+                            <input
+                              type="radio"
+                              [name]="'radio_q_' + qIdx"
+                              [checked]="q.correct_index === optIdx"
+                              (change)="q.correct_index = optIdx"
+                            />
+                            <span class="opt-label">{{ ['A', 'B', 'C', 'D'][optIdx] }}</span>
+                            <input
+                              type="text"
+                              class="field-input"
+                              placeholder="Opción de respuesta…"
+                              [(ngModel)]="q.options[optIdx]"
+                            />
+                          </div>
+                        }
+                      </div>
+
+                      <input
+                        type="text"
+                        class="field-input"
+                        placeholder="Explicación técnica de la respuesta correcta…"
+                        [(ngModel)]="q.explanation"
+                        style="margin-top: 0.5rem;"
+                      />
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-ghost" (click)="closeCreateModal()">Cancelar</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                (click)="saveNewActivity()"
+                [disabled]="!newActivityTitle().trim() || !newActivityDescription().trim()"
+              >
+                Publicar Actividad
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- MODAL DOSSIER ESTUDIANTE -->
+      @if (selectedStudentDetail()) {
+        @let d = selectedStudentDetail()!;
+        <div class="modal-backdrop" (click)="selectedStudentDetail.set(null)">
+          <div class="modal-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <div class="dossier-user">
+                <div class="avatar-box avatar-lg">{{ getInitials(d.student.name) }}</div>
+                <div>
+                  <h3 class="modal-title">{{ d.student.name }}</h3>
+                  <div class="cell-meta">{{ d.student.email }}</div>
+                  <div style="margin-top: 4px;">
+                    <span class="badge" [class.badge-success]="d.student.email_verified" [class.badge-warning]="!d.student.email_verified">
+                      {{ d.student.email_verified ? 'Verificado' : 'Pendiente' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn-close" (click)="selectedStudentDetail.set(null)">✕</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                <div class="kpi-card">
+                  <span class="kpi-label">Cursos Matriculados</span>
+                  <span class="kpi-value">{{ d.academic_summary.total_enrolled }}</span>
+                </div>
+                <div class="kpi-card">
+                  <span class="kpi-label">Lecciones Superadas</span>
+                  <span class="kpi-value">{{ d.academic_summary.total_completed }}</span>
+                </div>
+                <div class="kpi-card">
+                  <span class="kpi-label">Promedio Quizzes</span>
+                  <span class="kpi-value">{{ d.academic_summary.average_score ?? 0 }}%</span>
+                </div>
+              </div>
+
+              <h4 class="section-title">Cursos Inscritos</h4>
+              <div class="dossier-list">
+                @for (c of d.courses; track c.id) {
+                  <div class="dossier-course-item">
+                    <div class="feed-head">
+                      <span class="cell-primary">{{ c.title }}</span>
+                      <span class="mono-value">{{ c.progress_percent }}%</span>
+                    </div>
+                    <div class="demand-progress-bg">
+                      <div class="demand-progress-fill" [style.width.%]="c.progress_percent"></div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <h4 class="section-title" style="margin-top: 1.5rem;">Historial Evaluativo</h4>
+              @if (d.completed_lessons.length === 0) {
+                <p class="cell-muted">Sin evaluaciones registradas.</p>
+              } @else {
+                <table class="data-table" style="font-size: 0.8rem;">
+                  <thead>
+                    <tr>
+                      <th>Lección</th>
+                      <th>Tipo</th>
+                      <th>Puntaje</th>
+                      <th>Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (l of d.completed_lessons; track l.id) {
+                      <tr>
+                        <td><strong>{{ l.lesson_title }}</strong></td>
+                        <td><span class="badge badge-subtle">{{ l.lesson_type }}</span></td>
+                        <td>
+                          @if (l.score !== null) {
+                            <span [class.text-success]="l.passed" [class.text-danger]="!l.passed">
+                              {{ l.score }}%
+                            </span>
+                          } @else {
+                            <span class="cell-muted">—</span>
+                          }
+                        </td>
+                        <td><span class="cell-muted">{{ formatDate(l.completed_at) }}</span></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-ghost" (click)="selectedStudentDetail.set(null)">Cerrar Expediente</button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>

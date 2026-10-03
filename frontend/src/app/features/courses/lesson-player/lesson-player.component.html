@@ -1,0 +1,429 @@
+@if (loading()) {
+      <div class="container player">
+        <div class="skeleton breadcrumb-sk"></div>
+        <div class="skeleton title-sk"></div>
+        <div class="skeleton meta-sk"></div>
+        <div class="skeleton body-sk"></div>
+      </div>
+    } @else if (forbidden()) {
+      <div class="container player">
+        <div class="status-card">
+          <div class="status-card__icon"><app-icon name="lock" [size]="36" /></div>
+          <h2>Esta lección requiere inscripción</h2>
+          <p>Debes inscribirte en el curso o iniciar sesión para poder acceder al contenido completo de esta lección.</p>
+          <div style="display: flex; gap: var(--sp-3); justify-content: center; margin-top: var(--sp-4); flex-wrap: wrap;">
+            <a class="btn btn-primary" [routerLink]="['/cursos', paramSlug()]">Ver curso e inscribirme</a>
+            <a class="btn btn-outline" routerLink="/auth/login">Iniciar sesión</a>
+          </div>
+        </div>
+      </div>
+    } @else if (error()) {
+      <div class="container player">
+        <div class="status-card status-card--error">
+          <div class="status-card__icon"><app-icon name="alert-triangle" [size]="36" /></div>
+          <h2>No pudimos cargar la lección</h2>
+          <p>{{ error() }}</p>
+          <a class="btn btn-outline" [routerLink]="['/cursos', paramSlug()]">Volver al curso</a>
+        </div>
+      </div>
+    } @else if (lesson()) {
+      @let l = lesson()!;
+      <!-- ========================================================
+           UNIFIED CLASSROOM HEADER (Navbar + Header merged)
+           ======================================================== -->
+      <header class="classroom-unified-header">
+        <div class="header-left">
+          <!-- Brand Logo -->
+          <a routerLink="/" class="unified-logo" aria-label="SysEng Academy - Inicio">
+            <div class="logo-icon-wrap">
+              <span class="logo-icon">&lt;/&gt;</span>
+            </div>
+            <span class="logo-title">SysEng<strong>Academy</strong></span>
+          </a>
+
+          <div class="unified-divider" aria-hidden="true"></div>
+
+          <!-- Breadcrumbs -->
+          <nav class="unified-breadcrumbs" aria-label="Navegación de la lección">
+            <a routerLink="/cursos" class="crumb-link">Cursos</a>
+            <span class="crumb-sep">/</span>
+            <a [routerLink]="['/cursos', courseSlug()]" class="crumb-link crumb-course" [title]="courseTitle()">{{ courseTitle() }}</a>
+            <span class="crumb-sep">/</span>
+            <span class="crumb-module">Módulo {{ l.module.order ?? 1 }}</span>
+            <span class="crumb-sep">/</span>
+            <span class="crumb-current" [title]="l.title">{{ l.title }}</span>
+          </nav>
+        </div>
+
+        <div class="header-right">
+          <!-- Progress Capsule -->
+          <div class="progress-capsule" title="Progreso del curso">
+            <div class="progress-mini-track">
+              <div class="progress-mini-fill" [style.width.%]="courseProgressPercent()"></div>
+            </div>
+            <span class="progress-mini-text">{{ completedLessonsCount() }}/{{ totalLessonsCount() }} ({{ courseProgressPercent() }}%)</span>
+          </div>
+
+          <!-- Enlace al Temario Completo del Curso -->
+          <a
+            [routerLink]="['/cursos', courseSlug()]"
+            [queryParams]="{ tab: 'curriculum' }"
+            class="btn-curriculum-pill"
+            title="Ir al temario completo del curso"
+          >
+            <svg class="curriculum-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+              <path d="M8 7h8"/>
+              <path d="M8 11h6"/>
+            </svg>
+            <span>Temario</span>
+          </a>
+
+          <!-- User Avatar or Login (Avatar ASCII en miniatura animado sin recuadro de iniciales) -->
+          @if (auth.isAuthenticated()) {
+            <a
+              routerLink="/perfil"
+              class="classroom-ascii-avatar"
+              [class.classroom-ascii-avatar--teacher]="isTeacher()"
+              [title]="(auth.user()?.name ?? 'Mi Perfil') + ' — Perfil y Logros'"
+            >
+              <pre class="mini-ascii-pre">{{ currentMiniFrame() }}</pre>
+            </a>
+          } @else {
+            <a routerLink="/auth/login" class="btn-login-unified" title="Iniciar sesión para acceder a tu perfil y guardar insignias">
+              <span class="login-user-icon"><app-icon name="user" [size]="14" /></span>
+              <span class="login-btn-label">Iniciar Sesión</span>
+            </a>
+          }
+        </div>
+      </header>
+
+      <div class="lesson-player-page">
+        <div class="container player-body-wrap">
+          <div class="player-layout">
+            <!-- Main Content -->
+            <main class="player-main">
+              <!-- Mobile Lessons Drawer Trigger -->
+              <button
+                type="button"
+                class="mobile-curriculum-trigger"
+                (click)="sidebarOpen.set(true)"
+                aria-label="Ver todas las lecciones del curso"
+              >
+                <div class="trigger-left">
+                  <svg class="curriculum-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                    <path d="M8 7h8"/>
+                    <path d="M8 11h6"/>
+                  </svg>
+                  <span>Lecciones del curso</span>
+                </div>
+                <span class="trigger-badge">{{ completedLessonsCount() }}/{{ totalLessonsCount() }}</span>
+              </button>
+
+              <!-- Lesson Header inside content -->
+              <div class="lesson-header-card">
+                <div class="lesson-meta-row">
+                  <span class="badge badge-primary">{{ typeLabel(l.type) }}</span>
+                  <span class="meta-item" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="clock" [size]="12" /> {{ l.duration_minutes }} min</span>
+                  @if (l.is_preview) {
+                    <span class="badge badge-accent">Vista previa libre</span>
+                  }
+                  @if (completed()) {
+                    <span class="badge badge-success" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="check" [size]="12" /> Completada</span>
+                  }
+                </div>
+                <h1 class="lesson-headline">{{ l.title }}</h1>
+              </div>
+
+              @if (isCurrentModuleLocked()) {
+                <div class="module-lock-banner" role="alert">
+                  <div class="lock-shield-icon"><app-icon name="lock" [size]="24" /></div>
+                  <div class="lock-body">
+                    <h3>Módulo {{ currentModuleIndex() + 1 }} Bloqueado: {{ currentModule()?.title }}</h3>
+                    <p>
+                      Para acceder a este contenido y realizar sus prácticas, debes completar primero todas las clases del
+                      <strong>Módulo {{ currentModuleIndex() }}: «{{ previousModule()?.title }}»</strong>.
+                    </p>
+                    <button type="button" class="btn btn-primary btn-sm" (click)="goToActiveModuleLesson()">
+                      ← Continuar con el Módulo {{ currentModuleIndex() }}
+                    </button>
+                  </div>
+                </div>
+              }
+
+              @if (contentBlocks().length > 0) {
+                <app-lesson-content class="lesson-content" [blocks]="contentBlocks()" />
+              }
+
+            <!-- INTERACTIVE CODE PRACTICE (Only shown in lessons/modules where practice is required) -->
+            @if (hasPractice()) {
+              <div class="exercise-validation-banner" [class.is-done]="completed()">
+                @if (!completed()) {
+                  <div class="evb-content">
+                    <span class="evb-icon"><app-icon name="target" [size]="20" /></span>
+                    <div class="evb-text">
+                      <h4>Condición de Desbloqueo de este Módulo</h4>
+                      <p>
+                        Para completar este módulo y acceder al siguiente, debes <strong>resolver correctamente este ejercicio</strong>.
+                        El <strong>sistema y el agente Byte IA</strong> validarán tu solución automáticamente al ejecutar o probar tu código en la terminal.
+                      </p>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="evb-content is-success">
+                    <span class="evb-icon"><app-icon name="trophy" [size]="20" /></span>
+                    <div class="evb-text">
+                      <h4>¡Ejercicio Aprobado con Éxito!</h4>
+                      <p>
+                        Tu solución fue validada correctamente. El progreso de este módulo ha sido acreditado y los siguientes módulos están desbloqueados.
+                      </p>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <section class="practice-section" aria-label="Zona de práctica de programación">
+                <div class="practice-header">
+                  <div class="practice-header__info">
+                    <span class="practice-tag" style="display:inline-flex; align-items:center; gap:6px;"><app-icon name="code" [size]="14" /> Práctica Guiada</span>
+                    @if (l.hint) {
+                      <div class="practice-hint">
+                        <span class="hint-icon"><app-icon name="lightbulb" [size]="14" /></span>
+                        <span class="hint-text"><strong>Pista:</strong> {{ l.hint }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <app-interactive-ide
+                  #interactiveIde
+                  [initialCode]="l.starter_code || code()"
+                  [language]="l.language || 'python'"
+                  [testCases]="l.test_cases || []"
+                  [hint]="l.hint"
+                  [lessonTitle]="l.title"
+                  [lessonId]="l.id"
+                  [isChallenge]="isCodeChallenge()"
+                  [isCompleted]="completed()"
+                  (challengeSolved)="onChallengeSolved($event)"
+                />
+              </section>
+            }
+
+            <!-- QUIZ -->
+            @if (l.quiz && l.quiz.questions.length > 0) {
+              <section class="quiz" aria-label="Quiz de la lección">
+                <div class="quiz-head">
+                  <h2 style="display:inline-flex; align-items:center; gap:8px;"><app-icon name="help-circle" [size]="20" /> Quiz: {{ l.quiz.title ?? 'Comprueba lo aprendido' }}</h2>
+                  <p>Selecciona tus respuestas y compruébalas al final.</p>
+                </div>
+
+                @for (q of l.quiz.questions; track q.id) {
+                  @let res = resultFor(q.id);
+                  <div class="quiz-card" [class.is-correct]="res?.correct" [class.is-wrong]="res && !res.correct">
+                    <h3 class="quiz-card__q">{{ $index + 1 }}. {{ q.question }}</h3>
+
+                    <div class="quiz-options" role="group" [attr.aria-label]="'Opciones de respuesta'">
+                      @for (a of q.answers; track a.id) {
+                        <label
+                          class="quiz-option"
+                          [class.is-selected]="isSelected(q.id, a.id)"
+                          [class.is-correct]="isCorrectAnswer(q.id, a.id)"
+                          [class.is-wrong]="isWrongAnswer(q.id, a.id)"
+                        >
+                          <input
+                            [type]="isMultiple(q) ? 'checkbox' : 'radio'"
+                            [name]="'q-' + q.id"
+                            [checked]="isSelected(q.id, a.id)"
+                            [disabled]="!!quizResult() || quizSubmitting()"
+                            (change)="toggleAnswer(q.id, a.id, isMultiple(q))"
+                          />
+                          <span class="quiz-option__text">{{ a.answer_text || a.answer }}</span>
+                        </label>
+                      }
+                    </div>
+
+                    @if (res) {
+                      <div class="quiz-feedback">
+                        <div class="quiz-feedback__head">
+                          <span [class]="'quiz-feedback__tag ' + (res.correct ? 'ok' : 'ko')">
+                            {{ res.correct ? '✓ Correcta' : '✗ Incorrecta' }}
+                          </span>
+                          @if (!res.correct && res.correct_answer_ids?.length) {
+                            <span class="quiz-feedback__correct">
+                              Correcta: {{ correctAnswersText(q, res) }}
+                            </span>
+                          }
+                        </div>
+                        @if (res.explanation) {
+                          <p class="quiz-feedback__explanation">{{ res.explanation }}</p>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
+                @if (!quizResult()) {
+                  <button
+                    class="btn btn-primary quiz-submit"
+                    (click)="submitQuiz()"
+                    [disabled]="quizSubmitting() || !hasAnyAnswer()"
+                  >
+                    {{ quizSubmitting() ? 'Comprobando…' : 'Comprobar respuestas' }}
+                  </button>
+                  @if (!hasAnyAnswer()) {
+                    <p class="quiz-hint">Selecciona al menos una respuesta para comprobar.</p>
+                  }
+                } @else {
+                  @let result = quizResult()!;
+                  <div class="quiz-result">
+                    <div
+                      class="score-ring"
+                      [style.--score]="result.score + '%'"
+                      role="img"
+                      [attr.aria-label]="'Puntaje: ' + result.score + ' por ciento'"
+                    >
+                      <span class="score-ring__inner">{{ result.score }}%</span>
+                    </div>
+                    <div class="quiz-result__info">
+                      <h3>{{ scoreTitle(result.score) }}</h3>
+                      <p>Acertaste <strong>{{ result.correct }}</strong> de {{ result.total }} preguntas.</p>
+                      <p class="quiz-result__msg">{{ scoreMessage(result.score) }}</p>
+                      @if ((result.passed ?? result.score >= 60) && !completed()) {
+                        <button class="btn btn-success-outline" (click)="markComplete(result.score)" [disabled]="completing()">
+                          {{ completing() ? 'Guardando…' : '✓ Marcar lección como completada' }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </section>
+            }
+
+            <!-- Acciones -->
+            <div class="player-actions">
+              <button class="btn btn-outline" (click)="askByte()" title="Pregunta a nuestro asistente IA">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:6px;" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg>
+                Preguntar a Byte
+              </button>
+
+              <div class="player-actions__right">
+                @if (!completed()) {
+                  <button
+                    class="btn btn-primary"
+                    (click)="markComplete()"
+                    [disabled]="completing() || !canComplete()"
+                  >
+                    {{ completing() ? 'Guardando…' : (hasPractice() ? '✓ Validar y Marcar Completada' : '✓ Marcar como completada') }}
+                  </button>
+                } @else {
+                  <span class="done-chip" style="display:inline-flex; align-items:center; gap:6px;">
+                    @if (hasPractice()) {
+                      <app-icon name="trophy" [size]="16" /> Ejercicio Aprobado y Completado
+                    } @else {
+                      <app-icon name="check" [size]="16" /> Lección completada
+                    }
+                  </span>
+                  @if (nextLesson()) {
+                    <a class="btn btn-primary" [routerLink]="['/cursos', courseSlug(), 'leccion', nextLesson()!.slug]">
+                      Siguiente lección →
+                    </a>
+                  }
+                }
+              </div>
+            </div>
+
+            @if (!canComplete() && !completed()) {
+              <p class="enroll-hint">
+                <a [routerLink]="['/cursos', courseSlug()]">Inscríbete al curso</a> para guardar tu progreso y completar lecciones.
+              </p>
+            }
+
+            <!-- Prev / Next -->
+            <nav class="lesson-nav" aria-label="Navegación entre lecciones">
+              @if (prevLesson()) {
+                <a class="lesson-nav__item lesson-nav__item--prev" [routerLink]="['/cursos', courseSlug(), 'leccion', prevLesson()!.slug]">
+                  <span class="lesson-nav__dir">← Anterior</span>
+                  <span class="lesson-nav__title">{{ prevLesson()!.title ?? 'Lección anterior' }}</span>
+                </a>
+              } @else {
+                <span class="lesson-nav__spacer"></span>
+              }
+              @if (nextLesson()) {
+                @if (isNextLessonAccessible()) {
+                  <a class="lesson-nav__item lesson-nav__item--next" [routerLink]="['/cursos', courseSlug(), 'leccion', nextLesson()!.slug]">
+                    <span class="lesson-nav__dir">Siguiente →</span>
+                    <span class="lesson-nav__title">{{ nextLesson()!.title ?? 'Próxima lección' }}</span>
+                  </a>
+                } @else {
+                  <div class="lesson-nav__item lesson-nav__item--next is-locked-nav" (click)="triggerLockedNotice()" role="button" tabindex="0">
+                    <span class="lesson-nav__dir" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="lock" [size]="14" /> Siguiente (Bloqueada)</span>
+                    <span class="lesson-nav__title">{{ nextLessonLockedReason() }}</span>
+                  </div>
+                }
+              } @else {
+                <span class="lesson-nav__spacer"></span>
+              }
+            </nav>
+
+            @if (officialResources().length > 0) {
+              <section class="lesson-docs-refs" aria-label="Documentación Oficial de Referencia">
+                <div class="lesson-docs-refs__head">
+                  <span class="refs-icon"><app-icon name="book-open" [size]="20" /></span>
+                  <div>
+                    <h3 class="refs-title">Documentación Oficial & Referencias</h3>
+                    <p class="refs-subtitle">Fuentes técnicas canónicas para profundizar en los conceptos de esta lección.</p>
+                  </div>
+                </div>
+                <div class="resources-grid-list">
+                  @for (res of officialResources(); track res.title) {
+                    <a [href]="res.url" target="_blank" rel="noopener noreferrer" class="doc-resource-card">
+                      <div class="drc-icon"><app-icon [name]="res.icon" [size]="20" /></div>
+                      <div class="drc-body">
+                        <span class="drc-source">{{ res.source }}</span>
+                        <h4 class="drc-title">{{ res.title }}</h4>
+                        <p class="drc-desc">{{ res.description }}</p>
+                      </div>
+                      <span class="drc-arrow"><app-icon name="external-link" [size]="14" /></span>
+                    </a>
+                  }
+                </div>
+              </section>
+            }
+          </main>
+
+          <!-- Mobile Curriculum Drawer Backdrop -->
+          @if (sidebarOpen()) {
+            <div class="curriculum-drawer-backdrop" (click)="sidebarOpen.set(false)" aria-hidden="true"></div>
+          }
+
+          <!-- Sidebar: lecciones del curso -->
+          <aside id="player-side" class="player-side" [class.open]="sidebarOpen()" aria-label="Contenido del curso">
+            <!-- Mobile Drawer Header with Close Button -->
+            <div class="drawer-mobile-header">
+              <div class="drawer-mobile-title">
+                <svg class="curriculum-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                  <path d="M8 7h8"/>
+                  <path d="M8 11h6"/>
+                </svg>
+                <strong>Temario del Curso</strong>
+              </div>
+              <button type="button" class="drawer-close-btn" (click)="sidebarOpen.set(false)" aria-label="Cerrar temario">
+                ✕
+              </button>
+            </div>
+
+            @if (course()) {
+              <app-course-curriculum [course]="course()" [currentLessonId]="l.id" />
+            } @else {
+              <div class="skeleton side-sk"></div>
+              <div class="skeleton side-sk"></div>
+              <div class="skeleton side-sk"></div>
+            }
+          </aside>
+        </div>
+      </div>
+    </div>
+  }

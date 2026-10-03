@@ -1,0 +1,580 @@
+<div
+      class="linux-terminal-window"
+      [class.mobile-view-editor]="mobileActivePane() === 'editor'"
+      [class.mobile-view-terminal]="mobileActivePane() === 'terminal'"
+      [class.mobile-view-ai]="mobileActivePane() === 'ai'"
+    >
+      <!-- LINUX TERMINAL TITLE BAR (Clean, Minimalist, Unix-style) -->
+      <div class="terminal-titlebar">
+        <!-- LEFT: Unix dots + clean session info -->
+        <div class="titlebar-left">
+          <div class="terminal-dots" aria-hidden="true">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-amber"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="terminal-session-info">
+            <span class="session-host">syseng@terminal</span>:<span class="session-path">~/solution{{ currentLangInfo().extension }}</span>
+            @if (isModified()) {
+              <span class="session-dirty" title="Cambios sin guardar">●</span>
+            }
+          </div>
+        </div>
+
+        <!-- RIGHT: Essential, clean action buttons -->
+        <div class="titlebar-right">
+          <!-- Primary: Run button -->
+          <button
+            type="button"
+            class="cli-btn btn-run"
+            (click)="executeCode()"
+            [disabled]="running() || testing() || !code().trim()"
+            title="Compilar y ejecutar: ./run.sh (Ctrl + Enter)"
+          >
+            <span class="cli-icon">{{ running() ? '⏳' : '▶' }}</span>
+            <span>{{ running() ? 'ejecutando...' : 'Ejecutar' }}</span>
+            <kbd class="cli-kbd">Ctrl↵</kbd>
+          </button>
+
+          <!-- Tests button (if tests exist) -->
+          @if (activeTestCases().length > 0) {
+            <button
+              type="button"
+              class="cli-btn btn-test"
+              (click)="runTests()"
+              [disabled]="running() || testing() || !code().trim()"
+              title="Ejecutar pruebas automatizadas: ./test.sh"
+            >
+              <span class="cli-icon"><app-icon [name]="testing() ? 'refresh-cw' : 'flask'" [size]="14" /></span>
+              <span>{{ testing() ? 'probando...' : 'Probar' }}</span>
+              @if (testStats(); as stats) {
+                <span
+                  class="badge-pill"
+                  [class.badge-ok]="stats.passed === stats.total"
+                  [class.badge-err]="stats.passed < stats.total"
+                >
+                  {{ stats.passed }}/{{ stats.total }}
+                </span>
+              }
+            </button>
+          }
+
+          <!-- Direct validation button -->
+          @if (isApproved()) {
+            <span class="badge-challenge-done" title="Ejercicio aprobado">
+              ✓ Superado
+            </span>
+          } @else {
+            <button
+              type="button"
+              class="cli-btn btn-validate"
+              (click)="manualApproveAndComplete()"
+              [disabled]="running() || testing() || !code().trim()"
+              title="Validar y completar este ejercicio"
+            >
+              <span class="cli-icon">✓</span>
+              <span>Validar Reto</span>
+            </button>
+          }
+
+          <span class="titlebar-vdiv" aria-hidden="true"></span>
+
+          <!-- Tool icon: Reiniciar -->
+          <button
+            type="button"
+            class="cli-icon-btn"
+            (click)="resetCode()"
+            title="Restablecer código inicial"
+          >
+            ↺
+          </button>
+
+          <!-- Language Selector -->
+          <select
+            class="cli-select-compact"
+            [ngModel]="currentLanguage()"
+            (ngModelChange)="onLanguageChange($event)"
+            [disabled]="running() || testing()"
+            aria-label="Seleccionar lenguaje"
+          >
+            @for (lang of languages; track lang.id) {
+              <option [value]="lang.id">{{ lang.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- MOBILE TERMINAL TABS (Visible only on screens <= 768px) -->
+      <div class="mobile-terminal-tabs" aria-label="Selector de vista en móvil">
+        <button
+          type="button"
+          class="m-tab"
+          [class.is-active]="mobileActivePane() === 'editor'"
+          (click)="mobileActivePane.set('editor')"
+        >
+          <span class="m-tab-glyph"><app-icon name="folder" [size]="14" /></span>
+          <span>Editor</span>
+        </button>
+        <button
+          type="button"
+          class="m-tab"
+          [class.is-active]="mobileActivePane() === 'terminal'"
+          (click)="switchToTerminalTab()"
+        >
+          <span class="m-tab-glyph"><app-icon name="terminal" [size]="14" /></span>
+          <span>Terminal</span>
+          @if (testStats(); as stats) {
+            <span
+              class="m-badge"
+              [class.badge-ok]="stats.passed === stats.total"
+              [class.badge-err]="stats.passed < stats.total"
+            >
+              {{ stats.passed }}/{{ stats.total }}
+            </span>
+          }
+        </button>
+        <button
+          type="button"
+          class="m-tab"
+          [class.is-active]="mobileActivePane() === 'ai'"
+          (click)="switchToAiTab()"
+        >
+          <span class="m-tab-glyph ai-spark">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg>
+          </span>
+          <span>Byte AI</span>
+          @if (hasUnreadAiAdvice()) {
+            <span class="m-badge badge-unread">nuevo</span>
+          }
+        </button>
+      </div>
+
+      <!-- COLLAPSIBLE HINT PROMPT -->
+      @if (showHintBar() && hint()) {
+        <div class="terminal-hint-row font-mono">
+          <div class="hint-line">
+            <span class="prompt-user">syseng&#64;linux</span>:<span class="prompt-dir">~</span>$&nbsp;<span class="prompt-cmd">cat hint.txt</span>
+          </div>
+          <div class="hint-output">
+            <span class="hint-icon"><app-icon name="lightbulb" [size]="14" /></span>
+            <span>{{ hint() }}</span>
+            <button type="button" class="hint-dismiss-btn" (click)="showHintBar.set(false)" title="Ocultar pista">✕</button>
+          </div>
+        </div>
+      }
+
+      <!-- COLLAPSIBLE STDIN ROW -->
+      @if (showStdin()) {
+        <div class="terminal-stdin-row font-mono">
+          <span class="stdin-prompt">syseng&#64;stdin:~$</span>
+          <input
+            type="text"
+            class="stdin-text-field"
+            [ngModel]="stdin()"
+            (ngModelChange)="stdin.set($event)"
+            placeholder="Valores de entrada separados por espacio o salto de línea..."
+          />
+          <button type="button" class="stdin-dismiss-btn" (click)="showStdin.set(false)" title="Cerrar stdin">✕</button>
+        </div>
+      }
+
+      <!-- MAIN WORKSPACE: CODE BUFFER + TERMINAL STREAM -->
+      <div class="terminal-workspace">
+        <!-- CODE EDITOR BUFFER -->
+        <div class="editor-pane">
+          <!-- Gutter Line Numbers -->
+          <div class="editor-gutter" #codeGutter aria-hidden="true">
+            @for (line of lineNumbers(); track $index) {
+              <div class="gutter-line" [class.is-active-line]="line === cursorLine()">
+                {{ line }}
+              </div>
+            }
+          </div>
+
+          <!-- Code Textarea -->
+          <div class="editor-surface">
+            <textarea
+              #codeTextarea
+              class="editor-textarea font-mono"
+              [ngModel]="code()"
+              (ngModelChange)="onCodeChange($event)"
+              (keydown)="handleEditorKeyDown($event)"
+              (scroll)="onEditorScroll($event)"
+              (click)="updateCursorPos()"
+              (keyup)="updateCursorPos()"
+              (select)="updateCursorPos()"
+              spellcheck="false"
+              autocomplete="off"
+              autocapitalize="off"
+              placeholder="// Escribe tu código aquí..."
+              aria-label="Editor de código de terminal"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- INTEGRATED LINUX TERMINAL / COPILOT -->
+        <div class="terminal-pane">
+          <!-- Terminal Header Tabs -->
+          <div class="terminal-header-strip">
+            <div class="terminal-tabs-group">
+              <button
+                type="button"
+                class="term-strip-tab"
+                [class.is-active]="activeTerminalTab() === 'terminal'"
+                (click)="activeTerminalTab.set('terminal')"
+              >
+                <span>&gt;_ Consola</span>
+                @if (executionResult()) {
+                  <span
+                    class="status-indicator-dot"
+                    [class.is-ok]="executionResult()!.exit_code === 0"
+                    [class.is-err]="executionResult()!.exit_code !== 0"
+                  ></span>
+                }
+              </button>
+
+              @if (activeTestCases().length > 0 || (executionResult()?.tests && executionResult()!.tests!.length > 0)) {
+                <button
+                  type="button"
+                  class="term-strip-tab"
+                  [class.is-active]="activeTerminalTab() === 'tests'"
+                  (click)="activeTerminalTab.set('tests')"
+                >
+                  <span style="display:inline-flex; align-items:center; gap:5px;"><app-icon name="flask" [size]="13" /> Pruebas</span>
+                  @if (testStats(); as stats) {
+                    <span
+                      class="test-score-badge"
+                      [class.is-ok]="stats.passed === stats.total"
+                      [class.is-err]="stats.passed < stats.total"
+                    >
+                      {{ stats.passed }}/{{ stats.total }}
+                    </span>
+                  }
+                </button>
+              }
+
+              <button
+                type="button"
+                class="term-strip-tab tab-ai-strip"
+                [class.is-active]="activeTerminalTab() === 'ai'"
+                (click)="openCopilotTab()"
+              >
+                <span class="ai-spark">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg>
+                </span>
+                <span>Byte Copilot</span>
+                @if (hasUnreadAiAdvice()) {
+                  <span class="ai-unread-badge" title="Nuevas recomendaciones disponibles">nuevo</span>
+                }
+                @if (aiLoading()) {
+                  <span class="ai-pulse">●</span>
+                }
+              </button>
+
+              @if (hint()) {
+                <button
+                  type="button"
+                  class="term-strip-tab tab-hint-strip"
+                  [class.is-active]="showHintBar()"
+                  (click)="showHintBar.set(!showHintBar())"
+                  title="Ver pista técnica"
+                >
+                  <span style="display:inline-flex; align-items:center; gap:5px;"><app-icon name="lightbulb" [size]="13" /> Pista</span>
+                </button>
+              }
+            </div>
+
+            <!-- Terminal Controls -->
+            <div class="terminal-meta-controls">
+              @if (executionResult()?.execution_time_ms !== undefined) {
+                <span class="term-time-stat" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="zap" [size]="11" /> {{ executionResult()!.execution_time_ms }}ms</span>
+              }
+              @if (executionResult()) {
+                <button
+                  type="button"
+                  class="term-clear-btn"
+                  (click)="clearTerminal()"
+                  title="Limpiar salida de consola"
+                >
+                  limpiar
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Terminal Screen Viewport -->
+          <div class="terminal-viewport font-mono">
+            <!-- VIEW 1: TERMINAL OUTPUT -->
+            @if (activeTerminalTab() === 'terminal') {
+              <div class="cli-stdout-stream">
+                @if (running()) {
+                  <div class="cli-running-indicator">
+                    <span class="cli-spinner"></span>
+                    <span>syseng&#64;linux:~$ ./run.sh compiling & executing in isolated sandbox...</span>
+                  </div>
+                } @else if (executionResult()) {
+                  @let res = executionResult()!;
+                  <div class="cli-prompt-line">
+                    <span class="prompt-user">syseng&#64;linux</span>:<span class="prompt-dir">~/workspace</span>$&nbsp;<span class="prompt-cmd">python3 solution{{ currentLangInfo().extension }}</span>
+                  </div>
+
+                  @if (res.stdout) {
+                    <pre class="cli-stdout">{{ res.stdout }}</pre>
+                  }
+                  @if (res.stderr) {
+                    <pre class="cli-stderr">{{ res.stderr }}</pre>
+                  }
+                  @if (!res.stdout && !res.stderr) {
+                    <div class="cli-quiet-notice">
+                      [Process finished without console output (stdout/stderr)]
+                    </div>
+                  }
+                  <div
+                    class="cli-exit-line"
+                    [class.is-ok]="res.exit_code === 0"
+                    [class.is-err]="res.exit_code !== 0"
+                  >
+                    [Process exited with code {{ res.exit_code }} in {{ res.execution_time_ms }}ms]
+                  </div>
+                } @else {
+                  <div class="cli-idle-prompt">
+                    <div class="cli-prompt-line">
+                      <span class="prompt-user">syseng&#64;linux</span>:<span class="prompt-dir">~/workspace</span>$&nbsp;<span class="cursor-block"></span>
+                    </div>
+                    <p class="cli-idle-hint">
+                      # Presiona <strong>run (Ctrl + Enter)</strong> para compilar y ejecutar tu código en el sandbox Linux.
+                    </p>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- VIEW 2: TESTS SPEC -->
+            @if (activeTerminalTab() === 'tests') {
+              <div class="cli-tests-stream">
+                @if (testing()) {
+                  <div class="cli-running-indicator">
+                    <span class="cli-spinner"></span>
+                    <span>syseng&#64;linux:~$ ./test.sh evaluating unit test suite...</span>
+                  </div>
+                } @else if (executionResult()?.tests && executionResult()!.tests!.length > 0) {
+                  <div class="cli-tests-list">
+                    @for (test of executionResult()!.tests; track $index) {
+                      <div class="cli-test-card" [class.is-pass]="test.passed" [class.is-fail]="!test.passed">
+                        <div class="cli-test-head">
+                          <span class="test-icon-badge">{{ test.passed ? 'PASS' : 'FAIL' }}</span>
+                          <span class="test-title">Test #{{ $index + 1 }}</span>
+                          <span class="test-verdict">{{ test.passed ? '✓ PASSED' : '✗ FAILED' }}</span>
+                        </div>
+                        @if (!test.passed) {
+                          <div class="cli-test-diff">
+                            @if (test.input) {
+                              <div class="diff-row">
+                                <span class="d-key">stdin/args:</span>
+                                <code class="d-val">{{ test.input }}</code>
+                              </div>
+                            }
+                            <div class="diff-row">
+                              <span class="d-key">expected:</span>
+                              <code class="d-val d-expected">{{ test.expected }}</code>
+                            </div>
+                            <div class="diff-row">
+                              <span class="d-key">actual:</span>
+                              <code class="d-val d-actual">{{ test.actual || '(null)' }}</code>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="cli-tests-empty">
+                    <p>No se han ejecutado los casos de prueba todavía.</p>
+                    <button type="button" class="cli-execute-tests-btn" (click)="runTests()">
+                      $ ./test.sh --all
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- VIEW 3: BYTE AI COPILOT (LINUX CLI TUTOR) -->
+            @if (activeTerminalTab() === 'ai') {
+              <div class="cli-copilot-container">
+                <!-- CLI Copilot Header Banner -->
+                <div class="cli-copilot-banner">
+                  <div class="banner-top">
+                    <span class="prompt-user">syseng&#64;linux</span>:<span class="prompt-dir">~</span>$&nbsp;<span class="prompt-cmd">byte-ai --interactive</span>
+                  </div>
+                  <div class="banner-info">
+                    <span class="ai-bot-glyph">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg>
+                    </span>
+                    <span>Byte AI Copilot v2.4 (OpenAI GPT-4o Mini en vivo)</span>
+                  </div>
+                </div>
+
+                <!-- Quick Command Chips -->
+                <div class="cli-chips-row">
+                  <button
+                    type="button"
+                    class="cli-chip"
+                    (click)="askByteWithChip('¿Cómo empiezo este ejercicio? Explica la lógica paso a paso sin darme la solución copiada.')"
+                    [disabled]="aiLoading()"
+                  >
+                    $ byte --how-to-start
+                  </button>
+
+                  <button
+                    type="button"
+                    class="cli-chip"
+                    (click)="askByteWithChip('Revisa mi código actual y las pruebas. ¿Por qué falló y qué condición lógica falta?')"
+                    [disabled]="aiLoading()"
+                  >
+                    $ byte --debug-tests
+                  </button>
+
+                  <button
+                    type="button"
+                    class="cli-chip"
+                    (click)="askByteWithChip('Dame el pseudocódigo estructurado del algoritmo para resolver este reto.')"
+                    [disabled]="aiLoading()"
+                  >
+                    $ byte --pseudocode
+                  </button>
+
+                  <button
+                    type="button"
+                    class="cli-chip"
+                    (click)="askByteWithChip('Analiza la complejidad temporal Big-O y espacial de mi solución. ¿Cómo optimizarla?')"
+                    [disabled]="aiLoading()"
+                  >
+                    $ byte --optimize
+                  </button>
+                </div>
+
+                <!-- Conversation Messages Stream -->
+                <div class="cli-messages-stream" #copilotScroll>
+                  @if (copilotMessages().length === 0) {
+                    <div class="cli-copilot-welcome">
+                      <p class="welcome-heading"># Asistente de programación socrático en terminal</p>
+                      <p class="welcome-body">
+                        Puedo explicarte cómo estructurar tu solución, analizar qué falló en tus pruebas,
+                        o responder cualquier duda técnica que tengas sobre este reto.
+                      </p>
+                      <p class="welcome-sub">
+                        <em>Haz clic en uno de los comandos rápidos arriba o escribe abajo en el prompt.</em>
+                      </p>
+                    </div>
+                  }
+
+                  @for (msg of copilotMessages(); track msg.id) {
+                    <div class="cli-msg-card" [class.is-user]="msg.sender === 'user'" [class.is-ai]="msg.sender === 'assistant'">
+                      <div class="cli-msg-prompt">
+                        <span class="msg-prompt-tag">{{ msg.sender === 'user' ? 'user@prompt:~$ ' : 'byte-ai@response:~$ ' }}</span>
+                        <span class="msg-time">{{ msg.timestamp | date:'shortTime' }}</span>
+                      </div>
+
+                      <div class="cli-msg-body" [innerHTML]="renderMarkdown(msg.text)"></div>
+
+                      @if (msg.codeSnippet) {
+                        <div class="cli-code-actions">
+                          <button
+                            type="button"
+                            class="cli-code-btn btn-apply-snippet"
+                            (click)="applySnippetToEditor(msg.codeSnippet)"
+                            title="Reemplazar el buffer de código con este fragmento"
+                          >
+                            <span style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="download" [size]="12" /> aplicar al código</span>
+                          </button>
+                          <button
+                            type="button"
+                            class="cli-code-btn btn-copy-snippet"
+                            (click)="copySnippet(msg.codeSnippet)"
+                            title="Copiar código al portapapeles"
+                          >
+                            <span style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="copy" [size]="12" /> copiar</span>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  @if (aiLoading()) {
+                    <div class="cli-msg-card is-ai is-thinking">
+                      <div class="cli-msg-prompt">
+                        <span class="msg-prompt-tag">byte-ai@thinking:~$</span>
+                      </div>
+                      <div class="thinking-row">
+                        <span class="cli-spinner"></span>
+                        <span>analizando código fuente y ejecutando diagnóstico...</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <!-- Terminal Command Input Bar -->
+                <div class="cli-input-bar">
+                  <span class="input-prompt-label">syseng&#64;ai:~$</span>
+                  <input
+                    type="text"
+                    class="cli-text-input font-mono"
+                    [(ngModel)]="aiInputText"
+                    (keydown.enter)="sendUserChatMessage()"
+                    [disabled]="aiLoading()"
+                    placeholder="Escribe tu consulta sobre el ejercicio... (Enter)"
+                    aria-label="Comando para Byte AI"
+                  />
+                  <button
+                    type="button"
+                    class="cli-send-btn"
+                    (click)="sendUserChatMessage()"
+                    [disabled]="aiLoading() || !aiInputText().trim()"
+                    title="Enviar consulta a Byte AI"
+                  >
+                    send
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANSIENT TOAST NOTIFICATION -->
+      @if (toastMessage()) {
+        <div class="terminal-toast font-mono">
+          {{ toastMessage() }}
+        </div>
+      }
+
+      <!-- LINUX STATUS BAR -->
+      <footer class="terminal-statusbar font-mono" aria-label="Estado de la terminal">
+        <div class="status-left">
+          <span class="status-item">
+            <span class="status-sym" style="display:inline-flex; align-items:center;"><app-icon name="terminal" [size]="12" /></span> <span class="status-hide-mobile">Linux Sandbox (x86_64)</span>
+          </span>
+          <span class="status-item status-hide-mobile">
+            <span class="status-sym">⎇</span> main*
+          </span>
+          <span class="status-item status-hide-mobile">
+            0 errors 0 warns
+          </span>
+        </div>
+
+        <div class="status-right">
+          <span class="status-item">
+            Ln {{ cursorLine() }}, Col {{ cursorCol() }}
+          </span>
+          <span class="status-item status-hide-mobile">
+            Spaces: 4
+          </span>
+          <span class="status-item status-hide-mobile">
+            UTF-8
+          </span>
+          <span class="status-item status-lang">
+            {{ currentLangInfo().name }}
+          </span>
+        </div>
+      </footer>
+    </div>

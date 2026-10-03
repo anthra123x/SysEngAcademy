@@ -1,0 +1,279 @@
+<!-- HERO -->
+    <section class="hero">
+      <div class="hero__bg-grid"></div>
+      <div class="container hero__inner">
+        <div class="hero__content">
+          <h1 class="hero__title">
+            Aprende <span>Programación.</span><br>
+            Domina tu carrera.
+          </h1>
+          <p class="hero__subtitle">
+            Rutas de aprendizaje estructuradas y cursos interactivos para
+            estudiantes de Ingeniería de Sistemas.
+          </p>
+          <div class="hero__actions">
+            <a routerLink="/rutas" class="btn btn-primary btn-lg">
+              Explorar Rutas
+            </a>
+            <a routerLink="/cursos" class="btn btn-outline btn-lg">
+              Ver Cursos
+            </a>
+          </div>
+          <div class="hero__stats">
+            <div class="stat">
+              <span class="stat__num">50+</span>
+              <span class="stat__label">Cursos</span>
+            </div>
+            <div class="stat__divider"></div>
+            <div class="stat">
+              <span class="stat__num">200+</span>
+              <span class="stat__label">Lecciones</span>
+            </div>
+            <div class="stat__divider"></div>
+            <div class="stat">
+              <span class="stat__num">10+</span>
+              <span class="stat__label">Rutas</span>
+            </div>
+            <div class="stat__divider"></div>
+            <div class="stat">
+              <span class="stat__num">100%</span>
+              <span class="stat__label">Gratis</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero__code" aria-hidden="true">
+          <div class="code-window">
+            <div class="code-window__bar">
+              <span></span><span></span><span></span>
+              <span class="code-window__title">main.py</span>
+            </div>
+            <pre class="code-window__body"><code><span class="c"># SysEng Academy</span>
+<span class="k">def</span> <span class="f">aprender_programacion</span>():
+    ruta = <span class="s">"Fundamentos → POO"</span>
+    <span class="k">for</span> nivel <span class="k">in</span> ruta.niveles:
+        completar(nivel.lecciones)
+        practicar(nivel.ejercicios)
+
+    <span class="k">return</span> <span class="s">"Ingeniero de Sistemas"</span>
+
+<span class="f">aprender_programacion</span>()</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEARNING PATHS (serpentine por categoría) -->
+    <section class="section paths-section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">
+            <app-icon name="map" [size]="15" color="var(--primary)" /> Línea de Tiempo Profesional
+          </div>
+          <h2 class="section-title">Rutas de <span>Aprendizaje Interactivas</span></h2>
+          <p class="section-subtitle">Sigue la trayectoria paso a paso desde los fundamentos hasta especializaciones avanzadas con retroalimentación en tiempo real.</p>
+        </div>
+
+        @if (learningPaths().length === 0) {
+          <div class="snake snake--loading" aria-hidden="true">
+            @for (i of [0,1,2]; track i) {
+              <div class="snake__row">
+                @for (j of [0,1]; track j) {
+                  <div class="snake__stop" [class.snake__stop--left]="j === 0" [class.snake__stop--right]="j === 1">
+                    <div class="snake__node skeleton"></div>
+                    <div class="snake__card skeleton" style="height:172px;"></div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="snake" #snakeWrap [class.snake--visible]="snakeVisible()">
+            <svg class="snake__svg" aria-hidden="true">
+              @for (seg of snakeSegments(); track $index) {
+                <line class="snake__seg"
+                  [attr.x1]="seg.x1" [attr.y1]="seg.y1"
+                  [attr.x2]="seg.x2" [attr.y2]="seg.y2"
+                  [attr.stroke]="seg.color"
+                  [style.--len]="seg.len + 'px'"
+                  [style.--d]="seg.delay + 's'" />
+              }
+              <circle class="snake__motion" r="5"></circle>
+            </svg>
+
+            <div class="snake__track">
+              @for (stop of snakeStops(); track stop.path.id; let idx = $index) {
+                <div class="snake__station"
+                     [class.snake__station--left]="!stop.isRight"
+                     [class.snake__station--right]="stop.isRight"
+                     [style.--c]="stop.color"
+                     [style.--d]="stop.delay + 's'">
+
+                  <!-- Left Side -->
+                  <div class="station-side station-side--left">
+                    @if (!stop.isRight) {
+                      <a [routerLink]="['/rutas', stop.path.slug]" class="snake__card">
+                        <div class="snake__card-top">
+                          <span class="snake__category">{{ stop.name }}</span>
+                          <span [class]="'badge badge-' + stop.path.difficulty">{{ difficultyLabel(stop.path.difficulty) }}</span>
+                        </div>
+                        <h3 class="snake__title">{{ stop.path.title }}</h3>
+                        <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
+                        <div class="snake__meta">
+                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span>·</span>
+                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h estimadas</span>
+                        </div>
+                        <span class="snake__cta">Explorar Ruta →</span>
+                      </a>
+                    } @else {
+                      <div class="snake__milestone-badge milestone-badge--right-align">
+                        <div class="milestone-badge__header">
+                          <span class="milestone-badge__dot" [style.background]="stop.color"></span>
+                          <span class="milestone-badge__label">{{ stop.levelBadge }}</span>
+                        </div>
+                        <span class="milestone-badge__desc">{{ stop.milestoneTitle }}</span>
+                        <div class="milestone-badge__stats">
+                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span>·</span>
+                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h de formación</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Center Node (On central vertical spine) -->
+                  <div class="station-center">
+                    <div class="snake__node"
+                         [style.background]="getPathGradient(stop.path)"
+                         [style.border-color]="stop.color">
+                      <span class="snake__icon">
+                        <app-icon [category]="stop.path.category?.slug" [size]="24" [color]="stop.color" [strokeWidth]="2" />
+                      </span>
+                      <span class="snake__num">{{ ('0' + stop.num).slice(-2) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Right Side -->
+                  <div class="station-side station-side--right">
+                    @if (stop.isRight) {
+                      <a [routerLink]="['/rutas', stop.path.slug]" class="snake__card">
+                        <div class="snake__card-top">
+                          <span class="snake__category">{{ stop.name }}</span>
+                          <span [class]="'badge badge-' + stop.path.difficulty">{{ difficultyLabel(stop.path.difficulty) }}</span>
+                        </div>
+                        <h3 class="snake__title">{{ stop.path.title }}</h3>
+                        <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
+                        <div class="snake__meta">
+                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span>·</span>
+                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h estimadas</span>
+                        </div>
+                        <span class="snake__cta">Explorar Ruta →</span>
+                      </a>
+                    } @else {
+                      <div class="snake__milestone-badge milestone-badge--left-align">
+                        <div class="milestone-badge__header">
+                          <span class="milestone-badge__dot" [style.background]="stop.color"></span>
+                          <span class="milestone-badge__label">{{ stop.levelBadge }}</span>
+                        </div>
+                        <span class="milestone-badge__desc">{{ stop.milestoneTitle }}</span>
+                        <div class="milestone-badge__stats">
+                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span>·</span>
+                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h de formación</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="section-cta">
+          <a routerLink="/rutas" class="btn btn-outline">Ver todas las rutas de ingeniería →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURED COURSES -->
+    <section class="section courses-section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">
+            <app-icon name="zap" [size]="15" color="#FFB800" /> Selección de la Academia
+          </div>
+          <h2 class="section-title">Cursos <span>Destacados</span></h2>
+          <p class="section-subtitle">Una selección de cursos esenciales con proyectos paso a paso y retos interactivos evaluados por IA para impulsar tu carrera técnica.</p>
+        </div>
+
+        <!-- Course Cards Grid (Featured Only) -->
+        <div class="courses-grid-cards">
+          @for (course of displayedCourses(); track course.id) {
+            <a [routerLink]="['/cursos', course.slug]" class="udemy-course-card">
+              <div class="card-thumb">
+                <span class="card-thumb__icon">
+                  <app-icon [category]="course.category?.slug" [size]="42" [color]="course.category?.color || '#0AE98A'" [strokeWidth]="1.8" />
+                </span>
+                @if (course.is_free) {
+                  <span class="card-thumb__free">GRATIS</span>
+                }
+                <div class="card-thumb__category">
+                  <app-icon [category]="course.category?.slug" [size]="12" [strokeWidth]="2" />
+                  <span>{{ course.category?.name ?? 'Curso' }}</span>
+                </div>
+              </div>
+
+              <div class="card-body">
+                <div class="card-tags-row">
+                  <span [class]="'badge badge-' + course.difficulty">{{ difficultyLabel(course.difficulty) }}</span>
+                  <span class="rating-badge"><app-icon name="star" [size]="12" color="#FFB800" /> 4.9 <small>(1.4k+)</small></span>
+                </div>
+
+                <h3 class="card-title">{{ course.title }}</h3>
+                <p class="card-desc">{{ course.description | slice:0:110 }}...</p>
+
+                <!-- Value features checklist -->
+                <div class="card-features">
+                  <span><app-icon name="sparkles" [size]="12" color="#0AE98A" /> Retos con IA</span>
+                  <span><app-icon name="file-text" [size]="12" color="#00C8FF" /> Quizzes</span>
+                  <span><app-icon name="chat" [size]="12" color="#9d4edd" /> Foro activo</span>
+                </div>
+
+                <div class="card-footer">
+                  <div class="meta-stats">
+                    <span><app-icon name="clock" [size]="12" /> {{ course.duration_hours }}h</span>
+                    <span>·</span>
+                    <span><app-icon name="book" [size]="12" /> {{ course.modules?.length ?? 3 }} módulos</span>
+                  </div>
+                  <span class="card-cta">Explorar →</span>
+                </div>
+              </div>
+            </a>
+          }
+
+          @if (featuredCourses().length === 0) {
+            @for (i of [1,2,3,4,5,6]; track i) {
+              <div class="udemy-course-card skeleton" style="height: 340px;"></div>
+            }
+          }
+        </div>
+
+        <div class="section-cta">
+          <div class="featured-catalog-cta">
+            <div class="cta-info">
+              <span class="cta-pill">Catálogo Completo</span>
+              <h3>Explora los 43 cursos disponibles</h3>
+              <p>Filtra por tecnologías, nivel de dificultad y categorías para encontrar tu próxima especialización técnica.</p>
+            </div>
+            <a routerLink="/cursos" class="btn btn-primary btn-lg">
+              <app-icon name="book-open" [size]="18" />
+              <span>Ir al Catálogo de Cursos (43) →</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
