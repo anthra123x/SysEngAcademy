@@ -60,53 +60,12 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
             </div>
           </div>
 
-          <!-- Filtro de Categoría / Especialidad -->
-          <div class="filter-group">
-            <div class="filter-label-row">
-              <label class="filter-label">Especialidad</label>
-              @if (filters.category) {
-                <button type="button" class="filter-clear-link" (click)="selectCategory('')">Ver todas</button>
-              }
-            </div>
-            <div class="select-wrap">
-              <select class="filter-select" [ngModel]="filters.category || ''" (ngModelChange)="selectCategory($event)">
-                <option value="">Todas las especialidades</option>
-                @for (cat of categories(); track cat.id) {
-                  <option [value]="cat.slug">{{ cat.name }}</option>
-                }
-              </select>
-              <span class="select-chevron"><app-icon name="chevron-down" [size]="12" /></span>
-            </div>
-
-            <!-- Chips de acceso rápido por categoría -->
-            <div class="category-quick-pills">
-              <button
-                type="button"
-                class="cat-chip"
-                [class.is-active]="!filters.category"
-                (click)="selectCategory('')"
-              >
-                Todas
-              </button>
-              @for (cat of categories(); track cat.id) {
-                <button
-                  type="button"
-                  class="cat-chip"
-                  [class.is-active]="filters.category === cat.slug"
-                  (click)="selectCategory(cat.slug)"
-                >
-                  {{ cat.name }}
-                </button>
-              }
-            </div>
-          </div>
-
           <!-- Filtro de Nivel de Dificultad -->
           <div class="filter-group">
             <div class="filter-label-row">
               <label class="filter-label">Nivel de Dificultad</label>
               @if (filters.difficulty) {
-                <button type="button" class="filter-clear-link" (click)="selectDifficulty('')">Cualquiera</button>
+                <button type="button" class="filter-clear-link" (click)="selectDifficulty('')">Todos</button>
               }
             </div>
             <div class="difficulty-segmented">
@@ -157,6 +116,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         <!-- Course Grid -->
         <main class="courses-main">
           <div class="courses-header-bar">
+            <h2 class="courses-main-title">Catálogo Completo</h2>
             <span class="results-count">{{ total() }} {{ total() === 1 ? 'curso disponible' : 'cursos disponibles' }}</span>
           </div>
 
@@ -191,9 +151,9 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           }
 
           @if (loading()) {
-            <div class="grid-4">
-              @for (i of [1,2,3,4,5,6,7,8]; track i) {
-                <div class="course-card skeleton" style="height:260px;"></div>
+            <div class="courses-grid">
+              @for (i of [1,2,3,4,5,6]; track i) {
+                <div class="course-card skeleton" style="height:280px;"></div>
               }
             </div>
           } @else if (courses().length === 0) {
@@ -208,12 +168,12 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
               </button>
             </div>
           } @else {
-            <div class="grid-4">
+            <div class="courses-grid">
               @for (course of courses(); track course.id) {
                 <a [routerLink]="['/cursos', course.slug]" class="course-card">
                   <div class="course-card__thumb">
                     <span class="course-thumb__icon">
-                      <app-icon [category]="course.category?.slug" [size]="38" [color]="course.category?.color || '#0AE98A'" [strokeWidth]="1.8" />
+                      <app-icon [category]="course.category?.slug" [size]="42" [color]="course.category?.color || '#0AE98A'" [strokeWidth]="1.8" />
                     </span>
                   </div>
                   <div class="course-card__body">
@@ -239,7 +199,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
                       }
                     </div>
                     <h3>{{ course.title }}</h3>
-                    <p>{{ course.description | slice:0:85 }}...</p>
+                    <p>{{ course.description | slice:0:110 }}...</p>
                     <div class="meta">
                       <span><app-icon name="clock" [size]="12" /> {{ course.duration_hours }}h</span>
                       <span>· <app-icon name="book" [size]="12" /> {{ course.lessons_count ?? 0 }} lecciones</span>
@@ -265,18 +225,30 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   styles: [`
     .courses-layout {
       display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: var(--sp-8);
-      padding-top: var(--sp-8);
+      grid-template-columns: 240px 1fr;
+      gap: var(--sp-6);
+      padding-top: var(--sp-6);
       padding-bottom: var(--sp-12);
-      @media (max-width: 900px) { grid-template-columns: 1fr; gap: var(--sp-4); padding-top: var(--sp-6); }
+      align-items: start;
+      @media (max-width: 900px) { grid-template-columns: 1fr; gap: var(--sp-4); padding-top: var(--sp-4); }
     }
 
     .courses-header-bar {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
-      margin-bottom: var(--sp-3);
+      min-height: 42px;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #1A1F30;
+
+      .courses-main-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #F8FAFC;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
     }
 
     .mobile-filters-trigger {
@@ -297,12 +269,13 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       border-radius: 99px;
     }
 
-    /* BARRA LATERAL DE FILTROS */
+    /* BARRA LATERAL DE FILTROS (ESTÁTICA Y ALINEADA) */
     .filters {
       background: #0E111A;
       border: 1px solid #202436;
       border-radius: 12px;
-      padding: 1.25rem;
+      padding: 1.15rem;
+      position: relative;
       height: fit-content;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 
@@ -310,6 +283,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         display: flex;
         justify-content: space-between;
         align-items: center;
+        min-height: 42px;
         margin-bottom: 1.25rem;
         padding-bottom: 0.75rem;
         border-bottom: 1px solid #1A1F30;
@@ -430,77 +404,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       }
     }
 
-    /* SELECT CON CHEVRON PERSONALIZADO */
-    .select-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
 
-      .filter-select {
-        width: 100%;
-        appearance: none;
-        -webkit-appearance: none;
-        background: #08090D;
-        border: 1px solid #202436;
-        color: #F8FAFC;
-        border-radius: 6px;
-        padding: 8px 30px 8px 10px;
-        font-size: 0.82rem;
-        cursor: pointer;
-        transition: border-color 0.15s ease;
-
-        &:focus {
-          outline: none;
-          border-color: var(--primary);
-        }
-
-        option {
-          background: #0E111A;
-          color: #F8FAFC;
-        }
-      }
-
-      .select-chevron {
-        position: absolute;
-        right: 10px;
-        pointer-events: none;
-        color: #64748B;
-        display: flex;
-        align-items: center;
-      }
-    }
-
-    /* CHIPS DE CATEGORÍA */
-    .category-quick-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 8px;
-    }
-
-    .cat-chip {
-      background: #121622;
-      border: 1px solid #202436;
-      color: #94A3B8;
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      white-space: nowrap;
-
-      &:hover {
-        color: #F8FAFC;
-        border-color: #2E344E;
-      }
-
-      &.is-active {
-        background: rgba(10, 233, 138, 0.12);
-        color: var(--primary);
-        border-color: rgba(10, 233, 138, 0.35);
-        font-weight: 600;
-      }
-    }
 
     /* SEGMENTADO DE DIFICULTAD */
     .difficulty-segmented {
@@ -630,37 +534,99 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       color: #94A3B8;
     }
 
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+
+      @media (max-width: 1200px) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      @media (max-width: 680px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* TARJETAS DE CURSO */
     .course-card {
-      display: flex; flex-direction: column; background: #0E111A; border: 1px solid #202436;
-      border-radius: var(--radius-xl); overflow: hidden; text-decoration: none; transition: all var(--transition-base);
-      &:hover { border-color: var(--primary); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(10, 233, 138, 0.15); transform: translateY(-3px); }
+      display: flex;
+      flex-direction: column;
+      background: #0E111A;
+      border: 1px solid #202436;
+      border-radius: 12px;
+      overflow: hidden;
+      text-decoration: none;
+      position: relative;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+      &:hover {
+        border-color: rgba(10, 233, 138, 0.45);
+        box-shadow: 0 10px 24px -4px rgba(0, 0, 0, 0.5), 0 0 16px rgba(10, 233, 138, 0.12);
+        transform: translateY(-2px);
+
+        h3 {
+          color: var(--primary);
+        }
+
+        .course-thumb__icon {
+          transform: scale(1.08);
+        }
+      }
 
       &__thumb {
         position: relative;
-        height: 110px;
+        height: 112px;
         display: flex;
         align-items: center;
         justify-content: center;
         background: linear-gradient(180deg, #121622 0%, #0E111A 100%);
-        border-bottom: 1px solid #202436;
+        border-bottom: 1px solid #1A1F30;
       }
 
-      .course-thumb__icon { display: flex; align-items: center; justify-content: center; transition: transform var(--transition-fast); }
-      &:hover .course-thumb__icon { transform: scale(1.12); }
+      .course-thumb__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease;
+      }
 
-      &__body { flex: 1; padding: 1rem 1.15rem; display: flex; flex-direction: column; gap: var(--sp-2);
-        .card-badges { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-bottom: 2px; }
+      &__body {
+        flex: 1;
+        padding: 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .card-badges {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 2px;
+          flex-wrap: nowrap;
+        }
+
         .card-cat-tag {
           display: inline-flex;
           align-items: center;
-          gap: 5px;
-          font-size: 0.7rem;
-          font-weight: var(--font-bold);
+          gap: 4px;
+          font-size: 0.68rem;
+          font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.04em;
           color: var(--primary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 130px;
         }
+
+        .badge {
+          white-space: nowrap;
+          flex-shrink: 0;
+          font-size: 10px;
+          padding: 2px 7px;
+        }
+
         .rating-badge-card {
           display: inline-flex;
           align-items: center;
@@ -669,6 +635,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           font-weight: 700;
           color: #FFB800;
           margin-left: auto;
+          white-space: nowrap;
+          flex-shrink: 0;
 
           small {
             color: #64748B;
@@ -680,11 +648,40 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
             font-weight: 500;
           }
         }
-        h3 { font-size: var(--text-base); font-weight: var(--font-semibold); color: var(--text-primary); line-height: 1.35; }
-        p { font-size: var(--text-xs); color: var(--text-secondary); flex: 1; line-height: 1.55; }
+
+        h3 {
+          font-size: 0.96rem;
+          font-weight: 600;
+          color: #F8FAFC;
+          line-height: 1.35;
+          margin: 0;
+          transition: color 0.15s ease;
+        }
+
+        p {
+          font-size: 0.78rem;
+          color: #94A3B8;
+          flex: 1;
+          line-height: 1.5;
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
       }
 
-      .meta { font-size: var(--text-xs); color: var(--text-muted); display: flex; gap: var(--sp-2); font-family: var(--font-mono); }
+      .meta {
+        font-size: 0.72rem;
+        color: #64748B;
+        display: flex;
+        gap: 0.5rem;
+        font-family: var(--font-mono);
+        align-items: center;
+        border-top: 1px solid #161B26;
+        padding-top: 0.5rem;
+        margin-top: auto;
+      }
     }
 
     .pagination {

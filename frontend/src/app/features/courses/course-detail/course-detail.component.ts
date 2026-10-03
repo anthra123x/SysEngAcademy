@@ -150,6 +150,12 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
         this.coursesSvc.getBySlug(slug).subscribe({
           next: (c) => {
             this.course.set(c);
+            if (this.auth.isAuthenticated() && c && !c.enrolled && c.id) {
+              this.coursesSvc.enroll(c.id).subscribe({
+                next: () => this.course.update(curr => curr ? { ...curr, enrolled: true } : curr),
+                error: () => {}
+              });
+            }
             if (c?.user_review) {
               this.userReview.set(c.user_review);
               this.selectedRating.set(c.user_review.rating);
@@ -420,14 +426,19 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
       this.showAuthModal.set(true);
       return;
     }
-    const slug = this.continueLessonSlug();
+    const c = this.course();
+    if (!c) return;
+
+    if (!c.enrolled && c.id) {
+      this.coursesSvc.enroll(c.id).subscribe({
+        next: () => this.course.update(curr => curr ? { ...curr, enrolled: true } : curr),
+        error: () => {}
+      });
+    }
+
+    const slug = this.continueLessonSlug() || c.modules?.[0]?.lessons?.[0]?.slug;
     if (slug) {
-      this.router.navigate(['/cursos', this.course()!.slug, 'leccion', slug]);
-    } else {
-      const firstLesson = this.course()?.modules?.[0]?.lessons?.[0];
-      if (firstLesson) {
-        this.router.navigate(['/cursos', this.course()!.slug, 'leccion', firstLesson.slug]);
-      }
+      this.router.navigate(['/cursos', c.slug, 'leccion', slug]);
     }
   }
 

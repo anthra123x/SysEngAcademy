@@ -618,13 +618,21 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
 
   private loadCourse(slug: string) {
     this.coursesSvc.getBySlug(slug).subscribe({
-      next: course => this.course.set({
-        id: course.id,
-        slug: course.slug,
-        title: course.title,
-        enrolled: course.enrolled,
-        modules: course.modules,
-      }),
+      next: course => {
+        this.course.set({
+          id: course.id,
+          slug: course.slug,
+          title: course.title,
+          enrolled: course.enrolled,
+          modules: course.modules,
+        });
+        if (this.auth.isAuthenticated() && !course.enrolled && course.id) {
+          this.coursesSvc.enroll(course.id).subscribe({
+            next: () => this.course.update(c => (c ? { ...c, enrolled: true } : c)),
+            error: () => {},
+          });
+        }
+      },
       error: () => { /* El sidebar es opcional; la lección ya está cargada */ },
     });
   }

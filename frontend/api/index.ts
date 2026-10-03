@@ -1127,7 +1127,11 @@ export default async function handler(req: any, res: any) {
       let list = baseCatalog;
       if (search && search.trim()) {
         const q = search.trim().toLowerCase();
-        list = list.filter((c: any) => c.title.toLowerCase().includes(q) || (c.description && c.description.toLowerCase().includes(q)));
+        list = list.filter((c: any) => 
+          c.title.toLowerCase().includes(q) || 
+          (c.description && c.description.toLowerCase().includes(q)) ||
+          (c.category?.name && c.category.name.toLowerCase().includes(q))
+        );
       }
       if (category) {
         list = list.filter((c: any) => c.category?.slug === category);

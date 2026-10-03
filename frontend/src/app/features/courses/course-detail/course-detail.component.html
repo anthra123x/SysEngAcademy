@@ -482,7 +482,8 @@
                       Iniciar Sesión
                     </a>
                   </div>
-                } @else if (course()!.enrolled) {
+                } @else {
+                  <!-- Barra de progreso visible siempre para usuarios autenticados -->
                   <div class="enrolled-progress">
                     <div class="progress-label">
                       <span class="progress-title">Tu progreso en el curso</span>
@@ -504,24 +505,20 @@
                   </div>
 
                   @if (courseProgressPercent() === 100) {
-                    <button class="btn btn-outline btn-block btn-lg btn-review" (click)="goToFirstLesson()">
+                    <a [routerLink]="['/cursos', course()!.slug, 'leccion', continueLessonSlug() || course()!.modules?.[0]?.lessons?.[0]?.slug]" class="btn btn-outline btn-block btn-lg btn-review">
                       <span style="display:inline-flex; align-items:center; gap:6px;">
                         <app-icon name="trophy" [size]="16" color="#FFD700" /> Repasar Curso Completado
                       </span>
-                    </button>
-                  } @else if (continueLessonSlug()) {
-                    <a [routerLink]="['/cursos', course()!.slug, 'leccion', continueLessonSlug()]" class="btn btn-primary btn-block btn-lg">
-                      {{ completedLessonsCount() > 0 ? 'Continuar Curso →' : 'Empezar Curso →' }}
+                    </a>
+                  } @else if (continueLessonSlug() || course()!.modules?.[0]?.lessons?.[0]?.slug) {
+                    <a [routerLink]="['/cursos', course()!.slug, 'leccion', continueLessonSlug() || course()!.modules?.[0]?.lessons?.[0]?.slug]" (click)="goToFirstLesson()" class="btn btn-primary btn-block btn-lg">
+                      {{ completedLessonsCount() > 0 ? 'Continuar Curso →' : 'Empezar a Aprender →' }}
                     </a>
                   } @else {
-                    <button class="btn btn-primary btn-block btn-lg" (click)="goToFirstLesson()">
-                      Ir a la primera lección →
+                    <button type="button" class="btn btn-primary btn-block btn-lg" (click)="goToFirstLesson()">
+                      Empezar a Aprender →
                     </button>
                   }
-                } @else {
-                  <button class="btn btn-primary btn-block btn-lg" (click)="goToFirstLesson()">
-                    Empezar a Aprender →
-                  </button>
                 }
               </div>
 
