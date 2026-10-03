@@ -1,0 +1,53 @@
+config:
+  target: "https://frontend-nine-rho-xxvp7yeoqa.vercel.app/api"
+  phases:
+    - name: "Warmup"
+      duration: 10
+      arrivalRate: 2
+    - name: "Ramp up load"
+      duration: 20
+      arrivalRate: 5
+      rampTo: 25
+    - name: "Sustained high load"
+      duration: 30
+      arrivalRate: 25
+  defaults:
+    headers:
+      Accept: "application/json"
+      Content-Type: "application/json"
+      Origin: "https://frontend-nine-rho-xxvp7yeoqa.vercel.app"
+  ensure:
+    p95: 800
+    maxErrorRate: 2
+
+scenarios:
+  - name: "Navegación general y consulta de catálogo"
+    flow:
+      - get:
+          url: "/home"
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - think: 1
+      - get:
+          url: "/courses"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: "/categories"
+          expect:
+            - statusCode: 200
+
+  - name: "Telemetría y registro de pulso"
+    flow:
+      - post:
+          url: "/user/activity-ping"
+          json:
+            delta_seconds: 30
+            action: "pulse"
+            email: "estudiante@sysengacademy.dev"
+          expect:
+            - statusCode:
+                - 200
+                - 429

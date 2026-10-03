@@ -84,6 +84,19 @@ class CodeExecutionController extends Controller
             ], 200);
         }
 
+        // Filtro de seguridad heurístico para prevenir ejecución de comandos del SO en ejecuciones locales
+        $securityRisk = $this->detectSecurityRisk($language, $code);
+        if ($securityRisk) {
+            return response()->json([
+                'stdout' => '',
+                'stderr' => 'Restricción de seguridad SysEng: ' . $securityRisk,
+                'exit_code' => 1,
+                'tests' => [],
+                'execution_time_ms' => 0,
+                'language' => $language,
+            ], 403);
+        }
+
         $startTime = microtime(true);
         $result = $this->runLocally($language, $code, $stdin);
         $executionTimeMs = (int) round((microtime(true) - $startTime) * 1000);
@@ -287,5 +300,39 @@ class CodeExecutionController extends Controller
         }
 
         return 'code-exec:ip:'.$request->ip();
+    }
+
+    private function detectSecurityRisk(string $language, string $code): ?string
+    {
+        $patterns = match ($language) {
+            'python' => [
+                '/\b(os|subprocess|shutil|pty|socket)\s*\./i' => 'Módulos de SO y subprocesos no permitidos',
+                '/\b__import__\s*\(/i' => 'Importación dinámica bloqueada',
+                '/\b(exec|eval)\s*\(/i' => 'Ejecución dinámica de código bloqueada',
+                '/\bopen\s*\(\s*[\'"](\/etc|\/proc|\/sys|\/root|\/home)/i' => 'Acceso a rutas del sistema bloqueado',
+            ],
+            'javascript', 'typescript' => [
+                '/\b(child_process|cluster|worker_threads)\b/i' => 'Procesos secundarios no permitidos',
+                '/\bprocess\s*\.\s*(exit|kill|env|abort)/i' => 'Manipulación de proceso Node bloqueada',
+                '/\bfs\s*\.\s*(unlink|rmdir|rm|chmod|chown)/i' => 'Modificación de archivos bloqueada',
+            ],
+            'php' => [
+                '/\b(exec|shell_exec|system|passthru|proc_open|popen|pcntl_exec)\s*\(/i' => 'Ejecución de subprocesos bloqueada',
+                '/\b(phpinfo|unlink|rmdir|chmod|chown)\s*\(/i' => 'Funciones de sistema de archivos bloqueadas',
+            ],
+            'c', 'cpp' => [
+                '/\b(system|fork|execve|popen)\s*\(/i' => 'Llamadas de sistema en C/C++ bloqueadas',
+                '/\b#include\s*<sys\/socket\.h>/i' => 'Acceso a sockets bloqueado',
+            ],
+            default => [],
+        };
+
+        foreach ($patterns as $pattern => $message) {
+            if (preg_match($pattern, $code)) {
+                return $message;
+            }
+        }
+
+        return null;
     }
 }

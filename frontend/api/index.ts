@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 // @ts-ignore
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import bcrypt from 'bcryptjs';
 
 declare const process: any;
 declare const Buffer: any;
@@ -61,8 +62,59 @@ function invalidateCachePrefix(prefix: string): void {
 }
 
 // =============================================================================
-// 2. SLIDING-WINDOW IP RATE LIMITER (Protección contra DDoS y abusos de invocación)
+// 2. SEGURIDAD, CABECERAS OWASP Y CONTROL DE SOBRECARGA (RESILIENCIA)
 // =============================================================================
+export class PayloadTooLargeError extends Error {
+  constructor(message = 'Payload Too Large') {
+    super(message);
+    this.name = 'PayloadTooLargeError';
+  }
+}
+
+export const MAX_PAYLOAD_BYTES = 256 * 1024; // 256 KB límite estricto para mitigar DoS
+
+const ALLOWED_ORIGIN_PATTERNS = [
+  /^https?:\/\/localhost(:\d+)?$/,
+  /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
+  /^https:\/\/([a-zA-Z0-9-]+\.)?vercel\.app$/,
+  /^https:\/\/([a-zA-Z0-9-]+\.)?sysengacademy\.dev$/,
+  /^https:\/\/sysengacademy\.dev$/,
+];
+
+function isOriginAllowed(origin: string | undefined): boolean {
+  if (!origin) return false;
+  return ALLOWED_ORIGIN_PATTERNS.some((pat) => pat.test(origin));
+}
+
+function applySecurityHeaders(req: any, res: any, cacheHeader?: string) {
+  const origin = req.headers?.origin || req.headers?.Origin;
+
+  if (origin && isOriginAllowed(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+
+  // Cabeceras OWASP esenciales para mitigar clickjacking, MIME sniffing y forzar HTTPS
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+  if (cacheHeader) {
+    res.setHeader('Cache-Control', cacheHeader);
+  } else {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  }
+}
+
 interface RateBucket {
   count: number;
   resetAt: number;
@@ -77,17 +129,28 @@ function getClientIp(req: any): string {
   return req.headers?.['x-real-ip'] || req.socket?.remoteAddress || '127.0.0.1';
 }
 
+function getClientIdentifier(req: any): string {
+  const authHeader = req.headers?.authorization || req.headers?.Authorization;
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+    const raw = authHeader.slice(7).trim();
+    if (raw.length > 8) {
+      return 'usr_' + createHmac('sha256', APP_SECRET).update(raw).digest('hex').slice(0, 16);
+    }
+  }
+  return getClientIp(req);
+}
+
 function checkRateLimit(
-  ip: string,
+  keyId: string,
   actionType: string,
   maxRequests: number,
   windowSeconds: number
-): { allowed: boolean; remaining: number; resetIn: number } {
+): { allowed: boolean; remaining: number; resetIn: number; limit: number } {
   const now = Date.now();
-  const key = `${ip}:${actionType}`;
+  const key = `${keyId}:${actionType}`;
   const bucket = RATE_LIMIT_STORE.get(key);
 
-  if (RATE_LIMIT_STORE.size > 6000) {
+  if (RATE_LIMIT_STORE.size > 8000) {
     for (const [k, b] of RATE_LIMIT_STORE.entries()) {
       if (b.resetAt < now) RATE_LIMIT_STORE.delete(k);
     }
@@ -95,56 +158,79 @@ function checkRateLimit(
 
   if (!bucket || bucket.resetAt < now) {
     RATE_LIMIT_STORE.set(key, { count: 1, resetAt: now + windowSeconds * 1000 });
-    return { allowed: true, remaining: maxRequests - 1, resetIn: windowSeconds };
+    return { allowed: true, remaining: maxRequests - 1, resetIn: windowSeconds, limit: maxRequests };
   }
 
   bucket.count += 1;
   const resetIn = Math.max(1, Math.ceil((bucket.resetAt - now) / 1000));
   if (bucket.count > maxRequests) {
-    return { allowed: false, remaining: 0, resetIn };
+    return { allowed: false, remaining: 0, resetIn, limit: maxRequests };
   }
 
-  return { allowed: true, remaining: maxRequests - bucket.count, resetIn };
+  return { allowed: true, remaining: maxRequests - bucket.count, resetIn, limit: maxRequests };
 }
 
-// Helper to set CORS and send JSON with optional Edge CDN Cache-Control
+// Helper para responder JSON garantizando tipos y cabeceras
 function sendJson(res: any, status: number, data: any, cacheHeader?: string) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
   if (cacheHeader) {
     res.setHeader('Cache-Control', cacheHeader);
   } else {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   }
   res.end(JSON.stringify(data));
 }
 
-// Helper to read JSON body
+// Helper para leer y parsear JSON con límite estricto de tamaño (protección contra saturación de memoria)
 async function getBody(req: any): Promise<any> {
+  const cl = Number(req.headers?.['content-length'] || 0);
+  if (cl > MAX_PAYLOAD_BYTES) {
+    throw new PayloadTooLargeError('El tamaño del payload excede el límite permitido de 256 KB.');
+  }
+
   if (req.body && typeof req.body === 'object') return req.body;
   if (typeof req.body === 'string') {
+    if (Buffer.byteLength(req.body) > MAX_PAYLOAD_BYTES) {
+      throw new PayloadTooLargeError('El tamaño del payload excede el límite permitido de 256 KB.');
+    }
     try {
       return JSON.parse(req.body);
     } catch {
       return {};
     }
   }
-  return new Promise((resolve) => {
+
+  return new Promise((resolve, reject) => {
     let data = '';
+    let bytesReceived = 0;
+    let exceeded = false;
+
     req.on('data', (chunk: any) => {
+      if (exceeded) return;
+      bytesReceived += chunk.length;
+      if (bytesReceived > MAX_PAYLOAD_BYTES) {
+        exceeded = true;
+        req.destroy();
+        reject(new PayloadTooLargeError('El tamaño del payload excede el límite permitido de 256 KB.'));
+        return;
+      }
       data += chunk;
     });
+
     req.on('end', () => {
+      if (exceeded) return;
       try {
         resolve(JSON.parse(data || '{}'));
       } catch {
         resolve({});
       }
     });
-    req.on('error', () => resolve({}));
+
+    req.on('error', () => {
+      if (exceeded) return;
+      resolve({});
+    });
   });
 }
 
@@ -295,69 +381,64 @@ function verifyCheckoutToken(token: string | undefined, userId: number, courseId
 // 5. SERVERLESS ROUTER PRINCIPAL
 // =============================================================================
 export default async function handler(req: any, res: any) {
-  // CORS Preflight
+  // Aplicar cabeceras de seguridad y CORS OWASP en todas las respuestas
+  applySecurityHeaders(req, res);
+
+  // Manejo de preflight CORS (OPTIONS)
   if (req.method === 'OPTIONS') {
     res.statusCode = 204;
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
     res.end();
     return;
+  }
+
+  // Verificación temprana de tamaño de carga (Content-Length) para mitigar DoS
+  const incomingContentLength = Number(req.headers?.['content-length'] || 0);
+  if (incomingContentLength > MAX_PAYLOAD_BYTES) {
+    return sendJson(res, 413, {
+      error: 'payload_too_large',
+      message: 'El tamaño de la solicitud excede el límite máximo permitido (256 KB).',
+    });
   }
 
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname;
   const cleanPath = (pathname.replace(/^\/api/, '') || '/').replace(/\/+$/, '') || '/';
   const method = req.method?.toUpperCase() || 'GET';
-  const clientIp = getClientIp(req);
+  const clientId = getClientIdentifier(req);
+
+  // Función auxiliar para aplicar y reportar cabeceras estándar de rate limiting
+  const enforceLimit = (action: string, maxReq: number, windowSec: number): boolean => {
+    const check = checkRateLimit(clientId, action, maxReq, windowSec);
+    res.setHeader('X-RateLimit-Limit', check.limit);
+    res.setHeader('X-RateLimit-Remaining', check.remaining);
+    res.setHeader('X-RateLimit-Reset', check.resetIn);
+    if (!check.allowed) {
+      res.setHeader('Retry-After', check.resetIn);
+      sendJson(res, 429, {
+        error: 'rate_limit_exceeded',
+        message: 'Demasiadas solicitudes. Por favor espera unos momentos antes de reintentar.',
+        retry_after: check.resetIn,
+      });
+      return false;
+    }
+    return true;
+  };
 
   // -------------------------------------------------------------
-  // ESCUDO DE RATE LIMITING (Control de flujo y protección Vercel)
+  // ESCUDO DE RATE LIMITING (Control de flujo y resiliencia)
   // -------------------------------------------------------------
-  const globalCheck = checkRateLimit(clientIp, 'global', 120, 60);
-  if (!globalCheck.allowed) {
-    res.setHeader('Retry-After', globalCheck.resetIn);
-    return sendJson(res, 429, {
-      error: 'rate_limit_exceeded',
-      message: 'Demasiadas solicitudes desde tu IP. Por favor espera unos momentos.',
-      retry_after: globalCheck.resetIn,
-    });
-  }
+  if (!enforceLimit('global', 120, 60)) return;
 
   if (cleanPath.startsWith('/auth/')) {
-    const authCheck = checkRateLimit(clientIp, 'auth', 20, 60);
-    if (!authCheck.allowed) {
-      res.setHeader('Retry-After', authCheck.resetIn);
-      return sendJson(res, 429, {
-        error: 'rate_limit_exceeded',
-        message: 'Límite de solicitudes de autenticación superado. Espera un minuto.',
-        retry_after: authCheck.resetIn,
-      });
-    }
+    if (!enforceLimit('auth', 20, 60)) return;
   }
 
   if (cleanPath.startsWith('/ai/')) {
-    const aiCheck = checkRateLimit(clientIp, 'ai', 15, 60);
-    if (!aiCheck.allowed) {
-      res.setHeader('Retry-After', aiCheck.resetIn);
-      return sendJson(res, 429, {
-        error: 'rate_limit_exceeded',
-        message: 'Límite de consultas a la IA alcanzado por este minuto.',
-        retry_after: aiCheck.resetIn,
-      });
-    }
+    if (!enforceLimit('ai', 15, 60)) return;
   }
 
   if (cleanPath.startsWith('/user/')) {
-    const pingCheck = checkRateLimit(clientIp, 'telemetry', 60, 60);
-    if (!pingCheck.allowed) {
-      res.setHeader('Retry-After', pingCheck.resetIn);
-      return sendJson(res, 429, {
-        error: 'rate_limit_exceeded',
-        message: 'Frecuencia de telemetría excedida.',
-        retry_after: pingCheck.resetIn,
-      });
-    }
+    if (!enforceLimit('telemetry', 60, 60)) return;
   }
 
   if (
@@ -367,15 +448,7 @@ export default async function handler(req: any, res: any) {
       cleanPath.startsWith('/lessons/') ||
       cleanPath.startsWith('/forum/'))
   ) {
-    const mutCheck = checkRateLimit(clientIp, 'mutation', 35, 60);
-    if (!mutCheck.allowed) {
-      res.setHeader('Retry-After', mutCheck.resetIn);
-      return sendJson(res, 429, {
-        error: 'rate_limit_exceeded',
-        message: 'Demasiadas operaciones consecutivas. Espera unos segundos antes de reintentar.',
-        retry_after: mutCheck.resetIn,
-      });
-    }
+    if (!enforceLimit('mutation', 35, 60)) return;
   }
 
   try {
@@ -559,7 +632,7 @@ export default async function handler(req: any, res: any) {
     // -------------------------------------------------------------
     if (method === 'POST' && cleanPath === '/auth/register') {
       const body = await getBody(req);
-      const name = String(body.name || '').trim();
+      const name = String(body.name || '').trim().slice(0, 100);
       const email = String(body.email || '').trim().toLowerCase();
       const password = String(body.password || '');
 
@@ -567,14 +640,24 @@ export default async function handler(req: any, res: any) {
         return sendJson(res, 422, { message: 'Nombre, correo electrónico y contraseña son obligatorios.' });
       }
 
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email) || email.length > 255) {
+        return sendJson(res, 422, { message: 'El correo electrónico no tiene un formato válido.' });
+      }
+
+      if (password.length < 6) {
+        return sendJson(res, 422, { message: 'La contraseña debe contener al menos 6 caracteres.' });
+      }
+
       const existing: any = await sql`SELECT id FROM users WHERE LOWER(email) = LOWER(${email}) LIMIT 1`;
       if (existing && existing.length > 0) {
         return sendJson(res, 422, { message: 'El correo electrónico ya se encuentra registrado.' });
       }
 
+      const hashedPassword = bcrypt.hashSync(password, 10);
       const inserted: any = await sql`
         INSERT INTO users (name, email, password, role, email_verified_at, created_at, updated_at, xp, current_streak)
-        VALUES (${name}, ${email}, ${password}, 'student', NOW(), NOW(), NOW(), 100, 1)
+        VALUES (${name}, ${email}, ${hashedPassword}, 'student', NOW(), NOW(), NOW(), 100, 1)
         ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
         RETURNING id, name, email, role, avatar, email_verified_at, created_at, xp
       `;
@@ -610,27 +693,53 @@ export default async function handler(req: any, res: any) {
     if (method === 'POST' && cleanPath === '/auth/sync-session') {
       const body = await getBody(req);
       const email = String(body.email || req.headers?.['x-user-email'] || '').trim().toLowerCase();
-      const name = String(body.name || req.headers?.['x-user-name'] || '').trim();
-      const password = String(body.password || 'syseng_synced_pass');
+      const name = String(body.name || req.headers?.['x-user-name'] || '').trim().slice(0, 100);
+      const password = String(body.password || '');
 
       if (!email || !email.includes('@')) {
         return sendJson(res, 400, { message: 'Email válido requerido para sincronización' });
       }
 
-      if (email === 'andrescamilomartinez330@gmail.com') {
-        const adminRows: any = await sql`SELECT * FROM users WHERE LOWER(email) = ${email} LIMIT 1`;
-        const admin = adminRows[0] || { id: 28, email, role: 'admin' };
-        const token = generateSecureToken(email, Number(admin.id), 'admin');
-        return sendJson(res, 200, { user: admin, token, synced: true });
-      }
-
+      // 1. Si la llamada proviene de un usuario autenticado legítimo con su Bearer token
+      const caller = await resolveUser(req);
       const rows: any = await sql`
-        SELECT id, name, email, role, avatar, email_verified_at, created_at, xp, current_streak
+        SELECT id, name, email, password, role, avatar, email_verified_at, created_at, xp, current_streak
         FROM users WHERE LOWER(email) = ${email} LIMIT 1
       `;
 
       if (rows && rows.length > 0) {
         const u = rows[0];
+
+        // Verificar autorización: o bien el caller es este usuario, o se envió la contraseña correcta
+        let isAuthorized = false;
+        if (caller && caller.id === u.id) {
+          isAuthorized = true;
+        } else if (password) {
+          const dbPass = String(u.password || '');
+          if (dbPass.startsWith('$2y$') || dbPass.startsWith('$2a$') || dbPass.startsWith('$2b$')) {
+            try {
+              isAuthorized = bcrypt.compareSync(password, dbPass);
+            } catch {
+              isAuthorized = false;
+            }
+          } else {
+            isAuthorized = password === dbPass;
+            if (isAuthorized) {
+              try {
+                const upgradeHash = bcrypt.hashSync(password, 10);
+                await sql`UPDATE users SET password = ${upgradeHash}, updated_at = NOW() WHERE id = ${u.id}`;
+              } catch {}
+            }
+          }
+        }
+
+        if (!isAuthorized) {
+          return sendJson(res, 401, {
+            error: 'unauthorized',
+            message: 'Credenciales inválidas para sincronizar la sesión.',
+          });
+        }
+
         try {
           await sql`
             INSERT INTO enrollments (user_id, course_id, enrolled_at, progress_percent, created_at, updated_at)
@@ -638,6 +747,7 @@ export default async function handler(req: any, res: any) {
             ON CONFLICT DO NOTHING
           `;
         } catch {}
+
         const token = generateSecureToken(u.email, Number(u.id), u.role || 'student');
         return sendJson(res, 200, {
           user: {
@@ -655,10 +765,16 @@ export default async function handler(req: any, res: any) {
         });
       }
 
+      // Si el usuario no existe en BD y se provee contraseña para registrarlo
+      if (!password || password.length < 6) {
+        return sendJson(res, 422, { message: 'Se requiere una contraseña válida de al menos 6 caracteres.' });
+      }
+
       const displayName = name || email.split('@')[0];
+      const hashedPassword = bcrypt.hashSync(password, 10);
       const inserted: any = await sql`
         INSERT INTO users (name, email, password, role, email_verified_at, created_at, updated_at, xp, current_streak)
-        VALUES (${displayName}, ${email}, ${password}, 'student', NOW(), NOW(), NOW(), 100, 1)
+        VALUES (${displayName}, ${email}, ${hashedPassword}, 'student', NOW(), NOW(), NOW(), 100, 1)
         ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
         RETURNING id, name, email, role, avatar, email_verified_at, created_at, xp
       `;
@@ -694,42 +810,14 @@ export default async function handler(req: any, res: any) {
       const email = String(body.email || '').trim().toLowerCase();
       const password = String(body.password || '');
       const syncAccount = Boolean(body.sync_account || body.name);
-      const name = String(body.name || '').trim();
-
-      if (email === 'andrescamilomartinez330@gmail.com' && password === 'kimetsunoyaiBa1') {
-        const adminRows: any = await sql`SELECT * FROM users WHERE LOWER(email) = LOWER(${email}) LIMIT 1`;
-        const admin: any = adminRows[0] || {
-          id: 28,
-          name: 'Andres Camilo Martinez',
-          email: 'andrescamilomartinez330@gmail.com',
-          role: 'admin',
-          avatar: null,
-          email_verified_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-        };
-
-        const token = generateSecureToken(admin.email, Number(admin.id), 'admin');
-        return sendJson(res, 200, {
-          user: {
-            id: Number(admin.id),
-            name: admin.name || 'Andres Camilo Martinez',
-            email: admin.email,
-            role: 'admin',
-            avatar: admin.avatar,
-            email_verified_at: admin.email_verified_at,
-            created_at: admin.created_at,
-          },
-          token,
-          message: 'Bienvenido de nuevo, Profesor Andres Camilo.',
-        });
-      }
+      const name = String(body.name || '').trim().slice(0, 100);
 
       if (!email || !password) {
         return sendJson(res, 422, { message: 'El correo electrónico y la contraseña son requeridos.' });
       }
 
       let userRows: any = await sql`
-        SELECT id, name, email, password, role, avatar, email_verified_at, created_at
+        SELECT id, name, email, password, role, avatar, email_verified_at, created_at, xp, current_streak
         FROM users
         WHERE LOWER(email) = LOWER(${email})
         LIMIT 1
@@ -737,11 +825,12 @@ export default async function handler(req: any, res: any) {
 
       if ((!userRows || userRows.length === 0) && syncAccount) {
         const displayName = name || email.split('@')[0];
+        const hashedPassword = bcrypt.hashSync(password, 10);
         const inserted: any = await sql`
           INSERT INTO users (name, email, password, role, email_verified_at, created_at, updated_at, xp, current_streak)
-          VALUES (${displayName}, ${email}, ${password}, 'student', NOW(), NOW(), NOW(), 100, 1)
+          VALUES (${displayName}, ${email}, ${hashedPassword}, 'student', NOW(), NOW(), NOW(), 100, 1)
           ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
-          RETURNING id, name, email, password, role, avatar, email_verified_at, created_at
+          RETURNING id, name, email, password, role, avatar, email_verified_at, created_at, xp, current_streak
         `;
         userRows = inserted;
         invalidateCachePrefix('teacher:');
@@ -752,6 +841,47 @@ export default async function handler(req: any, res: any) {
       }
 
       const dbUser = userRows[0];
+      const dbPassword = String(dbUser.password || '');
+
+      let passwordValid = false;
+      let needsHashUpgrade = false;
+
+      // 1. Verificación segura con bcrypt ($2y$, $2a$, $2b$)
+      if (dbPassword.startsWith('$2y$') || dbPassword.startsWith('$2a$') || dbPassword.startsWith('$2b$')) {
+        try {
+          passwordValid = bcrypt.compareSync(password, dbPassword);
+        } catch {
+          passwordValid = false;
+        }
+      } else {
+        // 2. Compatibilidad con credenciales legadas en texto plano usando comparación segura
+        try {
+          const passBuf = Buffer.from(password);
+          const dbBuf = Buffer.from(dbPassword);
+          if (passBuf.length === dbBuf.length && timingSafeEqual(passBuf, dbBuf)) {
+            passwordValid = true;
+            needsHashUpgrade = true;
+          }
+        } catch {
+          passwordValid = (password === dbPassword);
+          if (passwordValid) needsHashUpgrade = true;
+        }
+      }
+
+      if (!passwordValid) {
+        return sendJson(res, 401, { message: 'Credenciales inválidas. Verifica tu correo y contraseña.' });
+      }
+
+      // Si la contraseña estaba en texto plano, actualizar automáticamente a hash bcrypt
+      if (needsHashUpgrade) {
+        try {
+          const secureHash = bcrypt.hashSync(password, 10);
+          await sql`UPDATE users SET password = ${secureHash}, updated_at = NOW() WHERE id = ${dbUser.id}`;
+        } catch (upgradeErr) {
+          console.error('Error al actualizar contraseña a bcrypt:', upgradeErr);
+        }
+      }
+
       const token = generateSecureToken(dbUser.email, Number(dbUser.id), dbUser.role || 'student');
 
       return sendJson(res, 200, {
@@ -763,6 +893,8 @@ export default async function handler(req: any, res: any) {
           avatar: dbUser.avatar,
           email_verified_at: dbUser.email_verified_at,
           created_at: dbUser.created_at,
+          xp: Number(dbUser.xp || 100),
+          current_streak: Number(dbUser.current_streak || 1),
         },
         token,
         message: 'Sesión iniciada con éxito.',
@@ -1459,12 +1591,20 @@ export default async function handler(req: any, res: any) {
 
       const title = String(body.title || '').trim();
       const content = String(body.content || '').trim();
-      const category = String(body.category || 'question');
+      const category = String(body.category || 'question').slice(0, 50);
       const moduleId = body.module_id ? Number(body.module_id) : null;
       const lessonId = body.lesson_id ? Number(body.lesson_id) : null;
 
       if (!title || !content) {
         return sendJson(res, 422, { message: 'El título y el contenido son obligatorios.' });
+      }
+
+      if (title.length < 3 || title.length > 200) {
+        return sendJson(res, 422, { message: 'El título debe tener entre 3 y 200 caracteres.' });
+      }
+
+      if (content.length < 5 || content.length > 8000) {
+        return sendJson(res, 422, { message: 'El contenido debe tener entre 5 y 8000 caracteres.' });
       }
 
       const inserted: any = await sql`
@@ -1573,6 +1713,10 @@ export default async function handler(req: any, res: any) {
         return sendJson(res, 422, { message: 'El contenido de la respuesta es requerido.' });
       }
 
+      if (content.length < 2 || content.length > 8000) {
+        return sendJson(res, 422, { message: 'La respuesta debe tener entre 2 y 8000 caracteres.' });
+      }
+
       const inserted: any = await sql`
         INSERT INTO forum_replies (post_id, user_id, content, is_solution, upvotes, created_at, updated_at)
         VALUES (${postId}, ${user.id}, ${content}, false, 0, NOW(), NOW())
@@ -1601,6 +1745,13 @@ export default async function handler(req: any, res: any) {
     const upvotePostMatch = cleanPath.match(/^\/forum\/posts\/(\d+)\/upvote$/);
     if (method === 'POST' && upvotePostMatch) {
       const postId = Number(upvotePostMatch[1]);
+      const upvoteLimit = checkRateLimit(clientId, `upvote:${postId}`, 5, 60);
+      if (!upvoteLimit.allowed) {
+        return sendJson(res, 429, {
+          error: 'rate_limit_exceeded',
+          message: 'Has alcanzado el límite de votos para esta publicación.',
+        });
+      }
       const updated: any = await sql`
         UPDATE forum_posts SET upvotes = COALESCE(upvotes, 0) + 1, updated_at = NOW() WHERE id = ${postId} RETURNING upvotes
       `;
@@ -1609,16 +1760,36 @@ export default async function handler(req: any, res: any) {
 
     const markSolutionMatch = cleanPath.match(/^\/forum\/replies\/(\d+)\/solution$/);
     if (method === 'POST' && markSolutionMatch) {
-      const replyId = Number(markSolutionMatch[1]);
-      const repRows: any = await sql`SELECT post_id FROM forum_replies WHERE id = ${replyId} LIMIT 1`;
-      if (repRows && repRows.length > 0) {
-        const postId = repRows[0].post_id;
-        await sql`UPDATE forum_replies SET is_solution = false WHERE post_id = ${postId}`;
-        await sql`UPDATE forum_replies SET is_solution = true WHERE id = ${replyId}`;
-        await sql`UPDATE forum_posts SET is_solved = true WHERE id = ${postId}`;
-        return sendJson(res, 200, { is_solution: true, success: true });
+      const user = await resolveUser(req);
+      if (!user) {
+        return sendJson(res, 401, { error: 'unauthorized', message: 'Debes iniciar sesión para marcar una respuesta como solución.' });
       }
-      return sendJson(res, 404, { message: 'Respuesta no encontrada' });
+
+      const replyId = Number(markSolutionMatch[1]);
+      const repRows: any = await sql`
+        SELECT r.id, r.post_id, p.user_id as post_author_id
+        FROM forum_replies r
+        JOIN forum_posts p ON r.post_id = p.id
+        WHERE r.id = ${replyId} LIMIT 1
+      `;
+      if (!repRows || repRows.length === 0) {
+        return sendJson(res, 404, { message: 'Respuesta no encontrada' });
+      }
+
+      const isPostAuthor = Number(repRows[0].post_author_id) === Number(user.id);
+      const isTeacher = user.role === 'admin' || user.role === 'instructor';
+      if (!isPostAuthor && !isTeacher) {
+        return sendJson(res, 403, {
+          error: 'forbidden',
+          message: 'Solo el autor de la pregunta o un docente pueden marcar la solución.',
+        });
+      }
+
+      const postId = repRows[0].post_id;
+      await sql`UPDATE forum_replies SET is_solution = false WHERE post_id = ${postId}`;
+      await sql`UPDATE forum_replies SET is_solution = true WHERE id = ${replyId}`;
+      await sql`UPDATE forum_posts SET is_solved = true WHERE id = ${postId}`;
+      return sendJson(res, 200, { is_solution: true, success: true });
     }
 
     // -------------------------------------------------------------
@@ -1903,6 +2074,7 @@ export default async function handler(req: any, res: any) {
       try {
         const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
+          signal: AbortSignal.timeout(8000), // Timeout de 8s para evitar que la lambda de Vercel se congele
           headers: {
             'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
             'Content-Type': 'application/json',
@@ -1968,10 +2140,16 @@ export default async function handler(req: any, res: any) {
     // Ruta no mapeada
     return sendJson(res, 200, { status: 'ok', path: cleanPath });
   } catch (error: any) {
+    if (error?.name === 'PayloadTooLargeError') {
+      return sendJson(res, 413, {
+        error: 'payload_too_large',
+        message: error.message || 'El tamaño de la solicitud excede el límite máximo permitido (256 KB).',
+      });
+    }
     console.error('Serverless API error on', method, cleanPath, error);
     return sendJson(res, 500, {
       error: 'internal_server_error',
-      message: error?.message || 'Error interno del servidor',
+      message: 'Ha ocurrido un error interno en el servidor. Por favor intenta de nuevo más tarde.',
     });
   }
 }
