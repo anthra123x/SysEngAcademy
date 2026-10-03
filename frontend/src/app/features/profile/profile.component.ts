@@ -6,7 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { CoursesService } from '../../core/services/courses.service';
 import { StreakService } from '../../core/services/streak.service';
-import { TeacherService, TeacherStudent, TeacherActivity, TeacherOverviewResponse } from '../../core/services/teacher.service';
+import { TeacherService, TeacherStudent, TeacherActivity, TeacherOverviewResponse, StudentFeedbackItem } from '../../core/services/teacher.service';
 import { Enrollment } from '../../core/models';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
 
@@ -502,6 +502,27 @@ export class ProfileComponent implements OnInit, OnDestroy {
       timeAgo: 'ahora',
     }
   ]);
+
+  // Estados para Retroalimentación y Comunicados del Docente
+  studentFeedbacks = signal<StudentFeedbackItem[]>([]);
+  feedbacksLoading = signal<boolean>(false);
+
+  readonly activeWarnings = computed(() =>
+    this.studentFeedbacks().filter(f => f.type === 'warning_strict' || f.type === 'warning_mild')
+  );
+
+  readonly totalPenalizedXp = computed(() =>
+    this.studentFeedbacks()
+      .filter(f => f.xp_impact < 0)
+      .reduce((acc, f) => acc + Math.abs(f.xp_impact), 0)
+  );
+
+  readonly totalBonusXp = computed(() =>
+    this.studentFeedbacks()
+      .filter(f => f.xp_impact > 0)
+      .reduce((acc, f) => acc + f.xp_impact, 0)
+  );
+
   currentDiagQuestionIndex = signal(0);
   selectedDiagAnswer = signal<string | null>(null);
   evaluatingQuestion = signal(false);
@@ -989,6 +1010,7 @@ for (let paso = 1; paso <= 3; paso++) {
     });
 
     this.initLocalData();
+    this.loadTeacherFeedbacks();
 
     // Start animated ASCII frame cycler y telemetría de estudio en vivo
     if (typeof window !== 'undefined') {
@@ -997,7 +1019,8 @@ for (let paso = 1; paso <= 3; paso++) {
       }, 1200);
 
       window.addEventListener('syseng:diagnostic_completed', this.onDiagnosticUpdated);
-
+      window.addEventListener('syseng:feedback_sent', this.onFeedbackReceived);
+      window.addEventListener('syseng:xp_updated', this.onFeedbackReceived);
     }
 
     const qp = this.route.snapshot.queryParams;
@@ -1010,8 +1033,36 @@ for (let paso = 1; paso <= 3; paso++) {
     if (this.frameTimer) clearInterval(this.frameTimer);
     if (typeof window !== 'undefined') {
       window.removeEventListener('syseng:diagnostic_completed', this.onDiagnosticUpdated);
+      window.removeEventListener('syseng:feedback_sent', this.onFeedbackReceived);
+      window.removeEventListener('syseng:xp_updated', this.onFeedbackReceived);
     }
   }
+
+  loadTeacherFeedbacks() {
+    const email = this.currentStudentEmail();
+    this.feedbacksLoading.set(true);
+    this.teacherSvc.getStudentFeedbacksForProfile(email).subscribe({
+      next: (list) => {
+        if (Array.isArray(list)) {
+          this.studentFeedbacks.set(list);
+        }
+        this.feedbacksLoading.set(false);
+      },
+      error: () => this.feedbacksLoading.set(false)
+    });
+  }
+
+  private onFeedbackReceived = () => {
+    this.loadTeacherFeedbacks();
+    this.api.get<LeaderboardEntry[]>('/leaderboard').subscribe({
+      next: (entries) => {
+        if (Array.isArray(entries)) {
+          this.remoteLeaderboard.set(entries);
+        }
+      },
+      error: () => {}
+    });
+  };
 
   private initLocalData() {
     if (typeof window === 'undefined') return;
@@ -2044,20 +2095,45 @@ for (let paso = 1; paso <= 3; paso++) {
     const myEmail = this.currentStudentEmail().toLowerCase().trim();
 
     if (remote && remote.length > 0) {
-      return remote.map((entry, idx) => {
-        const isMe = entry.email?.toLowerCase().trim() === myEmail || entry.isCurrentUser;
+      return remote.map((entry: any, idx) => {
+        const isMe = (entry.email?.toLowerCase().trim() === myEmail) || entry.isCurrentUser || entry.is_current_user;
         const rank = idx + 1;
         let badge = 'ACTIVO';
         if (rank === 1) badge = 'ORO';
         else if (rank === 2) badge = 'PLATA';
         else if (rank === 3) badge = 'BRONCE';
 
+        const name = (entry.name && String(entry.name).trim().length > 0)
+          ? String(entry.name).trim()
+          : (entry.user_name && String(entry.user_name).trim().length > 0)
+            ? String(entry.user_name).trim()
+            : (entry.email ? String(entry.email).split('@')[0] : 'Estudiante');
+
+        const nameParts = name.split(/\s+/);
+        const autoAvatar = nameParts.length >= 2
+          ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
+          : name.slice(0, 2).toUpperCase();
+
+        const xp = Number(entry.xp || 100);
+        const level = Number(entry.level) || Math.max(1, Math.min(5, Math.floor(xp / 150) + 1));
+        const rankTitles = ['Junior Dev', 'Algorithmic Solver', 'Systems Builder', 'Junior Engineer', 'Master Architect'];
+        const rankTitle = entry.rankTitle || rankTitles[level - 1] || 'Junior Dev';
+
         return {
           ...entry,
           rank,
+          id: entry.id || entry.user_id,
+          name: name,
+          email: entry.email || '',
+          avatarText: entry.avatarText || autoAvatar,
+          level: isMe ? this.userLevel() : level,
+          rankTitle: isMe ? this.rankTitle() : rankTitle,
+          specialization: entry.specialization || (isMe ? this.specialization().title : 'Ingeniería de Software'),
+          completedLessons: entry.completedLessons ?? entry.completed_lessons_count ?? 0,
+          avgQuizScore: entry.avgQuizScore ?? entry.average_quiz_score ?? 100,
+          xp: isMe ? (this.totalXp() || xp) : xp,
           isCurrentUser: isMe,
           badgePill: badge,
-          avatarText: entry.avatarText || (entry.name ? entry.name.slice(0, 2).toUpperCase() : 'ES'),
         };
       });
     }
@@ -2183,15 +2259,24 @@ for (let paso = 1; paso <= 3; paso++) {
       else if (rank === 2) badge = 'PLATA';
       else if (rank === 3) badge = 'BRONCE';
 
+      const name = (st.name && st.name.trim().length > 0)
+        ? st.name.trim()
+        : (st.email ? st.email.split('@')[0] : 'Estudiante');
+
+      const nameParts = name.split(/\s+/);
+      const autoAvatar = nameParts.length >= 2
+        ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
+        : name.slice(0, 2).toUpperCase();
+
       const level = Math.max(1, Math.min(5, Math.floor(st.xp / 150) + 1));
       const rankTitles = ['Junior Dev', 'Algorithmic Solver', 'Systems Builder', 'Junior Engineer', 'Master Architect'];
       const rankTitle = rankTitles[level - 1] || 'Junior Dev';
 
       return {
         rank,
-        name: st.name,
+        name: name,
         email: st.email,
-        avatarText: st.name.slice(0, 2).toUpperCase(),
+        avatarText: autoAvatar,
         level: isMe ? this.userLevel() : level,
         rankTitle: isMe ? this.rankTitle() : rankTitle,
         specialization: isMe ? this.specialization().title : 'Ingeniería de Software',

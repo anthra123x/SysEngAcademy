@@ -909,13 +909,192 @@
             </div>
 
             <div class="modal-footer">
-              <button type="button" class="btn btn-outline" (click)="contactStudent(d.student.email)">
+              <button type="button" class="btn btn-primary" (click)="openFeedbackModal(d.student)">
                 <span style="display: inline-flex; align-items: center; gap: 6px;">
-                  <app-icon name="mail" [size]="14" /> Enviar Mensaje
+                  <app-icon name="mail" [size]="14" /> Enviar Mensaje / Retroalimentación
+                </span>
+              </button>
+              <button type="button" class="btn btn-outline" (click)="contactStudent(d.student.email)" title="Enviar correo externo">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                  <app-icon name="mail" [size]="14" /> Mailto
                 </span>
               </button>
               <button type="button" class="btn btn-ghost" (click)="selectedStudentDetail.set(null)">
                 Cerrar Expediente
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================================
+           MODAL: RETROALIMENTACIÓN DOCENTE Y LLAMADO DE ATENCIÓN
+           ======================================================== -->
+      @if (showFeedbackModal() && feedbackTargetStudent()) {
+        <div class="modal-backdrop" (click)="closeFeedbackModal()">
+          <div class="modal-dialog modal-feedback-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <div class="modal-title-group">
+                <span class="modal-badge-tag">SEGUIMIENTO DE CÁTEDRA</span>
+                <h3 class="modal-title">Retroalimentación & Llamado de Atención</h3>
+                <p class="modal-subtitle">
+                  Destinatario: <strong>{{ feedbackTargetStudent()?.name }}</strong> ({{ feedbackTargetStudent()?.email }})
+                </p>
+              </div>
+              <button type="button" class="btn-close" (click)="closeFeedbackModal()">✕</button>
+            </div>
+
+            <div class="modal-body">
+              <!-- Fundamentación con IA del panel docente -->
+              @if (feedbackAiSummary()) {
+                <div class="feedback-ai-box">
+                  <div class="ai-box-header">
+                    <span class="ai-box-title">
+                      <app-icon name="sparkles" [size]="14" color="#00f0ff" />
+                      Diagnóstico de Cátedra emitido por Byte IA:
+                    </span>
+                    <button type="button" class="btn btn-xs btn-outline" (click)="useAiDiagnosticInFeedback()">
+                      💡 Fundamentar mensaje con este análisis
+                    </button>
+                  </div>
+                  <p class="ai-box-text">"{{ feedbackAiSummary() }}"</p>
+                </div>
+              }
+
+              <!-- Selector de Categoría / Tipo -->
+              <div class="form-group" style="margin-top: 14px;">
+                <label class="form-label">Tipo de Retroalimentación o Acción Disciplinaria:</label>
+                <div class="feedback-type-grid">
+                  <button
+                    type="button"
+                    class="type-card"
+                    [class.is-selected]="feedbackType() === 'pedagogical'"
+                    (click)="feedbackType.set('pedagogical'); feedbackTitle.set('Seguimiento pedagógico y recomendaciones');"
+                  >
+                    <span class="type-card-icon">💬</span>
+                    <strong class="type-card-title">Orientación Formativa</strong>
+                    <span class="type-card-desc">Consejos pedagógicos y recomendaciones de ruta técnica. Sin penalización.</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="type-card"
+                    [class.is-selected]="feedbackType() === 'praise'"
+                    (click)="feedbackType.set('praise'); feedbackTitle.set('¡Felicitaciones por tu desempeño destacado!');"
+                  >
+                    <span class="type-card-icon">⭐</span>
+                    <strong class="type-card-title">Felicitación & Reconocimiento</strong>
+                    <span class="type-card-desc">Premia el esfuerzo y la constancia con una bonificación de XP.</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="type-card"
+                    [class.is-selected]="feedbackType() === 'warning_mild'"
+                    (click)="feedbackType.set('warning_mild'); feedbackTitle.set('Llamado de atención preventivo por inactividad');"
+                  >
+                    <span class="type-card-icon">⚠️</span>
+                    <strong class="type-card-title">Llamado Preventivo</strong>
+                    <span class="type-card-desc">Advertencia de ritmo o rezago. Registro en expediente sin descuento de XP.</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="type-card is-strict"
+                    [class.is-selected]="feedbackType() === 'warning_strict'"
+                    (click)="feedbackType.set('warning_strict'); feedbackTitle.set('Llamado de atención formal por bajo rendimiento');"
+                  >
+                    <span class="type-card-icon">🚨</span>
+                    <strong class="type-card-title">Bajo Rendimiento (Con Penalización)</strong>
+                    <span class="type-card-desc">Llamado formal con descuento de XP y pérdida de posición en el Ranking.</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Impacto en XP (si aplica) -->
+              @if (feedbackType() === 'warning_strict') {
+                <div class="penalty-config-box">
+                  <label class="form-label" style="color: #ef4444;">
+                    <app-icon name="alert-triangle" [size]="14" color="#ef4444" />
+                    Penalización de Experiencia (Deducción en Ranking):
+                  </label>
+                  <div class="penalty-options">
+                    <button type="button" class="btn btn-sm" [class.btn-danger]="feedbackXpDeduction() === 50" [class.btn-outline]="feedbackXpDeduction() !== 50" (click)="feedbackXpDeduction.set(50)">-50 XP (Leve)</button>
+                    <button type="button" class="btn btn-sm" [class.btn-danger]="feedbackXpDeduction() === 100" [class.btn-outline]="feedbackXpDeduction() !== 100" (click)="feedbackXpDeduction.set(100)">-100 XP (Moderada)</button>
+                    <button type="button" class="btn btn-sm" [class.btn-danger]="feedbackXpDeduction() === 200" [class.btn-outline]="feedbackXpDeduction() !== 200" (click)="feedbackXpDeduction.set(200)">-200 XP (Severa)</button>
+                  </div>
+                  <p class="penalty-hint">El estudiante verá esta deducción reflejada inmediatamente en su expediente y bajará de puesto en el Leaderboard.</p>
+                </div>
+              }
+
+              @if (feedbackType() === 'praise') {
+                <div class="bonus-config-box">
+                  <label class="form-label" style="color: #10b981;">
+                    <app-icon name="sparkles" [size]="14" color="#10b981" />
+                    Bonificación de Experiencia (Premio al Mérito):
+                  </label>
+                  <div class="penalty-options">
+                    <button type="button" class="btn btn-sm" [class.btn-success]="feedbackXpBonus() === 25" [class.btn-outline]="feedbackXpBonus() !== 25" (click)="feedbackXpBonus.set(25)">+25 XP</button>
+                    <button type="button" class="btn btn-sm" [class.btn-success]="feedbackXpBonus() === 50" [class.btn-outline]="feedbackXpBonus() !== 50" (click)="feedbackXpBonus.set(50)">+50 XP</button>
+                    <button type="button" class="btn btn-sm" [class.btn-success]="feedbackXpBonus() === 100" [class.btn-outline]="feedbackXpBonus() !== 100" (click)="feedbackXpBonus.set(100)">+100 XP</button>
+                  </div>
+                </div>
+              }
+
+              <!-- Asunto -->
+              <div class="form-group" style="margin-top: 14px;">
+                <label class="form-label">Asunto del Comunicado:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [ngModel]="feedbackTitle()"
+                  (ngModelChange)="feedbackTitle.set($event)"
+                  placeholder="Ej. Llamado de atención por bajo rendimiento en evaluaciones..."
+                />
+              </div>
+
+              <!-- Mensaje -->
+              <div class="form-group" style="margin-top: 14px;">
+                <label class="form-label">Mensaje Pedagógico / Observaciones:</label>
+                <textarea
+                  class="form-control"
+                  rows="4"
+                  [ngModel]="feedbackMessage()"
+                  (ngModelChange)="feedbackMessage.set($event)"
+                  placeholder="Escribe el mensaje o retroalimentación clara que recibirá el estudiante en su perfil..."
+                ></textarea>
+              </div>
+
+              <!-- Historial de comunicados anteriores si existen -->
+              @if (studentFeedbackHistory().length > 0) {
+                <div class="feedback-prev-history" style="margin-top: 16px;">
+                  <h5 style="font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">Historial previo con este alumno ({{ studentFeedbackHistory().length }}):</h5>
+                  <div class="history-list-mini">
+                    @for (item of studentFeedbackHistory(); track item.id) {
+                      <div class="history-item-mini" [class.is-warning]="item.type === 'warning_strict' || item.type === 'warning_mild'">
+                        <span class="hist-badge">{{ item.type === 'warning_strict' ? '🚨 LLAMADO' : (item.type === 'warning_mild' ? '⚠️ PREVENTIVO' : (item.type === 'praise' ? '⭐ ELOGIO' : '💬 MENSAJE')) }}</span>
+                        <strong class="hist-title">{{ item.title }}</strong>
+                        @if (item.xp_impact !== 0) {
+                          <span class="hist-xp" [style.color]="item.xp_impact < 0 ? '#ef4444' : '#10b981'">({{ item.xp_impact > 0 ? '+' : '' }}{{ item.xp_impact }} XP)</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-ghost" (click)="closeFeedbackModal()">Cancelar</button>
+              <button
+                type="button"
+                class="btn"
+                [class.btn-danger]="feedbackType() === 'warning_strict'"
+                [class.btn-primary]="feedbackType() !== 'warning_strict'"
+                (click)="submitFeedback()"
+                [disabled]="feedbackSending() || !feedbackTitle().trim() || !feedbackMessage().trim()"
+              >
+                {{ feedbackSending() ? 'Registrando...' : (feedbackType() === 'warning_strict' ? 'Emitir Llamado con Penalización' : 'Enviar Retroalimentación Oficial') }}
               </button>
             </div>
           </div>

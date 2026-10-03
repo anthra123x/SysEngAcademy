@@ -59,6 +59,33 @@ export interface TeacherStudent {
   courses: StudentEnrolledCourse[];
 }
 
+export type FeedbackType = 'pedagogical' | 'praise' | 'warning_mild' | 'warning_strict';
+
+export interface StudentFeedbackPayload {
+  student_id?: number;
+  type: FeedbackType;
+  title: string;
+  message: string;
+  ai_context_summary?: string;
+  xp_impact?: number;
+  xp_deduction?: number;
+  xp_bonus?: number;
+}
+
+export interface StudentFeedbackItem {
+  id: number;
+  student_id: number;
+  teacher_id?: number;
+  teacher_name: string;
+  type: FeedbackType;
+  title: string;
+  message: string;
+  ai_context_summary?: string;
+  xp_impact: number;
+  is_read: boolean;
+  created_at: string;
+}
+
 export interface QuizQuestion {
   question: string;
   options: string[];
@@ -836,6 +863,86 @@ export class TeacherService {
     }
 
     return of(questions);
+  }
+
+  sendStudentFeedback(studentId: number, payload: StudentFeedbackPayload): Observable<{ success: boolean; feedback: StudentFeedbackItem; xp_impact: number; message: string }> {
+    return this.api.post<{ success: boolean; feedback: StudentFeedbackItem; xp_impact: number; message: string }>(
+      `/teacher/students/${studentId}/feedback`,
+      payload
+    ).pipe(
+      catchError(() => {
+        const xpImpact = payload.xp_impact !== undefined
+          ? payload.xp_impact
+          : (payload.type === 'warning_strict' ? -(payload.xp_deduction || 50) : (payload.xp_bonus || 0));
+
+        const localItem: StudentFeedbackItem = {
+          id: Date.now(),
+          student_id: studentId,
+          teacher_name: 'Prof. Andrés (Cátedra)',
+          type: payload.type,
+          title: payload.title,
+          message: payload.message,
+          ai_context_summary: payload.ai_context_summary,
+          xp_impact: xpImpact,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        };
+
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem('syseng_student_feedbacks') || '[]';
+            const list: StudentFeedbackItem[] = JSON.parse(raw);
+            list.unshift(localItem);
+            localStorage.setItem('syseng_student_feedbacks', JSON.stringify(list));
+
+            // Actualizar XP local
+            if (xpImpact !== 0) {
+              window.dispatchEvent(new CustomEvent('syseng:xp_updated', {
+                detail: { studentId, xp_impact: xpImpact }
+              }));
+            }
+          } catch {}
+        }
+
+        return of({
+          success: true,
+          message: 'Retroalimentación registrada en el expediente con éxito.',
+          feedback: localItem,
+          xp_impact: xpImpact,
+        });
+      })
+    );
+  }
+
+  getStudentFeedbacks(studentId: number): Observable<StudentFeedbackItem[]> {
+    return this.api.get<StudentFeedbackItem[]>(`/teacher/students/${studentId}/feedbacks`).pipe(
+      catchError(() => {
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem('syseng_student_feedbacks') || '[]';
+            const list: StudentFeedbackItem[] = JSON.parse(raw);
+            return of(list.filter(f => f.student_id === studentId));
+          } catch {}
+        }
+        return of([]);
+      })
+    );
+  }
+
+  getStudentFeedbacksForProfile(email?: string): Observable<StudentFeedbackItem[]> {
+    const params = email ? { email } : undefined;
+    return this.api.get<StudentFeedbackItem[]>('/profile/feedbacks', params).pipe(
+      catchError(() => {
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem('syseng_student_feedbacks') || '[]';
+            const list: StudentFeedbackItem[] = JSON.parse(raw);
+            return of(list);
+          } catch {}
+        }
+        return of([]);
+      })
+    );
   }
 }
 

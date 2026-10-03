@@ -86,6 +86,9 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
     // Evaluación diagnóstica con IA
     Route::post('/ai/diagnostic', [\App\Http\Controllers\Api\DiagnosticController::class, 'evaluate']);
 
+    Route::get('/profile/feedbacks', [ProfileController::class, 'feedbacks']);
+    Route::get('/student/feedbacks', [ProfileController::class, 'feedbacks']);
+
     // Teacher & Admin Dashboard routes
     Route::prefix('teacher')->group(function () {
         Route::get('/overview', [TeacherController::class, 'overview']);
@@ -93,6 +96,8 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
         Route::get('/students/{id}', [TeacherController::class, 'studentDetail']);
         Route::patch('/students/{id}', [TeacherController::class, 'updateStudent']);
         Route::delete('/students/{id}', [TeacherController::class, 'deleteStudent']);
+        Route::post('/students/{id}/feedback', [TeacherController::class, 'sendFeedback']);
+        Route::get('/students/{id}/feedbacks', [TeacherController::class, 'listFeedbacks']);
         Route::post('/send-digest', [TeacherController::class, 'sendProgressDigest']);
         Route::post('/send-streak-reminders', [TeacherController::class, 'sendStreakReminder']);
     });

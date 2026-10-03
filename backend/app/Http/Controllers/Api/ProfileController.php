@@ -27,4 +27,28 @@ class ProfileController extends Controller
 
         return response()->json($summary);
     }
+
+    /**
+     * Retorna el historial de retroalimentaciones y llamados de atención del usuario.
+     */
+    public function feedbacks(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            $email = $request->query('email');
+            if ($email) {
+                $user = \App\Models\User::where('email', strtolower(trim($email)))->first();
+            }
+        }
+
+        if (!$user) {
+            return response()->json([]);
+        }
+
+        $feedbacks = \App\Models\StudentFeedback::where('student_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($feedbacks);
+    }
 }

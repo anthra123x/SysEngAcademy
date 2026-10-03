@@ -2315,7 +2315,114 @@ export default async function handler(req: any, res: any) {
       await sql`DELETE FROM enrollments WHERE user_id = ${studentId}`;
       await sql`DELETE FROM users WHERE id = ${studentId}`;
       invalidateCachePrefix('teacher:');
+      invalidateCachePrefix('leaderboard_');
       return sendJson(res, 200, { message: 'Estudiante eliminado con éxito' });
+    }
+
+    // -------------------------------------------------------------
+    // FEEDBACK & LLAMADOS DE ATENCIÓN DEL DOCENTE
+    // -------------------------------------------------------------
+    const studentFeedbacksMatch = cleanPath.match(/^\/teacher\/students\/(\d+)\/feedbacks$/);
+    if (method === 'GET' && studentFeedbacksMatch) {
+      const studentId = Number(studentFeedbacksMatch[1]);
+      const feedbacks: any = await sql`
+        SELECT * FROM student_feedbacks 
+        WHERE student_id = ${studentId} 
+        ORDER BY created_at DESC;
+      `;
+      return sendJson(res, 200, feedbacks || []);
+    }
+
+    const studentFeedbackPostMatch = cleanPath.match(/^\/teacher\/students\/(\d+)\/feedback$/);
+    if (method === 'POST' && studentFeedbackPostMatch) {
+      const studentId = Number(studentFeedbackPostMatch[1]);
+      const user = await resolveUser(req);
+      const teacherName = user?.name || 'Docente de Cátedra';
+      const teacherId = user?.id || null;
+
+      const body = await readBody(req);
+      const type = body.type || 'pedagogical'; // 'pedagogical', 'praise', 'warning_mild', 'warning_strict'
+      const title = body.title ? String(body.title).trim() : 'Retroalimentación Docente';
+      const message = body.message ? String(body.message).trim() : '';
+      const aiContextSummary = body.ai_context_summary ? String(body.ai_context_summary).trim() : null;
+      let xpImpact = Number(body.xp_impact ?? 0);
+
+      if (!message) {
+        return sendJson(res, 400, { error: 'El contenido del mensaje es requerido.' });
+      }
+
+      // Si es llamado de atención por rendimiento y se indicó penalización
+      if (type === 'warning_strict' && xpImpact >= 0) {
+        const deduction = body.xp_deduction ? Math.abs(Number(body.xp_deduction)) : 50;
+        xpImpact = -deduction;
+      } else if (type === 'praise' && body.xp_bonus) {
+        xpImpact = Math.abs(Number(body.xp_bonus));
+      }
+
+      const insertedRows: any = await sql`
+        INSERT INTO student_feedbacks (
+          student_id,
+          teacher_id,
+          teacher_name,
+          type,
+          title,
+          message,
+          ai_context_summary,
+          xp_impact
+        ) VALUES (
+          ${studentId},
+          ${teacherId},
+          ${teacherName},
+          ${type},
+          ${title},
+          ${message},
+          ${aiContextSummary},
+          ${xpImpact}
+        )
+        RETURNING *;
+      `;
+
+      // Si hay impacto en XP (ej. penalización de -50 o -100 XP por bajo rendimiento), actualizar inmediatamente
+      if (xpImpact !== 0) {
+        await sql`
+          UPDATE users
+          SET xp = GREATEST(0, COALESCE(xp, 100) + ${xpImpact})
+          WHERE id = ${studentId};
+        `;
+        invalidateCachePrefix('leaderboard_');
+        invalidateCachePrefix('teacher:');
+      }
+
+      return sendJson(res, 201, {
+        success: true,
+        message: 'Retroalimentación registrada con éxito en el expediente del estudiante.',
+        feedback: insertedRows[0],
+        xp_impact: xpImpact,
+      });
+    }
+
+    // -------------------------------------------------------------
+    // CONSULTA DE RETROALIMENTACIONES PARA EL PERFIL DEL ESTUDIANTE
+    // -------------------------------------------------------------
+    if (method === 'GET' && (cleanPath === '/profile/feedbacks' || cleanPath === '/student/feedbacks')) {
+      const user = await resolveUser(req);
+      let studentId = user?.id;
+      const emailParam = url.searchParams.get('email');
+      if (!studentId && emailParam) {
+        const userRows: any = await sql`SELECT id FROM users WHERE LOWER(email) = ${emailParam.toLowerCase().trim()} LIMIT 1;`;
+        if (userRows && userRows.length > 0) studentId = Number(userRows[0].id);
+      }
+
+      if (!studentId) {
+        return sendJson(res, 200, []);
+      }
+
+      const feedbacks: any = await sql`
+        SELECT * FROM student_feedbacks
+        WHERE student_id = ${studentId}
+        ORDER BY created_at DESC;
+      `;
+      return sendJson(res, 200, feedbacks || []);
     }
 
     // -------------------------------------------------------------
@@ -2333,25 +2440,57 @@ export default async function handler(req: any, res: any) {
             COALESCE(u.specialization, 'Ingeniería de Software') as specialization,
             COALESCE(u.current_streak, 1) as streak,
             COALESCE(u.xp, 100) + ((SELECT count(*)::int FROM lesson_progress lp WHERE lp.user_id = u.id) * 100) as xp,
-            (SELECT count(*)::int FROM lesson_progress lp WHERE lp.user_id = u.id) as completed_lessons_count
+            (SELECT count(*)::int FROM lesson_progress lp WHERE lp.user_id = u.id) as completed_lessons_count,
+            (SELECT COALESCE(ROUND(AVG(lp.score))::int, 100) FROM lesson_progress lp WHERE lp.user_id = u.id AND lp.score IS NOT NULL) as avg_quiz_score
           FROM users u
           WHERE LOWER(COALESCE(u.role, 'student')) NOT IN ('admin', 'instructor', 'teacher')
           ORDER BY xp DESC
           LIMIT 50
         `;
 
-        list = (rows as any[]).map((r: any, idx: number) => ({
-          rank: idx + 1,
-          user_id: Number(r.id),
-          user_name: r.name,
-          user_avatar: r.avatar || null,
-          specialization: r.specialization,
-          xp: Number(r.xp || 100),
-          streak: Number(r.streak || 1),
-          completed_lessons_count: Number(r.completed_lessons_count || 0),
-          is_current_user: false,
-        }));
-        setCache('leaderboard_top_50', list, 20);
+        list = (rows as any[]).map((r: any, idx: number) => {
+          const xp = Number(r.xp || 100);
+          const level = Math.max(1, Math.min(5, Math.floor(xp / 200) + 1));
+          const rankTitles = ['Junior Dev', 'Algorithmic Solver', 'Systems Builder', 'Junior Engineer', 'Master Architect'];
+          const rankTitle = rankTitles[level - 1] || 'Junior Dev';
+          const name = (r.name && String(r.name).trim().length > 0)
+            ? String(r.name).trim()
+            : (r.email ? String(r.email).split('@')[0] : 'Estudiante');
+          const nameParts = name.split(/\s+/);
+          const avatarText = nameParts.length >= 2
+            ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
+            : name.slice(0, 2).toUpperCase();
+
+          let badge = 'ACTIVO';
+          if (idx === 0) badge = 'ORO';
+          else if (idx === 1) badge = 'PLATA';
+          else if (idx === 2) badge = 'BRONCE';
+
+          return {
+            rank: idx + 1,
+            id: Number(r.id),
+            user_id: Number(r.id),
+            name: name,
+            user_name: name,
+            email: r.email,
+            avatar: r.avatar || null,
+            user_avatar: r.avatar || null,
+            avatarText: avatarText,
+            specialization: r.specialization,
+            level: level,
+            rankTitle: rankTitle,
+            xp: xp,
+            streak: Number(r.streak || 1),
+            completedLessons: Number(r.completed_lessons_count || 0),
+            completed_lessons_count: Number(r.completed_lessons_count || 0),
+            avgQuizScore: r.avg_quiz_score !== null ? Number(r.avg_quiz_score) : 100,
+            average_quiz_score: r.avg_quiz_score !== null ? Number(r.avg_quiz_score) : 100,
+            isCurrentUser: false,
+            is_current_user: false,
+            badgePill: badge,
+          };
+        });
+        setCache('leaderboard_top_50', list, 15);
       }
 
       return sendJson(res, 200, list, 'public, s-maxage=10, stale-while-revalidate=30');

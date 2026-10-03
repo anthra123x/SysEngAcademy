@@ -177,4 +177,76 @@ class TeacherController extends Controller
             'sent_count' => $sentCount,
         ]);
     }
+
+    /**
+     * Emite retroalimentación pedagógica o llamado de atención formal con impacto gamificado opcional.
+     */
+    public function sendFeedback(Request $request, int $id): JsonResponse
+    {
+        $this->authorizeTeacher($request);
+
+        $validated = $request->validate([
+            'type'               => 'required|string|in:pedagogical,praise,warning_mild,warning_strict',
+            'title'              => 'required|string|max:255',
+            'message'            => 'required|string',
+            'ai_context_summary' => 'nullable|string',
+            'xp_impact'          => 'nullable|integer',
+            'xp_deduction'       => 'nullable|integer|min:0',
+            'xp_bonus'           => 'nullable|integer|min:0',
+        ]);
+
+        $student = \App\Models\User::findOrFail($id);
+        $teacher = $request->user();
+
+        $type = $validated['type'];
+        $xpImpact = (int) ($validated['xp_impact'] ?? 0);
+
+        if ($type === 'warning_strict' && $xpImpact >= 0) {
+            $deduction = !empty($validated['xp_deduction']) ? (int) $validated['xp_deduction'] : 50;
+            $xpImpact = -$deduction;
+        } elseif ($type === 'praise' && !empty($validated['xp_bonus'])) {
+            $xpImpact = (int) $validated['xp_bonus'];
+        }
+
+        $feedback = \App\Models\StudentFeedback::create([
+            'student_id'         => $student->id,
+            'teacher_id'         => $teacher->id,
+            'teacher_name'       => $teacher->name ?: 'Docente de Cátedra',
+            'type'               => $type,
+            'title'              => $validated['title'],
+            'message'            => $validated['message'],
+            'ai_context_summary' => $validated['ai_context_summary'] ?? null,
+            'xp_impact'          => $xpImpact,
+        ]);
+
+        if ($xpImpact !== 0) {
+            $currentXp = (int) ($student->xp ?: 100);
+            $newXp = max(0, $currentXp + $xpImpact);
+            $student->update(['xp' => $newXp]);
+        }
+
+        $this->analyticsService->invalidateCache();
+
+        return response()->json([
+            'message'   => 'Retroalimentación registrada en el expediente con éxito.',
+            'feedback'  => $feedback,
+            'xp_impact' => $xpImpact,
+            'student_xp'=> $student->fresh()->xp,
+        ], 201);
+    }
+
+    /**
+     * Retorna el historial de retroalimentaciones y llamados de atención de un estudiante.
+     */
+    public function listFeedbacks(Request $request, int $id): JsonResponse
+    {
+        $this->authorizeTeacher($request);
+
+        $feedbacks = \App\Models\StudentFeedback::where('student_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($feedbacks);
+    }
 }
+

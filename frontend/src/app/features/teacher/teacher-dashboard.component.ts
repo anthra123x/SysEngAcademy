@@ -10,6 +10,9 @@ import {
   TeacherStudentDetail,
   TeacherActivity,
   QuizQuestion,
+  FeedbackType,
+  StudentFeedbackPayload,
+  StudentFeedbackItem,
 } from '../../core/services/teacher.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
@@ -69,6 +72,18 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
   readonly sendingDigest = signal(false);
   readonly sendingStreak = signal(false);
   readonly actionNotification = signal('');
+
+  // Estados para modal de retroalimentación & llamado de atención
+  readonly showFeedbackModal = signal<boolean>(false);
+  readonly feedbackTargetStudent = signal<{ id: number; name: string; email: string } | null>(null);
+  readonly feedbackType = signal<FeedbackType>('warning_strict');
+  readonly feedbackTitle = signal<string>('Llamado de atención por bajo rendimiento');
+  readonly feedbackMessage = signal<string>('');
+  readonly feedbackAiSummary = signal<string>('');
+  readonly feedbackXpDeduction = signal<number>(50);
+  readonly feedbackXpBonus = signal<number>(50);
+  readonly feedbackSending = signal<boolean>(false);
+  readonly studentFeedbackHistory = signal<StudentFeedbackItem[]>([]);
 
   private studentsUpdateListener = () => {
     this.loadAllData();
@@ -446,5 +461,95 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     if (typeof window !== 'undefined') {
       window.location.href = `mailto:${email}?subject=Seguimiento Académico - SysEng Academy`;
     }
+  }
+
+  openFeedbackModal(student: { id: number; name: string; email: string }) {
+    this.feedbackTargetStudent.set(student);
+    const detail = this.selectedStudentDetail();
+    const aiDiag = detail?.academic_summary?.ai_pedagogical_diagnostic || '';
+    this.feedbackAiSummary.set(aiDiag);
+
+    // Predeterminar tipo según estado académico
+    if (detail?.academic_summary?.status === 'critical' || detail?.academic_summary?.status === 'warning') {
+      this.feedbackType.set('warning_strict');
+      this.feedbackTitle.set('Llamado de atención por bajo rendimiento y rezago');
+      this.feedbackXpDeduction.set(50);
+      this.feedbackMessage.set(`Estimado(a) ${student.name},\n\nHemos identificado un rezago significativo en tus entregas prácticas y evaluaciones en la plataforma. Es crucial que retomes las actividades de cátedra para no comprometer tu progreso.`);
+    } else {
+      this.feedbackType.set('pedagogical');
+      this.feedbackTitle.set('Seguimiento pedagógico y recomendaciones técnicas');
+      this.feedbackMessage.set(`Hola ${student.name},\n\nRevisando tu expediente académico, queremos felicitar tu constancia y compartirte recomendaciones para seguir impulsando tus proyectos.`);
+    }
+
+    // Cargar historial de feedbacks previos de este alumno
+    this.teacherSvc.getStudentFeedbacks(student.id).subscribe({
+      next: (list) => this.studentFeedbackHistory.set(list),
+      error: () => this.studentFeedbackHistory.set([])
+    });
+
+    this.showFeedbackModal.set(true);
+  }
+
+  useAiDiagnosticInFeedback() {
+    const aiDiag = this.feedbackAiSummary();
+    if (!aiDiag) return;
+    const current = this.feedbackMessage();
+    if (!current.includes('[Diagnóstico de IA de Cátedra]')) {
+      this.feedbackMessage.set(current + `\n\n[Diagnóstico de IA de Cátedra]: ${aiDiag}`);
+    }
+  }
+
+  closeFeedbackModal() {
+    this.showFeedbackModal.set(false);
+    this.feedbackTargetStudent.set(null);
+  }
+
+  submitFeedback() {
+    const student = this.feedbackTargetStudent();
+    if (!student) return;
+    const title = this.feedbackTitle().trim();
+    const message = this.feedbackMessage().trim();
+    if (!title || !message) {
+      alert('Por favor completa el asunto y el mensaje.');
+      return;
+    }
+
+    this.feedbackSending.set(true);
+    const type = this.feedbackType();
+    let xpImpact = 0;
+    if (type === 'warning_strict') {
+      xpImpact = -Math.abs(this.feedbackXpDeduction());
+    } else if (type === 'praise') {
+      xpImpact = Math.abs(this.feedbackXpBonus());
+    }
+
+    const payload: StudentFeedbackPayload = {
+      type,
+      title,
+      message,
+      ai_context_summary: this.feedbackAiSummary() || undefined,
+      xp_impact: xpImpact,
+      xp_deduction: type === 'warning_strict' ? this.feedbackXpDeduction() : 0,
+      xp_bonus: type === 'praise' ? this.feedbackXpBonus() : 0,
+    };
+
+    this.teacherSvc.sendStudentFeedback(student.id, payload).subscribe({
+      next: (res) => {
+        this.feedbackSending.set(false);
+        this.actionNotification.set(`✓ ${res.message || 'Retroalimentación registrada en el expediente con éxito.'}`);
+        setTimeout(() => this.actionNotification.set(''), 4500);
+        this.closeFeedbackModal();
+        this.loadAllData();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('syseng:feedback_sent', { detail: { studentId: student.id } }));
+          window.dispatchEvent(new CustomEvent('syseng:xp_updated', { detail: { studentId: student.id, xp_impact: xpImpact } }));
+        }
+      },
+      error: () => {
+        this.feedbackSending.set(false);
+        alert('Hubo un error al registrar la retroalimentación.');
+        this.closeFeedbackModal();
+      }
+    });
   }
 }
