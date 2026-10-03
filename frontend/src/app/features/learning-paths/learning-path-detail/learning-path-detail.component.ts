@@ -9,7 +9,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
   imports: [RouterLink, AppIconComponent],
   template: `
     @if (loading()) {
-      <div class="container" style="padding: var(--sp-16) 0;">
+      <div class="container" style="padding-top: var(--sp-16); padding-bottom: var(--sp-16);">
         <div class="skeleton" style="height: 320px; border-radius: var(--radius-xl); margin-bottom: var(--sp-8);"></div>
         <div class="skeleton" style="height: 500px; border-radius: var(--radius-xl);"></div>
       </div>

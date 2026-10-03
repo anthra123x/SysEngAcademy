@@ -1,27 +1,32 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { SlicePipe } from '@angular/common';
 import { LearningPathsService } from '../../core/services/learning-paths.service';
 import { LearningPath } from '../../core/models';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-learning-paths',
-  imports: [RouterLink, SlicePipe, AppIconComponent],
+  imports: [RouterLink, AppIconComponent],
   template: `
     <div class="paths-page">
+      <!-- Page Header -->
       <div class="page-header">
         <div class="container">
-          <h1>Rutas de <span>Aprendizaje</span></h1>
-          <p>Sigue un camino estructurado de estación en estación. Diseñado para llevarte desde fundamentos hasta el dominio completo de cada área técnica.</p>
+          <div class="section-eyebrow">
+            <app-icon name="map" [size]="14" color="var(--primary)" />
+            <span>Itinerarios Profesionales</span>
+          </div>
+          <h1 class="page-title">Rutas de <span>Aprendizaje</span></h1>
+          <p class="page-desc">Sigue un camino estructurado de estación en estación. Diseñado para llevarte desde fundamentos hasta el dominio completo de cada área técnica.</p>
         </div>
       </div>
 
-      <div class="container" style="padding: var(--sp-12) 0;">
+      <!-- Main Paths Content -->
+      <div class="container paths-container">
         @if (loading()) {
-          <div class="grid-3">
+          <div class="paths-grid">
             @for (i of [1,2,3,4,5,6]; track i) {
-              <div class="path-card skeleton" style="height: 320px;"></div>
+              <div class="path-card skeleton" style="height: 340px;"></div>
             }
           </div>
         } @else if (paths().length === 0) {
@@ -33,35 +38,46 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
             <p>Las rutas de aprendizaje están siendo preparadas. ¡Vuelve pronto!</p>
           </div>
         } @else {
-          <div class="grid-3">
+          <div class="paths-grid">
             @for (path of paths(); track path.id) {
-              <a [routerLink]="['/rutas', path.slug]" class="path-card">
+              <a [routerLink]="['/rutas', path.slug]" class="path-card" [style.--c]="path.category?.color || '#0AE98A'">
+                <!-- Top Accent Line & Header -->
                 <div class="path-card__header">
-                  <div class="header-top">
-                    <span class="path-card__icon">
-                      <app-icon [category]="path.category?.slug" [size]="28" [color]="path.category?.color || '#0AE98A'" [strokeWidth]="2" />
+                  <div class="cat-pill">
+                    <span class="cat-icon" [style.background]="getCategoryBg(path.category?.color)">
+                      <app-icon [category]="path.category?.slug" [size]="16" [color]="path.category?.color || '#0AE98A'" [strokeWidth]="2" />
                     </span>
-                    <div [class]="'badge badge-' + path.difficulty">{{ diffLabel(path.difficulty) }}</div>
+                    <span class="cat-name">{{ path.category?.name ?? 'Ingeniería' }}</span>
                   </div>
-                  @if (path.category) {
-                    <span class="cat-tag">
-                      <app-icon [category]="path.category.slug" [size]="12" [strokeWidth]="2" />
-                      <span>{{ path.category.name }}</span>
-                    </span>
-                  }
+                  <span [class]="'badge badge-' + path.difficulty">{{ diffLabel(path.difficulty) }}</span>
                 </div>
+
+                <!-- Card Body -->
                 <div class="path-card__body">
-                  <h3>{{ path.title }}</h3>
-                  <p>{{ path.description | slice:0:110 }}{{ path.description.length > 110 ? '...' : '' }}</p>
+                  <h2 class="path-card__title">{{ path.title }}</h2>
+                  <p class="path-card__desc">{{ path.description }}</p>
+                  
                   <div class="path-meta">
-                    <span class="meta-item"><app-icon name="book" [size]="13" /> {{ path.courses_count ?? (path.levels ? countCourses(path) : 0) }} cursos</span>
-                    <span class="meta-item"><app-icon name="clock" [size]="13" /> {{ path.estimated_hours }}h</span>
-                    <span class="meta-item"><app-icon name="trophy" [size]="13" /> {{ path.levels?.length ?? 0 }} niveles</span>
+                    <span class="meta-item">
+                      <app-icon name="book" [size]="13" />
+                      <span>{{ path.courses_count ?? (path.levels ? countCourses(path) : 0) }} cursos</span>
+                    </span>
+                    <span class="meta-item">
+                      <app-icon name="clock" [size]="13" />
+                      <span>{{ path.estimated_hours }}h estimadas</span>
+                    </span>
+                    <span class="meta-item">
+                      <app-icon name="trophy" [size]="13" />
+                      <span>{{ path.levels?.length ?? 0 }} niveles</span>
+                    </span>
                   </div>
                 </div>
+
+                <!-- Card Footer CTA -->
                 <div class="path-card__footer">
                   <span class="explore-btn">
-                    Explorar Ruta Completa <span class="arrow">→</span>
+                    <span>Explorar Ruta Completa</span>
+                    <span class="arrow" aria-hidden="true">→</span>
                   </span>
                 </div>
               </a>
@@ -72,142 +88,229 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     </div>
   `,
   styles: [`
-    .page-header {
-      padding: var(--sp-8) 0 var(--sp-6);
-      background: radial-gradient(ellipse at top, rgba(108,99,255,0.08), transparent 65%);
-      h1 { font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--text-primary); letter-spacing: -0.02em; span { color: var(--primary); } }
-      p { color: var(--text-secondary); margin-top: var(--sp-2); max-width: 62ch; line-height: 1.6; }
+    .paths-page {
+      min-height: calc(100vh - var(--header-height, 64px));
+      background: var(--bg-base);
     }
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-2);
-      font-size: var(--text-sm);
-      color: var(--text-muted);
-      margin-bottom: var(--sp-3);
 
-      a { color: var(--text-muted); transition: color var(--transition-fast); &:hover { color: var(--primary); } }
-      &__sep { color: var(--border-hover); }
-      &__current { color: var(--text-secondary); font-weight: var(--font-medium); }
+    .page-header {
+      padding: var(--sp-10) 0 var(--sp-8);
+      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(10, 233, 138, 0.08) 0%, transparent 70%);
+      border-bottom: 1px solid var(--border-subtle);
+
+      .section-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--primary);
+        margin-bottom: var(--sp-3);
+      }
+
+      .page-title {
+        font-size: clamp(2rem, 4vw, 2.75rem);
+        font-weight: var(--font-bold);
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        margin-bottom: var(--sp-3);
+
+        span {
+          color: var(--primary);
+        }
+      }
+
+      .page-desc {
+        color: var(--text-secondary);
+        font-size: var(--text-base);
+        max-width: 66ch;
+        line-height: 1.6;
+        margin: 0;
+      }
     }
+
+    .paths-container {
+      padding-top: var(--sp-10);
+      padding-bottom: var(--sp-20);
+    }
+
+    .paths-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-6);
+
+      @media (max-width: 1024px) {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--sp-5);
+      }
+
+      @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+        gap: var(--sp-4);
+      }
+    }
+
     .path-card {
       display: flex;
       flex-direction: column;
-      background: var(--bg-surface);
+      background: rgba(16, 18, 28, 0.85);
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       overflow: hidden;
       text-decoration: none;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
       transition: all var(--transition-base);
       position: relative;
 
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--c, var(--primary)), transparent 80%);
+        opacity: 0.95;
+      }
+
       &:hover {
-        border-color: var(--primary);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(10, 233, 138, 0.15);
-        transform: translateY(-3px);
+        border-color: color-mix(in srgb, var(--c, var(--primary)) 45%, var(--border));
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 0 24px color-mix(in srgb, var(--c, var(--primary)) 20%, transparent);
+        transform: translateY(-4px);
 
         .arrow {
-          transform: translateX(4px);
+          transform: translateX(6px);
+          color: var(--c, var(--primary));
+        }
+
+        .cat-icon {
+          transform: scale(1.08);
         }
       }
 
       &__header {
-        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--sp-3);
         padding: var(--sp-4) var(--sp-5);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        position: relative;
-        background: linear-gradient(135deg, var(--bg-surface-2) 0%, var(--bg-surface) 100%);
-        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(22, 25, 38, 0.6) 0%, transparent 100%);
       }
 
-      .header-top {
-        display: flex;
-        justify-content: space-between;
+      .cat-pill {
+        display: inline-flex;
         align-items: center;
-      }
+        gap: 8px;
+        min-width: 0;
 
-      .path-card__icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform var(--transition-fast);
-      }
+        .cat-icon {
+          width: 32px;
+          height: 32px;
+          border-radius: var(--radius-md);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          transition: transform var(--transition-fast);
+        }
 
-      &:hover .path-card__icon {
-        transform: scale(1.1);
+        .cat-name {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
       }
 
       &__body {
         flex: 1;
-        padding: var(--sp-5);
+        padding: var(--sp-3) var(--sp-5) var(--sp-4);
         display: flex;
         flex-direction: column;
 
-        h3 {
-          font-size: var(--text-lg);
-          font-weight: var(--font-bold);
+        .path-card__title {
+          font-size: 1.15rem;
+          font-weight: 600;
           color: var(--text-primary);
+          line-height: 1.35;
           margin-bottom: var(--sp-2);
-          line-height: 1.3;
+          /* Bloquea la altura a 2 líneas exactas para que todas las descripciones inicien en la misma línea */
+          min-height: 3.1rem;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
-        p {
-          font-size: var(--text-xs);
+        .path-card__desc {
+          font-size: var(--text-sm);
           color: var(--text-secondary);
-          line-height: 1.55;
-          margin-bottom: var(--sp-4);
-          flex: 1;
+          line-height: 1.6;
+          margin-bottom: var(--sp-5);
+          /* Bloquea la altura a 2 líneas exactas para que los metadatos mantengan la misma línea base */
+          min-height: 3.2rem;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .path-meta {
+          margin-top: auto;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          flex-wrap: wrap;
+          padding-top: var(--sp-3);
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+
+          .meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+          }
         }
       }
 
       &__footer {
         padding: var(--sp-3) var(--sp-5);
         border-top: 1px solid var(--border);
-        background: rgba(10, 10, 15, 0.3);
-      }
-    }
+        background: rgba(10, 12, 20, 0.4);
 
-    .cat-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.7rem;
-      font-weight: var(--font-bold);
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-    }
+        .explore-btn {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: var(--text-xs);
+          font-weight: var(--font-semibold);
+          color: var(--text-secondary);
+          transition: color var(--transition-fast);
 
-    .path-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--sp-3);
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-
-      .meta-item {
-        background: var(--bg-surface-2);
-        padding: 2px 7px;
-        border-radius: var(--radius-sm);
-        border: 1px solid rgba(42, 42, 62, 0.6);
-      }
-    }
-
-    .explore-btn {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: var(--text-xs);
-      font-weight: var(--font-semibold);
-      color: var(--text-primary);
-
-      .arrow {
-        color: var(--primary);
-        font-size: 1rem;
-        transition: transform var(--transition-fast);
+          .arrow {
+            color: var(--text-muted);
+            font-size: 1rem;
+            transition: transform var(--transition-fast), color var(--transition-fast);
+          }
+        }
       }
     }
   `]
@@ -227,6 +330,14 @@ export class LearningPathsComponent implements OnInit {
 
   diffLabel(d: string): string {
     return { beginner: 'Principiante', intermediate: 'Intermedio', advanced: 'Avanzado', expert: 'Experto' }[d] ?? d;
+  }
+
+  getCategoryBg(color: string | undefined): string {
+    if (!color) return 'rgba(10, 233, 138, 0.12)';
+    if (color.startsWith('#') && color.length === 7) {
+      return `${color}18`;
+    }
+    return 'rgba(10, 233, 138, 0.12)';
   }
 
   countCourses(path: LearningPath): number {
