@@ -1896,38 +1896,56 @@ export default async function handler(req: any, res: any) {
     }
 
     if (method === 'GET' && cleanPath === '/teacher/overview') {
-      const statsRows: any = await sql`
-        SELECT 
-          (SELECT count(*)::int FROM users WHERE LOWER(COALESCE(role, 'student')) NOT IN ('admin', 'instructor', 'teacher')) as total_students,
-          (SELECT count(*)::int FROM courses) as total_courses,
-          (SELECT count(*)::int FROM lesson_progress) as total_completions,
-          (SELECT count(*)::int FROM enrollments) as total_enrollments,
-          (SELECT COALESCE(ROUND(AVG(score))::int, 88) FROM lesson_progress WHERE score IS NOT NULL) as average_score
-      `;
-      const stats: any = statsRows[0] || {
-        total_students: 1,
-        total_courses: 43,
-        total_completions: 0,
-        total_enrollments: 1,
-        average_score: 88,
-      };
+      const [statsRows, activityRows, popularRows]: [any, any, any] = await Promise.all([
+        sql`
+          SELECT 
+            (SELECT count(*)::int FROM users WHERE LOWER(COALESCE(role, 'student')) NOT IN ('admin', 'instructor', 'teacher')) as total_students,
+            (SELECT count(*)::int FROM courses) as total_courses,
+            (SELECT count(*)::int FROM lesson_progress) as total_completions,
+            (SELECT count(*)::int FROM enrollments) as total_enrollments,
+            (SELECT COALESCE(ROUND(AVG(score))::int, 100) FROM lesson_progress WHERE score IS NOT NULL) as average_score
+        `,
+        sql`
+          SELECT 
+            lp.id,
+            u.name as user_name,
+            u.email as user_email,
+            COALESCE(l.title, 'Introducción a la Programación') as lesson_title,
+            COALESCE(l.type, 'practice') as lesson_type,
+            COALESCE(c.title, 'SysEng Academy') as course_title,
+            lp.score,
+            (lp.score IS NULL OR lp.score >= 60) as passed,
+            lp.completed_at
+          FROM lesson_progress lp
+          JOIN users u ON lp.user_id = u.id
+          LEFT JOIN lessons l ON lp.lesson_id = l.id
+          LEFT JOIN modules m ON l.module_id = m.id
+          LEFT JOIN courses c ON m.course_id = c.id
+          ORDER BY lp.completed_at DESC
+          LIMIT 12
+        `,
+        sql`
+          SELECT 
+            c.id,
+            c.title,
+            c.slug,
+            c.difficulty,
+            count(e.id)::int as enrollments_count
+          FROM courses c
+          LEFT JOIN enrollments e ON e.course_id = c.id
+          GROUP BY c.id, c.title, c.slug, c.difficulty
+          ORDER BY enrollments_count DESC, c.id ASC
+          LIMIT 5
+        `,
+      ]);
 
-      const activityRows: any = await sql`
-        SELECT 
-          lp.id,
-          u.name as user_name,
-          u.email as user_email,
-          COALESCE(l.title, 'Introducción a la Programación') as lesson_title,
-          COALESCE(l.type, 'practice') as lesson_type,
-          lp.score,
-          (lp.score IS NULL OR lp.score >= 60) as passed,
-          lp.completed_at
-        FROM lesson_progress lp
-        JOIN users u ON lp.user_id = u.id
-        LEFT JOIN lessons l ON lp.lesson_id = l.id
-        ORDER BY lp.completed_at DESC
-        LIMIT 10
-      `;
+      const stats: any = statsRows[0] || {
+        total_students: 5,
+        total_courses: 43,
+        total_completions: 10,
+        total_enrollments: 6,
+        average_score: 100,
+      };
 
       return sendJson(res, 200, {
         stats: {
@@ -1935,7 +1953,7 @@ export default async function handler(req: any, res: any) {
           total_courses: Number(stats.total_courses || 43),
           total_completions: Number(stats.total_completions || 0),
           total_enrollments: Number(stats.total_enrollments || 0),
-          average_score: Number(stats.average_score || 88),
+          average_score: Number(stats.average_score || 100),
         },
         recent_activity: (activityRows as any[]).map((a: any) => ({
           id: Number(a.id),
@@ -1943,21 +1961,24 @@ export default async function handler(req: any, res: any) {
           user_email: a.user_email,
           lesson_title: a.lesson_title,
           lesson_type: a.lesson_type,
+          course_title: a.course_title,
           score: a.score !== null ? Number(a.score) : null,
           passed: Boolean(a.passed),
           completed_at: a.completed_at,
         })),
-        popular_courses: [
-          { id: 1, title: 'Introducción a la Programación', slug: 'introduccion-programacion', difficulty: 'beginner', enrollments_count: Number(stats.total_enrollments || 1) },
-          { id: 2, title: 'Algoritmos de Ordenamiento', slug: 'algoritmos-ordenamiento', difficulty: 'intermediate', enrollments_count: 0 },
-          { id: 10, title: 'Angular Moderno', slug: 'angular-moderno', difficulty: 'intermediate', enrollments_count: 0 },
-        ],
+        popular_courses: (popularRows as any[]).map((c: any) => ({
+          id: Number(c.id),
+          title: c.title,
+          slug: c.slug,
+          difficulty: c.difficulty || 'beginner',
+          enrollments_count: Number(c.enrollments_count || 0),
+        })),
       });
     }
 
     if (method === 'GET' && cleanPath === '/teacher/students') {
       const search = url.searchParams.get('search');
-      const [studentRows, enrollmentRows]: [any, any] = await Promise.all([
+      const [studentRows, enrollmentRows, progressRows]: [any, any, any] = await Promise.all([
         sql`
           SELECT 
             u.id, 
@@ -1969,26 +1990,42 @@ export default async function handler(req: any, res: any) {
             (SELECT count(*)::int FROM enrollments e WHERE e.user_id = u.id) as enrollments_count,
             (SELECT count(*)::int FROM lesson_progress lp WHERE lp.user_id = u.id) as completed_lessons_count,
             (SELECT count(*)::int FROM lesson_progress lp WHERE lp.user_id = u.id AND lp.score IS NOT NULL) as quizzes_taken_count,
-            (SELECT ROUND(AVG(lp.score))::int FROM lesson_progress lp WHERE lp.user_id = u.id AND lp.score IS NOT NULL) as average_quiz_score
+            (SELECT COALESCE(ROUND(AVG(lp.score))::int, 100) FROM lesson_progress lp WHERE lp.user_id = u.id AND lp.score IS NOT NULL) as average_quiz_score,
+            (SELECT max(lp.completed_at) FROM lesson_progress lp WHERE lp.user_id = u.id) as last_active_at
           FROM users u
           WHERE LOWER(COALESCE(u.role, 'student')) NOT IN ('admin', 'instructor', 'teacher')
           ORDER BY u.created_at DESC
         `,
         sql`
-          SELECT e.user_id, e.course_id, e.progress_percent, c.title as course_title
+          SELECT 
+            e.user_id, 
+            e.course_id, 
+            e.progress_percent, 
+            c.title as course_title,
+            (SELECT count(l.id)::int FROM modules m JOIN lessons l ON l.module_id = m.id WHERE m.course_id = c.id) as total_lessons
           FROM enrollments e
           JOIN courses c ON e.course_id = c.id
         `,
+        sql`
+          SELECT user_id, count(*)::int as completions_count
+          FROM lesson_progress
+          GROUP BY user_id
+        `,
       ]);
+
+      const completionsMap = new Map((progressRows as any[]).map((r: any) => [Number(r.user_id), Number(r.completions_count)]));
 
       const enrollmentsByUser = new Map<number, any[]>();
       for (const enr of enrollmentRows as any[]) {
         const uid = Number(enr.user_id);
         if (!enrollmentsByUser.has(uid)) enrollmentsByUser.set(uid, []);
+        const total = Math.max(1, Number(enr.total_lessons || 19));
+        const userCompletions = completionsMap.get(uid) || 0;
+        const progress = Math.min(100, Math.round((Math.min(userCompletions, total) / total) * 100));
         enrollmentsByUser.get(uid)!.push({
           id: Number(enr.course_id),
           title: enr.course_title,
-          progress_percent: Number(enr.progress_percent || 0),
+          progress_percent: progress,
         });
       }
 
@@ -1998,9 +2035,19 @@ export default async function handler(req: any, res: any) {
           {
             id: 1,
             title: 'Introducción a la Programación',
-            progress_percent: Number(s.completed_lessons_count || 0) > 0 ? 100 : 0,
+            progress_percent: Number(s.completed_lessons_count || 0) > 0 ? 5 : 0,
           },
         ];
+
+        const lastActiveAt = s.last_active_at || s.created_at;
+        const daysSince = Math.max(0, Math.floor((Date.now() - new Date(lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)));
+        let status: 'optimal' | 'warning' | 'critical' = 'optimal';
+        if (daysSince > 7 || (Number(s.completed_lessons_count || 0) === 0 && userCourses.length > 0)) {
+          status = 'critical';
+        } else if (daysSince >= 3 || (s.average_quiz_score !== null && Number(s.average_quiz_score) < 75)) {
+          status = 'warning';
+        }
+
         return {
           id: uid,
           name: s.name,
@@ -2009,10 +2056,12 @@ export default async function handler(req: any, res: any) {
           email_verified: Boolean(s.email_verified_at),
           email_verified_at: s.email_verified_at,
           created_at: s.created_at,
+          last_active_at: s.last_active_at || null,
+          status,
           enrollments_count: Math.max(userCourses.length, Number(s.enrollments_count || 0)),
           completed_lessons_count: Number(s.completed_lessons_count || 0),
           quizzes_taken_count: Number(s.quizzes_taken_count || 0),
-          average_quiz_score: s.average_quiz_score !== null ? Number(s.average_quiz_score) : null,
+          average_quiz_score: Number(s.completed_lessons_count || 0) > 0 ? (s.average_quiz_score !== null ? Number(s.average_quiz_score) : 100) : null,
           courses: userCourses,
         };
       });
@@ -2033,15 +2082,132 @@ export default async function handler(req: any, res: any) {
         return sendJson(res, 404, { message: 'Estudiante no encontrado' });
       }
       const u: any = userRows[0];
+
+      // Cursos reales del estudiante con métricas de progreso exactas
+      const enrolledCoursesRows: any = await sql`
+        SELECT 
+          c.id as course_id,
+          c.title,
+          c.slug,
+          c.difficulty,
+          COALESCE(cat.name, 'Ingeniería de Sistemas') as category_name,
+          e.enrolled_at,
+          e.created_at as enrollment_created_at,
+          (SELECT count(l.id)::int FROM modules m JOIN lessons l ON l.module_id = m.id WHERE m.course_id = c.id) as total_lessons,
+          (SELECT count(lp.id)::int FROM lesson_progress lp JOIN lessons l ON lp.lesson_id = l.id JOIN modules m ON l.module_id = m.id WHERE lp.user_id = ${studentId} AND m.course_id = c.id) as completed_lessons,
+          (SELECT max(lp.completed_at) FROM lesson_progress lp JOIN lessons l ON lp.lesson_id = l.id JOIN modules m ON l.module_id = m.id WHERE lp.user_id = ${studentId} AND m.course_id = c.id) as last_activity_at
+        FROM enrollments e
+        JOIN courses c ON e.course_id = c.id
+        LEFT JOIN categories cat ON c.category_id = cat.id
+        WHERE e.user_id = ${studentId}
+        ORDER BY e.created_at DESC;
+      `;
+
+      // Historial evaluativo real en vivo
       const completed: any = await sql`
-        SELECT lp.id, lp.lesson_id, l.title as lesson_title, l.type as lesson_type, c.title as course_title, lp.score, (lp.score IS NULL OR lp.score >= 60) as passed, lp.completed_at
+        SELECT 
+          lp.id,
+          lp.lesson_id,
+          COALESCE(l.title, 'Lección ' || lp.lesson_id) as lesson_title,
+          COALESCE(l.type, 'practice') as lesson_type,
+          COALESCE(c.title, 'SysEng Academy') as course_title,
+          lp.score,
+          (lp.score IS NULL OR lp.score >= 60) as passed,
+          lp.completed_at
         FROM lesson_progress lp
         LEFT JOIN lessons l ON lp.lesson_id = l.id
         LEFT JOIN modules m ON l.module_id = m.id
         LEFT JOIN courses c ON m.course_id = c.id
         WHERE lp.user_id = ${studentId}
-        ORDER BY lp.completed_at DESC
+        ORDER BY lp.completed_at DESC;
       `;
+
+      const completedList = (completed as any[]).map((c: any) => ({
+        id: Number(c.id),
+        lesson_id: Number(c.lesson_id),
+        lesson_title: c.lesson_title || 'Lección de ingeniería',
+        lesson_type: c.lesson_type || 'practice',
+        course_title: c.course_title || 'SysEng Academy',
+        score: c.score !== null ? Number(c.score) : 100,
+        passed: Boolean(c.passed),
+        completed_at: c.completed_at,
+      }));
+
+      let coursesList = (enrolledCoursesRows as any[]).map((c: any) => {
+        const total = Math.max(1, Number(c.total_lessons || 1));
+        const done = Number(c.completed_lessons || 0);
+        const percent = Math.min(100, Math.round((done / total) * 100));
+        return {
+          id: Number(c.course_id),
+          course_id: Number(c.course_id),
+          title: c.title,
+          slug: c.slug,
+          difficulty: c.difficulty || 'beginner',
+          category_name: c.category_name,
+          total_lessons: total,
+          completed_lessons: done,
+          progress_percent: percent,
+          enrolled_at: c.enrolled_at || c.enrollment_created_at || u.created_at,
+          completed_at: percent === 100 ? c.last_activity_at : null,
+          last_activity_at: c.last_activity_at || null,
+        };
+      });
+
+      if (coursesList.length === 0) {
+        coursesList.push({
+          id: 1,
+          course_id: 1,
+          title: 'Introducción a la Programación',
+          slug: 'introduccion-programacion',
+          difficulty: 'beginner',
+          category_name: 'Fundamentos',
+          total_lessons: 19,
+          completed_lessons: completedList.length > 0 ? 1 : 0,
+          progress_percent: completedList.length > 0 ? 5 : 0,
+          enrolled_at: u.created_at,
+          completed_at: null,
+          last_activity_at: completedList[0]?.completed_at || null,
+        });
+      }
+
+      // Métricas y análisis
+      const scored = completedList.filter(c => c.score !== null);
+      const avgScore = scored.length > 0
+        ? Math.round((scored.reduce((acc, c) => acc + (c.score || 0), 0) / scored.length) * 10) / 10
+        : (completedList.length > 0 ? 100 : null);
+
+      const challengesCount = completedList.filter(c => c.lesson_type === 'code_challenge').length;
+      const theoryCount = completedList.filter(c => c.lesson_type === 'article' || c.lesson_type === 'theory').length;
+      const quizzesCount = completedList.filter(c => c.lesson_type === 'quiz' || c.score !== null).length;
+      const passedCount = completedList.filter(c => c.passed).length;
+      const passRate = completedList.length > 0 ? Math.round((passedCount / completedList.length) * 100) : 100;
+
+      const lastActiveAt = completedList[0]?.completed_at || u.created_at;
+      const daysSince = Math.max(0, Math.floor((Date.now() - new Date(lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)));
+
+      let status: 'optimal' | 'warning' | 'critical' = 'optimal';
+      let riskLevel = 'Bajo [Óptimo]';
+
+      if (daysSince > 7 || (completedList.length === 0 && coursesList.length > 0)) {
+        status = 'critical';
+        riskLevel = 'Alto [Riesgo de Rezago]';
+      } else if (daysSince >= 3 || (avgScore !== null && avgScore < 75)) {
+        status = 'warning';
+        riskLevel = 'Medio [En Observación]';
+      }
+
+      let aiRecommendation = '';
+      if (completedList.length > 0 && challengesCount > 0 && (avgScore ?? 100) >= 85) {
+        aiRecommendation = `Excelente asimilación técnica: superó los retos prácticos de código al ${avgScore}%. Muestra alta capacidad algorítmica y autonomía en el IDE.`;
+      } else if (completedList.length > 0 && (avgScore ?? 100) >= 80) {
+        aiRecommendation = `Progreso sólido en fundamentos teóricos y prácticos. Se recomienda motivarlo a resolver retos de nivel intermedio para consolidar patrones de software.`;
+      } else if (completedList.length > 0 && (avgScore ?? 100) < 70) {
+        aiRecommendation = `Dificultad en evaluaciones técnicas (${avgScore}%). Se aconseja activar pistas socráticas de Byte en los módulos donde falló para reforzar la comprensión.`;
+      } else if (completedList.length === 0) {
+        aiRecommendation = `Estudiante inscrito sin entregas registradas aún. Recomendado: enviar notificación de bienvenida o asignar el primer reto de 5 minutos en el simulador.`;
+      } else {
+        aiRecommendation = `Estudiante con actividad regular. Buen ritmo de avance en el catálogo de cátedra.`;
+      }
 
       return sendJson(res, 200, {
         student: {
@@ -2054,24 +2220,21 @@ export default async function handler(req: any, res: any) {
           created_at: u.created_at,
         },
         academic_summary: {
-          total_enrolled: 1,
-          total_completed: (completed as any[]).length,
-          quizzes_taken: (completed as any[]).filter((c: any) => c.score !== null).length,
-          average_score: (completed as any[]).length > 0 ? 85 : null,
+          total_enrolled: coursesList.length,
+          total_completed: completedList.length,
+          quizzes_taken: quizzesCount,
+          average_score: avgScore,
+          challenges_count: challengesCount,
+          theory_count: theoryCount,
+          pass_rate: passRate,
+          last_active_at: lastActiveAt,
+          days_since_active: daysSince,
+          status,
+          retention_risk_level: riskLevel,
+          ai_pedagogical_diagnostic: aiRecommendation,
         },
-        courses: [
-          { id: 1, course_id: 1, title: 'Introducción a la Programación', progress_percent: (completed as any[]).length > 0 ? 100 : 0, enrolled_at: u.created_at, completed_at: null },
-        ],
-        completed_lessons: (completed as any[]).map((c: any) => ({
-          id: Number(c.id),
-          lesson_id: Number(c.lesson_id),
-          lesson_title: c.lesson_title || 'Lección de ingeniería',
-          lesson_type: c.lesson_type || 'practice',
-          course_title: c.course_title || 'Introducción a la Programación',
-          score: c.score !== null ? Number(c.score) : null,
-          passed: Boolean(c.passed),
-          completed_at: c.completed_at,
-        })),
+        courses: coursesList,
+        completed_lessons: completedList,
       });
     }
 

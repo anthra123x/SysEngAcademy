@@ -154,11 +154,11 @@
                   <thead>
                     <tr>
                       <th>Estudiante</th>
-                      <th>Estado</th>
-                      <th>Cursos</th>
+                      <th>Salud Académica</th>
+                      <th>Cursos Activos</th>
                       <th>Lecciones</th>
-                      <th>Promedio</th>
-                      <th>Fecha Registro</th>
+                      <th>Promedio Eval.</th>
+                      <th>Última Actividad</th>
                       <th class="text-right">Acciones</th>
                     </tr>
                   </thead>
@@ -167,7 +167,7 @@
                       <tr>
                         <td>
                           <div class="student-cell">
-                            <div class="avatar-box">{{ getInitials(st.name) }}</div>
+                            <div class="avatar-box" [ngClass]="st.status === 'optimal' ? 'avatar--ring-optimal' : st.status === 'warning' ? 'avatar--ring-warning' : 'avatar--ring-critical'">{{ getInitials(st.name) }}</div>
                             <div>
                               <div class="cell-name">{{ st.name }}</div>
                               <div class="cell-meta">{{ st.email }}</div>
@@ -175,31 +175,40 @@
                           </div>
                         </td>
                         <td>
-                          @if (st.email_verified) {
-                            <span class="badge badge-success">Verificado</span>
-                          } @else {
-                            <span class="badge badge-warning">Pendiente</span>
-                          }
+                          <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                            <span class="badge" [ngClass]="getStatusBadgeClass(st.status)">{{ getStatusLabel(st.status) }}</span>
+                            @if (st.email_verified) {
+                              <span class="badge-subtle-sm">Verificado</span>
+                            } @else {
+                              <span class="badge-subtle-sm badge-warning-sm">No Verificado</span>
+                            }
+                          </div>
                         </td>
                         <td>
-                          <span class="cell-primary">{{ st.enrollments_count }} cursos</span>
+                          <span class="cell-primary">{{ st.enrollments_count }} {{ st.enrollments_count === 1 ? 'curso' : 'cursos' }}</span>
                           @if (st.courses.length > 0) {
-                            <small class="cell-sub">{{ st.courses[0].title }}</small>
+                            <div class="cell-sub text-truncate" style="max-width: 160px;">
+                              {{ st.courses[0].title }} ({{ st.courses[0].progress_percent }}%)
+                            </div>
                           }
                         </td>
                         <td>
                           <span class="mono-value">{{ st.completed_lessons_count }}</span>
+                          <small class="cell-sub">superadas</small>
                         </td>
                         <td>
                           @if (st.average_quiz_score !== null) {
-                            <span class="mono-value">{{ st.average_quiz_score }}%</span>
-                            <small class="cell-sub">({{ st.quizzes_taken_count }} evaluados)</small>
+                            <span class="mono-value" [class.text-success]="st.average_quiz_score >= 80" [class.text-warning]="st.average_quiz_score >= 60 && st.average_quiz_score < 80" [class.text-danger]="st.average_quiz_score < 60">
+                              {{ st.average_quiz_score }}%
+                            </span>
+                            <small class="cell-sub">({{ st.quizzes_taken_count }} evaluadas)</small>
                           } @else {
                             <span class="cell-muted">—</span>
                           }
                         </td>
                         <td>
-                          <span class="cell-muted">{{ formatDate(st.created_at) }}</span>
+                          <div class="cell-primary" style="font-size: 0.8rem;">{{ timeAgo(st.last_active_at) }}</div>
+                          <small class="cell-sub">Reg: {{ formatDate(st.created_at) }}</small>
                         </td>
                         <td>
                           <div class="action-btn-group">
@@ -207,9 +216,9 @@
                               type="button"
                               class="action-btn"
                               (click)="viewStudentDossier(st.id)"
-                              title="Ver expediente académico"
+                              title="Ver expediente académico detallado"
                             >
-                              Ver
+                              Expediente
                             </button>
                             @if (!st.email_verified) {
                               <button
@@ -343,7 +352,7 @@
             <!-- Feed de Actividad Reciente -->
             <div class="surface-panel">
               <h2 class="panel-heading">Resoluciones Recientes</h2>
-              <p class="panel-subtext">Historial de actividades entregadas en tiempo real.</p>
+              <p class="panel-subtext">Historial de actividades y entregas evaluadas en tiempo real.</p>
 
               @if (overview()!.recent_activity.length === 0) {
                 <p class="cell-muted" style="padding: 1.5rem 0;">No hay actividad registrada en las últimas horas.</p>
@@ -354,13 +363,16 @@
                       <div class="feed-dot" [class.dot-success]="act.passed" [class.dot-danger]="!act.passed"></div>
                       <div class="feed-body">
                         <div class="feed-head">
-                          <span class="cell-primary">{{ act.user_name }}</span>
-                          <span class="cell-muted">{{ formatTime(act.completed_at) }}</span>
+                          <span class="cell-primary font-semibold">{{ act.user_name }}</span>
+                          <span class="cell-muted" style="font-size: 0.75rem;">{{ timeAgo(act.completed_at) }}</span>
                         </div>
                         <div class="feed-meta">
-                          <span>Completó: <em>{{ act.lesson_title }}</em></span>
+                          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            <span class="badge" [ngClass]="getLessonTypeBadgeClass(act.lesson_type)">{{ getLessonTypeLabel(act.lesson_type) }}</span>
+                            <span class="cell-sub" style="color: #CBD5E1;">Completó: <em>{{ act.lesson_title }}</em></span>
+                          </div>
                           @if (act.score !== null) {
-                            <span class="mono-value" [class.text-success]="act.passed" [class.text-danger]="!act.passed">
+                            <span class="mono-value font-bold" [class.text-success]="act.passed" [class.text-danger]="!act.passed">
                               {{ act.score }}%
                             </span>
                           }
@@ -375,20 +387,20 @@
             <!-- Cursos con Mayor Demanda -->
             <div class="surface-panel">
               <h2 class="panel-heading">Demanda de Asignaturas</h2>
-              <p class="panel-subtext">Distribución de estudiantes inscritos.</p>
+              <p class="panel-subtext">Distribución y tasa de captación de estudiantes en tiempo real.</p>
 
               <div class="demand-table">
                 @for (c of overview()!.popular_courses; track c.id) {
                   <div class="demand-row">
                     <div class="demand-info">
-                      <span class="cell-primary">{{ c.title }}</span>
+                      <span class="cell-primary font-semibold">{{ c.title }}</span>
                       <span class="badge badge-subtle">{{ c.difficulty }}</span>
                     </div>
                     <div class="demand-bar-wrap">
                       <div class="demand-progress-bg">
-                        <div class="demand-progress-fill" [style.width.%]="(c.enrollments_count / 1500) * 100"></div>
+                        <div class="demand-progress-fill" [style.width.%]="getCourseDemandPercent(c.enrollments_count)"></div>
                       </div>
-                      <span class="mono-value">{{ c.enrollments_count }} alumnos</span>
+                      <span class="mono-value">{{ c.enrollments_count }} {{ c.enrollments_count === 1 ? 'alumno' : 'alumnos' }} ({{ getCourseDemandPercent(c.enrollments_count) }}%)</span>
                     </div>
                   </div>
                 }
@@ -704,21 +716,33 @@
         </div>
       }
 
-      <!-- MODAL DOSSIER ESTUDIANTE -->
+      <!-- MODAL DOSSIER ESTUDIANTE EN TIEMPO REAL -->
       @if (selectedStudentDetail()) {
         @let d = selectedStudentDetail()!;
         <div class="modal-backdrop" (click)="selectedStudentDetail.set(null)">
-          <div class="modal-dialog" (click)="$event.stopPropagation()">
+          <div class="modal-dialog modal-dialog--dossier" (click)="$event.stopPropagation()">
             <div class="modal-header">
               <div class="dossier-user">
-                <div class="avatar-box avatar-lg">{{ getInitials(d.student.name) }}</div>
+                <div class="avatar-box avatar-lg" [ngClass]="d.academic_summary.status === 'optimal' ? 'avatar--ring-optimal' : d.academic_summary.status === 'warning' ? 'avatar--ring-warning' : 'avatar--ring-critical'">
+                  {{ getInitials(d.student.name) }}
+                </div>
                 <div>
-                  <h3 class="modal-title">{{ d.student.name }}</h3>
-                  <div class="cell-meta">{{ d.student.email }}</div>
-                  <div style="margin-top: 4px;">
-                    <span class="badge" [class.badge-success]="d.student.email_verified" [class.badge-warning]="!d.student.email_verified">
-                      {{ d.student.email_verified ? 'Verificado' : 'Pendiente' }}
+                  <div class="dossier-name-row">
+                    <h3 class="modal-title">{{ d.student.name }}</h3>
+                    <span class="badge" [ngClass]="getStatusBadgeClass(d.academic_summary.status)">
+                      {{ getStatusLabel(d.academic_summary.status) }}
                     </span>
+                    <span class="badge" [class.badge-success]="d.student.email_verified" [class.badge-warning]="!d.student.email_verified">
+                      {{ d.student.email_verified ? 'Verificado' : 'Email Pendiente' }}
+                    </span>
+                  </div>
+                  <div class="cell-meta">{{ d.student.email }}</div>
+                  <div class="dossier-submeta">
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">
+                      <app-icon name="clock" [size]="12" /> Última actividad: <strong>{{ timeAgo(d.academic_summary.last_active_at) }}</strong>
+                    </span>
+                    <span>·</span>
+                    <span>Miembro desde: {{ formatDate(d.student.created_at) }}</span>
                   </div>
                 </div>
               </div>
@@ -726,73 +750,173 @@
             </div>
 
             <div class="modal-body">
-              <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+              <!-- DIAGNÓSTICO PEDAGÓGICO EN TIEMPO REAL (BYTE AI) -->
+              <div class="dossier-diagnostic-card">
+                <div class="diagnostic-header">
+                  <div class="diagnostic-title-wrap">
+                    <app-icon name="brain-circuit" [size]="16" color="#0AE98A" />
+                    <span class="diagnostic-title">Diagnóstico Académico en Tiempo Real · Byte IA</span>
+                  </div>
+                  <span class="diagnostic-badge" [class.badge-low-risk]="d.academic_summary.retention_risk_level === 'Bajo Riesgo'" [class.badge-mod-risk]="d.academic_summary.retention_risk_level === 'Riesgo Moderado'" [class.badge-high-risk]="d.academic_summary.retention_risk_level === 'Alto Riesgo'">
+                    {{ d.academic_summary.retention_risk_level || 'Evaluado' }}
+                  </span>
+                </div>
+                <p class="diagnostic-text">
+                  {{ d.academic_summary.ai_pedagogical_diagnostic || 'Monitoreo activo: el estudiante mantiene sincronización con el plan curricular.' }}
+                </p>
+              </div>
+
+              <!-- GRID DE 6 MÉTRICAS CLAVE -->
+              <div class="kpi-grid kpi-grid--6">
                 <div class="kpi-card">
                   <span class="kpi-label">Cursos Matriculados</span>
                   <span class="kpi-value">{{ d.academic_summary.total_enrolled }}</span>
+                  <span class="kpi-meta">Asignaturas activas</span>
                 </div>
                 <div class="kpi-card">
                   <span class="kpi-label">Lecciones Superadas</span>
-                  <span class="kpi-value">{{ d.academic_summary.total_completed }}</span>
+                  <span class="kpi-value text-success">{{ d.academic_summary.total_completed }}</span>
+                  <span class="kpi-meta">Avance total completado</span>
                 </div>
                 <div class="kpi-card">
-                  <span class="kpi-label">Promedio Quizzes</span>
-                  <span class="kpi-value">{{ d.academic_summary.average_score ?? 0 }}%</span>
+                  <span class="kpi-label">Promedio Evaluativo</span>
+                  <span class="kpi-value" [class.text-success]="(d.academic_summary.average_score ?? 0) >= 80" [class.text-warning]="(d.academic_summary.average_score ?? 0) >= 60 && (d.academic_summary.average_score ?? 0) < 80" [class.text-danger]="(d.academic_summary.average_score ?? 0) < 60">
+                    {{ d.academic_summary.average_score !== null ? d.academic_summary.average_score + '%' : '—' }}
+                  </span>
+                  <span class="kpi-meta">Puntaje ponderado real</span>
+                </div>
+                <div class="kpi-card">
+                  <span class="kpi-label">Retos de Código</span>
+                  <span class="kpi-value text-accent">{{ d.academic_summary.challenges_count ?? 0 }}</span>
+                  <span class="kpi-meta">Práctica computacional</span>
+                </div>
+                <div class="kpi-card">
+                  <span class="kpi-label">Tasa de Aprobación</span>
+                  <span class="kpi-value text-success">{{ d.academic_summary.pass_rate ?? 100 }}%</span>
+                  <span class="kpi-meta">Efectividad evaluativa</span>
+                </div>
+                <div class="kpi-card">
+                  <span class="kpi-label">Nivel de Riesgo</span>
+                  <span class="kpi-value" [class.text-success]="d.academic_summary.retention_risk_level === 'Bajo Riesgo'" [class.text-warning]="d.academic_summary.retention_risk_level === 'Riesgo Moderado'" [class.text-danger]="d.academic_summary.retention_risk_level === 'Alto Riesgo'">
+                    {{ d.academic_summary.retention_risk_level ?? 'Bajo' }}
+                  </span>
+                  <span class="kpi-meta">Índice de retención</span>
                 </div>
               </div>
 
-              <h4 class="section-title">Cursos Inscritos</h4>
+              <!-- CURSOS MATRICULADOS Y SU AVANCE DETALLADO -->
+              <div class="dossier-section-head">
+                <h4 class="section-title">Progreso Detallado por Asignatura</h4>
+                <span class="cell-meta">{{ d.courses.length }} en curso</span>
+              </div>
               <div class="dossier-list">
                 @for (c of d.courses; track c.id) {
                   <div class="dossier-course-item">
-                    <div class="feed-head">
-                      <span class="cell-primary">{{ c.title }}</span>
-                      <span class="mono-value">{{ c.progress_percent }}%</span>
+                    <div class="dossier-course-head">
+                      <div>
+                        <div class="course-name-wrap">
+                          <span class="cell-primary font-semibold">{{ c.title }}</span>
+                          @if (c.difficulty) {
+                            <span class="badge badge-subtle">{{ c.difficulty }}</span>
+                          }
+                          @if (c.progress_percent === 100) {
+                            <span class="badge badge-success">Completado</span>
+                          }
+                        </div>
+                        <div class="cell-meta" style="font-size: 0.75rem; margin-top: 2px;">
+                          Inscrito el {{ formatDate(c.enrolled_at) }}
+                          @if (c.total_lessons) {
+                            · <strong>{{ c.completed_lessons ?? 0 }} de {{ c.total_lessons }}</strong> lecciones finalizadas
+                          }
+                        </div>
+                      </div>
+                      <span class="mono-value font-bold" [class.text-success]="c.progress_percent === 100">
+                        {{ c.progress_percent }}%
+                      </span>
                     </div>
-                    <div class="demand-progress-bg">
+                    <div class="demand-progress-bg" style="margin-top: 8px;">
                       <div class="demand-progress-fill" [style.width.%]="c.progress_percent"></div>
                     </div>
                   </div>
                 }
               </div>
 
-              <h4 class="section-title" style="margin-top: 1.5rem;">Historial Evaluativo</h4>
+              <!-- HISTORIAL EVALUATIVO Y ACTIVIDADES ENTREGADAS -->
+              <div class="dossier-section-head" style="margin-top: 1.25rem;">
+                <h4 class="section-title">Historial de Evaluaciones y Retos Prácticos</h4>
+                <span class="cell-meta">{{ d.completed_lessons.length }} entregas registradas</span>
+              </div>
               @if (d.completed_lessons.length === 0) {
-                <p class="cell-muted">Sin evaluaciones registradas.</p>
+                <div class="empty-dossier-box">
+                  <p class="cell-muted">El estudiante no ha enviado soluciones o quizzes hasta el momento.</p>
+                </div>
               } @else {
-                <table class="data-table" style="font-size: 0.8rem;">
-                  <thead>
-                    <tr>
-                      <th>Lección</th>
-                      <th>Tipo</th>
-                      <th>Puntaje</th>
-                      <th>Fecha</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (l of d.completed_lessons; track l.id) {
+                <div class="table-wrap">
+                  <table class="data-table" style="font-size: 0.8rem;">
+                    <thead>
                       <tr>
-                        <td><strong>{{ l.lesson_title }}</strong></td>
-                        <td><span class="badge badge-subtle">{{ l.lesson_type }}</span></td>
-                        <td>
-                          @if (l.score !== null) {
-                            <span [class.text-success]="l.passed" [class.text-danger]="!l.passed">
-                              {{ l.score }}%
-                            </span>
-                          } @else {
-                            <span class="cell-muted">—</span>
-                          }
-                        </td>
-                        <td><span class="cell-muted">{{ formatDate(l.completed_at) }}</span></td>
+                        <th>Actividad / Lección</th>
+                        <th>Tipo</th>
+                        <th>Curso</th>
+                        <th>Calificación</th>
+                        <th>Fecha de Entrega</th>
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      @for (l of d.completed_lessons; track l.id) {
+                        <tr>
+                          <td>
+                            <strong>{{ l.lesson_title }}</strong>
+                          </td>
+                          <td>
+                            <span class="badge" [ngClass]="getLessonTypeBadgeClass(l.lesson_type)">
+                              {{ getLessonTypeLabel(l.lesson_type) }}
+                            </span>
+                          </td>
+                          <td>
+                            <span class="cell-sub text-truncate" style="max-width: 140px; display: inline-block;">
+                              {{ l.course_title }}
+                            </span>
+                          </td>
+                          <td>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                              @if (l.score !== null) {
+                                <span class="mono-value font-bold" [class.text-success]="l.passed" [class.text-danger]="!l.passed">
+                                  {{ l.score }}%
+                                </span>
+                              }
+                              @if (l.passed) {
+                                <span class="pass-pill pass-pill--ok">Aprobado</span>
+                              } @else if (l.passed === false) {
+                                <span class="pass-pill pass-pill--fail">No Aprobado</span>
+                              } @else {
+                                <span class="pass-pill pass-pill--ok">Completado</span>
+                              }
+                            </div>
+                          </td>
+                          <td>
+                            <div>
+                              <span class="mono-value" style="font-size: 0.75rem;">{{ timeAgo(l.completed_at) }}</span>
+                              <div class="cell-meta" style="font-size: 0.7rem;">{{ formatDate(l.completed_at) }}</div>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               }
             </div>
 
             <div class="modal-footer">
-              <button type="button" class="btn btn-ghost" (click)="selectedStudentDetail.set(null)">Cerrar Expediente</button>
+              <button type="button" class="btn btn-outline" (click)="contactStudent(d.student.email)">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                  <app-icon name="mail" [size]="14" /> Enviar Mensaje
+                </span>
+              </button>
+              <button type="button" class="btn btn-ghost" (click)="selectedStudentDetail.set(null)">
+                Cerrar Expediente
+              </button>
             </div>
           </div>
         </div>

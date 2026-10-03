@@ -381,4 +381,70 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     const d = new Date(dateStr);
     return d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   }
+
+  timeAgo(dateStr: string | null | undefined): string {
+    if (!dateStr) return 'Sin actividad';
+    const now = Date.now();
+    const time = new Date(dateStr).getTime();
+    if (isNaN(time)) return 'Sin actividad';
+    const diffSec = Math.floor((now - time) / 1000);
+    if (diffSec < 60) return 'Hace unos segundos';
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `Hace ${diffMin} min`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `Hace ${diffHours} h`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    return this.formatDate(dateStr);
+  }
+
+  getStatusBadgeClass(status?: string): string {
+    switch (status) {
+      case 'optimal': return 'badge-success';
+      case 'warning': return 'badge-warning';
+      case 'critical': return 'badge-danger';
+      default: return 'badge-subtle';
+    }
+  }
+
+  getStatusLabel(status?: string): string {
+    switch (status) {
+      case 'optimal': return 'Al Día';
+      case 'warning': return 'En Observación';
+      case 'critical': return 'En Riesgo';
+      default: return 'Activo';
+    }
+  }
+
+  getCourseDemandPercent(enrollmentsCount: number): number {
+    const total = this.totalStudentsCount();
+    if (!total || total === 0) return 0;
+    return Math.min(100, Math.round((enrollmentsCount / total) * 100));
+  }
+
+  getLessonTypeLabel(type: string): string {
+    switch (type) {
+      case 'code_challenge': return 'Reto de Código';
+      case 'quiz': return 'Quiz Evaluativo';
+      case 'article': return 'Lectura Técnica';
+      case 'video': return 'Video Interactivo';
+      default: return type ? type.toUpperCase() : 'Lección';
+    }
+  }
+
+  getLessonTypeBadgeClass(type: string): string {
+    switch (type) {
+      case 'code_challenge': return 'badge-challenge';
+      case 'quiz': return 'badge-quiz';
+      case 'article': return 'badge-neutral';
+      default: return 'badge-subtle';
+    }
+  }
+
+  contactStudent(email: string) {
+    if (typeof window !== 'undefined') {
+      window.location.href = `mailto:${email}?subject=Seguimiento Académico - SysEng Academy`;
+    }
+  }
 }
