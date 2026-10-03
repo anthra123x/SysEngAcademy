@@ -363,7 +363,6 @@ export class LoginComponent {
 
   private redirectAfterAuth(user: any) {
     if (
-      user?.email === 'andrescamilomartinez330@gmail.com' ||
       user?.role === 'admin' ||
       user?.role === 'instructor'
     ) {

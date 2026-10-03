@@ -25,9 +25,7 @@ export const teacherGuard: CanActivateFn = () => {
 
   if (
     auth.isAuthenticated() &&
-    (user?.role === 'admin' ||
-      user?.role === 'instructor' ||
-      user?.email === 'andrescamilomartinez330@gmail.com')
+    (user?.role === 'admin' || user?.role === 'instructor')
   ) {
     return true;
   }

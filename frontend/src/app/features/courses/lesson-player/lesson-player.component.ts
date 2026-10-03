@@ -1877,7 +1877,6 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   readonly isTeacher = computed(() => {
     const user = this.auth.user();
     return (
-      user?.email === 'andrescamilomartinez330@gmail.com' ||
       user?.role === 'admin' ||
       user?.role === 'instructor'
     );

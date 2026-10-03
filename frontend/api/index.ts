@@ -9,7 +9,11 @@ declare const Buffer: any;
 const DB_URL =
   process.env.DATABASE_URL ||
   process.env.POSTGRES_URL ||
-  'postgresql://neondb_owner:npg_WLusNo3hm6tR@ep-bitter-fog-b5ngref9-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require';
+  '';
+
+if (!DB_URL) {
+  throw new Error('DATABASE_URL or POSTGRES_URL environment variable is required');
+}
 
 const sql = neon(DB_URL);
 
@@ -18,7 +22,11 @@ const APP_SECRET =
   process.env.APP_SECRET ||
   process.env.APP_KEY ||
   process.env.JWT_SECRET ||
-  'syseng_prod_sec_key_2026_x87b1c';
+  '';
+
+if (!APP_SECRET) {
+  throw new Error('APP_SECRET, APP_KEY, or JWT_SECRET environment variable is required');
+}
 
 // =============================================================================
 // 1. IN-MEMORY MICRO-CACHE (Acelera respuestas públicas reduciendo roundtrips a Neon)

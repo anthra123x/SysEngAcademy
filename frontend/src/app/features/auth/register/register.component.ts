@@ -605,7 +605,6 @@ export class RegisterComponent {
   finishRegistration() {
     const user = this.auth.user();
     if (
-      user?.email === 'andrescamilomartinez330@gmail.com' ||
       user?.role === 'admin' ||
       user?.role === 'instructor'
     ) {

@@ -209,7 +209,7 @@ export class TeacherService {
             const u = item.user;
             if (!u) continue;
             const normEmail = (u.email || '').toLowerCase().trim();
-            if (normEmail === 'andrescamilomartinez330@gmail.com') continue; // Docente
+            if (u.role === 'admin' || u.role === 'instructor') continue; // Docente
             if (deletedSet.has(normEmail) || deletedSet.has(String(u.id))) continue;
             if (BANNED_MOCK_EMAILS.has(normEmail)) continue;
 
@@ -271,7 +271,7 @@ export class TeacherService {
         const u = JSON.parse(userRaw);
         if (u && (u.role === 'student' || !u.role || u.role === 'user') && u.email) {
           const normEmail = u.email.toLowerCase().trim();
-          if (normEmail !== 'andrescamilomartinez330@gmail.com' && !deletedSet.has(normEmail) && !BANNED_MOCK_EMAILS.has(normEmail) && !studentsMap.has(normEmail)) {
+          if (!deletedSet.has(normEmail) && !BANNED_MOCK_EMAILS.has(normEmail) && !studentsMap.has(normEmail)) {
             const completedRaw = localStorage.getItem(`syseng_${normEmail}_completed_lessons`);
             const completedArr = completedRaw ? JSON.parse(completedRaw) : [];
             const completedCount = Array.isArray(completedArr) ? completedArr.length : 1;
@@ -315,7 +315,7 @@ export class TeacherService {
         if (Array.isArray(cachedList)) {
           for (const cached of cachedList) {
             const normEmail = (cached.email || '').toLowerCase().trim();
-            if (normEmail === 'andrescamilomartinez330@gmail.com' || deletedSet.has(normEmail) || BANNED_MOCK_EMAILS.has(normEmail)) {
+            if ((cached.role === 'admin' || cached.role === 'instructor') || deletedSet.has(normEmail) || BANNED_MOCK_EMAILS.has(normEmail)) {
               continue;
             }
             if (studentsMap.has(normEmail)) {

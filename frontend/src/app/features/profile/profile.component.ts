@@ -4766,7 +4766,6 @@ for (let paso = 1; paso <= 3; paso++) {
   readonly isTeacher = computed(() => {
     const user = this.auth.user();
     return (
-      user?.email === 'andrescamilomartinez330@gmail.com' ||
       user?.role === 'admin' ||
       user?.role === 'instructor'
     );
@@ -5913,7 +5912,7 @@ for (let paso = 1; paso <= 3; paso++) {
               const u = item.user;
               if (!u || !u.email) continue;
               const email = u.email.toLowerCase().trim();
-              if (email === 'andrescamilomartinez330@gmail.com') continue; // Docente
+              if (u.role === 'admin' || u.role === 'instructor') continue; // Docente
               if (email === 'estudiante@sysengacademy.dev') continue; // Mock
 
               if (!studentsMap.has(email)) {
@@ -5955,7 +5954,7 @@ for (let paso = 1; paso <= 3; paso++) {
             for (const st of cacheList) {
               if (!st.email) continue;
               const email = st.email.toLowerCase().trim();
-              if (email === 'andrescamilomartinez330@gmail.com' || email === 'estudiante@sysengacademy.dev') continue;
+              if (st.role === 'admin' || st.role === 'instructor') continue;
 
               const existing = studentsMap.get(email);
               const doneCount = st.completed_lessons_count || 0;
