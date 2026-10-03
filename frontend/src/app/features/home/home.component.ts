@@ -14,6 +14,7 @@ interface SnakeStop {
   delay: number;   // stagger de entrada (s)
   levelBadge: string;
   milestoneTitle: string;
+  skills: string[];
 }
 
 interface SnakeSeg {
@@ -58,33 +59,90 @@ export class HomeComponent implements OnInit {
       this.categories.set(home.categories);
       this.learningPaths.set(home.learning_paths.data);
       this.featuredCourses.set(home.courses.data);
-      this.snakeStops.set(this.buildSnake(home.learning_paths.data));
+      this.snakeStops.set(this.buildSnake(home.learning_paths.data, home.categories));
       // Esperar a que Angular pinte los nodos antes de medir la ruta.
-      setTimeout(() => this.measureSnake(), 0);
+      setTimeout(() => this.measureSnake(), 60);
     });
   }
 
   /** Crea las estaciones del roadmap en disposición alternante (L -> R -> L) con eje central */
-  private buildSnake(paths: LearningPath[]): SnakeStop[] {
-    const milestones = [
-      { badge: 'Hito 01 • Fundamentos Base', desc: 'Pensamiento lógico, variables, control de flujo y sintaxis esencial' },
-      { badge: 'Hito 02 • Especialización Backend', desc: 'Arquitectura de servidores, APIs RESTful, seguridad y bases de datos' },
-      { badge: 'Hito 03 • Dominio Fullstack', desc: 'Integración frontend moderna, TypeScript, Single Page Apps y cloud' },
-      { badge: 'Hito 04 • DevOps y Plataformas', desc: 'Contenedores Docker, CI/CD automatizado y orquestación' },
-      { badge: 'Hito 05 • Inteligencia Artificial', desc: 'Modelos de lenguaje, agentes autónomos y prompt engineering' },
-    ];
+  private buildSnake(paths: LearningPath[], allCats: Category[] = []): SnakeStop[] {
+    const catMap = new Map(allCats.map(c => [Number(c.id), c]));
+
+    const pathMilestones: Record<string, { badge: string; title: string; skills: string[] }> = {
+      'fundamentos-programacion': {
+        badge: 'Hito 01 • Lógica & Algoritmia Base',
+        title: 'Pensamiento computacional estructurado, variables, control de flujo y resolución algorítmica esencial.',
+        skills: ['Variables & Tipos', 'Estructuras de Control', 'Pseudocódigo', 'Funciones'],
+      },
+      'desarrollo-orientado-objetos': {
+        badge: 'Hito 02 • Paradigma & Modelado OO',
+        title: 'Abstracción de software, encapsulamiento, herencia, polimorfismo y diseño modular con principios SOLID.',
+        skills: ['Clases & Objetos', 'Herencia & Interfaces', 'Principios SOLID', 'Clean Code'],
+      },
+      'desarrollo-backend': {
+        badge: 'Hito 03 • Servidores & APIs Robustas',
+        title: 'Arquitectura de servicios REST, persistencia relacional SQL, seguridad, transacciones y autenticación JWT.',
+        skills: ['APIs RESTful', 'SQL & Modelado BD', 'Autenticación JWT', 'Seguridad Web'],
+      },
+      'desarrollo-frontend': {
+        badge: 'Hito 04 • Interfaces Reactivas & SPA',
+        title: 'Maquetación responsive moderna, componentes dinámicos, TypeScript avanzado y experiencia de usuario fluida.',
+        skills: ['Angular / TypeScript', 'Componentes UI', 'Gestión de Estado', 'Responsive UX'],
+      },
+      'desarrollo-fullstack': {
+        badge: 'Hito 05 • Integración End-to-End',
+        title: 'Conexión integral entre cliente, servidor y base de datos con despliegue productivo y comunicación asíncrona.',
+        skills: ['Arquitectura Full Stack', 'Consumo de APIs', 'WebSockets', 'Despliegue Cloud'],
+      },
+      'devops': {
+        badge: 'Hito 06 • Contenedores & CI/CD',
+        title: 'Entornos reproducibles con Docker, automatización de entregas continuas, administración Linux y orquestación.',
+        skills: ['Docker & Compose', 'Pipelines CI/CD', 'Linux & Bash', 'Reverse Proxy'],
+      },
+      'git-y-control-versiones': {
+        badge: 'Hito 07 • Control de Versiones Pro',
+        title: 'Flujos de trabajo colaborativos en equipo, ramas profesionales, resolución de conflictos y Conventional Commits.',
+        skills: ['Git Flow', 'Rebase & Merge', 'Pull Requests', 'Versionado Semántico'],
+      },
+      'ingenieria-de-requerimientos': {
+        badge: 'Hito 08 • Análisis & Calidad Software',
+        title: 'Levantamiento riguroso de especificaciones, modelado UML, casos de uso, arquitectura y testing QA formal.',
+        skills: ['Historias de Usuario', 'Diagramas UML', 'Criterios de Aceptación', 'Testing QA'],
+      },
+      'desarrollo-con-ia': {
+        badge: 'Hito 09 • IA Generativa & Agentes',
+        title: 'Integración práctica de modelos LLM, ingeniería de prompts, flujos RAG con embeddings y desarrollo aumentado.',
+        skills: ['Prompt Engineering', 'Agentes Autónomos', 'Embeddings & RAG', 'APIs de LLM'],
+      },
+    };
 
     return paths.map((p, idx) => {
-      const ms = milestones[idx] || { badge: `Hito 0${idx + 1} • Especialización`, desc: p.description };
+      const cat = p.category || (p.category_id ? catMap.get(Number(p.category_id)) : null);
+      const enrichedPath: LearningPath = {
+        ...p,
+        category: cat || p.category,
+      };
+
+      const ms = pathMilestones[p.slug] || {
+        badge: `Hito 0${idx + 1} • Especialización Técnica`,
+        title: p.description,
+        skills: ['Ingeniería de Sistemas', 'Buenas Prácticas', 'Proyectos Reales'],
+      };
+
+      const color = cat?.color || '#0AE98A';
+      const name = cat?.name || 'Ingeniería';
+
       return {
-        path: p,
-        color: p.category?.color ?? '#0AE98A',
-        name: p.category?.name ?? 'Ruta',
+        path: enrichedPath,
+        color,
+        name,
         isRight: idx % 2 === 1,
         num: idx + 1,
         delay: Math.round(idx * 0.12 * 10) / 10,
         levelBadge: ms.badge,
-        milestoneTitle: ms.desc,
+        milestoneTitle: ms.title,
+        skills: ms.skills,
       };
     });
   }

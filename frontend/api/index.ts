@@ -2226,19 +2226,51 @@ export default async function handler(req: any, res: any) {
     // HOME AGGREGATED (Cached < 2ms)
     // -------------------------------------------------------------
     if (method === 'GET' && cleanPath === '/home') {
-      let homeData = getCached<any>('home_aggregated_data');
+      let homeData = getCached<any>('home_aggregated_data_v2');
       if (!homeData) {
-        const [cats, paths, courses]: [any, any, any] = await Promise.all([
+        const [cats, paths, courses, courseCounts, levelCounts, lessonCounts]: [any, any, any, any, any, any] = await Promise.all([
           sql`SELECT * FROM categories ORDER BY id ASC`,
           sql`SELECT * FROM learning_paths ORDER BY id ASC`,
-          sql`SELECT * FROM courses ORDER BY id ASC LIMIT 6`,
+          sql`SELECT * FROM courses ORDER BY "order" ASC, id ASC LIMIT 6`,
+          sql`SELECT learning_path_id, count(*)::int as courses_count FROM courses WHERE learning_path_id IS NOT NULL GROUP BY learning_path_id`,
+          sql`SELECT learning_path_id, count(*)::int as levels_count FROM learning_path_levels GROUP BY learning_path_id`,
+          sql`SELECT m.course_id, count(l.id)::int as lessons_count FROM modules m JOIN lessons l ON l.module_id = m.id GROUP BY m.course_id`,
         ]);
+
+        const catMap = new Map((cats as any[]).map((cat: any) => [Number(cat.id), cat]));
+        const courseCountMap = new Map((courseCounts as any[]).map((r: any) => [Number(r.learning_path_id), Number(r.courses_count)]));
+        const levelCountMap = new Map((levelCounts as any[]).map((r: any) => [Number(r.learning_path_id), Number(r.levels_count)]));
+        const lessonCountMap = new Map((lessonCounts as any[]).map((r: any) => [Number(r.course_id), Number(r.lessons_count)]));
+
+        const enrichedPaths = (paths as any[]).map((p: any) => {
+          const pid = Number(p.id);
+          const cat = p.category_id ? catMap.get(Number(p.category_id)) || null : null;
+          return {
+            ...p,
+            id: pid,
+            category: cat,
+            courses_count: courseCountMap.get(pid) ?? 4,
+            levels_count: levelCountMap.get(pid) ?? 3,
+          };
+        });
+
+        const enrichedCourses = (courses as any[]).map((c: any) => {
+          const cid = Number(c.id);
+          const cat = c.category_id ? catMap.get(Number(c.category_id)) || null : null;
+          return {
+            ...c,
+            id: cid,
+            category: cat,
+            lessons_count: lessonCountMap.get(cid) ?? 4,
+          };
+        });
+
         homeData = {
           categories: cats,
-          learning_paths: { data: paths },
-          courses: { data: courses },
+          learning_paths: { data: enrichedPaths },
+          courses: { data: enrichedCourses },
         };
-        setCache('home_aggregated_data', homeData, 30);
+        setCache('home_aggregated_data_v2', homeData, 30);
       }
       return sendJson(res, 200, homeData, 'public, s-maxage=30, stale-while-revalidate=120');
     }

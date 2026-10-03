@@ -1,12 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from './layout/navbar/navbar.component';
-import { FooterComponent } from './layout/footer/footer.component';
 import { AiCompanionComponent } from './features/ai-companion/ai-companion.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavbarComponent, FooterComponent, AiCompanionComponent],
+  imports: [RouterOutlet, NavbarComponent, AiCompanionComponent],
   template: `
     @if (!isClassroomMode()) {
       <app-navbar />
@@ -14,14 +13,11 @@ import { AiCompanionComponent } from './features/ai-companion/ai-companion.compo
     <main [class.classroom-mode]="isClassroomMode()">
       <router-outlet />
     </main>
-    @if (!isClassroomMode()) {
-      <app-footer />
-    }
     <app-ai-companion />
   `,
   styles: [`
     main {
-      min-height: calc(100vh - 64px - 200px);
+      min-height: calc(100vh - 64px);
       &.classroom-mode {
         min-height: 100vh;
       }

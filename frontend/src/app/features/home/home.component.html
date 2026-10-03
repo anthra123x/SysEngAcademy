@@ -114,29 +114,37 @@
                     @if (!stop.isRight) {
                       <a [routerLink]="['/rutas', stop.path.slug]" class="snake__card">
                         <div class="snake__card-top">
-                          <span class="snake__category">{{ stop.name }}</span>
+                          <span class="snake__category">
+                            <app-icon [category]="stop.path.category?.slug" [size]="14" [color]="stop.color" [strokeWidth]="2" />
+                            {{ stop.name }}
+                          </span>
                           <span [class]="'badge badge-' + stop.path.difficulty">{{ difficultyLabel(stop.path.difficulty) }}</span>
                         </div>
                         <h3 class="snake__title">{{ stop.path.title }}</h3>
                         <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
                         <div class="snake__meta">
-                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 4 }} cursos</span>
                           <span>·</span>
                           <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h estimadas</span>
                         </div>
                         <span class="snake__cta">Explorar Ruta →</span>
                       </a>
                     } @else {
-                      <div class="snake__milestone-badge milestone-badge--right-align">
-                        <div class="milestone-badge__header">
-                          <span class="milestone-badge__dot" [style.background]="stop.color"></span>
-                          <span class="milestone-badge__label">{{ stop.levelBadge }}</span>
+                      <div class="snake__milestone-card milestone-card--right">
+                        <div class="milestone-card__header">
+                          <span class="milestone-card__dot" [style.background]="stop.color" [style.box-shadow]="'0 0 10px ' + stop.color"></span>
+                          <span class="milestone-card__badge" [style.color]="stop.color">{{ stop.levelBadge }}</span>
                         </div>
-                        <span class="milestone-badge__desc">{{ stop.milestoneTitle }}</span>
-                        <div class="milestone-badge__stats">
-                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
+                        <h4 class="milestone-card__title">{{ stop.milestoneTitle }}</h4>
+                        <div class="milestone-card__skills">
+                          @for (skill of stop.skills; track skill) {
+                            <span class="milestone-skill-pill">{{ skill }}</span>
+                          }
+                        </div>
+                        <div class="milestone-card__footer">
+                          <span><app-icon name="award" [size]="12" [color]="stop.color" /> Certificación de Área</span>
                           <span>·</span>
-                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h de formación</span>
+                          <span><app-icon name="check-circle" [size]="12" color="#0AE98A" /> Proyectos Reales</span>
                         </div>
                       </div>
                     }
@@ -159,29 +167,37 @@
                     @if (stop.isRight) {
                       <a [routerLink]="['/rutas', stop.path.slug]" class="snake__card">
                         <div class="snake__card-top">
-                          <span class="snake__category">{{ stop.name }}</span>
+                          <span class="snake__category">
+                            <app-icon [category]="stop.path.category?.slug" [size]="14" [color]="stop.color" [strokeWidth]="2" />
+                            {{ stop.name }}
+                          </span>
                           <span [class]="'badge badge-' + stop.path.difficulty">{{ difficultyLabel(stop.path.difficulty) }}</span>
                         </div>
                         <h3 class="snake__title">{{ stop.path.title }}</h3>
                         <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
                         <div class="snake__meta">
-                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
+                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 4 }} cursos</span>
                           <span>·</span>
                           <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h estimadas</span>
                         </div>
                         <span class="snake__cta">Explorar Ruta →</span>
                       </a>
                     } @else {
-                      <div class="snake__milestone-badge milestone-badge--left-align">
-                        <div class="milestone-badge__header">
-                          <span class="milestone-badge__dot" [style.background]="stop.color"></span>
-                          <span class="milestone-badge__label">{{ stop.levelBadge }}</span>
+                      <div class="snake__milestone-card milestone-card--left">
+                        <div class="milestone-card__header">
+                          <span class="milestone-card__dot" [style.background]="stop.color" [style.box-shadow]="'0 0 10px ' + stop.color"></span>
+                          <span class="milestone-card__badge" [style.color]="stop.color">{{ stop.levelBadge }}</span>
                         </div>
-                        <span class="milestone-badge__desc">{{ stop.milestoneTitle }}</span>
-                        <div class="milestone-badge__stats">
-                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 0 }} cursos</span>
+                        <h4 class="milestone-card__title">{{ stop.milestoneTitle }}</h4>
+                        <div class="milestone-card__skills">
+                          @for (skill of stop.skills; track skill) {
+                            <span class="milestone-skill-pill">{{ skill }}</span>
+                          }
+                        </div>
+                        <div class="milestone-card__footer">
+                          <span><app-icon name="award" [size]="12" [color]="stop.color" /> Certificación de Área</span>
                           <span>·</span>
-                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h de formación</span>
+                          <span><app-icon name="check-circle" [size]="12" color="#0AE98A" /> Proyectos Reales</span>
                         </div>
                       </div>
                     }

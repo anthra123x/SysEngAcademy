@@ -9,7 +9,7 @@ export interface HomeData {
   courses: PaginatedResponse<Course>;
 }
 
-const CACHE_KEY = 'syseng_cache_home_v4';
+const CACHE_KEY = 'syseng_cache_home_v5';
 
 @Injectable({ providedIn: 'root' })
 export class HomeService {
