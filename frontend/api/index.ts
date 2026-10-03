@@ -1227,7 +1227,6 @@ export default async function handler(req: any, res: any) {
         ]);
         if (enrRows && enrRows.length > 0) {
           isEnrolled = true;
-          progressPercent = Number(enrRows[0].progress_percent || 0);
         }
         if (progRows && progRows.length > 0) {
           for (const pr of progRows) {
@@ -1236,9 +1235,13 @@ export default async function handler(req: any, res: any) {
           if (!isEnrolled && completedSet.size > 0) {
             isEnrolled = true;
           }
-          if (cachedCourse.lessons_count > 0 && progressPercent === 0) {
-            progressPercent = Math.min(100, Math.round((completedSet.size / cachedCourse.lessons_count) * 100));
-          }
+        }
+        const totalCount = Number(cachedCourse.lessons_count || 1);
+        progressPercent = totalCount > 0 ? Math.min(100, Math.round((completedSet.size / totalCount) * 100)) : 0;
+
+        // Auto-sincronizar matrícula si el porcentaje en base de datos quedó inconsistente
+        if (isEnrolled && enrRows && enrRows.length > 0 && Number(enrRows[0].progress_percent) !== progressPercent) {
+          sql`UPDATE enrollments SET progress_percent = ${progressPercent}, updated_at = NOW() WHERE user_id = ${user.id} AND course_id = ${cachedCourse.id}`.catch(() => {});
         }
         if (user.role === 'admin' || user.role === 'instructor') {
           isEnrolled = true;
@@ -1478,17 +1481,52 @@ export default async function handler(req: any, res: any) {
 
       await sql`UPDATE users SET xp = COALESCE(xp, 0) + 100, updated_at = NOW() WHERE id = ${userId}`;
 
-      try {
-        await sql`
-          INSERT INTO enrollments (user_id, course_id, enrolled_at, progress_percent, created_at, updated_at)
-          VALUES (${userId}, ${courseId}, NOW(), 100, NOW(), NOW())
-          ON CONFLICT (user_id, course_id) DO UPDATE SET progress_percent = 100, updated_at = NOW()
-        `;
-      } catch {}
+      let realProgress = 100;
+      let totalLessonsInCourse = 1;
+      let completedLessonsInCourse = 1;
 
+      try {
+        const [totalRows, doneRows]: [any, any] = await Promise.all([
+          sql`
+            SELECT count(DISTINCT l.id)::int as count 
+            FROM lessons l 
+            JOIN modules m ON l.module_id = m.id 
+            WHERE m.course_id = ${courseId}
+          `,
+          sql`
+            SELECT count(DISTINCT lp.lesson_id)::int as count 
+            FROM lesson_progress lp 
+            JOIN lessons l ON lp.lesson_id = l.id 
+            JOIN modules m ON l.module_id = m.id 
+            WHERE lp.user_id = ${userId} AND m.course_id = ${courseId}
+          `,
+        ]);
+        totalLessonsInCourse = Number(totalRows[0]?.count || 1);
+        completedLessonsInCourse = Number(doneRows[0]?.count || 1);
+        realProgress = Math.min(100, Math.round((completedLessonsInCourse / totalLessonsInCourse) * 100));
+
+        await sql`
+          INSERT INTO enrollments (user_id, course_id, enrolled_at, progress_percent, completed_at, created_at, updated_at)
+          VALUES (${userId}, ${courseId}, NOW(), ${realProgress}, ${realProgress >= 100 ? sql`NOW()` : null}, NOW(), NOW())
+          ON CONFLICT (user_id, course_id) 
+          DO UPDATE SET progress_percent = ${realProgress}, 
+                        completed_at = CASE WHEN ${realProgress} >= 100 THEN NOW() ELSE enrollments.completed_at END, 
+                        updated_at = NOW()
+        `;
+      } catch (err) {
+        console.error('Error syncing course enrollment progress:', err);
+      }
+
+      invalidateCachePrefix('course_detail_');
       invalidateCachePrefix('leaderboard_');
       invalidateCachePrefix('teacher:');
-      return sendJson(res, 200, { progress_percent: 100, success: true, course_id: courseId });
+      return sendJson(res, 200, { 
+        progress_percent: realProgress, 
+        completed_lessons: completedLessonsInCourse, 
+        total_lessons: totalLessonsInCourse, 
+        success: true, 
+        course_id: courseId 
+      });
     }
 
     // EVALUACIÓN DE CUESTIONARIOS
@@ -1498,9 +1536,16 @@ export default async function handler(req: any, res: any) {
       const body = await getBody(req);
       const submitted = body.answers || {};
 
-      const lessonRows: any = await sql`SELECT id FROM lessons WHERE slug = ${slug} OR id::text = ${slug} LIMIT 1`;
+      const lessonRows: any = await sql`
+        SELECT l.id, m.course_id 
+        FROM lessons l 
+        JOIN modules m ON l.module_id = m.id 
+        WHERE l.slug = ${slug} OR l.id::text = ${slug} 
+        LIMIT 1
+      `;
       if (!lessonRows || lessonRows.length === 0) return sendJson(res, 404, { message: 'Lección no encontrada' });
       const lessonId = Number(lessonRows[0].id);
+      const lessonCourseId = Number(lessonRows[0].course_id);
 
       const quizRows: any = await sql`SELECT id FROM quizzes WHERE lesson_id = ${lessonId} LIMIT 1`;
       if (!quizRows || quizRows.length === 0) return sendJson(res, 404, { message: 'Quiz no encontrado' });
@@ -1545,6 +1590,7 @@ export default async function handler(req: any, res: any) {
       const passed = score >= 60;
 
       const user = await resolveUser(req);
+      let courseProgressPercent = 0;
       if (user) {
         await sql`
           INSERT INTO lesson_progress (user_id, lesson_id, score, completed_at, created_at, updated_at)
@@ -1552,7 +1598,31 @@ export default async function handler(req: any, res: any) {
           ON CONFLICT (user_id, lesson_id)
           DO UPDATE SET score = GREATEST(lesson_progress.score, EXCLUDED.score), completed_at = NOW(), updated_at = NOW()
         `;
+
+        if (passed && lessonCourseId) {
+          try {
+            const [totalRows, doneRows]: [any, any] = await Promise.all([
+              sql`SELECT count(DISTINCT l.id)::int as count FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = ${lessonCourseId}`,
+              sql`SELECT count(DISTINCT lp.lesson_id)::int as count FROM lesson_progress lp JOIN lessons l ON lp.lesson_id = l.id JOIN modules m ON l.module_id = m.id WHERE lp.user_id = ${user.id} AND m.course_id = ${lessonCourseId}`,
+            ]);
+            const total = Number(totalRows[0]?.count || 1);
+            const done = Number(doneRows[0]?.count || 1);
+            courseProgressPercent = Math.min(100, Math.round((done / total) * 100));
+
+            await sql`
+              INSERT INTO enrollments (user_id, course_id, enrolled_at, progress_percent, completed_at, created_at, updated_at)
+              VALUES (${user.id}, ${lessonCourseId}, NOW(), ${courseProgressPercent}, ${courseProgressPercent >= 100 ? sql`NOW()` : null}, NOW(), NOW())
+              ON CONFLICT (user_id, course_id) 
+              DO UPDATE SET progress_percent = ${courseProgressPercent}, 
+                            completed_at = CASE WHEN ${courseProgressPercent} >= 100 THEN NOW() ELSE enrollments.completed_at END, 
+                            updated_at = NOW()
+            `;
+          } catch {}
+        }
+
+        invalidateCachePrefix('course_detail_');
         invalidateCachePrefix('leaderboard_');
+        invalidateCachePrefix('teacher:');
       }
 
       return sendJson(res, 200, {
@@ -1560,6 +1630,7 @@ export default async function handler(req: any, res: any) {
         correct: correctCount,
         total: totalCount,
         passed,
+        progress_percent: courseProgressPercent,
         results,
       });
     }

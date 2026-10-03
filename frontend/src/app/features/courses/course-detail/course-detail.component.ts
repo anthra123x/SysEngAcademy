@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { CoursesService, isModuleFullyCompleted, isModuleUnlockedForStudent } from '../../../core/services/courses.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -12,7 +12,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
   templateUrl: './course-detail.component.html',
   styleUrl: './course-detail.component.scss',
 })
-export class CourseDetailComponent implements OnInit {
+export class CourseDetailComponent implements OnInit, OnDestroy {
   private coursesSvc = inject(CoursesService);
   private route      = inject(ActivatedRoute);
   private router     = inject(Router);
@@ -26,6 +26,10 @@ export class CourseDetailComponent implements OnInit {
   forumModuleId = signal<number | undefined>(undefined);
   showAuthModal = signal(false);
   readonly lockedToast = signal<string | null>(null);
+
+  private readonly progressListener = () => {
+    this.verifyProgressRealtime();
+  };
 
   allExpanded = computed(() => {
     const c = this.course();
@@ -54,6 +58,41 @@ export class CourseDetailComponent implements OnInit {
     return count;
   });
 
+  totalLessonsCount = computed(() => {
+    const c = this.course();
+    if (!c) return 0;
+    if (c.lessons_count && c.lessons_count > 0) return c.lessons_count;
+    let count = 0;
+    for (const mod of c.modules ?? []) {
+      count += (mod.lessons ?? []).length;
+    }
+    return count;
+  });
+
+  completedLessonsCount = computed(() => {
+    let count = 0;
+    for (const mod of this.course()?.modules ?? []) {
+      for (const lesson of mod.lessons ?? []) {
+        if (lesson.completed) count++;
+      }
+    }
+    return count;
+  });
+
+  courseProgressPercent = computed(() => {
+    const c = this.course();
+    if (!c) return 0;
+    const total = this.totalLessonsCount();
+    if (total === 0) return 0;
+    const completed = this.completedLessonsCount();
+    return Math.min(100, Math.round((completed / total) * 100));
+  });
+
+  firstLessonSlug = computed(() => {
+    const c = this.course();
+    return c?.modules?.[0]?.lessons?.[0]?.slug ?? null;
+  });
+
   continueLessonSlug = computed(() => {
     const c = this.course();
     if (!c?.modules) return null;
@@ -65,16 +104,6 @@ export class CourseDetailComponent implements OnInit {
       }
     }
     return c.modules[0]?.lessons?.[0]?.slug ?? null;
-  });
-
-  completedLessonsCount = computed(() => {
-    let count = 0;
-    for (const mod of this.course()?.modules ?? []) {
-      for (const lesson of mod.lessons ?? []) {
-        if (lesson.completed) count++;
-      }
-    }
-    return count;
   });
 
   courseSkills = computed(() => {
@@ -91,6 +120,13 @@ export class CourseDetailComponent implements OnInit {
   });
 
   ngOnInit() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('lesson-completed-updated', this.progressListener);
+      window.addEventListener('storage', this.progressListener);
+      window.addEventListener('focus', this.progressListener);
+      window.addEventListener('teacher:students-updated', this.progressListener);
+    }
+
     this.route.paramMap.subscribe(params => {
       const slug = params.get('slug');
       if (slug) {
@@ -125,6 +161,35 @@ export class CourseDetailComponent implements OnInit {
         this.activeTab.set('forum');
       }
     });
+  }
+
+  ngOnDestroy() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('lesson-completed-updated', this.progressListener);
+      window.removeEventListener('storage', this.progressListener);
+      window.removeEventListener('focus', this.progressListener);
+      window.removeEventListener('teacher:students-updated', this.progressListener);
+    }
+  }
+
+  verifyProgressRealtime() {
+    const current = this.course();
+    if (!current) return;
+
+    // 1. Re-enriquecer inmediatamente con el estado local de lecciones para respuesta instantánea (0ms)
+    const enriched = this.coursesSvc.enrichCourseWithCompletions(current);
+    this.course.set(enriched);
+
+    // 2. Si el usuario está autenticado, sincronizar con el backend en segundo plano
+    if (this.auth.isAuthenticated() && current.slug) {
+      this.coursesSvc.getBySlug(current.slug).subscribe({
+        next: (fresh) => {
+          if (fresh) {
+            this.course.set(fresh);
+          }
+        },
+      });
+    }
   }
 
   setTab(tab: 'curriculum' | 'forum') {

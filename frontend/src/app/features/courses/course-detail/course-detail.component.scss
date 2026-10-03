@@ -294,13 +294,49 @@
           border-radius: 99px;
           transition: width 0.4s ease;
         }
+
+        &.is-complete &__fill {
+          background: linear-gradient(90deg, #0AE98A, #10B981);
+          box-shadow: 0 0 10px rgba(10, 233, 138, 0.4);
+        }
+      }
+
+      .progress-meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 6px;
       }
 
       .progress-sub {
         display: block;
         font-size: var(--text-xs);
         color: var(--text-muted);
-        margin-top: 6px;
+      }
+
+      .badge-success-subtle {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(10, 233, 138, 0.12);
+        color: var(--primary);
+        font-size: 10px;
+        font-weight: var(--font-semibold);
+        padding: 2px 7px;
+        border-radius: 99px;
+        border: 1px solid rgba(10, 233, 138, 0.3);
+      }
+    }
+
+    .btn-review {
+      border-color: rgba(255, 215, 0, 0.4);
+      color: #FFD700;
+      transition: all 0.2s ease;
+      &:hover {
+        background: rgba(255, 215, 0, 0.08);
+        border-color: #FFD700;
+        transform: translateY(-1px);
       }
     }
 

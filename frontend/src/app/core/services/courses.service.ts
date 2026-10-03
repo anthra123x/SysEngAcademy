@@ -183,9 +183,14 @@ export class CoursesService {
       }
     }
 
+    const allLessons = course.modules.flatMap(mod => mod.lessons ?? []);
+    const doneCount = allLessons.filter(l => !!l.completed || completedIds.has(Number(l.id)) || this.isLessonCompleted(Number(l.id), l.slug)).length;
+    const realProgress = allLessons.length > 0 ? Math.min(100, Math.round((doneCount / allLessons.length) * 100)) : 0;
+
     return {
       ...course,
       id: Number(course.id),
+      progress_percent: realProgress,
       modules: course.modules.map(mod => ({
         ...mod,
         id: Number(mod.id),

@@ -272,19 +272,32 @@
                   <div class="enrolled-progress">
                     <div class="progress-label">
                       <span class="progress-title">Tu progreso en el curso</span>
-                      <span class="progress-value">{{ course()!.progress_percent ?? 0 }}%</span>
+                      <span class="progress-value" [class.text-success]="courseProgressPercent() === 100">{{ courseProgressPercent() }}%</span>
                     </div>
-                    <div class="progress-bar">
-                      <div class="progress-bar__fill" [style.width]="(course()!.progress_percent ?? 0) + '%'"></div>
+                    <div class="progress-bar" [class.is-complete]="courseProgressPercent() === 100">
+                      <div class="progress-bar__fill" [style.width.%]="courseProgressPercent()"></div>
                     </div>
-                    <span class="progress-sub">
-                      {{ completedLessonsCount() }} de {{ course()!.lessons_count ?? 0 }} lecciones completadas
-                    </span>
+                    <div class="progress-meta-row">
+                      <span class="progress-sub">
+                        {{ completedLessonsCount() }} de {{ totalLessonsCount() }} lecciones completadas
+                      </span>
+                      @if (courseProgressPercent() === 100) {
+                        <span class="badge badge-success-subtle">
+                          <app-icon name="check" [size]="11" /> Completado
+                        </span>
+                      }
+                    </div>
                   </div>
 
-                  @if (continueLessonSlug()) {
+                  @if (courseProgressPercent() === 100) {
+                    <button class="btn btn-outline btn-block btn-lg btn-review" (click)="goToFirstLesson()">
+                      <span style="display:inline-flex; align-items:center; gap:6px;">
+                        <app-icon name="trophy" [size]="16" color="#FFD700" /> Repasar Curso Completado
+                      </span>
+                    </button>
+                  } @else if (continueLessonSlug()) {
                     <a [routerLink]="['/cursos', course()!.slug, 'leccion', continueLessonSlug()]" class="btn btn-primary btn-block btn-lg">
-                      Continuar Curso →
+                      {{ completedLessonsCount() > 0 ? 'Continuar Curso →' : 'Empezar Curso →' }}
                     </a>
                   } @else {
                     <button class="btn btn-primary btn-block btn-lg" (click)="goToFirstLesson()">
