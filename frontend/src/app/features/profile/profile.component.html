@@ -138,6 +138,20 @@
                       <span class="meta-k">Clan / Grupo:</span>
                       <span class="meta-v text-cyan">{{ myGroupName() }}</span>
                     </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Balance Gamificado:</span>
+                      <span class="meta-v" [style.color]="(totalBonusXp() - totalPenalizedXp()) >= 0 ? '#0AE98A' : '#EF4444'" style="font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                        <app-icon name="zap" [size]="13" />
+                        {{ (totalBonusXp() - totalPenalizedXp()) >= 0 ? '+' : '' }}{{ totalBonusXp() - totalPenalizedXp() }} XP netos en Ranking
+                      </span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-k">Afinidad Cognitiva:</span>
+                      <span class="meta-v" style="color: #c084fc; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                        <app-icon name="sparkles" [size]="13" />
+                        {{ currentRecommendation().matchScore }}% (Diagnóstico Byte IA)
+                      </span>
+                    </div>
                   }
                 </div>
               </div>
@@ -1212,152 +1226,206 @@
                   <span class="term-status-badge text-purple">EXPEDIENTE &amp; RETROALIMENTACIÓN INTEGRAL</span>
                 </div>
 
-                <!-- ALERTA DISCIPLINARIA SI HAY LLAMADOS DE ATENCIÓN ACTIVOS -->
-                @if (activeWarnings().length > 0) {
-                  <div class="academic-warning-banner">
-                    <div class="warn-banner-icon">
-                      <app-icon name="alert-triangle" [size]="26" color="#EF4444" />
+                <!-- SUB-TABS INTERACTIVAS: COMUNICADOS vs LLAMADOS -->
+                <div class="feedback-subtabs-nav">
+                  <button
+                    type="button"
+                    class="feedback-subtab-btn"
+                    [class.is-active]="advisorSubTab() === 'comunicados'"
+                    (click)="advisorSubTab.set('comunicados')"
+                  >
+                    <div class="subtab-btn-icon icon-info">
+                      <app-icon name="mail" [size]="16" />
                     </div>
-                    <div class="warn-banner-body">
-                      <div class="warn-banner-header">
-                        <strong class="warn-banner-title">LLAMADOS DE ATENCIÓN VIGENTES ({{ activeWarnings().length }})</strong>
-                        @if (totalPenalizedXp() > 0) {
-                          <span class="warn-penalty-chip">-{{ totalPenalizedXp() }} XP DEDUCIDOS EN RANKING</span>
-                        }
+                    <div class="subtab-btn-text">
+                      <div class="subtab-btn-top">
+                        <span class="subtab-btn-title">Comunicados de Cátedra</span>
+                        <span class="subtab-count-badge">{{ catedraFeedbacks().length }}</span>
                       </div>
-                      <p class="warn-banner-desc">
-                        El cuerpo docente ha emitido llamados de atención en tu expediente por bajo rendimiento o inactividad. Las deducciones de experiencia han reducido tu puntuación de XP acumulada, desplazándote a puestos inferiores en el Ranking global de la academia. Regulariza tus entregas prácticas para restaurar tu rendimiento.
-                      </p>
+                      <span class="subtab-btn-desc">Orientaciones formativas, felicitaciones y avisos docentes</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="feedback-subtab-btn"
+                    [class.is-active]="advisorSubTab() === 'llamados'"
+                    [class.has-warnings]="activeWarnings().length > 0"
+                    (click)="advisorSubTab.set('llamados')"
+                  >
+                    <div class="subtab-btn-icon" [class.icon-alert]="activeWarnings().length > 0" [class.icon-success]="activeWarnings().length === 0">
+                      <app-icon [name]="activeWarnings().length > 0 ? 'alert-triangle' : 'shield'" [size]="16" />
+                    </div>
+                    <div class="subtab-btn-text">
+                      <div class="subtab-btn-top">
+                        <span class="subtab-btn-title">Llamados de Atención</span>
+                        <span class="subtab-count-badge" [class.badge-danger]="activeWarnings().length > 0" [class.badge-success]="activeWarnings().length === 0">
+                          {{ activeWarnings().length }}
+                        </span>
+                      </div>
+                      <span class="subtab-btn-desc">
+                        {{ activeWarnings().length === 0 ? 'Expediente disciplinario limpio y al día' : 'Advertencias vigentes con penalización XP' }}
+                      </span>
+                    </div>
+                  </button>
+                </div>
+
+                <!-- VISTA SUB-TAB 1: COMUNICADOS DE CÁTEDRA -->
+                @if (advisorSubTab() === 'comunicados') {
+                  <div class="feedback-section-box">
+                    <div class="terminal-subhead" style="background: #090c12;">
+                      <span class="term-dot" style="background: #38bdf8; box-shadow: 0 0 6px #38bdf8;"></span>
+                      <span class="term-subhead-title" style="color: #38bdf8;">
+                        COMUNICADOS &amp; ORIENTACIONES DOCENTES ({{ catedraFeedbacks().length }})
+                      </span>
+                      <button type="button" class="btn btn-xs btn-outline" style="margin-left: auto;" (click)="loadTeacherFeedbacks()">
+                        ↻ Actualizar
+                      </button>
+                    </div>
+
+                    <div class="feedback-feed-list">
+                      @if (feedbacksLoading()) {
+                        <div class="feedback-empty-state">
+                          <span style="color: #64748b;">Consultando expediente de comunicados...</span>
+                        </div>
+                      } @else if (catedraFeedbacks().length === 0) {
+                        <div class="feedback-empty-state is-clean">
+                          <div class="empty-icon-shield">✓</div>
+                          <div class="empty-text-wrap">
+                            <strong>Sin Comunicados de Cátedra</strong>
+                            <p>No tienes notas u orientaciones formativas emitidas por el cuerpo docente en este momento. ¡Sigue así!</p>
+                          </div>
+                        </div>
+                      } @else {
+                        @for (f of catedraFeedbacks(); track f.id) {
+                          <div class="feedback-card" [class.type-praise]="f.type === 'praise'" [class.type-pedagogical]="f.type === 'pedagogical'">
+                            <div class="card-head">
+                              <div class="type-pill-wrap">
+                                @if (f.type === 'praise') {
+                                  <span class="badge-type-pill pill-success">
+                                    <app-icon name="sparkles" [size]="12" /> FELICITACIÓN ACADÉMICA
+                                  </span>
+                                  @if (f.xp_impact > 0) {
+                                    <span class="bonus-tag">+{{ f.xp_impact }} XP BONIFICADOS</span>
+                                  }
+                                } @else {
+                                  <span class="badge-type-pill pill-info">
+                                    <app-icon name="message-square" [size]="12" /> ORIENTACIÓN FORMATIVA
+                                  </span>
+                                }
+                              </div>
+                              <div class="card-author-meta">
+                                <span class="author-name">👨‍🏫 {{ f.teacher_name }}</span>
+                                <span class="author-date">{{ f.created_at | date:'d MMM y, HH:mm' }}</span>
+                              </div>
+                            </div>
+
+                            <h4 class="feedback-card-title">{{ f.title }}</h4>
+                            <p class="feedback-card-body">{{ f.message }}</p>
+
+                            @if (f.ai_context_summary) {
+                              <div class="feedback-ai-quote">
+                                <span class="ai-quote-label">
+                                  <app-icon name="sparkles" [size]="12" color="#00f0ff" />
+                                  Fundamentado en el Análisis del Agente de Cátedra:
+                                </span>
+                                <p class="ai-quote-text">"{{ f.ai_context_summary }}"</p>
+                              </div>
+                            }
+                          </div>
+                        }
+                      }
                     </div>
                   </div>
                 }
 
-                <!-- MÉTRICAS RÁPIDAS DEL EXPEDIENTE DE RETROALIMENTACIÓN -->
-                <div class="feedback-kpis-grid">
-                  <div class="feedback-kpi-card">
-                    <div class="kpi-header">
-                      <span class="kpi-icon-wrap icon-info"><app-icon name="mail" [size]="15" /></span>
-                      <span class="kpi-label">Comunicados Cátedra</span>
-                    </div>
-                    <div class="kpi-num">{{ studentFeedbacks().length }}</div>
-                    <div class="kpi-sub">Mensajes del cuerpo docente</div>
-                  </div>
-
-                  <div class="feedback-kpi-card" [class.is-alert]="activeWarnings().length > 0">
-                    <div class="kpi-header">
-                      <span class="kpi-icon-wrap" [class.icon-alert]="activeWarnings().length > 0" [class.icon-success]="activeWarnings().length === 0">
-                        <app-icon [name]="activeWarnings().length > 0 ? 'alert-triangle' : 'shield'" [size]="15" />
-                      </span>
-                      <span class="kpi-label">Llamados de Atención</span>
-                    </div>
-                    <div class="kpi-num" [style.color]="activeWarnings().length > 0 ? '#EF4444' : '#0AE98A'">
-                      {{ activeWarnings().length }}
-                    </div>
-                    <div class="kpi-sub">
-                      {{ activeWarnings().length === 0 ? 'Expediente limpio y al día' : 'Advertencias vigentes' }}
-                    </div>
-                  </div>
-
-                  <div class="feedback-kpi-card">
-                    <div class="kpi-header">
-                      <span class="kpi-icon-wrap icon-xp"><app-icon name="zap" [size]="15" /></span>
-                      <span class="kpi-label">Balance Gamificado</span>
-                    </div>
-                    <div class="kpi-num" [style.color]="(totalBonusXp() - totalPenalizedXp()) >= 0 ? '#0AE98A' : '#EF4444'">
-                      {{ (totalBonusXp() - totalPenalizedXp()) >= 0 ? '+' : '' }}{{ totalBonusXp() - totalPenalizedXp() }} XP
-                    </div>
-                    <div class="kpi-sub">Impacto neto en tu ranking</div>
-                  </div>
-
-                  <div class="feedback-kpi-card">
-                    <div class="kpi-header">
-                      <span class="kpi-icon-wrap icon-ai"><app-icon name="sparkles" [size]="15" /></span>
-                      <span class="kpi-label">Afinidad Cognitiva IA</span>
-                    </div>
-                    <div class="kpi-num" style="color: #c084fc;">
-                      {{ currentRecommendation().matchScore }}%
-                    </div>
-                    <div class="kpi-sub">Diagnóstico de Byte AI</div>
-                  </div>
-                </div>
-
-                <!-- BLOQUE 1: COMUNICADOS Y SEGUIMIENTO DEL DOCENTE -->
-                <div class="feedback-section-box">
-                  <div class="terminal-subhead" style="background: #090c12;">
-                    <span class="term-dot" style="background: #38bdf8; box-shadow: 0 0 6px #38bdf8;"></span>
-                    <span class="term-subhead-title" style="color: #38bdf8;">
-                      RETROALIMENTACIONES & SEGUIMIENTO DEL DOCENTE
-                    </span>
-                    <button type="button" class="btn btn-xs btn-outline" style="margin-left: auto;" (click)="loadTeacherFeedbacks()">
-                      ↻ Actualizar
-                    </button>
-                  </div>
-
-                  <div class="feedback-feed-list">
-                    @if (feedbacksLoading()) {
-                      <div class="feedback-empty-state">
-                        <span style="color: #64748b;">Consultando expediente de retroalimentaciones...</span>
+                <!-- VISTA SUB-TAB 2: LLAMADOS DE ATENCIÓN -->
+                @if (advisorSubTab() === 'llamados') {
+                  @if (activeWarnings().length > 0) {
+                    <div class="academic-warning-banner">
+                      <div class="warn-banner-icon">
+                        <app-icon name="alert-triangle" [size]="26" color="#EF4444" />
                       </div>
-                    } @else if (studentFeedbacks().length === 0) {
-                      <div class="feedback-empty-state is-clean">
-                        <div class="empty-icon-shield">✓</div>
-                        <div class="empty-text-wrap">
-                          <strong>Expediente Docente Limpio y al Día</strong>
-                          <p>No tienes llamados de atención ni advertencias emitidas por el cuerpo docente. ¡Mantienes una constancia y avance técnico impecable!</p>
-                        </div>
-                      </div>
-                    } @else {
-                      @for (f of studentFeedbacks(); track f.id) {
-                        <div class="feedback-card" [class.type-strict]="f.type === 'warning_strict'" [class.type-mild]="f.type === 'warning_mild'" [class.type-praise]="f.type === 'praise'" [class.type-pedagogical]="f.type === 'pedagogical'">
-                          <div class="card-head">
-                            <div class="type-pill-wrap">
-                              @if (f.type === 'warning_strict') {
-                                <span class="badge-type-pill pill-danger">
-                                  <app-icon name="alert-triangle" [size]="12" /> LLAMADO FORMAL POR RENDIMIENTO
-                                </span>
-                                @if (f.xp_impact < 0) {
-                                  <span class="penalty-tag">{{ f.xp_impact }} XP EN RANKING</span>
-                                }
-                              } @else if (f.type === 'warning_mild') {
-                                <span class="badge-type-pill pill-warning">
-                                  <app-icon name="alert-circle" [size]="12" /> LLAMADO PREVENTIVO
-                                </span>
-                              } @else if (f.type === 'praise') {
-                                <span class="badge-type-pill pill-success">
-                                  <app-icon name="sparkles" [size]="12" /> FELICITACIÓN ACADÉMICA
-                                </span>
-                                @if (f.xp_impact > 0) {
-                                  <span class="bonus-tag">+{{ f.xp_impact }} XP BONIFICADOS</span>
-                                }
-                              } @else {
-                                <span class="badge-type-pill pill-info">
-                                  <app-icon name="message-square" [size]="12" /> ORIENTACIÓN FORMATIVA
-                                </span>
-                              }
-                            </div>
-                            <div class="card-author-meta">
-                              <span class="author-name">👨‍🏫 {{ f.teacher_name }}</span>
-                              <span class="author-date">{{ f.created_at | date:'d MMM y, HH:mm' }}</span>
-                            </div>
-                          </div>
-
-                          <h4 class="feedback-card-title">{{ f.title }}</h4>
-                          <p class="feedback-card-body">{{ f.message }}</p>
-
-                          @if (f.ai_context_summary) {
-                            <div class="feedback-ai-quote">
-                              <span class="ai-quote-label">
-                                <app-icon name="sparkles" [size]="12" color="#00f0ff" />
-                                Fundamentado en el Análisis del Agente de Cátedra:
-                              </span>
-                              <p class="ai-quote-text">"{{ f.ai_context_summary }}"</p>
-                            </div>
+                      <div class="warn-banner-body">
+                        <div class="warn-banner-header">
+                          <strong class="warn-banner-title">LLAMADOS DE ATENCIÓN VIGENTES ({{ activeWarnings().length }})</strong>
+                          @if (totalPenalizedXp() > 0) {
+                            <span class="warn-penalty-chip">-{{ totalPenalizedXp() }} XP DEDUCIDOS EN RANKING</span>
                           }
                         </div>
+                        <p class="warn-banner-desc">
+                          El cuerpo docente ha emitido llamados de atención en tu expediente por bajo rendimiento o inactividad. Las deducciones de experiencia han reducido tu puntuación de XP acumulada, desplazándote a puestos inferiores en el Ranking global de la academia. Regulariza tus entregas prácticas para restaurar tu rendimiento.
+                        </p>
+                      </div>
+                    </div>
+                  }
+
+                  <div class="feedback-section-box">
+                    <div class="terminal-subhead" style="background: #090c12;">
+                      <span class="term-dot" [style.background]="activeWarnings().length > 0 ? '#EF4444' : '#0AE98A'" [style.box-shadow]="activeWarnings().length > 0 ? '0 0 6px #EF4444' : '0 0 6px #0AE98A'"></span>
+                      <span class="term-subhead-title" [style.color]="activeWarnings().length > 0 ? '#EF4444' : '#0AE98A'">
+                        HISTORIAL DE LLAMADOS DE ATENCIÓN ({{ activeWarnings().length }})
+                      </span>
+                      <button type="button" class="btn btn-xs btn-outline" style="margin-left: auto;" (click)="loadTeacherFeedbacks()">
+                        ↻ Actualizar
+                      </button>
+                    </div>
+
+                    <div class="feedback-feed-list">
+                      @if (feedbacksLoading()) {
+                        <div class="feedback-empty-state">
+                          <span style="color: #64748b;">Consultando llamados de atención...</span>
+                        </div>
+                      } @else if (activeWarnings().length === 0) {
+                        <div class="feedback-empty-state is-clean">
+                          <div class="empty-icon-shield">✓</div>
+                          <div class="empty-text-wrap">
+                            <strong>Expediente Disciplinario Impecable</strong>
+                            <p>¡No tienes llamados de atención activos ni deducciones de experiencia! Mantienes una constancia y rendimiento técnico excelente.</p>
+                          </div>
+                        </div>
+                      } @else {
+                        @for (f of activeWarnings(); track f.id) {
+                          <div class="feedback-card" [class.type-strict]="f.type === 'warning_strict'" [class.type-mild]="f.type === 'warning_mild'">
+                            <div class="card-head">
+                              <div class="type-pill-wrap">
+                                @if (f.type === 'warning_strict') {
+                                  <span class="badge-type-pill pill-danger">
+                                    <app-icon name="alert-triangle" [size]="12" /> LLAMADO FORMAL POR RENDIMIENTO
+                                  </span>
+                                  @if (f.xp_impact < 0) {
+                                    <span class="penalty-tag">{{ f.xp_impact }} XP EN RANKING</span>
+                                  }
+                                } @else if (f.type === 'warning_mild') {
+                                  <span class="badge-type-pill pill-warning">
+                                    <app-icon name="alert-circle" [size]="12" /> LLAMADO PREVENTIVO
+                                  </span>
+                                }
+                              </div>
+                              <div class="card-author-meta">
+                                <span class="author-name">👨‍🏫 {{ f.teacher_name }}</span>
+                                <span class="author-date">{{ f.created_at | date:'d MMM y, HH:mm' }}</span>
+                              </div>
+                            </div>
+
+                            <h4 class="feedback-card-title">{{ f.title }}</h4>
+                            <p class="feedback-card-body">{{ f.message }}</p>
+
+                            @if (f.ai_context_summary) {
+                              <div class="feedback-ai-quote">
+                                <span class="ai-quote-label">
+                                  <app-icon name="sparkles" [size]="12" color="#00f0ff" />
+                                  Fundamentado en el Análisis del Agente de Cátedra:
+                                </span>
+                                <p class="ai-quote-text">"{{ f.ai_context_summary }}"</p>
+                              </div>
+                            }
+                          </div>
+                        }
                       }
-                    }
+                    </div>
                   </div>
-                </div>
+                }
 
                 <!-- BLOQUE 2: DIAGNÓSTICO EN TIEMPO REAL DEL AGENTE BYTE (IA) -->
                 <div class="advisor-output-card" style="margin-top: 20px;">

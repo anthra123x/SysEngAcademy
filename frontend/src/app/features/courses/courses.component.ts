@@ -13,15 +13,6 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   template: `
     <div class="courses-page">
       <div class="container">
-        <!-- Barra de Cabecera del Catálogo (Nivel superior, ancho completo) -->
-        <div class="courses-header-bar">
-          <div class="courses-header-left">
-            <h1 class="courses-main-title">Catálogo de Cursos</h1>
-            <span class="courses-subtitle">Explora cursos y especializaciones técnicas</span>
-          </div>
-          <span class="results-count">{{ total() }} {{ total() === 1 ? 'curso disponible' : 'cursos disponibles' }}</span>
-        </div>
-
         <div class="courses-layout">
           <!-- Mobile Filters Trigger -->
           <div class="mobile-filters-trigger">
@@ -47,8 +38,9 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
                   <span class="active-badge">{{ activeFiltersCount() }}</span>
                 }
               </div>
+              <span class="filters-total-chip">{{ total() }} {{ total() === 1 ? 'curso' : 'cursos' }}</span>
               @if (activeFiltersCount() > 0) {
-                <button type="button" class="btn btn-ghost btn-sm" (click)="clearFilters()">Limpiar todo</button>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="clearFilters()">Limpiar</button>
               }
             </div>
 
@@ -233,34 +225,16 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       padding-bottom: var(--sp-12);
     }
 
-    .courses-header-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 1.25rem;
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid #1A1F30;
-      gap: 1rem;
-      flex-wrap: wrap;
-
-      .courses-header-left {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-      }
-
-      .courses-main-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #F8FAFC;
-        margin: 0;
-        letter-spacing: -0.02em;
-      }
-
-      .courses-subtitle {
-        font-size: 0.84rem;
-        color: #94A3B8;
-      }
+    .filters-total-chip {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: #94A3B8;
+      background: #141A28;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      border: 1px solid #1E2738;
+      margin-left: auto;
+      white-space: nowrap;
     }
 
     .courses-layout {

@@ -506,9 +506,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
   // Estados para Retroalimentación y Comunicados del Docente
   studentFeedbacks = signal<StudentFeedbackItem[]>([]);
   feedbacksLoading = signal<boolean>(false);
+  advisorSubTab = signal<'comunicados' | 'llamados'>('comunicados');
 
   readonly activeWarnings = computed(() =>
     this.studentFeedbacks().filter(f => f.type === 'warning_strict' || f.type === 'warning_mild')
+  );
+
+  readonly catedraFeedbacks = computed(() =>
+    this.studentFeedbacks().filter(f => f.type !== 'warning_strict' && f.type !== 'warning_mild')
   );
 
   readonly totalPenalizedXp = computed(() =>
