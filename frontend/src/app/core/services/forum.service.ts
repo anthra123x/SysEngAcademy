@@ -108,36 +108,6 @@ export class ForumService {
     ).pipe(
       tap(created => {
         this.saveSingleLocalPost(courseSlug, created);
-      }),
-      catchError(() => {
-        const u = this.auth.user();
-        const currentUser: User = u ? u : {
-          id: 3,
-          name: 'Estudiante SysEng',
-          email: 'estudiante@sysengacademy.dev',
-          role: 'student',
-        };
-
-        const fallbackPost: ForumPost = {
-          id: Date.now(),
-          user_id: currentUser.id,
-          course_id: 1,
-          module_id: data.module_id ?? undefined,
-          lesson_id: data.lesson_id ?? undefined,
-          title: data.title.trim(),
-          content: data.content.trim(),
-          category: (data.category as ForumCategory) || 'question',
-          upvotes: 0,
-          is_solved: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user: currentUser,
-          replies_count: 0,
-          replies: [],
-        };
-
-        this.saveSingleLocalPost(courseSlug, fallbackPost);
-        return of(fallbackPost);
       })
     );
   }
@@ -146,27 +116,7 @@ export class ForumService {
    * Obtiene el detalle de una publicación con sus respuestas.
    */
   getPost(id: number): Observable<ForumPost> {
-    return this.api.get<ForumPost>(`/forum/posts/${id}`, undefined, FORUM_TIMEOUT_MS).pipe(
-      catchError(() => {
-        const found = this.findLocalPostById(id);
-        if (found) return of(found);
-        const fallback: ForumPost = {
-          id,
-          user_id: 3,
-          course_id: 1,
-          title: 'Publicación de la comunidad',
-          content: 'Detalle de la consulta en el foro.',
-          category: 'question',
-          upvotes: 1,
-          is_solved: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          replies: [],
-          replies_count: 0,
-        };
-        return of(fallback);
-      })
-    );
+    return this.api.get<ForumPost>(`/forum/posts/${id}`, undefined, FORUM_TIMEOUT_MS);
   }
 
   /**
@@ -178,31 +128,7 @@ export class ForumService {
       { content },
       FORUM_TIMEOUT_MS
     ).pipe(
-      tap(reply => this.appendLocalReply(postId, reply)),
-      catchError(() => {
-        const u = this.auth.user();
-        const currentUser: User = u ? u : {
-          id: 3,
-          name: 'Estudiante SysEng',
-          email: 'estudiante@sysengacademy.dev',
-          role: 'student',
-        };
-
-        const newReply: ForumReply = {
-          id: Date.now(),
-          post_id: postId,
-          user_id: currentUser.id,
-          content: content.trim(),
-          is_solution: false,
-          upvotes: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user: currentUser,
-        };
-
-        this.appendLocalReply(postId, newReply);
-        return of(newReply);
-      })
+      tap(reply => this.appendLocalReply(postId, reply))
     );
   }
 
@@ -214,11 +140,6 @@ export class ForumService {
       `/forum/posts/${postId}/upvote`,
       {},
       FORUM_TIMEOUT_MS
-    ).pipe(
-      catchError(() => {
-        const updated = this.incrementLocalUpvote(postId);
-        return of({ upvotes: updated });
-      })
     );
   }
 
@@ -230,11 +151,6 @@ export class ForumService {
       `/forum/replies/${replyId}/solution`,
       {},
       FORUM_TIMEOUT_MS
-    ).pipe(
-      catchError(() => {
-        const reply = this.markLocalSolution(replyId);
-        return of(reply);
-      })
     );
   }
 

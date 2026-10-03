@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import {
   Course,
@@ -8,12 +8,9 @@ import {
   CourseModule,
   PaginatedResponse,
   Enrollment,
-  Lesson,
   LessonDetail,
   QuizAttemptResult,
 } from '../models';
-import { FALLBACK_COURSES } from './fallback-data';
-import { FALLBACK_LESSONS } from './fallback-lessons';
 
 const COURSES_CACHE_KEY = 'syseng_cache_courses_v3';
 
@@ -55,240 +52,53 @@ export class CoursesService {
 
   getAll(filters?: CourseFilters): Observable<PaginatedResponse<Course>> {
     const cached = this.readCache();
-
-    let filtered = [...FALLBACK_COURSES];
-    if (filters?.search) {
-      const q = filters.search.toLowerCase().trim();
-      filtered = filtered.filter(c =>
-        c.title.toLowerCase().includes(q) ||
-        (c.description && c.description.toLowerCase().includes(q))
-      );
-    }
-    if (filters?.category) {
-      filtered = filtered.filter(c => c.category?.slug === filters.category);
-    }
-    if (filters?.difficulty) {
-      filtered = filtered.filter(c => c.difficulty === filters.difficulty);
-    }
-    if (filters?.is_free !== undefined && filters?.is_free !== null && (filters?.is_free as any) !== '') {
-      const isFreeBool = String(filters.is_free) === 'true' || filters.is_free === true;
-      filtered = filtered.filter(c => c.is_free === isFreeBool);
-    }
-    if (filters?.learning_path_id) {
-      filtered = filtered.filter(c => (c as any).learning_path_id === Number(filters.learning_path_id));
-    }
-
-    const page = Number(filters?.page) || 1;
-    const perPage = 16;
-    const total = filtered.length;
-    const lastPage = Math.max(1, Math.ceil(total / perPage));
-    const start = (page - 1) * perPage;
-    const paginatedData = filtered.slice(start, start + perPage);
-
-    const initialRes: PaginatedResponse<Course> = (!filters || Object.keys(filters).length === 0) && cached
-      ? cached
-      : {
-          current_page: page,
-          data: paginatedData,
-          total: total,
-          per_page: perPage,
-          last_page: lastPage,
-        };
+    const hasFilters = filters && Object.keys(filters).length > 0;
 
     return new Observable<PaginatedResponse<Course>>(subscriber => {
-      // 1. Emisión instantánea a 0ms (sin pantalla en blanco ni retraso perceptible)
-      subscriber.next(initialRes);
+      // Si no hay filtros y existe caché local, emitir de inmediato para mejorar FCP
+      if (!hasFilters && cached) {
+        subscriber.next(cached);
+      }
 
-      // 2. Consulta y refresco en segundo plano sin bloquear la UI
       this.api.get<PaginatedResponse<Course>>('/courses', filters as Record<string, unknown>).subscribe({
         next: fresh => {
-          if (fresh && Array.isArray(fresh.data) && fresh.data.length > 0) {
-            if (!filters || Object.keys(filters).length === 0) {
+          if (fresh && Array.isArray(fresh.data)) {
+            if (!hasFilters) {
               this.writeCache(fresh);
             }
             subscriber.next(fresh);
           }
           subscriber.complete();
         },
-        error: () => subscriber.complete(),
+        error: err => {
+          if (!cached || hasFilters) {
+            subscriber.error(err);
+          } else {
+            subscriber.complete();
+          }
+        },
       });
     });
   }
 
   getBySlug(slug: string): Observable<Course> {
-    const raw = FALLBACK_COURSES.find(c => c.slug === slug || c.slug.includes(slug) || slug.includes(c.slug)) || FALLBACK_COURSES[0];
-    const found = this.enrichCourseWithCompletions(raw);
-
-    return new Observable<Course>(subscriber => {
-      // Emisión instantánea (0ms) con todos sus módulos y lecciones enriquecidas con progreso real
-      subscriber.next(found);
-
-      this.api.get<Course>(`/courses/${slug}`).subscribe({
-        next: fresh => {
-          if (fresh && fresh.modules && fresh.modules.length > 0) {
-            const hasLessons = fresh.modules.some(m => m.lessons && m.lessons.length > 0);
-            if (hasLessons) {
-              subscriber.next(this.enrichCourseWithCompletions(fresh));
-            } else if (found.modules && found.modules.length > 0) {
-              const mergedModules = fresh.modules.map(fm => {
-                const existing = found.modules?.find(em => em.id === fm.id || em.order === fm.order);
-                return {
-                  ...fm,
-                  lessons: (fm.lessons && fm.lessons.length > 0) ? fm.lessons : (existing?.lessons || []),
-                };
-              });
-              subscriber.next(this.enrichCourseWithCompletions({ ...fresh, modules: mergedModules }));
-            }
-          }
-          subscriber.complete();
-        },
-        error: () => subscriber.complete(),
-      });
-    });
+    return this.api.get<Course>(`/courses/${slug}`).pipe(
+      map(course => this.enrichCourseWithCompletions(course))
+    );
   }
 
   getLesson(lessonSlug: string): Observable<LessonDetail> {
-    const rawFallback = FALLBACK_LESSONS[lessonSlug] ||
-      Object.values(FALLBACK_LESSONS).find(l => l.slug === lessonSlug || l.slug.includes(lessonSlug) || lessonSlug.includes(l.slug)) ||
-      FALLBACK_LESSONS['introduccion-programacion-que-es-programar'] ||
-      Object.values(FALLBACK_LESSONS)[0];
-    const foundFallback = this.enrichLessonWithCompletions(rawFallback);
-
-    return new Observable<LessonDetail>(subscriber => {
-      // Emisión instantánea (0ms) de la lección didáctica con IDE interactivo
-      subscriber.next(foundFallback);
-
-      this.api.get<LessonDetail>(`/lessons/${lessonSlug}`).subscribe({
-        next: fresh => {
-          if (fresh && fresh.title) {
-            subscriber.next(this.enrichLessonWithCompletions(fresh));
-          }
-          subscriber.complete();
-        },
-        error: () => subscriber.complete(),
-      });
-    });
+    return this.api.get<LessonDetail>(`/lessons/${lessonSlug}`).pipe(
+      map(lesson => this.enrichLessonWithCompletions(lesson))
+    );
   }
 
   enroll(courseId: number, checkoutToken?: string): Observable<Enrollment> {
-    return this.api.post<Enrollment>('/enrollments', { course_id: courseId, checkout_token: checkoutToken }).pipe(
-      catchError((err) => {
-        if (err?.status === 401 || err?.status === 402 || err?.status === 403) {
-          return throwError(() => err);
-        }
-        const fakeEnrollment: Enrollment = {
-          id: Date.now(),
-          user_id: 1,
-          course_id: courseId,
-          progress_percent: 0,
-          enrolled_at: new Date().toISOString(),
-        };
-        return of(fakeEnrollment);
-      })
-    );
+    return this.api.post<Enrollment>('/enrollments', { course_id: courseId, checkout_token: checkoutToken });
   }
 
   getMyEnrollments(): Observable<Enrollment[]> {
-    return this.api.get<Enrollment[]>('/enrollments').pipe(
-      catchError(() => {
-        // En entornos sin backend o fallback, verificar si es el alumno demo o un nuevo usuario
-        if (typeof window !== 'undefined') {
-          try {
-            const userStr = localStorage.getItem('syseng_user');
-            if (userStr) {
-              const u = JSON.parse(userStr);
-              if (u.email?.toLowerCase() === 'estudiante@sysengacademy.dev') {
-                return of(this.getDemoEnrollments());
-              }
-              const userKey = 'syseng_user_enrollments_' + (u.email?.toLowerCase().trim() || u.id);
-              const stored = localStorage.getItem(userKey);
-              if (stored) {
-                return of(JSON.parse(stored));
-              }
-              return of([]);
-            }
-          } catch {}
-        }
-        return of([]);
-      })
-    );
-  }
-
-  private getDemoEnrollments(): Enrollment[] {
-    return [
-      {
-        id: 1,
-        user_id: 3,
-        course_id: 1,
-        enrolled_at: '2026-09-15T10:00:00.000Z',
-        completed_at: '2026-09-20T18:30:00.000Z',
-        progress_percent: 100,
-        course: {
-          id: 1,
-          title: 'Introducción a la Programación',
-          slug: 'introduccion-programacion',
-          description: 'Fundamentos de algoritmos, variables, estructuras de control y lógica computacional.',
-          duration_hours: 12,
-          difficulty: 'beginner',
-          is_free: true,
-          category: { id: 1, name: 'Fundamentos', slug: 'programacion-basica' },
-        } as any,
-      },
-      {
-        id: 2,
-        user_id: 3,
-        course_id: 2,
-        enrolled_at: '2026-09-18T14:00:00.000Z',
-        completed_at: undefined,
-        progress_percent: 65,
-        course: {
-          id: 2,
-          title: 'Algoritmos de Ordenamiento',
-          slug: 'algoritmos-ordenamiento',
-          description: 'BubbleSort, InsertionSort, MergeSort y QuickSort con análisis de complejidad.',
-          duration_hours: 15,
-          difficulty: 'intermediate',
-          is_free: false,
-          category: { id: 2, name: 'Algoritmos', slug: 'algoritmos' },
-        } as any,
-      },
-      {
-        id: 3,
-        user_id: 3,
-        course_id: 3,
-        enrolled_at: '2026-09-22T09:00:00.000Z',
-        completed_at: undefined,
-        progress_percent: 40,
-        course: {
-          id: 3,
-          title: 'Introducción al Desarrollo Web',
-          slug: 'introduccion-desarrollo-web',
-          description: 'HTML semántico, arquitectura cliente-servidor y estilos CSS modernos.',
-          duration_hours: 18,
-          difficulty: 'beginner',
-          is_free: true,
-          category: { id: 3, name: 'Web', slug: 'desarrollo-web' },
-        } as any,
-      },
-      {
-        id: 4,
-        user_id: 3,
-        course_id: 106,
-        enrolled_at: '2026-09-23T11:00:00.000Z',
-        completed_at: '2026-09-26T16:00:00.000Z',
-        progress_percent: 100,
-        course: {
-          id: 106,
-          title: 'Git Avanzado: Rebase, Cherry-Pick y Conflictos Complejos',
-          slug: 'git-avanzado-rebase-cherry-pick-conflictos-complejos',
-          description: 'Flujos profesionales en equipo, ramas efímeras y resolución quirúrgica de merge conflicts.',
-          duration_hours: 10,
-          difficulty: 'intermediate',
-          is_free: false,
-          category: { id: 4, name: 'Herramientas', slug: 'programacion-basica' },
-        } as any,
-      },
-    ];
+    return this.api.get<Enrollment[]>('/enrollments');
   }
 
   getUserEmail(): string {
@@ -299,7 +109,9 @@ export class CoursesService {
         const u = JSON.parse(userStr);
         return (u.email || 'guest').toLowerCase().trim();
       }
-    } catch {}
+    } catch (e) {
+      console.warn('Error reading syseng_user from localStorage', e);
+    }
     return 'guest';
   }
 
@@ -313,9 +125,8 @@ export class CoursesService {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) return new Set(arr);
       }
-    } catch {}
-    if (email === 'estudiante@sysengacademy.dev') {
-      return new Set([1, 2, 418, 3, 4]);
+    } catch (e) {
+      console.warn('Error reading completed lessons from localStorage', e);
     }
     return new Set();
   }
@@ -329,7 +140,9 @@ export class CoursesService {
       try {
         const slugRaw = JSON.parse(localStorage.getItem(slugKey) || '[]');
         if (Array.isArray(slugRaw) && slugRaw.includes(lessonSlug)) return true;
-      } catch {}
+      } catch (e) {
+        console.warn('Error checking completed lesson slug', e);
+      }
     }
     return false;
   }
@@ -351,7 +164,9 @@ export class CoursesService {
         }
       }
       window.dispatchEvent(new CustomEvent('lesson-completed-updated', { detail: { lessonId, lessonSlug, email } }));
-    } catch {}
+    } catch (e) {
+      console.warn('Error saving completed lesson to localStorage', e);
+    }
   }
 
   enrichCourseWithCompletions(course: Course): Course {
@@ -386,16 +201,16 @@ export class CoursesService {
     try {
       const enrKey = `syseng_user_enrollments_${email}`;
       const enrollments: Enrollment[] = JSON.parse(localStorage.getItem(enrKey) || '[]');
+      const cachedCourses = this.readCache()?.data || [];
 
-      // Encontrar el curso relevante
-      let targetCourse = FALLBACK_COURSES.find(c => c.slug === courseSlug);
+      let targetCourse = cachedCourses.find(c => c.slug === courseSlug);
       if (!targetCourse && lessonId) {
-        targetCourse = FALLBACK_COURSES.find(c =>
+        targetCourse = cachedCourses.find(c =>
           (c.modules ?? []).some(m => (m.lessons ?? []).some(l => l.id === lessonId))
         );
       }
       if (!targetCourse && enrollments.length > 0) {
-        targetCourse = targetCourse || FALLBACK_COURSES.find(c => c.id === enrollments[0].course_id);
+        targetCourse = cachedCourses.find(c => c.id === enrollments[0].course_id);
       }
       if (!targetCourse) return;
 
@@ -413,53 +228,25 @@ export class CoursesService {
         if (progressPercent === 100 && !enrollments[existingIdx].completed_at) {
           enrollments[existingIdx].completed_at = new Date().toISOString();
         }
-      } else {
-        enrollments.push({
-          id: Date.now(),
-          user_id: 1,
-          course_id: targetCourse.id,
-          enrolled_at: new Date().toISOString(),
-          completed_at: progressPercent === 100 ? new Date().toISOString() : undefined,
-          progress_percent: progressPercent,
-          course: targetCourse,
-        });
       }
       localStorage.setItem(enrKey, JSON.stringify(enrollments));
-
-      // Sincronizar con la caché del panel docente
-      const teacherCache = JSON.parse(localStorage.getItem('syseng_teacher_students_cache') || '[]');
-      const stIdx = teacherCache.findIndex((s: any) => s.email?.toLowerCase() === email);
-      if (stIdx >= 0) {
-        teacherCache[stIdx].completed_lessons_count = Math.max(teacherCache[stIdx].completed_lessons_count || 0, doneCount);
-        teacherCache[stIdx].courses = [{ id: targetCourse.id, title: targetCourse.title, progress_percent: progressPercent }];
-        localStorage.setItem('syseng_teacher_students_cache', JSON.stringify(teacherCache));
-        window.dispatchEvent(new CustomEvent('teacher:students-updated', { detail: { email, progressPercent } }));
-      }
-    } catch {}
+    } catch (e) {
+      console.warn('Error syncing enrollment progress', e);
+    }
   }
 
   completeLesson(lessonId: number, score?: number, lessonSlug?: string, courseSlug?: string): Observable<{ progress_percent: number }> {
     this.saveCompletedLesson(lessonId, lessonSlug);
     this.syncEnrollmentProgress(courseSlug, lessonId);
 
-    return this.api.post<{ progress_percent: number }>(`/lessons/${lessonId}/complete`, { score }).pipe(
-      catchError(() => of({ progress_percent: 100 }))
-    );
+    return this.api.post<{ progress_percent: number }>(`/lessons/${lessonId}/complete`, { score });
   }
 
   submitQuizAttempt(
     lessonSlug: string,
     answers: Record<string, number[]>
   ): Observable<QuizAttemptResult> {
-    return this.api.post<QuizAttemptResult>(`/lessons/${lessonSlug}/quiz/attempt`, { answers }).pipe(
-      catchError(() => of({
-        passed: true,
-        score: 100,
-        total: 3,
-        correct: 3,
-        results: [],
-      }))
-    );
+    return this.api.post<QuizAttemptResult>(`/lessons/${lessonSlug}/quiz/attempt`, { answers });
   }
 
   askAi(lessonId: number, code: string): Observable<{ reply: string }> {
@@ -467,11 +254,7 @@ export class CoursesService {
       lesson_id: lessonId,
       kind: 'code_review',
       code,
-    }).pipe(
-      catchError(() => of({
-        reply: 'Buen trabajo con la lógica. Recuerda revisar la indentación y nombrar las variables con claridad.',
-      }))
-    );
+    });
   }
 
   private readCache(): PaginatedResponse<Course> | null {
@@ -479,17 +262,22 @@ export class CoursesService {
       const raw = localStorage.getItem(COURSES_CACHE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed?.data?.length >= FALLBACK_COURSES.length) {
+        if (Array.isArray(parsed?.data) && parsed.data.length > 0) {
           return parsed;
         }
       }
-    } catch {}
+    } catch (e) {
+      console.warn('Error reading courses cache from localStorage', e);
+    }
     return null;
   }
 
   private writeCache(data: PaginatedResponse<Course>): void {
     try {
       localStorage.setItem(COURSES_CACHE_KEY, JSON.stringify(data));
-    } catch {}
+    } catch (e) {
+      console.warn('Error writing courses cache to localStorage', e);
+    }
   }
 }
+

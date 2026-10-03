@@ -58,14 +58,29 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
           </div>
         }
 
-        <!-- 3D Robot Actor libre en viewport -->
-        <app-byte-robot-3d
-          [isHovered]="isHovered()"
-          [isOpen]="open()"
-          [isThinking]="busy() || streaming()"
-          (robotClick)="togglePanel()"
-          (hoverChange)="onRobotHover($event)"
-        ></app-byte-robot-3d>
+        <!-- 3D Robot Actor cargado de forma diferida (on idle) para no inflar el bundle inicial con Three.js -->
+        @defer (on idle) {
+          <app-byte-robot-3d
+            [isHovered]="isHovered()"
+            [isOpen]="open()"
+            [isThinking]="busy() || streaming()"
+            (robotClick)="togglePanel()"
+            (hoverChange)="onRobotHover($event)"
+          ></app-byte-robot-3d>
+        } @placeholder {
+          <div
+            class="robot-canvas-container robot-placeholder-container"
+            (click)="togglePanel()"
+            role="button"
+            tabindex="0"
+            aria-label="Byte - Asistente IA"
+            title="Haz clic para chatear con Byte"
+          >
+            <div class="byte-placeholder-glow">
+              <app-icon [name]="'bot'" [size]="36"/>
+            </div>
+          </div>
+        }
       </div>
     }
 
@@ -445,6 +460,35 @@ const TEACHER_STORAGE_KEY = 'byte-teacher-conversation-id';
       transition: transform 0.2s ease;
       &:hover {
         transform: translateY(-2px) scale(1.02);
+      }
+    }
+
+    .robot-placeholder-container {
+      width: 125px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: auto;
+
+      .byte-placeholder-glow {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0, 217, 255, 0.2) 0%, rgba(10, 15, 30, 0.8) 70%);
+        border: 2px solid rgba(0, 217, 255, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #00D9FF;
+        box-shadow: 0 0 16px rgba(0, 217, 255, 0.35);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        &:hover {
+          transform: translateY(-2px) scale(1.06);
+          box-shadow: 0 0 24px rgba(0, 217, 255, 0.6);
+        }
       }
     }
 

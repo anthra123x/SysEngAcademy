@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { FALLBACK_TEACHER_OVERVIEW } from './fallback-data';
 
 export interface TeacherStats {
   total_students: number;

@@ -1809,7 +1809,7 @@ export default async function handler(req: any, res: any) {
         user &&
         (user.role === 'admin' ||
           user.role === 'instructor' ||
-          user.email?.toLowerCase() === 'andrescamilomartinez330@gmail.com');
+          user.role === 'teacher');
 
       if (!isTeacher) {
         return sendJson(res, 403, {
@@ -1822,7 +1822,7 @@ export default async function handler(req: any, res: any) {
     if (method === 'GET' && cleanPath === '/teacher/overview') {
       const statsRows: any = await sql`
         SELECT 
-          (SELECT count(*)::int FROM users WHERE LOWER(email) != 'andrescamilomartinez330@gmail.com') as total_students,
+          (SELECT count(*)::int FROM users WHERE LOWER(COALESCE(role, 'student')) NOT IN ('admin', 'instructor', 'teacher')) as total_students,
           (SELECT count(*)::int FROM courses) as total_courses,
           (SELECT count(*)::int FROM lesson_progress) as total_completions,
           (SELECT count(*)::int FROM enrollments) as total_enrollments,
@@ -1894,7 +1894,7 @@ export default async function handler(req: any, res: any) {
           (SELECT count(*)::int FROM lesson_progress lp WHERE lp.user_id = u.id AND lp.score IS NOT NULL) as quizzes_taken_count,
           (SELECT ROUND(AVG(lp.score))::int FROM lesson_progress lp WHERE lp.user_id = u.id AND lp.score IS NOT NULL) as average_quiz_score
         FROM users u
-        WHERE LOWER(u.email) != 'andrescamilomartinez330@gmail.com'
+        WHERE LOWER(COALESCE(u.role, 'student')) NOT IN ('admin', 'instructor', 'teacher')
         ORDER BY u.created_at DESC
       `;
 
@@ -2003,7 +2003,7 @@ export default async function handler(req: any, res: any) {
             COALESCE(u.xp, 100) + ((SELECT count(*)::int FROM lesson_progress lp WHERE lp.user_id = u.id) * 100) as xp,
             (SELECT count(*)::int FROM lesson_progress lp WHERE lp.user_id = u.id) as completed_lessons_count
           FROM users u
-          WHERE LOWER(u.email) != 'andrescamilomartinez330@gmail.com'
+          WHERE LOWER(COALESCE(u.role, 'student')) NOT IN ('admin', 'instructor', 'teacher')
           ORDER BY xp DESC
           LIMIT 50
         `;
