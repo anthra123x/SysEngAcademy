@@ -2,13 +2,57 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>SysEng Academy — Aprende Programación</title>
+  <title>SysEng Academy — Aprende Programación e Ingeniería de Software</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Rutas de aprendizaje estructuradas, cursos interactivos y asistente de IA para estudiantes de Ingeniería de Sistemas.">
+  
+  <!-- Responsive & Safe Area Viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="description" content="Rutas de aprendizaje estructuradas, cursos interactivos con código en vivo y asistente de IA para estudiantes de Ingeniería de Sistemas.">
+  
+  <!-- PWA & Color Theme -->
+  <meta name="theme-color" content="#08090D">
+  <meta name="color-scheme" content="dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  
+  <!-- iOS Web App Metadata -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SysEng">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png">
+
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
   <app-root></app-root>
+
+  <!-- Service Worker Registration for PWA Offline / Standalone Capability -->
+  <script>
+    if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then((registration) => {
+            console.log('[PWA] Service Worker registrado con éxito:', registration.scope);
+            registration.onupdatefound = () => {
+              const installingWorker = registration.installing;
+              if (installingWorker) {
+                installingWorker.onstatechange = () => {
+                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('[PWA] Nueva versión disponible. Recarga para actualizar.');
+                  }
+                };
+              }
+            };
+          })
+          .catch((err) => {
+            console.warn('[PWA] Error al registrar Service Worker:', err);
+          });
+      });
+    }
+  </script>
 </body>
 </html>

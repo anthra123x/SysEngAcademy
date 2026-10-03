@@ -88,9 +88,13 @@
   --transition-base: 200ms ease;
   --transition-slow: 300ms ease;
 
-  // Layout
+  // Layout & Safe Area (PWA / Mobile)
   --container-max: 1600px;
   --header-height: 64px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 // === TYPOGRAPHY IMPORT ===
@@ -101,6 +105,7 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -110,8 +115,11 @@ body {
   font-size: var(--text-base);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
   width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 a {
@@ -411,3 +419,22 @@ pre, code {
   h3 { font-size: var(--text-xl); color: var(--text-primary); margin-bottom: var(--sp-2); }
   p { color: var(--text-secondary); max-width: 400px; }
 }
+
+// === PWA STANDALONE & MOBILE POLISH ===
+@media all and (display-mode: standalone) {
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior-y: contain;
+  }
+
+  input, textarea, [contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  .navbar-wrapper {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+

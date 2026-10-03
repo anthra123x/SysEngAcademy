@@ -1,5 +1,6 @@
 <!-- ===== FAB / 3D ACTOR ===== -->
     @if (!hidden()) {
+      <!-- Desktop Interactive 3D Actor -->
       <div class="byte-freewalk-zone" [class.is-open]="open()">
         <!-- Dynamic Speech Bubble (Alineado con el diseño SysEng: tarjetas oscuras con acento verde/cyan) -->
         @if (currentBubbleMessage() && !open()) {
@@ -43,6 +44,26 @@
           </div>
         }
       </div>
+
+      <!-- Dedicated Compact Mobile FAB (Evita que el robot 3D tape las tarjetas en móviles) -->
+      @if (!open()) {
+        <button
+          type="button"
+          class="byte-mobile-fab"
+          [class.byte-mobile-fab--teacher]="isTeacherMode()"
+          (click)="togglePanel()"
+          aria-label="Abrir asistente IA Byte"
+          title="Byte - Asistente IA"
+        >
+          <span class="byte-mobile-fab__pulse" aria-hidden="true"></span>
+          <span class="byte-mobile-fab__icon">
+            <app-icon [name]="isTeacherMode() ? 'zap' : 'bot'" [size]="22" />
+          </span>
+          @if (currentBubbleMessage()) {
+            <span class="byte-mobile-fab__dot" aria-hidden="true"></span>
+          }
+        </button>
+      }
     }
 
     <!-- ===== CONSOLA DE CHAT BYTE (Estilo Híbrido Windows Terminal + WSL Linux) ===== -->

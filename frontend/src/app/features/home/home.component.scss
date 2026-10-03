@@ -462,41 +462,6 @@
       }
     }
 
-    @media (max-width: 768px) {
-      .timeline-phase-marker {
-        justify-content: flex-start;
-        margin-left: 8px;
-      }
-      .snake__track {
-        gap: 36px;
-      }
-      .snake__track::before {
-        left: 28px;
-        transform: none;
-      }
-      .snake__station {
-        grid-template-columns: 56px 1fr !important;
-        gap: var(--sp-3);
-      }
-      .station-center {
-        grid-column: 1;
-        grid-row: 1;
-      }
-      .station-side--left,
-      .station-side--right {
-        grid-column: 2;
-        grid-row: 1;
-        justify-content: flex-start !important;
-      }
-      .station-side:has(.checkpoint-indicator) {
-        display: none !important;
-      }
-      .snake__card {
-        width: 100% !important;
-        padding: var(--sp-4) !important;
-      }
-    }
-
     .snake__card {
       position: relative;
       display: flex;
@@ -645,9 +610,19 @@
       .snake__stop { opacity: 1; animation: none; }
     }
 
-    @media (max-width: 920px) {
+    @media (max-width: 1024px) {
+      .snake__station {
+        grid-template-columns: 1fr 76px 1fr;
+        gap: var(--sp-4);
+      }
+      .snake__card {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 768px) {
       .snake {
-        padding: var(--sp-4) 0;
+        padding: var(--sp-2) 0 var(--sp-4);
       }
 
       .snake__svg {
@@ -655,76 +630,146 @@
       }
 
       .snake__track {
-        gap: var(--sp-6);
+        gap: 28px;
+        padding-left: 0;
       }
 
+      /* Vertical continuous spine passing straight through center of mobile nodes (x = 22px) */
+      .snake__track::before {
+        left: 22px;
+        transform: translateX(-50%);
+        width: 3px;
+        top: 6px;
+        bottom: 6px;
+      }
+
+      /* Clean left-aligned Phase divider pills */
+      .timeline-phase-marker {
+        justify-content: flex-start;
+        margin: 6px 0 2px;
+        padding-left: 0;
+
+        .phase-marker-pill {
+          font-size: 10px;
+          padding: 5px 12px;
+          gap: 6px;
+          max-width: calc(100vw - 32px);
+          white-space: normal;
+        }
+      }
+
+      /* Mobile station: Node on the left spine, card on the right */
       .snake__station {
         display: flex !important;
-        flex-direction: column !important;
-        gap: var(--sp-3) !important;
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        gap: 14px !important;
         width: 100% !important;
         opacity: 1 !important;
       }
 
+      /* Station Node centered on the spine */
       .station-center {
-        justify-content: flex-start !important;
-        align-items: center;
-        order: 1;
+        order: 1 !important;
+        flex: 0 0 44px !important;
+        width: 44px !important;
+        display: flex !important;
+        justify-content: center !important;
+        position: relative !important;
+        z-index: 2 !important;
+        margin-top: 3px !important;
       }
 
       .snake__node {
-        width: 44px;
-        height: 44px;
+        width: 44px !important;
+        height: 44px !important;
+        box-shadow: 0 0 0 4px var(--bg-base), 0 0 16px rgba(10, 233, 138, 0.22) !important;
 
         .snake__icon {
           display: flex;
           align-items: center;
           justify-content: center;
+          svg {
+            width: 20px !important;
+            height: 20px !important;
+          }
         }
 
         .snake__num {
-          position: static;
-          margin-left: 8px;
-          font-size: 11px;
-          background: var(--bg-surface-2);
-          border: 1px solid var(--border);
-          padding: 2px 7px;
-          border-radius: var(--radius-sm);
+          position: absolute !important;
+          bottom: -7px !important;
+          top: auto !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          font-size: 9.5px !important;
+          padding: 0 5px !important;
+          line-height: 14px !important;
+          border-radius: 999px !important;
         }
       }
 
-      .station-side,
-      .station-side--left,
-      .station-side--right {
-        order: 2;
-        width: 100% !important;
-        display: block !important;
+      /* Hide milestone indicator on mobile - clean 1 card per stop */
+      .station-side--checkpoint {
+        display: none !important;
+      }
+
+      /* Card container expands to full remaining width */
+      .station-side--card {
+        order: 2 !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+        display: flex !important;
       }
 
       .snake__card {
         width: 100% !important;
         max-width: 100% !important;
+        padding: var(--sp-4) !important;
+        border-radius: var(--radius-lg) !important;
+        gap: 6px !important;
       }
 
-      .snake__milestone-badge {
-        display: none !important;
+      .snake__card-top {
+        margin-bottom: 2px;
       }
 
-      .snake__row {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        padding: 10px 0;
+      .snake__title {
+        font-size: 1.05rem !important;
+        line-height: 1.3 !important;
       }
 
-      .snake__stop,
-      .snake__stop--left,
-      .snake__stop--right {
-        width: 100%;
-        grid-column: auto;
-        justify-self: auto;
-        flex-direction: column;
-        gap: var(--sp-3);
+      .snake__desc {
+        font-size: var(--text-xs) !important;
+        line-height: 1.5 !important;
+        -webkit-line-clamp: 2 !important;
+      }
+
+      .snake__card-skills {
+        margin: 2px 0;
+        gap: 4px;
+
+        .skill-tag {
+          font-size: 10px !important;
+          padding: 1px 6px !important;
+        }
+      }
+
+      .snake__meta {
+        padding-top: 6px;
+        margin-top: 2px;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .meta-stats {
+          font-size: 10.5px !important;
+          flex-wrap: wrap;
+          gap: 4px;
+        }
+
+        .snake__cta {
+          font-size: 11.5px !important;
+        }
       }
     }
 
