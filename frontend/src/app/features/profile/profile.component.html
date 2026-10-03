@@ -140,16 +140,22 @@
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Balance Gamificado:</span>
-                      <span class="meta-v" [style.color]="(totalBonusXp() - totalPenalizedXp()) >= 0 ? '#0AE98A' : '#EF4444'" style="font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                      <span
+                        class="meta-v balance-tag"
+                        [class.is-positive]="(totalBonusXp() - totalPenalizedXp()) >= 0"
+                        [class.is-negative]="(totalBonusXp() - totalPenalizedXp()) < 0"
+                      >
                         <app-icon name="zap" [size]="13" />
-                        {{ (totalBonusXp() - totalPenalizedXp()) >= 0 ? '+' : '' }}{{ totalBonusXp() - totalPenalizedXp() }} XP netos en Ranking
+                        <strong>{{ (totalBonusXp() - totalPenalizedXp()) >= 0 ? '+' : '' }}{{ totalBonusXp() - totalPenalizedXp() }} XP</strong>
+                        <span class="tag-note">(Netos en Ranking)</span>
                       </span>
                     </div>
                     <div class="meta-row">
                       <span class="meta-k">Afinidad Cognitiva:</span>
-                      <span class="meta-v" style="color: #c084fc; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                      <span class="meta-v affinity-tag">
                         <app-icon name="sparkles" [size]="13" />
-                        {{ currentRecommendation().matchScore }}% (Diagnóstico Byte IA)
+                        <strong>{{ currentRecommendation().matchScore }}%</strong>
+                        <span class="tag-note">(Diagnóstico Byte IA)</span>
                       </span>
                     </div>
                   }
@@ -1226,47 +1232,35 @@
                   <span class="term-status-badge text-purple">EXPEDIENTE &amp; RETROALIMENTACIÓN INTEGRAL</span>
                 </div>
 
-                <!-- SUB-TABS INTERACTIVAS: COMUNICADOS vs LLAMADOS -->
-                <div class="feedback-subtabs-nav">
+                <!-- SUB-TABS NAVEGACIÓN ELEGANTE: COMUNICADOS vs LLAMADOS -->
+                <div class="feedback-subnav">
                   <button
                     type="button"
-                    class="feedback-subtab-btn"
+                    class="feedback-subtab"
                     [class.is-active]="advisorSubTab() === 'comunicados'"
                     (click)="advisorSubTab.set('comunicados')"
                   >
-                    <div class="subtab-btn-icon icon-info">
-                      <app-icon name="mail" [size]="16" />
-                    </div>
-                    <div class="subtab-btn-text">
-                      <div class="subtab-btn-top">
-                        <span class="subtab-btn-title">Comunicados de Cátedra</span>
-                        <span class="subtab-count-badge">{{ catedraFeedbacks().length }}</span>
-                      </div>
-                      <span class="subtab-btn-desc">Orientaciones formativas, felicitaciones y avisos docentes</span>
-                    </div>
+                    <app-icon name="mail" [size]="14" />
+                    <span class="subtab-label">Comunicados de Cátedra</span>
+                    <span class="subtab-pill">{{ catedraFeedbacks().length }}</span>
                   </button>
 
                   <button
                     type="button"
-                    class="feedback-subtab-btn"
+                    class="feedback-subtab"
                     [class.is-active]="advisorSubTab() === 'llamados'"
                     [class.has-warnings]="activeWarnings().length > 0"
                     (click)="advisorSubTab.set('llamados')"
                   >
-                    <div class="subtab-btn-icon" [class.icon-alert]="activeWarnings().length > 0" [class.icon-success]="activeWarnings().length === 0">
-                      <app-icon [name]="activeWarnings().length > 0 ? 'alert-triangle' : 'shield'" [size]="16" />
-                    </div>
-                    <div class="subtab-btn-text">
-                      <div class="subtab-btn-top">
-                        <span class="subtab-btn-title">Llamados de Atención</span>
-                        <span class="subtab-count-badge" [class.badge-danger]="activeWarnings().length > 0" [class.badge-success]="activeWarnings().length === 0">
-                          {{ activeWarnings().length }}
-                        </span>
-                      </div>
-                      <span class="subtab-btn-desc">
-                        {{ activeWarnings().length === 0 ? 'Expediente disciplinario limpio y al día' : 'Advertencias vigentes con penalización XP' }}
-                      </span>
-                    </div>
+                    <app-icon [name]="activeWarnings().length > 0 ? 'alert-triangle' : 'shield'" [size]="14" />
+                    <span class="subtab-label">Llamados de Atención</span>
+                    <span
+                      class="subtab-pill"
+                      [class.pill-danger]="activeWarnings().length > 0"
+                      [class.pill-clean]="activeWarnings().length === 0"
+                    >
+                      {{ activeWarnings().length }}
+                    </span>
                   </button>
                 </div>
 
