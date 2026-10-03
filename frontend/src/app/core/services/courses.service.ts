@@ -10,9 +10,23 @@ import {
   Enrollment,
   LessonDetail,
   QuizAttemptResult,
+  CourseReview,
+  CourseReviewsResponse,
+  CourseRatingStats,
 } from '../models';
 
 const COURSES_CACHE_KEY = 'syseng_cache_courses_v3';
+
+/**
+ * Formatea conteos numéricos de valoraciones (ej. 1400 -> "1.4k+", 250 -> "250")
+ */
+export function formatRatingCount(count?: number | null): string {
+  if (!count || count <= 0) return '0';
+  if (count >= 1000) {
+    return (count / 1000).toFixed(1).replace(/\.0$/, '') + 'k+';
+  }
+  return `${count}`;
+}
 
 /**
  * Determina si todas las lecciones de un módulo están completadas por el estudiante.
@@ -99,6 +113,18 @@ export class CoursesService {
 
   getMyEnrollments(): Observable<Enrollment[]> {
     return this.api.get<Enrollment[]>('/enrollments');
+  }
+
+  getCourseReviews(slug: string): Observable<CourseReviewsResponse> {
+    return this.api.get<CourseReviewsResponse>(`/courses/${slug}/reviews`);
+  }
+
+  rateCourse(slug: string, rating: number, comment?: string): Observable<{ message: string; review: CourseReview; rating_avg: number; rating_count: number }> {
+    return this.api.post<{ message: string; review: CourseReview; rating_avg: number; rating_count: number }>(`/courses/${slug}/reviews`, { rating, comment });
+  }
+
+  deleteCourseReview(slug: string): Observable<{ message: string; rating_avg: number; rating_count: number }> {
+    return this.api.delete<{ message: string; rating_avg: number; rating_count: number }>(`/courses/${slug}/reviews`);
   }
 
   getUserEmail(): string {

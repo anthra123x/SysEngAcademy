@@ -1,14 +1,16 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { CoursesService, isModuleFullyCompleted, isModuleUnlockedForStudent } from '../../../core/services/courses.service';
+import { DecimalPipe, DatePipe, SlicePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoursesService, isModuleFullyCompleted, isModuleUnlockedForStudent, formatRatingCount } from '../../../core/services/courses.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Course, CourseModule, Lesson } from '../../../core/models';
+import { Course, CourseModule, Lesson, CourseReview, CourseRatingStats } from '../../../core/models';
 import { CourseForumComponent } from '../course-forum/course-forum.component';
 import { AppIconComponent } from '../../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-course-detail',
-  imports: [RouterLink, CourseForumComponent, AppIconComponent],
+  imports: [RouterLink, FormsModule, DecimalPipe, DatePipe, SlicePipe, CourseForumComponent, AppIconComponent],
   templateUrl: './course-detail.component.html',
   styleUrl: './course-detail.component.scss',
 })
@@ -22,10 +24,23 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   loading       = signal(true);
   enrolling     = signal(false);
   openModules   = signal<Set<number>>(new Set());
-  activeTab     = signal<'curriculum' | 'forum'>('curriculum');
+  activeTab     = signal<'curriculum' | 'forum' | 'reviews'>('curriculum');
   forumModuleId = signal<number | undefined>(undefined);
   showAuthModal = signal(false);
   readonly lockedToast = signal<string | null>(null);
+
+  // Sistema de Calificaciones y Reseñas
+  reviews            = signal<CourseReview[]>([]);
+  reviewsStats       = signal<CourseRatingStats | null>(null);
+  userReview         = signal<CourseReview | null>(null);
+  loadingReviews     = signal(false);
+  submittingRating   = signal(false);
+  selectedRating     = signal<number>(5);
+  hoveredRating      = signal<number>(0);
+  reviewComment      = signal<string>('');
+  ratingFeedbackMsg  = signal<string | null>(null);
+  ratingFeedbackType = signal<'success' | 'error' | null>(null);
+  readonly formatRatingCount = formatRatingCount;
 
   private readonly progressListener = () => {
     this.verifyProgressRealtime();
@@ -131,9 +146,15 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
       const slug = params.get('slug');
       if (slug) {
         this.loading.set(true);
+        this.loadReviews(slug);
         this.coursesSvc.getBySlug(slug).subscribe({
           next: (c) => {
             this.course.set(c);
+            if (c?.user_review) {
+              this.userReview.set(c.user_review);
+              this.selectedRating.set(c.user_review.rating);
+              this.reviewComment.set(c.user_review.comment || '');
+            }
             this.loading.set(false);
             // Abrir todos los módulos por defecto para que el estudiante vea todo el temario y lecciones inmediatamente
             if (c?.modules && c.modules.length > 0) {
@@ -154,6 +175,8 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
         this.activeTab.set('forum');
       } else if (tab === 'curriculum') {
         this.activeTab.set('curriculum');
+      } else if (tab === 'reviews') {
+        this.activeTab.set('reviews');
       }
       const modId = params.get('moduleId');
       if (modId) {
@@ -192,8 +215,118 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  setTab(tab: 'curriculum' | 'forum') {
+  setTab(tab: 'curriculum' | 'forum' | 'reviews') {
     this.activeTab.set(tab);
+    if (tab === 'reviews' && this.course()?.slug && this.reviews().length === 0) {
+      this.loadReviews(this.course()!.slug);
+    }
+  }
+
+  loadReviews(slug: string) {
+    this.loadingReviews.set(true);
+    this.coursesSvc.getCourseReviews(slug).subscribe({
+      next: (res) => {
+        this.reviews.set(res.reviews?.data ?? []);
+        this.reviewsStats.set(res.stats ?? null);
+        if (res.user_review) {
+          this.userReview.set(res.user_review);
+          this.selectedRating.set(res.user_review.rating);
+          this.reviewComment.set(res.user_review.comment || '');
+        }
+        this.loadingReviews.set(false);
+      },
+      error: () => {
+        this.loadingReviews.set(false);
+      }
+    });
+  }
+
+  onRatingHover(stars: number) {
+    this.hoveredRating.set(stars);
+  }
+
+  onRatingLeave() {
+    this.hoveredRating.set(0);
+  }
+
+  setRatingScore(stars: number) {
+    this.selectedRating.set(stars);
+  }
+
+  getRatingLabel(stars: number): string {
+    const map: Record<number, string> = {
+      1: '1 de 5 - Deficiente',
+      2: '2 de 5 - Regular',
+      3: '3 de 5 - Bueno',
+      4: '4 de 5 - Muy Bueno',
+      5: '5 de 5 - ¡Excelente contenido!',
+    };
+    return map[stars] ?? `${stars} de 5`;
+  }
+
+  getBreakdownPercent(stars: number): number {
+    const stats = this.reviewsStats();
+    if (!stats || stats.total <= 0) {
+      if (stars === 5) return 85;
+      if (stars === 4) return 15;
+      return 0;
+    }
+    const count = stats.breakdown?.[stars] ?? 0;
+    return Math.round((count / stats.total) * 100);
+  }
+
+  submitRating() {
+    if (!this.auth.isAuthenticated()) {
+      this.showAuthModal.set(true);
+      return;
+    }
+    const slug = this.course()?.slug;
+    if (!slug) return;
+    const rating = this.selectedRating();
+    const comment = this.reviewComment().trim();
+
+    this.submittingRating.set(true);
+    this.ratingFeedbackMsg.set(null);
+
+    this.coursesSvc.rateCourse(slug, rating, comment).subscribe({
+      next: (res) => {
+        this.submittingRating.set(false);
+        this.userReview.set(res.review);
+        this.course.update(c => c ? { ...c, rating_avg: res.rating_avg, rating_count: res.rating_count, user_review: res.review } : c);
+        this.ratingFeedbackMsg.set(res.message || '¡Tu calificación ha sido guardada exitosamente!');
+        this.ratingFeedbackType.set('success');
+        this.loadReviews(slug);
+        setTimeout(() => this.ratingFeedbackMsg.set(null), 5000);
+      },
+      error: (err) => {
+        this.submittingRating.set(false);
+        const msg = err?.error?.message || 'Error al guardar la calificación. Por favor intenta de nuevo.';
+        this.ratingFeedbackMsg.set(msg);
+        this.ratingFeedbackType.set('error');
+      }
+    });
+  }
+
+  deleteRating() {
+    const slug = this.course()?.slug;
+    if (!slug) return;
+    this.submittingRating.set(true);
+    this.coursesSvc.deleteCourseReview(slug).subscribe({
+      next: (res) => {
+        this.submittingRating.set(false);
+        this.userReview.set(null);
+        this.reviewComment.set('');
+        this.selectedRating.set(5);
+        this.course.update(c => c ? { ...c, rating_avg: res.rating_avg, rating_count: res.rating_count, user_review: null } : c);
+        this.ratingFeedbackMsg.set('Calificación eliminada.');
+        this.ratingFeedbackType.set('success');
+        this.loadReviews(slug);
+        setTimeout(() => this.ratingFeedbackMsg.set(null), 4000);
+      },
+      error: () => {
+        this.submittingRating.set(false);
+      }
+    });
   }
 
   openModuleForum(event: Event, modId: number) {

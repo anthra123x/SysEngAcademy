@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CodeExecutionController;
 use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\CourseReviewController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\ForumController;
 use App\Http\Controllers\Api\HomeController;
@@ -29,6 +30,7 @@ Route::get('/learning-paths', [LearningPathController::class, 'index']);
 Route::get('/learning-paths/{slug}', [LearningPathController::class, 'show']);
 Route::get('/courses', [CourseController::class, 'index']);
 Route::get('/courses/{slug}', [CourseController::class, 'show']);
+Route::get('/courses/{slug}/reviews', [CourseReviewController::class, 'index']);
 Route::get('/lessons/{slug}', [LessonController::class, 'show']);
 Route::get('/courses/{course}/forum', [ForumController::class, 'index']);
 Route::get('/forum/posts/{id}', [ForumController::class, 'show']);
@@ -61,6 +63,10 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
 
     Route::post('/lessons/{lesson}/complete', [LessonController::class, 'complete']);
     Route::post('/lessons/{lesson}/quiz/attempt', [LessonController::class, 'attempt']);
+
+    // Calificaciones y Reseñas
+    Route::post('/courses/{slug}/reviews', [CourseReviewController::class, 'store']);
+    Route::delete('/courses/{slug}/reviews', [CourseReviewController::class, 'destroy']);
 
     // Forum protected routes
     Route::post('/courses/{course}/forum', [ForumController::class, 'store']);

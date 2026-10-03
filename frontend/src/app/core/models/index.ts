@@ -64,6 +64,42 @@ export interface Course {
   lessons_count?: number;
   enrolled?: boolean;
   progress_percent?: number;
+  rating_avg?: number;
+  rating_count?: number;
+  user_review?: CourseReview | null;
+}
+
+export interface CourseReview {
+  id: number;
+  course_id: number;
+  user_id: number;
+  rating: number;
+  comment?: string | null;
+  created_at: string;
+  updated_at?: string;
+  user?: {
+    id: number;
+    name: string;
+    avatar?: string;
+    role?: string;
+  };
+}
+
+export interface CourseRatingStats {
+  average: number;
+  total: number;
+  breakdown: { [stars: number]: number };
+}
+
+export interface CourseReviewsResponse {
+  stats: CourseRatingStats;
+  reviews: {
+    data: CourseReview[];
+    current_page: number;
+    last_page: number;
+    total: number;
+  };
+  user_review?: CourseReview | null;
 }
 
 export interface CourseModule {

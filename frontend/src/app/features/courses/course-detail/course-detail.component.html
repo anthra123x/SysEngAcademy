@@ -38,11 +38,23 @@
 
               <!-- Platzi-inspired Metrics Strip -->
               <div class="course-metrics-strip">
-                <div class="metric-item metric-rating">
-                  <span class="star-icon"><app-icon name="zap" [size]="14" color="#FFB800" /></span>
-                  <span class="rating-score">Pensum Oficial</span>
-                  <span class="rating-count">SysEng Academy</span>
-                </div>
+                <button
+                  type="button"
+                  class="metric-item metric-rating metric-rating--btn"
+                  (click)="setTab('reviews')"
+                  title="Ver calificaciones y calificar el curso"
+                >
+                  <span class="star-icon"><app-icon name="star" [size]="14" color="#FFB800" /></span>
+                  <span class="rating-score">{{ course()!.rating_avg ? (course()!.rating_avg | number:'1.1-1') : '4.9' }}</span>
+                  <span class="rating-count">({{ formatRatingCount(course()!.rating_count) }})</span>
+                  <span class="rating-pill-action">
+                    @if (userReview()) {
+                      <span>★ {{ userReview()!.rating }}.0</span>
+                    } @else {
+                      <span>★ Calificar</span>
+                    }
+                  </span>
+                </button>
                 <span class="metric-divider">·</span>
                 <div class="metric-item">
                   <span class="metric-icon"><app-icon name="layers" [size]="16" color="var(--primary)" /></span>
@@ -70,7 +82,7 @@
               <p class="course-desc">{{ course()!.description }}</p>
             </header>
 
-            <!-- Navigation Tabs: Temario & Foro -->
+            <!-- Navigation Tabs: Temario & Foro & Reseñas -->
             <div class="content-nav-tabs" role="tablist">
               <button
                 type="button"
@@ -95,6 +107,18 @@
                 <span class="tab-btn__icon"><app-icon name="chat" [size]="16" /></span>
                 <span class="tab-btn__text">Foro y Discusiones</span>
                 <span class="tab-btn__pill">Comunidad & Soluciones</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                class="content-tab-btn"
+                [class.is-active]="activeTab() === 'reviews'"
+                [attr.aria-selected]="activeTab() === 'reviews'"
+                (click)="setTab('reviews')"
+              >
+                <span class="tab-btn__icon"><app-icon name="star" [size]="16" color="#FFB800" /></span>
+                <span class="tab-btn__text">Opiniones y Calificaciones</span>
+                <span class="tab-btn__badge">{{ reviewsStats()?.total ?? (course()!.rating_count ?? 0) }}</span>
               </button>
             </div>
 
@@ -240,12 +264,192 @@
                   }
                 </div>
               </section>
-            } @else {
+            } @else if (activeTab() === 'forum') {
               <app-course-forum
                 [courseSlug]="course()!.slug"
                 [modules]="course()!.modules ?? []"
                 [initialModuleId]="forumModuleId()"
               />
+            } @else if (activeTab() === 'reviews') {
+              <!-- SECCIÓN COMPLETA DE CALIFICACIONES Y RESEÑAS -->
+              <section class="reviews-section">
+                <!-- 1. Overview Summary Card -->
+                <div class="reviews-overview-card">
+                  <div class="overview-score-box">
+                    <span class="big-score">{{ course()!.rating_avg ? (course()!.rating_avg | number:'1.1-1') : '4.9' }}</span>
+                    <div class="stars-row">
+                      @for (s of [1,2,3,4,5]; track s) {
+                        <span class="overview-star">★</span>
+                      }
+                    </div>
+                    <span class="overview-meta">Calificación media verificada</span>
+                    <span class="overview-total-count">{{ formatRatingCount(course()!.rating_count) }} estudiantes</span>
+                  </div>
+
+                  <div class="overview-breakdown-box">
+                    <h4 class="breakdown-title">Distribución de Puntuaciones</h4>
+                    <div class="breakdown-list">
+                      @for (stars of [5, 4, 3, 2, 1]; track stars) {
+                        <div class="breakdown-item">
+                          <span class="b-stars">{{ stars }}★</span>
+                          <div class="b-track">
+                            <div class="b-fill" [style.width.%]="getBreakdownPercent(stars)"></div>
+                          </div>
+                          <span class="b-pct">{{ getBreakdownPercent(stars) }}%</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. Student Rating Widget / Action Card -->
+                <div class="user-rate-card" id="student-rating-widget">
+                  <div class="rate-card-head">
+                    <div class="rhead-icon">
+                      <app-icon name="star" [size]="20" color="#FFB800" />
+                    </div>
+                    <div>
+                      <h3>{{ userReview() ? 'Tu Calificación y Opinión' : '¿Cómo calificarías este curso?' }}</h3>
+                      <p>Comparte tu valoración sobre la calidad de las clases, código y ejercicios prácticos.</p>
+                    </div>
+                  </div>
+
+                  @if (!auth.isAuthenticated()) {
+                    <div class="rate-auth-prompt">
+                      <p>Inicia sesión con tu cuenta de estudiante para valorar este curso y dejar tu opinión.</p>
+                      <button type="button" class="btn btn-primary btn-sm" (click)="showAuthModal.set(true)">
+                        Iniciar Sesión para Calificar
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="rate-form">
+                      <!-- Star Picker -->
+                      <div class="star-picker-wrap">
+                        <label class="picker-label">Tu puntuación general:</label>
+                        <div class="star-picker-buttons" (mouseleave)="onRatingLeave()">
+                          @for (star of [1, 2, 3, 4, 5]; track star) {
+                            <button
+                              type="button"
+                              class="star-pick-btn"
+                              [class.is-lit]="(hoveredRating() > 0 ? star <= hoveredRating() : star <= selectedRating())"
+                              (mouseenter)="onRatingHover(star)"
+                              (click)="setRatingScore(star)"
+                              [attr.aria-label]="star + ' estrellas'"
+                            >
+                              ★
+                            </button>
+                          }
+                        </div>
+                        <span class="star-picker-text">
+                          {{ getRatingLabel(hoveredRating() > 0 ? hoveredRating() : selectedRating()) }}
+                        </span>
+                      </div>
+
+                      <!-- Comment Textarea -->
+                      <div class="rate-comment-wrap">
+                        <label class="comment-label" for="review-comment-input">
+                          Comentario u opinión <small>(opcional)</small>
+                        </label>
+                        <textarea
+                          id="review-comment-input"
+                          class="rate-textarea"
+                          rows="3"
+                          placeholder="Cuéntanos qué tal te parecieron los retos en vivo, las explicaciones teóricas y qué recomendarías..."
+                          [ngModel]="reviewComment()"
+                          (ngModelChange)="reviewComment.set($event)"
+                        ></textarea>
+                      </div>
+
+                      <!-- Feedback Notification Banner -->
+                      @if (ratingFeedbackMsg()) {
+                        <div class="rate-alert" [class.rate-alert--success]="ratingFeedbackType() === 'success'" [class.rate-alert--error]="ratingFeedbackType() === 'error'">
+                          {{ ratingFeedbackMsg() }}
+                        </div>
+                      }
+
+                      <!-- Submit / Delete Actions -->
+                      <div class="rate-actions">
+                        <button
+                          type="button"
+                          class="btn btn-primary"
+                          [disabled]="submittingRating()"
+                          (click)="submitRating()"
+                        >
+                          @if (submittingRating()) {
+                            <span>Guardando valoración...</span>
+                          } @else if (userReview()) {
+                            <span>Actualizar mi Calificación</span>
+                          } @else {
+                            <span>Publicar Calificación</span>
+                          }
+                        </button>
+
+                        @if (userReview()) {
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-sm btn-delete-rate"
+                            [disabled]="submittingRating()"
+                            (click)="deleteRating()"
+                          >
+                            Eliminar mi reseña
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <!-- 3. Reviews Community Feed -->
+                <div class="reviews-feed">
+                  <div class="feed-header">
+                    <h3>Opiniones de la Comunidad</h3>
+                    <span class="feed-count">{{ reviews().length }} {{ reviews().length === 1 ? 'reseña' : 'reseñas' }}</span>
+                  </div>
+
+                  @if (loadingReviews()) {
+                    <div class="reviews-skeleton-list">
+                      @for (i of [1,2,3]; track i) {
+                        <div class="review-card skeleton" style="height: 100px; margin-bottom: 12px; border-radius: 10px;"></div>
+                      }
+                    </div>
+                  } @else if (reviews().length === 0) {
+                    <div class="empty-reviews-box">
+                      <app-icon name="chat" [size]="36" color="var(--text-muted)" />
+                      <h4>Aún no hay reseñas escritas</h4>
+                      <p>Sé el primer estudiante en compartir tu experiencia en este curso.</p>
+                    </div>
+                  } @else {
+                    <div class="reviews-list">
+                      @for (review of reviews(); track review.id) {
+                        <div class="review-card">
+                          <div class="review-card__top">
+                            <div class="reviewer-meta">
+                              <div class="reviewer-avatar">
+                                {{ review.user?.name ? (review.user!.name | slice:0:1) : 'E' }}
+                              </div>
+                              <div class="reviewer-info">
+                                <span class="reviewer-name">{{ review.user?.name ?? 'Estudiante de SysEng' }}</span>
+                                <span class="reviewer-role">{{ review.user?.role === 'instructor' ? 'Docente' : 'Estudiante Verificado' }}</span>
+                              </div>
+                            </div>
+                            <div class="review-stars-date">
+                              <div class="review-stars">
+                                @for (s of [1,2,3,4,5]; track s) {
+                                  <span class="rev-star" [class.is-lit]="s <= review.rating">★</span>
+                                }
+                              </div>
+                              <span class="review-date">{{ review.created_at | date:'d MMM yyyy' }}</span>
+                            </div>
+                          </div>
+                          @if (review.comment) {
+                            <p class="review-text">{{ review.comment }}</p>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </section>
             }
           </main>
 
@@ -309,6 +513,20 @@
                     Empezar a Aprender →
                   </button>
                 }
+              </div>
+
+              <!-- Mini Banner Calificar en Sidebar -->
+              <div class="sidebar-rating-banner" (click)="setTab('reviews')">
+                <div class="srb-info">
+                  <span class="srb-star-icon">⭐</span>
+                  <div>
+                    <strong class="srb-score">{{ course()!.rating_avg ? (course()!.rating_avg | number:'1.1-1') : '4.9' }} / 5</strong>
+                    <span class="srb-count">({{ formatRatingCount(course()!.rating_count) }} opiniones)</span>
+                  </div>
+                </div>
+                <span class="srb-link">
+                  {{ userReview() ? 'Mi valoración' : 'Calificar' }} →
+                </span>
               </div>
 
               <!-- Methodology Card (Documentation-first) -->

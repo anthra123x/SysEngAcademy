@@ -1,15 +1,15 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { SlicePipe } from '@angular/common';
-import { CoursesService } from '../../core/services/courses.service';
+import { DecimalPipe, SlicePipe } from '@angular/common';
+import { CoursesService, formatRatingCount } from '../../core/services/courses.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { Category, Course, CourseFilters, PaginatedResponse } from '../../core/models';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 @Component({
   selector: 'app-courses',
-  imports: [RouterLink, FormsModule, SlicePipe, AppIconComponent],
+  imports: [RouterLink, FormsModule, SlicePipe, DecimalPipe, AppIconComponent],
   template: `
     <div class="courses-page">
       <div class="container courses-layout">
@@ -225,6 +225,11 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
                         </span>
                       }
                       <div [class]="'badge badge-' + course.difficulty">{{ diffLabel(course.difficulty) }}</div>
+                      <span class="rating-badge-card" [title]="'Calificación: ' + (course.rating_avg ? (course.rating_avg | number:'1.1-1') : '4.9') + ' / 5'">
+                        <app-icon name="star" [size]="11" color="#FFB800" />
+                        <span>{{ course.rating_avg ? (course.rating_avg | number:'1.1-1') : '4.9' }}</span>
+                        <small>({{ formatRatingCount(course.rating_count) }})</small>
+                      </span>
                     </div>
                     <h3>{{ course.title }}</h3>
                     <p>{{ course.description | slice:0:85 }}...</p>
@@ -649,6 +654,20 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           letter-spacing: 0.06em;
           color: var(--primary);
         }
+        .rating-badge-card {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          font-size: 11px;
+          font-weight: 700;
+          color: #FFB800;
+          margin-left: auto;
+
+          small {
+            color: #64748B;
+            font-weight: 500;
+          }
+        }
         h3 { font-size: var(--text-base); font-weight: var(--font-semibold); color: var(--text-primary); line-height: 1.35; }
         p { font-size: var(--text-xs); color: var(--text-secondary); flex: 1; line-height: 1.55; }
       }
@@ -677,6 +696,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
 export class CoursesComponent implements OnInit {
   private coursesSvc    = inject(CoursesService);
   private categoriesSvc = inject(CategoriesService);
+  readonly formatRatingCount = formatRatingCount;
 
   courses     = signal<Course[]>([]);
   categories  = signal<Category[]>([]);

@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { NgIf, SlicePipe } from '@angular/common';
+import { DecimalPipe, SlicePipe } from '@angular/common';
 import { HomeService } from '../../core/services/home.service';
+import { formatRatingCount } from '../../core/services/courses.service';
 import { LearningPath, Course, Category } from '../../core/models';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
 
@@ -28,12 +29,13 @@ interface SnakeSeg {
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, SlicePipe, AppIconComponent],
+  imports: [RouterLink, SlicePipe, DecimalPipe, AppIconComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
 export class HomeComponent implements OnInit {
   private homeSvc = inject(HomeService);
+  readonly formatRatingCount = formatRatingCount;
 
   learningPaths   = signal<LearningPath[]>([]);
   featuredCourses = signal<Course[]>([]);

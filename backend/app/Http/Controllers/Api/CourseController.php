@@ -62,6 +62,11 @@ class CourseController extends Controller
             $course['enrolled'] = (bool) $enrollment;
             $course['progress_percent'] = $enrollment ? $enrollment->progress_percent : 0;
 
+            $userReview = \App\Models\CourseReview::where('course_id', $course['id'])
+                ->where('user_id', $user->id)
+                ->first();
+            $course['user_review'] = $userReview;
+
             if ($enrollment) {
                 $completedLessonIds = $user->lessonProgress()
                     ->whereHas('lesson', fn ($q) => $q->whereHas('module', fn ($q2) => $q2->where('course_id', $course['id'])))

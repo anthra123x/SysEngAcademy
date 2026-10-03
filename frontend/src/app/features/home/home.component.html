@@ -250,7 +250,11 @@
               <div class="card-body">
                 <div class="card-tags-row">
                   <span [class]="'badge badge-' + course.difficulty">{{ difficultyLabel(course.difficulty) }}</span>
-                  <span class="rating-badge"><app-icon name="star" [size]="12" color="#FFB800" /> 4.9 <small>(1.4k+)</small></span>
+                  <span class="rating-badge" [title]="'Calificación: ' + (course.rating_avg ? (course.rating_avg | number:'1.1-1') : '4.9') + ' / 5'">
+                    <app-icon name="star" [size]="12" color="#FFB800" />
+                    {{ course.rating_avg ? (course.rating_avg | number:'1.1-1') : '4.9' }}
+                    <small>({{ formatRatingCount(course.rating_count) }})</small>
+                  </span>
                 </div>
 
                 <h3 class="card-title">{{ course.title }}</h3>

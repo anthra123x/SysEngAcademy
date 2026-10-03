@@ -13,11 +13,14 @@ class Course extends Model
         'title', 'slug', 'description', 'category_id', 'instructor_id',
         'thumbnail', 'is_published', 'is_free', 'duration_hours', 'difficulty',
         'learning_path_id', 'learning_path_level_id', 'order',
+        'rating_avg', 'rating_count',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
         'is_free' => 'boolean',
+        'rating_avg' => 'float',
+        'rating_count' => 'integer',
     ];
 
     public function category()
@@ -53,5 +56,22 @@ class Course extends Model
     public function enrollments()
     {
         return $this->hasMany(Enrollment::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(CourseReview::class);
+    }
+
+    public function recalculateRating(): void
+    {
+        $count = $this->reviews()->count();
+        if ($count > 0) {
+            $avg = round((float) $this->reviews()->avg('rating'), 2);
+            $this->update([
+                'rating_avg' => $avg,
+                'rating_count' => $count,
+            ]);
+        }
     }
 }
