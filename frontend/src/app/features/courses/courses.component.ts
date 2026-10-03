@@ -12,143 +12,148 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   imports: [RouterLink, FormsModule, SlicePipe, DecimalPipe, AppIconComponent],
   template: `
     <div class="courses-page">
-      <div class="container courses-layout">
-        <!-- Mobile Filters Trigger -->
-        <div class="mobile-filters-trigger">
-          <button type="button" class="btn btn-outline btn-block" (click)="showMobileFilters.set(!showMobileFilters())">
-            <span style="display:inline-flex; align-items:center; gap:8px;">
-              <app-icon name="target" [size]="14" color="var(--primary)" />
-              {{ showMobileFilters() ? 'Ocultar Filtros' : 'Filtrar Cursos (' + total() + ')' }}
-              @if (activeFiltersCount() > 0) {
-                <span class="filter-count-pill">{{ activeFiltersCount() }}</span>
-              }
-            </span>
-            <app-icon [name]="showMobileFilters() ? 'chevron-up' : 'chevron-down'" [size]="14" />
-          </button>
+      <div class="container">
+        <!-- Barra de Cabecera del Catálogo (Nivel superior, ancho completo) -->
+        <div class="courses-header-bar">
+          <div class="courses-header-left">
+            <h1 class="courses-main-title">Catálogo de Cursos</h1>
+            <span class="courses-subtitle">Explora cursos y especializaciones técnicas</span>
+          </div>
+          <span class="results-count">{{ total() }} {{ total() === 1 ? 'curso disponible' : 'cursos disponibles' }}</span>
         </div>
 
-        <!-- Sidebar de Filtros Moderno -->
-        <aside class="filters" [class.is-mobile-open]="showMobileFilters()">
-          <div class="filters__header">
-            <div class="filters-title-wrap">
-              <app-icon name="target" [size]="15" color="var(--primary)" />
-              <h3>Filtros</h3>
+        <div class="courses-layout">
+          <!-- Mobile Filters Trigger -->
+          <div class="mobile-filters-trigger">
+            <button type="button" class="btn btn-outline btn-block" (click)="showMobileFilters.set(!showMobileFilters())">
+              <span style="display:inline-flex; align-items:center; gap:8px;">
+                <app-icon name="target" [size]="14" color="var(--primary)" />
+                {{ showMobileFilters() ? 'Ocultar Filtros' : 'Filtrar Cursos (' + total() + ')' }}
+                @if (activeFiltersCount() > 0) {
+                  <span class="filter-count-pill">{{ activeFiltersCount() }}</span>
+                }
+              </span>
+              <app-icon [name]="showMobileFilters() ? 'chevron-up' : 'chevron-down'" [size]="14" />
+            </button>
+          </div>
+
+          <!-- Sidebar de Filtros Moderno (Alineado con el top de los cursos) -->
+          <aside class="filters" [class.is-mobile-open]="showMobileFilters()">
+            <div class="filters__header">
+              <div class="filters-title-wrap">
+                <app-icon name="target" [size]="15" color="var(--primary)" />
+                <h3>Filtros</h3>
+                @if (activeFiltersCount() > 0) {
+                  <span class="active-badge">{{ activeFiltersCount() }}</span>
+                }
+              </div>
               @if (activeFiltersCount() > 0) {
-                <span class="active-badge">{{ activeFiltersCount() }}</span>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="clearFilters()">Limpiar todo</button>
               }
             </div>
-            @if (activeFiltersCount() > 0) {
-              <button type="button" class="btn btn-ghost btn-sm" (click)="clearFilters()">Limpiar todo</button>
-            }
-          </div>
 
-          <!-- Búsqueda con debounce y botón de borrado -->
-          <div class="filter-group">
-            <label class="filter-label">Buscar Curso</label>
-            <div class="search-input-wrap">
-              <span class="search-icon"><app-icon name="search" [size]="14" color="var(--text-muted)" /></span>
-              <input
-                class="search-input"
-                type="text"
-                placeholder="Ej. Python, Docker, SQL..."
-                [ngModel]="filters.search || ''"
-                (input)="onSearchInput($event)"
-              />
-              @if (filters.search) {
-                <button type="button" class="btn-clear-search" (click)="clearSearch()" title="Borrar búsqueda">✕</button>
-              }
-            </div>
-          </div>
-
-          <!-- Filtro de Nivel de Dificultad -->
-          <div class="filter-group">
-            <div class="filter-label-row">
-              <label class="filter-label">Nivel de Dificultad</label>
-              @if (filters.difficulty) {
-                <button type="button" class="filter-clear-link" (click)="selectDifficulty('')">Todos</button>
-              }
-            </div>
-            <div class="difficulty-segmented">
-              <button
-                type="button"
-                class="diff-seg-btn"
-                [class.is-active]="!filters.difficulty"
-                (click)="selectDifficulty('')"
-              >
-                Todos
-              </button>
-              <button
-                type="button"
-                class="diff-seg-btn diff-seg-btn--beginner"
-                [class.is-active]="filters.difficulty === 'beginner'"
-                (click)="selectDifficulty('beginner')"
-              >
-                Principiante
-              </button>
-              <button
-                type="button"
-                class="diff-seg-btn diff-seg-btn--intermediate"
-                [class.is-active]="filters.difficulty === 'intermediate'"
-                (click)="selectDifficulty('intermediate')"
-              >
-                Intermedio
-              </button>
-              <button
-                type="button"
-                class="diff-seg-btn diff-seg-btn--advanced"
-                [class.is-active]="filters.difficulty === 'advanced'"
-                (click)="selectDifficulty('advanced')"
-              >
-                Avanzado
-              </button>
-              <button
-                type="button"
-                class="diff-seg-btn diff-seg-btn--expert"
-                [class.is-active]="filters.difficulty === 'expert'"
-                (click)="selectDifficulty('expert')"
-              >
-                Experto
-              </button>
-            </div>
-          </div>
-        </aside>
-
-        <!-- Course Grid -->
-        <main class="courses-main">
-          <div class="courses-header-bar">
-            <h2 class="courses-main-title">Catálogo Completo</h2>
-            <span class="results-count">{{ total() }} {{ total() === 1 ? 'curso disponible' : 'cursos disponibles' }}</span>
-          </div>
-
-          <!-- Active filter chips row -->
-          @if (activeFiltersCount() > 0) {
-            <div class="active-filters-bar">
-              <span class="af-label">Filtros aplicados:</span>
-              <div class="af-chips-wrap">
+            <!-- Búsqueda con debounce y botón de borrado -->
+            <div class="filter-group">
+              <label class="filter-label">Buscar Curso</label>
+              <div class="search-input-wrap">
+                <span class="search-icon"><app-icon name="search" [size]="14" color="var(--text-muted)" /></span>
+                <input
+                  class="search-input"
+                  type="text"
+                  placeholder="Ej. Python, Docker, SQL..."
+                  [ngModel]="filters.search || ''"
+                  (input)="onSearchInput($event)"
+                />
                 @if (filters.search) {
-                  <span class="af-chip" (click)="clearSearch()">
-                    <span class="af-chip-text">"{{ filters.search }}"</span>
-                    <span class="af-close">✕</span>
-                  </span>
+                  <button type="button" class="btn-clear-search" (click)="clearSearch()" title="Borrar búsqueda">✕</button>
                 }
-                @if (filters.category) {
-                  <span class="af-chip" (click)="selectCategory('')">
-                    <span class="af-chip-text">{{ getCategoryName(filters.category) }}</span>
-                    <span class="af-close">✕</span>
-                  </span>
-                }
+              </div>
+            </div>
+
+            <!-- Filtro de Nivel de Dificultad -->
+            <div class="filter-group">
+              <div class="filter-label-row">
+                <label class="filter-label">Nivel de Dificultad</label>
                 @if (filters.difficulty) {
-                  <span class="af-chip" (click)="selectDifficulty('')">
-                    <span class="af-chip-text">{{ diffLabel(filters.difficulty) }}</span>
-                    <span class="af-close">✕</span>
-                  </span>
+                  <button type="button" class="filter-clear-link" (click)="selectDifficulty('')">Todos</button>
                 }
-                <button type="button" class="btn-clear-inline" (click)="clearFilters()">
-                  Limpiar todos
+              </div>
+              <div class="difficulty-segmented">
+                <button
+                  type="button"
+                  class="diff-seg-btn"
+                  [class.is-active]="!filters.difficulty"
+                  (click)="selectDifficulty('')"
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  class="diff-seg-btn diff-seg-btn--beginner"
+                  [class.is-active]="filters.difficulty === 'beginner'"
+                  (click)="selectDifficulty('beginner')"
+                >
+                  Principiante
+                </button>
+                <button
+                  type="button"
+                  class="diff-seg-btn diff-seg-btn--intermediate"
+                  [class.is-active]="filters.difficulty === 'intermediate'"
+                  (click)="selectDifficulty('intermediate')"
+                >
+                  Intermedio
+                </button>
+                <button
+                  type="button"
+                  class="diff-seg-btn diff-seg-btn--advanced"
+                  [class.is-active]="filters.difficulty === 'advanced'"
+                  (click)="selectDifficulty('advanced')"
+                >
+                  Avanzado
+                </button>
+                <button
+                  type="button"
+                  class="diff-seg-btn diff-seg-btn--expert"
+                  [class.is-active]="filters.difficulty === 'expert'"
+                  (click)="selectDifficulty('expert')"
+                >
+                  Experto
                 </button>
               </div>
             </div>
-          }
+          </aside>
+
+          <!-- Course Grid -->
+          <main class="courses-main">
+            <!-- Active filter chips row -->
+            @if (activeFiltersCount() > 0) {
+              <div class="active-filters-bar">
+                <span class="af-label">Filtros aplicados:</span>
+                <div class="af-chips-wrap">
+                  @if (filters.search) {
+                    <span class="af-chip" (click)="clearSearch()">
+                      <span class="af-chip-text">"{{ filters.search }}"</span>
+                      <span class="af-close">✕</span>
+                    </span>
+                  }
+                  @if (filters.category) {
+                    <span class="af-chip" (click)="selectCategory('')">
+                      <span class="af-chip-text">{{ getCategoryName(filters.category) }}</span>
+                      <span class="af-close">✕</span>
+                    </span>
+                  }
+                  @if (filters.difficulty) {
+                    <span class="af-chip" (click)="selectDifficulty('')">
+                      <span class="af-chip-text">{{ diffLabel(filters.difficulty) }}</span>
+                      <span class="af-close">✕</span>
+                    </span>
+                  }
+                  <button type="button" class="btn-clear-inline" (click)="clearFilters()">
+                    Limpiar todos
+                  </button>
+                </div>
+              </div>
+            }
 
           @if (loading()) {
             <div class="courses-grid">
@@ -223,32 +228,47 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     </div>
   `,
   styles: [`
-    .courses-layout {
-      display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: var(--sp-6);
+    .courses-page {
       padding-top: var(--sp-6);
       padding-bottom: var(--sp-12);
-      align-items: start;
-      @media (max-width: 900px) { grid-template-columns: 1fr; gap: var(--sp-4); padding-top: var(--sp-4); }
     }
 
     .courses-header-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      min-height: 42px;
-      margin-bottom: 1.25rem;
-      padding-bottom: 0.75rem;
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
       border-bottom: 1px solid #1A1F30;
+      gap: 1rem;
+      flex-wrap: wrap;
+
+      .courses-header-left {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
 
       .courses-main-title {
-        font-size: 1.05rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: #F8FAFC;
         margin: 0;
-        letter-spacing: -0.01em;
+        letter-spacing: -0.02em;
       }
+
+      .courses-subtitle {
+        font-size: 0.84rem;
+        color: #94A3B8;
+      }
+    }
+
+    .courses-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: var(--sp-6);
+      align-items: start;
+      @media (max-width: 900px) { grid-template-columns: 1fr; gap: var(--sp-4); }
     }
 
     .mobile-filters-trigger {
@@ -557,7 +577,13 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       overflow: hidden;
       text-decoration: none;
       position: relative;
+      outline: none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+      &:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
 
       &:hover {
         border-color: rgba(10, 233, 138, 0.45);
@@ -580,13 +606,14 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         align-items: center;
         justify-content: center;
         background: linear-gradient(180deg, #121622 0%, #0E111A 100%);
-        border-bottom: 1px solid #1A1F30;
+        border-bottom: none;
       }
 
       .course-thumb__icon {
         display: flex;
         align-items: center;
         justify-content: center;
+        pointer-events: none;
         transition: transform 0.2s ease;
       }
 
