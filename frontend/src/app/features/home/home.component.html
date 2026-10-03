@@ -103,6 +103,15 @@
 
             <div class="snake__track">
               @for (stop of snakeStops(); track stop.path.id; let idx = $index) {
+                @if (stop.phaseLabel) {
+                  <div class="timeline-phase-marker">
+                    <div class="phase-marker-pill">
+                      <span class="phase-marker-icon"><app-icon name="compass" [size]="13" color="var(--primary)" /></span>
+                      <span class="phase-marker-text">{{ stop.phaseLabel }}</span>
+                    </div>
+                  </div>
+                }
+
                 <div class="snake__station"
                      [class.snake__station--left]="!stop.isRight"
                      [class.snake__station--right]="stop.isRight"
@@ -122,29 +131,28 @@
                         </div>
                         <h3 class="snake__title">{{ stop.path.title }}</h3>
                         <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
-                        <div class="snake__meta">
-                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 4 }} cursos</span>
-                          <span>·</span>
-                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h estimadas</span>
-                        </div>
-                        <span class="snake__cta">Explorar Ruta →</span>
-                      </a>
-                    } @else {
-                      <div class="snake__milestone-card milestone-card--right">
-                        <div class="milestone-card__header">
-                          <span class="milestone-card__dot" [style.background]="stop.color" [style.box-shadow]="'0 0 10px ' + stop.color"></span>
-                          <span class="milestone-card__badge" [style.color]="stop.color">{{ stop.levelBadge }}</span>
-                        </div>
-                        <h4 class="milestone-card__title">{{ stop.milestoneTitle }}</h4>
-                        <div class="milestone-card__skills">
+                        
+                        <div class="snake__card-skills">
                           @for (skill of stop.skills; track skill) {
-                            <span class="milestone-skill-pill">{{ skill }}</span>
+                            <span class="skill-tag">{{ skill }}</span>
                           }
                         </div>
-                        <div class="milestone-card__footer">
-                          <span><app-icon name="award" [size]="12" [color]="stop.color" /> Certificación de Área</span>
-                          <span>·</span>
-                          <span><app-icon name="check-circle" [size]="12" color="#0AE98A" /> Proyectos Reales</span>
+
+                        <div class="snake__meta">
+                          <div class="meta-stats">
+                            <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 4 }} cursos</span>
+                            <span>·</span>
+                            <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h estimadas</span>
+                          </div>
+                          <span class="snake__cta">Explorar Ruta →</span>
+                        </div>
+                      </a>
+                    } @else {
+                      <div class="checkpoint-indicator checkpoint-indicator--left">
+                        <span class="checkpoint-step" [style.color]="stop.color">{{ stop.levelBadge }}</span>
+                        <p class="checkpoint-title">{{ stop.milestoneTitle }}</p>
+                        <div class="checkpoint-meta">
+                          <span><app-icon name="check-circle" [size]="13" color="#0AE98A" /> Competencia clave evaluada</span>
                         </div>
                       </div>
                     }
@@ -175,29 +183,28 @@
                         </div>
                         <h3 class="snake__title">{{ stop.path.title }}</h3>
                         <p class="snake__desc">{{ stop.path.description | slice:0:118 }}{{ stop.path.description.length > 118 ? '…' : '' }}</p>
-                        <div class="snake__meta">
-                          <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 4 }} cursos</span>
-                          <span>·</span>
-                          <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h estimadas</span>
-                        </div>
-                        <span class="snake__cta">Explorar Ruta →</span>
-                      </a>
-                    } @else {
-                      <div class="snake__milestone-card milestone-card--left">
-                        <div class="milestone-card__header">
-                          <span class="milestone-card__dot" [style.background]="stop.color" [style.box-shadow]="'0 0 10px ' + stop.color"></span>
-                          <span class="milestone-card__badge" [style.color]="stop.color">{{ stop.levelBadge }}</span>
-                        </div>
-                        <h4 class="milestone-card__title">{{ stop.milestoneTitle }}</h4>
-                        <div class="milestone-card__skills">
+                        
+                        <div class="snake__card-skills">
                           @for (skill of stop.skills; track skill) {
-                            <span class="milestone-skill-pill">{{ skill }}</span>
+                            <span class="skill-tag">{{ skill }}</span>
                           }
                         </div>
-                        <div class="milestone-card__footer">
-                          <span><app-icon name="award" [size]="12" [color]="stop.color" /> Certificación de Área</span>
-                          <span>·</span>
-                          <span><app-icon name="check-circle" [size]="12" color="#0AE98A" /> Proyectos Reales</span>
+
+                        <div class="snake__meta">
+                          <div class="meta-stats">
+                            <span><app-icon name="book" [size]="13" /> {{ stop.path.courses_count ?? 4 }} cursos</span>
+                            <span>·</span>
+                            <span><app-icon name="clock" [size]="13" /> {{ stop.path.estimated_hours }}h estimadas</span>
+                          </div>
+                          <span class="snake__cta">Explorar Ruta →</span>
+                        </div>
+                      </a>
+                    } @else {
+                      <div class="checkpoint-indicator checkpoint-indicator--right">
+                        <span class="checkpoint-step" [style.color]="stop.color">{{ stop.levelBadge }}</span>
+                        <p class="checkpoint-title">{{ stop.milestoneTitle }}</p>
+                        <div class="checkpoint-meta">
+                          <span><app-icon name="check-circle" [size]="13" color="#0AE98A" /> Competencia clave evaluada</span>
                         </div>
                       </div>
                     }

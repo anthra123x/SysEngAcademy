@@ -15,6 +15,7 @@ interface SnakeStop {
   levelBadge: string;
   milestoneTitle: string;
   skills: string[];
+  phaseLabel?: string;
 }
 
 interface SnakeSeg {
@@ -133,6 +134,11 @@ export class HomeComponent implements OnInit {
       const color = cat?.color || '#0AE98A';
       const name = cat?.name || 'Ingeniería';
 
+      let phaseLabel: string | undefined;
+      if (idx === 0) phaseLabel = 'Fase 01 · Fundamentos y Lógica Computacional';
+      if (idx === 3) phaseLabel = 'Fase 02 · Arquitectura y Desarrollo de Software';
+      if (idx === 6) phaseLabel = 'Fase 03 · Infraestructura, Calidad & Inteligencia Artificial';
+
       return {
         path: enrichedPath,
         color,
@@ -143,6 +149,7 @@ export class HomeComponent implements OnInit {
         levelBadge: ms.badge,
         milestoneTitle: ms.title,
         skills: ms.skills,
+        phaseLabel,
       };
     });
   }
