@@ -38,12 +38,7 @@
 
               <!-- Platzi-inspired Metrics Strip -->
               <div class="course-metrics-strip">
-                <button
-                  type="button"
-                  class="metric-item metric-rating metric-rating--btn"
-                  (click)="setTab('reviews')"
-                  title="Ver calificaciones y opiniones del curso"
-                >
+                <div class="metric-item metric-rating" title="Calificación promedio de la comunidad">
                   <span class="star-icon"><app-icon name="star" [size]="14" [color]="(course()!.rating_count ?? 0) > 0 ? '#FFB800' : '#64748B'" /></span>
                   @if ((course()!.rating_count ?? 0) > 0) {
                     <span class="rating-score">{{ course()!.rating_avg | number:'1.1-1' }}</span>
@@ -51,14 +46,7 @@
                   } @else {
                     <span class="rating-score" style="color: #94A3B8;">Sin calificar</span>
                   }
-                  <span class="rating-pill-action">
-                    @if (userReview()) {
-                      <span>★ {{ userReview()!.rating }}.0</span>
-                    } @else {
-                      <span>★ Calificar</span>
-                    }
-                  </span>
-                </button>
+                </div>
                 <span class="metric-divider">·</span>
                 <div class="metric-item">
                   <span class="metric-icon"><app-icon name="layers" [size]="16" color="var(--primary)" /></span>
@@ -505,18 +493,18 @@
                   </div>
 
                   @if (courseProgressPercent() === 100) {
-                    <a [routerLink]="['/cursos', course()!.slug, 'leccion', continueLessonSlug() || course()!.modules?.[0]?.lessons?.[0]?.slug]" class="btn btn-outline btn-block btn-lg btn-review">
+                    <button type="button" class="btn btn-outline btn-block btn-lg btn-review" (click)="goToFirstLesson()" [disabled]="enrolling()">
                       <span style="display:inline-flex; align-items:center; gap:6px;">
                         <app-icon name="trophy" [size]="16" color="#FFD700" /> Repasar Curso Completado
                       </span>
-                    </a>
-                  } @else if (continueLessonSlug() || course()!.modules?.[0]?.lessons?.[0]?.slug) {
-                    <a [routerLink]="['/cursos', course()!.slug, 'leccion', continueLessonSlug() || course()!.modules?.[0]?.lessons?.[0]?.slug]" (click)="goToFirstLesson()" class="btn btn-primary btn-block btn-lg">
-                      {{ completedLessonsCount() > 0 ? 'Continuar Curso →' : 'Empezar a Aprender →' }}
-                    </a>
+                    </button>
                   } @else {
-                    <button type="button" class="btn btn-primary btn-block btn-lg" (click)="goToFirstLesson()">
-                      Empezar a Aprender →
+                    <button type="button" class="btn btn-primary btn-block btn-lg" (click)="goToFirstLesson()" [disabled]="enrolling()">
+                      @if (enrolling()) {
+                        <span>Inscribiendo al curso...</span>
+                      } @else {
+                        <span>{{ completedLessonsCount() > 0 ? 'Continuar Curso →' : 'Empezar a Aprender →' }}</span>
+                      }
                     </button>
                   }
                 }

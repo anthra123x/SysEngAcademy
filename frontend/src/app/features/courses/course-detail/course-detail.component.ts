@@ -76,19 +76,20 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   totalLessonsCount = computed(() => {
     const c = this.course();
     if (!c) return 0;
-    if (c.lessons_count && c.lessons_count > 0) return c.lessons_count;
     let count = 0;
     for (const mod of c.modules ?? []) {
       count += (mod.lessons ?? []).length;
     }
-    return count;
+    return count > 0 ? count : (c.lessons_count ?? 0);
   });
 
   completedLessonsCount = computed(() => {
     let count = 0;
     for (const mod of this.course()?.modules ?? []) {
       for (const lesson of mod.lessons ?? []) {
-        if (lesson.completed) count++;
+        if (lesson.completed || this.coursesSvc.isLessonCompleted(Number(lesson.id), lesson.slug)) {
+          count++;
+        }
       }
     }
     return count;
@@ -98,14 +99,20 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     const c = this.course();
     if (!c) return 0;
     const total = this.totalLessonsCount();
-    if (total === 0) return 0;
     const completed = this.completedLessonsCount();
-    return Math.min(100, Math.round((completed / total) * 100));
+    if (total > 0) {
+      return Math.min(100, Math.round((completed / total) * 100));
+    }
+    return c.progress_percent ?? 0;
   });
 
   firstLessonSlug = computed(() => {
     const c = this.course();
-    return c?.modules?.[0]?.lessons?.[0]?.slug ?? null;
+    for (const mod of c?.modules ?? []) {
+      const first = (mod.lessons ?? [])[0];
+      if (first?.slug) return first.slug;
+    }
+    return null;
   });
 
   continueLessonSlug = computed(() => {
@@ -113,12 +120,13 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     if (!c?.modules) return null;
     for (const mod of c.modules) {
       for (const lesson of mod.lessons ?? []) {
-        if (!lesson.completed) {
+        const isDone = lesson.completed || this.coursesSvc.isLessonCompleted(Number(lesson.id), lesson.slug);
+        if (!isDone) {
           return lesson.slug;
         }
       }
     }
-    return c.modules[0]?.lessons?.[0]?.slug ?? null;
+    return this.firstLessonSlug();
   });
 
   courseSkills = computed(() => {
@@ -429,17 +437,30 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     const c = this.course();
     if (!c) return;
 
-    if (!c.enrolled && c.id) {
-      this.coursesSvc.enroll(c.id).subscribe({
-        next: () => this.course.update(curr => curr ? { ...curr, enrolled: true } : curr),
-        error: () => {}
-      });
+    const targetSlug = this.continueLessonSlug() || this.firstLessonSlug();
+    if (!targetSlug) {
+      this.lockedToast.set('Este curso aún no tiene lecciones publicadas.');
+      setTimeout(() => this.lockedToast.set(null), 3500);
+      return;
     }
 
-    const slug = this.continueLessonSlug() || c.modules?.[0]?.lessons?.[0]?.slug;
-    if (slug) {
-      this.router.navigate(['/cursos', c.slug, 'leccion', slug]);
+    if (!c.enrolled && c.id) {
+      this.enrolling.set(true);
+      this.coursesSvc.enroll(c.id).subscribe({
+        next: () => {
+          this.course.update(curr => curr ? { ...curr, enrolled: true } : curr);
+          this.enrolling.set(false);
+          this.router.navigate(['/cursos', c.slug, 'leccion', targetSlug]);
+        },
+        error: () => {
+          this.enrolling.set(false);
+          this.router.navigate(['/cursos', c.slug, 'leccion', targetSlug]);
+        }
+      });
+      return;
     }
+
+    this.router.navigate(['/cursos', c.slug, 'leccion', targetSlug]);
   }
 
   onLessonClick(event: Event, lesson: Lesson, moduleIndex: number) {
