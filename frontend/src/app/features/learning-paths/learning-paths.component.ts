@@ -9,18 +9,6 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   imports: [RouterLink, AppIconComponent],
   template: `
     <div class="paths-page">
-      <!-- Page Header -->
-      <div class="page-header">
-        <div class="container">
-          <div class="section-eyebrow">
-            <app-icon name="map" [size]="14" color="var(--primary)" />
-            <span>Itinerarios Profesionales</span>
-          </div>
-          <h1 class="page-title">Rutas de <span>Aprendizaje</span></h1>
-          <p class="page-desc">Sigue un camino estructurado de estación en estación. Diseñado para llevarte desde fundamentos hasta el dominio completo de cada área técnica.</p>
-        </div>
-      </div>
-
       <!-- Main Paths Content -->
       <div class="container paths-container">
         @if (loading()) {
@@ -93,48 +81,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       background: var(--bg-base);
     }
 
-    .page-header {
-      padding: var(--sp-10) 0 var(--sp-8);
-      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(10, 233, 138, 0.08) 0%, transparent 70%);
-      border-bottom: 1px solid var(--border-subtle);
-
-      .section-eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--primary);
-        margin-bottom: var(--sp-3);
-      }
-
-      .page-title {
-        font-size: clamp(2rem, 4vw, 2.75rem);
-        font-weight: var(--font-bold);
-        color: var(--text-primary);
-        letter-spacing: -0.02em;
-        line-height: 1.2;
-        margin-bottom: var(--sp-3);
-
-        span {
-          color: var(--primary);
-        }
-      }
-
-      .page-desc {
-        color: var(--text-secondary);
-        font-size: var(--text-base);
-        max-width: 66ch;
-        line-height: 1.6;
-        margin: 0;
-      }
-    }
-
     .paths-container {
-      padding-top: var(--sp-10);
+      padding-top: var(--sp-8);
       padding-bottom: var(--sp-20);
     }
 

@@ -12,25 +12,6 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   imports: [RouterLink, FormsModule, SlicePipe, AppIconComponent],
   template: `
     <div class="courses-page">
-      <!-- Encabezado Principal -->
-      <div class="page-header">
-        <div class="container">
-          <div class="page-header__row">
-            <div>
-              <div class="header-pre-tag">
-                <span class="pulse-dot"></span>
-                <span>CATÁLOGO ACADÉMICO ABIERTO</span>
-              </div>
-              <h1>Todos los <span>Cursos</span></h1>
-              <p>Aprende a tu ritmo con cursos y lecciones diseñadas para ingeniería de software, arquitectura y sistemas.</p>
-            </div>
-            <div class="header-meta-badge">
-              <span class="results-count">{{ total() }} {{ total() === 1 ? 'curso disponible' : 'cursos disponibles' }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="container courses-layout">
         <!-- Mobile Filters Trigger -->
         <div class="mobile-filters-trigger">
@@ -175,6 +156,10 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
 
         <!-- Course Grid -->
         <main class="courses-main">
+          <div class="courses-header-bar">
+            <span class="results-count">{{ total() }} {{ total() === 1 ? 'curso disponible' : 'cursos disponibles' }}</span>
+          </div>
+
           <!-- Active filter chips row -->
           @if (activeFiltersCount() > 0) {
             <div class="active-filters-bar">
@@ -266,71 +251,20 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     </div>
   `,
   styles: [`
-    .page-header {
-      padding: var(--sp-8) 0 var(--sp-6);
-
-      .header-pre-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        color: var(--primary);
-        background: rgba(10, 233, 138, 0.08);
-        border: 1px solid rgba(10, 233, 138, 0.25);
-        padding: 3px 9px;
-        border-radius: 99px;
-        margin-bottom: var(--sp-2);
-
-        .pulse-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: var(--primary);
-          box-shadow: 0 0 8px var(--primary);
-          animation: pulse 2s infinite;
-        }
-      }
-
-      h1 {
-        font-size: var(--text-3xl);
-        font-weight: var(--font-bold);
-        color: var(--text-primary);
-        letter-spacing: -0.02em;
-        span { color: var(--primary); }
-
-        @media (max-width: 640px) {
-          font-size: var(--text-2xl);
-        }
-      }
-
-      p { color: var(--text-secondary); margin-top: var(--sp-2); max-width: 65ch; line-height: 1.5; }
-
-      &__row {
-        display: flex; align-items: flex-end; justify-content: space-between;
-        gap: var(--sp-4); flex-wrap: wrap;
-
-        @media (max-width: 640px) {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 12px;
-        }
-      }
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.85); }
-    }
-
     .courses-layout {
       display: grid;
       grid-template-columns: 280px 1fr;
       gap: var(--sp-8);
-      padding-top: var(--sp-4);
+      padding-top: var(--sp-8);
       padding-bottom: var(--sp-12);
-      @media (max-width: 900px) { grid-template-columns: 1fr; gap: var(--sp-4); }
+      @media (max-width: 900px) { grid-template-columns: 1fr; gap: var(--sp-4); padding-top: var(--sp-6); }
+    }
+
+    .courses-header-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: var(--sp-3);
     }
 
     .mobile-filters-trigger {
