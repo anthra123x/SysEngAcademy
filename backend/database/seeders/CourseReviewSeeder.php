@@ -53,18 +53,8 @@ class CourseReviewSeeder extends Seeder
                 );
             }
 
-            // Recalcular métrica real
+            // Recalcular métrica real con conteo estricto
             $course->recalculateRating();
-
-            // Asignar una base respetable de rating_count si tiene pocas reseñas
-            if ($course->rating_count < 10) {
-                // Generar un número realista entre 120 y 1450 estudiantes para que la métrica inicial refleje volumen
-                $simulatedCount = 150 + (($course->id * 47) % 1300);
-                $course->update([
-                    'rating_avg' => round($course->reviews()->avg('rating') ?: 4.9, 1),
-                    'rating_count' => $simulatedCount,
-                ]);
-            }
         }
     }
 }

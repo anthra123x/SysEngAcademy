@@ -225,11 +225,18 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
                         </span>
                       }
                       <div [class]="'badge badge-' + course.difficulty">{{ diffLabel(course.difficulty) }}</div>
-                      <span class="rating-badge-card" [title]="'Calificación: ' + (course.rating_avg ? (course.rating_avg | number:'1.1-1') : '4.9') + ' / 5'">
-                        <app-icon name="star" [size]="11" color="#FFB800" />
-                        <span>{{ course.rating_avg ? (course.rating_avg | number:'1.1-1') : '4.9' }}</span>
-                        <small>({{ formatRatingCount(course.rating_count) }})</small>
-                      </span>
+                      @if ((course.rating_count ?? 0) > 0 && course.rating_avg) {
+                        <span class="rating-badge-card" [title]="'Calificación: ' + (course.rating_avg | number:'1.1-1') + ' / 5 (' + course.rating_count + ' opiniones)'">
+                          <app-icon name="star" [size]="11" color="#FFB800" />
+                          <span>{{ course.rating_avg | number:'1.1-1' }}</span>
+                          <small>({{ formatRatingCount(course.rating_count) }})</small>
+                        </span>
+                      } @else {
+                        <span class="rating-badge-card rating-badge-card--new" title="Curso nuevo sin calificaciones todavía">
+                          <app-icon name="sparkles" [size]="11" color="#64748B" />
+                          <span>Nuevo</span>
+                        </span>
+                      }
                     </div>
                     <h3>{{ course.title }}</h3>
                     <p>{{ course.description | slice:0:85 }}...</p>
@@ -664,6 +671,11 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           margin-left: auto;
 
           small {
+            color: #64748B;
+            font-weight: 500;
+          }
+
+          &--new {
             color: #64748B;
             font-weight: 500;
           }

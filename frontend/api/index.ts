@@ -1636,6 +1636,187 @@ export default async function handler(req: any, res: any) {
     }
 
     // -------------------------------------------------------------
+    // CALIFICACIONES Y RESEÑAS DE CURSOS (DATOS 100% REALES)
+    // -------------------------------------------------------------
+    const courseReviewsMatch = cleanPath.match(/^\/courses\/([^/]+)\/reviews$/);
+    if (courseReviewsMatch) {
+      const courseSlug = decodeURIComponent(courseReviewsMatch[1]);
+      const courseRows: any = await sql`SELECT id, slug, rating_avg, rating_count FROM courses WHERE slug = ${courseSlug} OR id::text = ${courseSlug} LIMIT 1`;
+      if (!courseRows || courseRows.length === 0) {
+        return sendJson(res, 404, { message: 'Curso no encontrado' });
+      }
+      const courseId = Number(courseRows[0].id);
+
+      if (method === 'GET') {
+        const [reviewsRows, breakdownRows]: [any, any] = await Promise.all([
+          sql`
+            SELECT r.id, r.course_id, r.user_id, r.rating, r.comment, r.created_at, r.updated_at,
+                   u.name as user_name, u.email as user_email, u.avatar as user_avatar, u.role as user_role
+            FROM course_reviews r
+            JOIN users u ON r.user_id = u.id
+            WHERE r.course_id = ${courseId}
+            ORDER BY r.created_at DESC
+            LIMIT 50
+          `,
+          sql`
+            SELECT rating, count(*)::int as count
+            FROM course_reviews
+            WHERE course_id = ${courseId}
+            GROUP BY rating
+          `,
+        ]);
+
+        const breakdownMap: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        let totalReviews = 0;
+        let sumRating = 0;
+        for (const row of breakdownRows as any[]) {
+          const stars = Number(row.rating);
+          const c = Number(row.count);
+          breakdownMap[stars] = c;
+          totalReviews += c;
+          sumRating += stars * c;
+        }
+
+        const avgRating = totalReviews > 0 ? Math.round((sumRating / totalReviews) * 10) / 10 : 0;
+
+        let userReview: any = null;
+        const user = await resolveUser(req);
+        if (user) {
+          const ur = (reviewsRows as any[]).find((r: any) => Number(r.user_id) === Number(user.id));
+          if (ur) {
+            userReview = {
+              id: Number(ur.id),
+              course_id: Number(ur.course_id),
+              user_id: Number(ur.user_id),
+              rating: Number(ur.rating),
+              comment: ur.comment,
+              created_at: ur.created_at,
+              updated_at: ur.updated_at,
+              user: {
+                id: Number(user.id),
+                name: user.name,
+                avatar: user.avatar,
+                role: user.role,
+              },
+            };
+          }
+        }
+
+        const formattedReviews = (reviewsRows as any[]).map((r: any) => ({
+          id: Number(r.id),
+          course_id: Number(r.course_id),
+          user_id: Number(r.user_id),
+          rating: Number(r.rating),
+          comment: r.comment,
+          created_at: r.created_at,
+          updated_at: r.updated_at,
+          user: {
+            id: Number(r.user_id),
+            name: r.user_name || 'Estudiante SysEng',
+            avatar: r.user_avatar,
+            role: r.user_role || 'student',
+          },
+        }));
+
+        return sendJson(res, 200, {
+          stats: {
+            average: avgRating,
+            total: totalReviews,
+            breakdown: breakdownMap,
+          },
+          reviews: {
+            data: formattedReviews,
+            total: totalReviews,
+          },
+          user_review: userReview,
+        });
+      }
+
+      if (method === 'POST') {
+        const user = await resolveUser(req);
+        if (!user) {
+          return sendJson(res, 401, { message: 'Debes iniciar sesión para calificar este curso.' });
+        }
+
+        const body = await getBody(req);
+        const rating = Math.min(5, Math.max(1, Number(body.rating || 5)));
+        const comment = body.comment ? String(body.comment).trim().slice(0, 1500) : null;
+
+        await sql`
+          INSERT INTO course_reviews (course_id, user_id, rating, comment, created_at, updated_at)
+          VALUES (${courseId}, ${user.id}, ${rating}, ${comment}, NOW(), NOW())
+          ON CONFLICT (course_id, user_id)
+          DO UPDATE SET rating = ${rating}, comment = ${comment}, updated_at = NOW()
+        `;
+
+        const stats: any = await sql`
+          SELECT round(avg(rating)::numeric, 1) as avg, count(*)::int as count
+          FROM course_reviews
+          WHERE course_id = ${courseId}
+        `;
+        const newAvg = Number(stats[0]?.avg || rating);
+        const newCount = Number(stats[0]?.count || 1);
+
+        await sql`
+          UPDATE courses
+          SET rating_avg = ${newAvg}, rating_count = ${newCount}
+          WHERE id = ${courseId}
+        `;
+
+        delCache(`course_detail_${courseSlug}`);
+        delCache('base_courses_catalog');
+
+        return sendJson(res, 200, {
+          message: '¡Tu calificación ha sido guardada exitosamente!',
+          review: {
+            course_id: courseId,
+            user_id: user.id,
+            rating,
+            comment,
+            user: { id: user.id, name: user.name, avatar: user.avatar, role: user.role },
+          },
+          rating_avg: newAvg,
+          rating_count: newCount,
+        });
+      }
+
+      if (method === 'DELETE') {
+        const user = await resolveUser(req);
+        if (!user) {
+          return sendJson(res, 401, { message: 'No autorizado.' });
+        }
+
+        await sql`
+          DELETE FROM course_reviews
+          WHERE course_id = ${courseId} AND user_id = ${user.id}
+        `;
+
+        const stats: any = await sql`
+          SELECT round(avg(rating)::numeric, 1) as avg, count(*)::int as count
+          FROM course_reviews
+          WHERE course_id = ${courseId}
+        `;
+        const newAvg = stats[0]?.count > 0 ? Number(stats[0]?.avg) : null;
+        const newCount = Number(stats[0]?.count || 0);
+
+        await sql`
+          UPDATE courses
+          SET rating_avg = ${newAvg}, rating_count = ${newCount}
+          WHERE id = ${courseId}
+        `;
+
+        delCache(`course_detail_${courseSlug}`);
+        delCache('base_courses_catalog');
+
+        return sendJson(res, 200, {
+          message: 'Calificación eliminada correctamente.',
+          rating_avg: newAvg,
+          rating_count: newCount,
+        });
+      }
+    }
+
+    // -------------------------------------------------------------
     // FOROS Y COMUNIDAD
     // -------------------------------------------------------------
     const courseForumMatch = cleanPath.match(/^\/courses\/([^/]+)\/forum$/);

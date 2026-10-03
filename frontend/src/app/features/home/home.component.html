@@ -250,11 +250,18 @@
               <div class="card-body">
                 <div class="card-tags-row">
                   <span [class]="'badge badge-' + course.difficulty">{{ difficultyLabel(course.difficulty) }}</span>
-                  <span class="rating-badge" [title]="'Calificación: ' + (course.rating_avg ? (course.rating_avg | number:'1.1-1') : '4.9') + ' / 5'">
-                    <app-icon name="star" [size]="12" color="#FFB800" />
-                    {{ course.rating_avg ? (course.rating_avg | number:'1.1-1') : '4.9' }}
-                    <small>({{ formatRatingCount(course.rating_count) }})</small>
-                  </span>
+                  @if ((course.rating_count ?? 0) > 0 && course.rating_avg) {
+                    <span class="rating-badge" [title]="'Calificación: ' + (course.rating_avg | number:'1.1-1') + ' / 5 (' + course.rating_count + ' opiniones)'">
+                      <app-icon name="star" [size]="12" color="#FFB800" />
+                      {{ course.rating_avg | number:'1.1-1' }}
+                      <small>({{ formatRatingCount(course.rating_count) }})</small>
+                    </span>
+                  } @else {
+                    <span class="rating-badge rating-badge--new" title="Curso nuevo sin calificaciones todavía">
+                      <app-icon name="sparkles" [size]="12" color="#64748B" />
+                      <span>Nuevo</span>
+                    </span>
+                  }
                 </div>
 
                 <h3 class="card-title">{{ course.title }}</h3>

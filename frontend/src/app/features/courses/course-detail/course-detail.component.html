@@ -42,11 +42,15 @@
                   type="button"
                   class="metric-item metric-rating metric-rating--btn"
                   (click)="setTab('reviews')"
-                  title="Ver calificaciones y calificar el curso"
+                  title="Ver calificaciones y opiniones del curso"
                 >
-                  <span class="star-icon"><app-icon name="star" [size]="14" color="#FFB800" /></span>
-                  <span class="rating-score">{{ course()!.rating_avg ? (course()!.rating_avg | number:'1.1-1') : '4.9' }}</span>
-                  <span class="rating-count">({{ formatRatingCount(course()!.rating_count) }})</span>
+                  <span class="star-icon"><app-icon name="star" [size]="14" [color]="(course()!.rating_count ?? 0) > 0 ? '#FFB800' : '#64748B'" /></span>
+                  @if ((course()!.rating_count ?? 0) > 0) {
+                    <span class="rating-score">{{ course()!.rating_avg | number:'1.1-1' }}</span>
+                    <span class="rating-count">({{ course()!.rating_count }})</span>
+                  } @else {
+                    <span class="rating-score" style="color: #94A3B8;">Sin calificar</span>
+                  }
                   <span class="rating-pill-action">
                     @if (userReview()) {
                       <span>★ {{ userReview()!.rating }}.0</span>
@@ -276,14 +280,20 @@
                 <!-- 1. Overview Summary Card -->
                 <div class="reviews-overview-card">
                   <div class="overview-score-box">
-                    <span class="big-score">{{ course()!.rating_avg ? (course()!.rating_avg | number:'1.1-1') : '4.9' }}</span>
-                    <div class="stars-row">
-                      @for (s of [1,2,3,4,5]; track s) {
-                        <span class="overview-star">★</span>
-                      }
-                    </div>
-                    <span class="overview-meta">Calificación media verificada</span>
-                    <span class="overview-total-count">{{ formatRatingCount(course()!.rating_count) }} estudiantes</span>
+                    @if ((course()!.rating_count ?? 0) > 0) {
+                      <span class="big-score">{{ course()!.rating_avg | number:'1.1-1' }}</span>
+                      <div class="stars-row">
+                        @for (s of [1,2,3,4,5]; track s) {
+                          <span class="overview-star" [class.is-filled]="s <= (course()!.rating_avg || 5)">★</span>
+                        }
+                      </div>
+                      <span class="overview-meta">Calificación media verificada</span>
+                      <span class="overview-total-count">{{ course()!.rating_count }} {{ course()!.rating_count === 1 ? 'opinión verificada' : 'opiniones verificadas' }}</span>
+                    } @else {
+                      <span class="big-score" style="color: #64748B; font-size: 34px;">S/C</span>
+                      <span class="overview-meta">Sin calificaciones aún</span>
+                      <span class="overview-total-count">Sé el primer estudiante en calificar este curso</span>
+                    }
                   </div>
 
                   <div class="overview-breakdown-box">
@@ -513,20 +523,6 @@
                     Empezar a Aprender →
                   </button>
                 }
-              </div>
-
-              <!-- Mini Banner Calificar en Sidebar -->
-              <div class="sidebar-rating-banner" (click)="setTab('reviews')">
-                <div class="srb-info">
-                  <span class="srb-star-icon">⭐</span>
-                  <div>
-                    <strong class="srb-score">{{ course()!.rating_avg ? (course()!.rating_avg | number:'1.1-1') : '4.9' }} / 5</strong>
-                    <span class="srb-count">({{ formatRatingCount(course()!.rating_count) }} opiniones)</span>
-                  </div>
-                </div>
-                <span class="srb-link">
-                  {{ userReview() ? 'Mi valoración' : 'Calificar' }} →
-                </span>
               </div>
 
               <!-- Methodology Card (Documentation-first) -->

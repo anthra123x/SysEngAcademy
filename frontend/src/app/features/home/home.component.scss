@@ -933,10 +933,18 @@
           margin-bottom: var(--sp-2);
 
           .rating-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             font-size: var(--text-xs);
             color: #ffb703;
             font-weight: var(--font-bold);
             small { color: var(--text-muted); font-weight: normal; }
+
+            &--new {
+              color: var(--text-muted);
+              font-weight: 500;
+            }
           }
         }
 

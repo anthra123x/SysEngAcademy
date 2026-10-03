@@ -67,10 +67,15 @@ class Course extends Model
     {
         $count = $this->reviews()->count();
         if ($count > 0) {
-            $avg = round((float) $this->reviews()->avg('rating'), 2);
+            $avg = round((float) $this->reviews()->avg('rating'), 1);
             $this->update([
                 'rating_avg' => $avg,
                 'rating_count' => $count,
+            ]);
+        } else {
+            $this->update([
+                'rating_avg' => null,
+                'rating_count' => 0,
             ]);
         }
     }

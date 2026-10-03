@@ -267,8 +267,6 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   getBreakdownPercent(stars: number): number {
     const stats = this.reviewsStats();
     if (!stats || stats.total <= 0) {
-      if (stars === 5) return 85;
-      if (stars === 4) return 15;
       return 0;
     }
     const count = stats.breakdown?.[stars] ?? 0;
