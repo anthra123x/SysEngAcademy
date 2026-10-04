@@ -206,7 +206,7 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #0AE98A, #00D9FF, #FFB800);
+    background: linear-gradient(90deg, #0AE98A, #00D9FF);
   }
 
   @media (max-width: 900px) {
@@ -256,9 +256,9 @@
   gap: 5px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #FFB800;
-  background: rgba(255, 184, 0, 0.1);
-  border: 1px solid rgba(255, 184, 0, 0.25);
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
   padding: 3px 9px;
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
@@ -418,7 +418,7 @@
     background: rgba(0, 0, 0, 0.2);
     padding: 3px 8px;
     border-radius: 4px;
-    border-left: 2px solid #FFB800;
+    border-left: 2px solid var(--primary);
   }
 }
 
@@ -498,8 +498,8 @@
     color: var(--text-secondary);
 
     &--quest {
-      background: rgba(255, 184, 0, 0.15);
-      color: #FFB800;
+      background: var(--accent-dim);
+      color: var(--accent);
       font-weight: 700;
     }
   }
@@ -1001,11 +1001,11 @@
     font-family: var(--font-mono);
     font-size: 0.75rem;
     font-weight: 800;
-    color: #FFB800;
-    background: rgba(255, 184, 0, 0.12);
+    color: var(--primary);
+    background: var(--primary-dim);
     padding: 3px 10px;
     border-radius: 4px;
-    border: 1px solid rgba(255, 184, 0, 0.25);
+    border: 1px solid rgba(10, 233, 138, 0.25);
   }
 
   .quest-title {
@@ -1045,7 +1045,7 @@
 
       .q-bar-fill {
         height: 100%;
-        background: linear-gradient(90deg, #FFB800, #0AE98A);
+        background: linear-gradient(90deg, var(--accent), var(--primary));
         border-radius: 5px;
         transition: width 0.4s ease;
       }
@@ -1514,84 +1514,11 @@
    BARRA DE MENTORÍA DOCENTE
    ======================================================== */
 .teacher-mentorship-bar {
-  background: linear-gradient(135deg, rgba(255, 184, 0, 0.08) 0%, rgba(22, 25, 38, 0.95) 100%);
-  border: 1px solid rgba(255, 184, 0, 0.35);
-  border-radius: var(--radius-xl);
-  padding: var(--sp-4) var(--sp-6);
-  margin-bottom: var(--sp-6);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 4px 20px rgba(255, 184, 0, 0.08);
-
-  .t-badge-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .t-badge-pill {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 800;
-    color: #FFB800;
-    background: rgba(255, 184, 0, 0.15);
-    border: 1px solid rgba(255, 184, 0, 0.3);
-    padding: 3px 10px;
-    border-radius: 4px;
-    letter-spacing: 0.04em;
-  }
-
-  .t-badge-title {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .t-badge-desc {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.45;
-  }
-
-  .t-badge-actions {
-    margin-top: 4px;
-  }
+  display: none;
 }
 
-/* ========================================================
-   DAILY STANDUP TRIGGER EN EL HERO
-   ======================================================== */
 .clan-standup-trigger-row {
-  margin-top: var(--sp-4);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.btn-standup-glow {
-  background: linear-gradient(90deg, rgba(255, 184, 0, 0.15), rgba(10, 233, 138, 0.15));
-  border: 1px solid rgba(255, 184, 0, 0.4);
-  color: #FFB800;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 0 16px rgba(255, 184, 0, 0.15);
-
-  &:hover {
-    background: #FFB800;
-    color: #08090D;
-    box-shadow: 0 0 24px rgba(255, 184, 0, 0.4);
-    transform: translateY(-1px);
-  }
+  display: none;
 }
 
 .standup-synced-badge {
@@ -1620,9 +1547,9 @@
 .author-teacher-tag {
   font-size: 0.65rem;
   font-weight: 800;
-  color: #FFB800;
-  background: rgba(255, 184, 0, 0.15);
-  border: 1px solid rgba(255, 184, 0, 0.3);
+  color: var(--accent);
+  background: rgba(0, 217, 255, 0.12);
+  border: 1px solid rgba(0, 217, 255, 0.25);
   padding: 1px 6px;
   border-radius: 4px;
   margin-left: 6px;
@@ -1630,15 +1557,15 @@
 }
 
 .is-teacher-avatar {
-  border-color: #FFB800 !important;
-  color: #FFB800 !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
 }
 
 .btn-endorse-docente {
-  background: rgba(255, 184, 0, 0.1);
-  border: 1px solid rgba(255, 184, 0, 0.35);
-  color: #FFB800;
-  font-weight: 700;
+  background: rgba(0, 217, 255, 0.1);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  color: var(--accent);
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -1649,18 +1576,18 @@
   transition: all 0.2s ease;
 
   &:hover {
-    background: #FFB800;
+    background: var(--accent);
     color: #08090D;
-    box-shadow: 0 0 14px rgba(255, 184, 0, 0.4);
+    box-shadow: 0 0 12px rgba(0, 217, 255, 0.3);
   }
 }
 
 .teacher-endorsement-banner {
-  background: rgba(255, 184, 0, 0.06);
-  border: 1px solid rgba(255, 184, 0, 0.3);
-  border-left: 3px solid #FFB800;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
+  padding: 8px 12px;
   margin-bottom: var(--sp-3);
 
   .te-header {
@@ -1668,7 +1595,7 @@
     align-items: center;
     gap: 8px;
     font-size: 0.78rem;
-    color: #FFB800;
+    color: var(--accent);
     margin-bottom: 4px;
     flex-wrap: wrap;
   }
@@ -1677,14 +1604,16 @@
     margin-left: auto;
     font-size: 0.7rem;
     font-weight: 700;
-    background: rgba(255, 184, 0, 0.18);
+    color: var(--accent);
+    background: rgba(0, 217, 255, 0.12);
+    border: 1px solid rgba(0, 217, 255, 0.25);
     padding: 1px 6px;
     border-radius: 4px;
   }
 
   .te-note {
     font-size: 0.78rem;
-    color: var(--text-primary);
+    color: var(--text-secondary);
     margin: 0;
     font-style: italic;
   }
@@ -1693,8 +1622,8 @@
 .badge-mentor {
   font-size: 0.62rem;
   font-weight: 800;
-  color: #FFB800;
-  background: rgba(255, 184, 0, 0.15);
+  color: var(--accent);
+  background: rgba(0, 217, 255, 0.12);
   padding: 1px 4px;
   border-radius: 3px;
   margin-left: 4px;
@@ -1702,7 +1631,7 @@
 }
 
 .is-teacher-comment {
-  border-left: 2px solid #FFB800;
+  border-left: 2px solid var(--accent);
   padding-left: 8px;
 }
 
@@ -1716,19 +1645,19 @@
 }
 
 .btn-endorse-project {
-  background: rgba(255, 184, 0, 0.12);
-  border: 1px solid rgba(255, 184, 0, 0.35);
-  color: #FFB800;
-  font-weight: 700;
+  background: rgba(0, 217, 255, 0.1);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  color: var(--accent);
+  font-weight: 600;
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 0.72rem;
   cursor: pointer;
   transition: all 0.2s ease;
   &:hover {
-    background: #FFB800;
+    background: var(--accent);
     color: #08090D;
-    box-shadow: 0 0 14px rgba(255, 184, 0, 0.4);
+    box-shadow: 0 0 12px rgba(0, 217, 255, 0.3);
   }
 }
 
@@ -1737,10 +1666,10 @@
   align-items: center;
   gap: 8px;
   font-size: 0.75rem;
-  color: #FFB800;
-  background: rgba(255, 184, 0, 0.08);
-  border: 1px solid rgba(255, 184, 0, 0.25);
-  padding: 5px 10px;
+  color: var(--accent);
+  background: rgba(0, 217, 255, 0.08);
+  border: 1px solid rgba(0, 217, 255, 0.2);
+  padding: 4px 8px;
   border-radius: 4px;
   margin-bottom: var(--sp-3);
   font-weight: 600;
@@ -2103,7 +2032,7 @@
     letter-spacing: 0.05em;
 
     .terminal-running-spinner {
-      color: #FFB800;
+      color: var(--accent);
       animation: pulse 1s infinite;
     }
   }
@@ -2117,7 +2046,7 @@
     gap: 4px;
 
     .term-muted { color: var(--text-muted); }
-    .term-loading { color: #FFB800; display: flex; flex-direction: column; gap: 2px; }
+    .term-loading { color: var(--accent); display: flex; flex-direction: column; gap: 2px; }
 
     .term-results-list {
       display: flex;
@@ -2224,7 +2153,7 @@
     font-size: 0.68rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: #FFB800;
+    color: var(--accent);
     margin-bottom: 4px;
     font-family: var(--font-mono);
   }

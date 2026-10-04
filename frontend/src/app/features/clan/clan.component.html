@@ -31,6 +31,12 @@
         </div>
 
         <div class="clan-top-actions">
+          @if (isTeacher()) {
+            <button type="button" class="btn btn-xs btn-outline" (click)="showTeacherMissionModal.set(true)">
+              <app-icon name="book" [size]="13" color="var(--accent)" />
+              <span>+ Misión de Cátedra</span>
+            </button>
+          }
           <button type="button" class="btn btn-xs btn-outline" (click)="browseAllClans.set(!browseAllClans())">
             <app-icon name="compass" [size]="13" />
             <span>{{ browseAllClans() ? 'Volver al Clan' : 'Explorar Otros Clanes (' + clansService.studyGroups().length + ')' }}</span>
@@ -41,25 +47,6 @@
           </button>
         </div>
       </div>
-
-      <!-- BARRA DE MENTORÍA DOCENTE (Si el usuario es Docente) -->
-      @if (isTeacher()) {
-        <div class="teacher-mentorship-bar animate-fade-in">
-          <div class="t-badge-group">
-            <span class="t-badge-pill">🎓 MODO DOCENTE / MENTOR</span>
-            <span class="t-badge-title">Semillero en Supervisión de Cátedra</span>
-          </div>
-          <p class="t-badge-desc">
-            Tienes facultades de mentor para otorgar <strong>Sellos de Aval Docente (+80 XP)</strong> a las ideas de los estudiantes, certificar proyectos y asignar <strong>Misiones de Cátedra</strong> oficiales.
-          </p>
-          <div class="t-badge-actions">
-            <button type="button" class="btn btn-xs btn-primary" (click)="showTeacherMissionModal.set(true)">
-              <app-icon name="book" [size]="13" />
-              <span>Asignar Misión de Cátedra 📜</span>
-            </button>
-          </div>
-        </div>
-      }
 
       <!-- DIRECTORY OF CLANS DRAWER / BROWSER (If user wants to explore other clanes) -->
       @if (browseAllClans()) {
@@ -113,6 +100,11 @@
                 <app-icon name="check" [size]="12" /> Miembro Activo
               </span>
             }
+            @if (clan.dailyStandupDoneToday) {
+              <span class="badge badge-outline">
+                <app-icon name="check" [size]="11" /> Standup al día
+              </span>
+            }
           </div>
 
           <h1 class="clan-title">{{ clan.name }}</h1>
@@ -126,23 +118,6 @@
                 <span class="lor-tag"># {{ line }}</span>
               }
             </div>
-          </div>
-
-          <!-- TRIGGER DAILY STANDUP / RACHA INTERACTIVA -->
-          <div class="clan-standup-trigger-row">
-            @if (clan.isMember) {
-              @if (clan.dailyStandupDoneToday) {
-                <div class="standup-synced-badge">
-                  <app-icon name="check-circle" [size]="15" color="#0AE98A" />
-                  <span>Standup Diario Completado Hoy · Racha Grupal Protegida 🔥</span>
-                </div>
-              } @else {
-                <button type="button" class="btn btn-sm btn-standup-glow" (click)="openStandupModal()">
-                  <app-icon name="zap" [size]="15" />
-                  <span>⚡ Sincronizar Daily Standup de Hoy (+45 XP)</span>
-                </button>
-              }
-            }
           </div>
         </div>
 
@@ -174,7 +149,7 @@
             <div class="perks-list">
               @for (perk of clan.clanPerks; track perk) {
                 <span class="perk-pill">
-                  <app-icon name="zap" [size]="11" color="#FFB800" /> {{ perk }}
+                  <app-icon name="zap" [size]="11" color="var(--primary)" /> {{ perk }}
                 </span>
               }
             </div>
@@ -191,6 +166,12 @@
                 <app-icon name="code" [size]="14" />
                 <span>Nuevo Proyecto</span>
               </button>
+              @if (!clan.dailyStandupDoneToday) {
+                <button type="button" class="btn btn-sm btn-outline" (click)="openStandupModal()">
+                  <app-icon name="zap" [size]="14" />
+                  <span>Check-in Diario (+45 XP)</span>
+                </button>
+              }
               <button type="button" class="btn-leave-clan" (click)="leaveCurrentClan()" title="Abandonar este semillero">
                 Salir del Clan
               </button>
@@ -237,7 +218,7 @@
           <app-icon name="zap" [size]="15" />
           <span>Arena de Retos en Vivo</span>
           @if (!clan.weeklyQuest.completed) {
-            <span class="tab-badge tab-badge--quest">Misión Activa</span>
+            <span class="tab-badge tab-badge--quest">Misión en curso</span>
           }
         </button>
 
@@ -267,7 +248,7 @@
                 [class.is-active]="feedFilter() === 'all'"
                 (click)="feedFilter.set('all')"
               >
-                Todas las Ideas ({{ clan.researchFeed.length }})
+                Todas ({{ clan.researchFeed.length }})
               </button>
               <button
                 type="button"
@@ -275,7 +256,7 @@
                 [class.is-active]="feedFilter() === 'hallazgo'"
                 (click)="feedFilter.set('hallazgo')"
               >
-                💡 Hallazgos
+                Hallazgos
               </button>
               <button
                 type="button"
@@ -283,7 +264,7 @@
                 [class.is-active]="feedFilter() === 'benchmark'"
                 (click)="feedFilter.set('benchmark')"
               >
-                ⚡ Benchmarks &amp; Retos
+                Benchmarks
               </button>
               <button
                 type="button"
@@ -291,7 +272,7 @@
                 [class.is-active]="feedFilter() === 'standup'"
                 (click)="feedFilter.set('standup')"
               >
-                🔥 Standups
+                Standups
               </button>
               <button
                 type="button"
@@ -299,14 +280,14 @@
                 [class.is-active]="feedFilter() === 'mision_docente'"
                 (click)="feedFilter.set('mision_docente')"
               >
-                📜 Misiones Docentes
+                Misiones Cátedra
               </button>
             </div>
 
             @if (clan.isMember) {
               <button type="button" class="btn btn-sm btn-primary" (click)="showNewLogModal.set(true)">
                 <app-icon name="plus" [size]="14" />
-                <span>Compartir Hallazgo (+60 XP)</span>
+                <span>Compartir Hallazgo</span>
               </button>
             }
           </div>
@@ -338,7 +319,7 @@
                       <span class="author-name">
                         {{ entry.author }}
                         @if (entry.authorRole.includes('Docente')) {
-                          <span class="author-teacher-tag">DOCENTE</span>
+                          <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.65rem;">Docente</span>
                         }
                       </span>
                       <span class="author-role">{{ entry.authorRole }} · {{ entry.timeAgo }}</span>
@@ -352,8 +333,8 @@
 
                     <!-- Botón para Docente: Avalar con Sello de Cátedra -->
                     @if (isTeacher() && !entry.teacherEndorsement && entry.author !== auth.user()?.name) {
-                      <button type="button" class="btn btn-xs btn-endorse-docente" (click)="endorseLog(entry.id)" title="Conceder Sello Oficial de Aval Docente (+80 XP)">
-                        <app-icon name="award" [size]="12" color="#FFB800" />
+                      <button type="button" class="btn btn-xs btn-outline" (click)="endorseLog(entry.id)" title="Conceder Aval Docente (+80 XP)">
+                        <app-icon name="award" [size]="12" color="var(--accent)" />
                         <span>Avalar (+80 XP)</span>
                       </button>
                     }
@@ -364,9 +345,9 @@
                 @if (entry.teacherEndorsement; as te) {
                   <div class="teacher-endorsement-banner animate-fade-in">
                     <div class="te-header">
-                      <app-icon name="award" [size]="16" color="#FFB800" />
-                      <strong>Sello de Aval Docente concedido por {{ te.teacherName }}</strong>
-                      <span class="te-badge font-mono">+{{ te.xpAwarded }} XP Mérito Académico</span>
+                      <app-icon name="award" [size]="14" color="var(--accent)" />
+                      <strong>Aval Docente · {{ te.teacherName }}</strong>
+                      <span class="te-badge font-mono">+{{ te.xpAwarded }} XP</span>
                     </div>
                     <p class="te-note">"{{ te.note }}"</p>
                   </div>
