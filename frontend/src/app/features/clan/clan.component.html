@@ -739,89 +739,79 @@
       @if (activeTab() === 'git') {
         <section class="squad-vercel-git-section animate-fade-in">
           @for (project of clan.projects; track project.id) {
-            <!-- 1. Vercel Production Environment Banner -->
-            <div class="vercel-prod-card">
-              <div class="vpc-main">
-                <div class="vpc-status-row">
-                  <span class="vpc-env-tag">
-                    <span class="vpc-dot"></span>
-                    PRODUCCIÓN
-                  </span>
-                  <span class="vpc-ready-badge font-mono">● Ready</span>
-                  <span class="vpc-branch-pill font-mono">
+            <!-- 1. Vercel Production Environment Card -->
+            <div class="v-production-card">
+              <div class="v-prod-top">
+                <div class="v-prod-badge-group font-mono">
+                  <span class="v-dot-live"></span>
+                  <span class="v-env-name">PRODUCCIÓN</span>
+                  <span class="v-prod-status">● Ready</span>
+                  <span class="v-prod-branch">
                     <app-icon name="git-branch" [size]="12" />
                     {{ project.activeBranch || 'main' }}
                   </span>
                 </div>
-
-                <h3 class="vpc-title">{{ project.title }}</h3>
-                <p class="vpc-desc">{{ project.description }}</p>
-
-                <div class="vpc-meta-row font-mono">
-                  <a [href]="project.productionDeployment?.domain || 'https://syseng-kernel.vercel.app'" target="_blank" class="vpc-domain-link">
-                    <span>{{ project.productionDeployment?.domain || 'https://syseng-kernel.vercel.app' }}</span>
-                    <app-icon name="external-link" [size]="11" />
+                <div class="v-prod-actions">
+                  <a [href]="project.productionDeployment?.domain || 'https://syseng-kernel.vercel.app'" target="_blank" class="btn btn-sm btn-outline font-mono">
+                    <span>Visitar ↗</span>
                   </a>
-                  <span class="vpc-sep">·</span>
-                  <span class="vpc-commit-msg">
-                    <span class="vpc-hash">{{ project.productionDeployment?.commitHash || 'd9c359a' }}</span>
-                    {{ project.productionDeployment?.commitMessage || 'Merge PR #3: Cola de estados de procesos' }}
-                  </span>
-                  <span class="vpc-sep">·</span>
-                  <span class="vpc-time">{{ project.productionDeployment?.deployedAt || 'hace 2h por Alex Torres' }}</span>
+                  @if (clan.isMember) {
+                    <button type="button" class="btn btn-sm btn-primary font-mono" (click)="openNewPrModal(project.id)">
+                      <app-icon name="plus" [size]="13" />
+                      <span>Nuevo PR</span>
+                    </button>
+                  }
                 </div>
               </div>
 
-              <div class="vpc-actions">
-                <a [href]="project.productionDeployment?.domain || 'https://syseng-kernel.vercel.app'" target="_blank" class="btn btn-sm btn-outline font-mono">
-                  <span>Visitar ↗</span>
+              <div class="v-prod-domain-row font-mono">
+                <a [href]="project.productionDeployment?.domain || 'https://syseng-kernel.vercel.app'" target="_blank" class="v-prod-link">
+                  <span>{{ project.productionDeployment?.domain || 'https://syseng-kernel.vercel.app' }}</span>
+                  <app-icon name="external-link" [size]="13" />
                 </a>
-                @if (clan.isMember) {
-                  <button type="button" class="btn btn-sm btn-primary font-mono" (click)="openNewPrModal(project.id)">
-                    <app-icon name="git-pull-request" [size]="14" />
-                    <span>+ Abrir PR</span>
-                  </button>
-                }
+              </div>
+
+              <div class="v-prod-meta-bar font-mono">
+                <span class="v-meta-commit">
+                  <span class="v-hash">{{ project.productionDeployment?.commitHash || 'd9c359a' }}</span>
+                  <span class="v-msg">{{ project.productionDeployment?.commitMessage || 'Merge PR #3: Cola de estados de procesos' }}</span>
+                </span>
+                <span class="v-meta-sep">·</span>
+                <span class="v-meta-time">{{ project.productionDeployment?.deployedAt || 'hace 2h por Alex Torres' }}</span>
               </div>
             </div>
 
             <!-- 2. Vercel Sub-navigation: Previews vs Commits -->
-            <div class="vercel-subnav">
-              <div class="v-subtabs-group">
+            <div class="v-subnav-bar">
+              <div class="v-subnav-tabs">
                 <button
                   type="button"
-                  class="v-subtab-btn"
+                  class="v-tab-item"
                   [class.is-active]="gitWorkflowTab() === 'previews'"
                   (click)="gitWorkflowTab.set('previews')"
                 >
-                  <app-icon name="zap" [size]="14" />
+                  <app-icon name="zap" [size]="13" />
                   <span>Preview Deployments &amp; PRs</span>
-                  <span class="v-tab-counter font-mono">{{ (project.pullRequests || []).length }}</span>
+                  <span class="v-tab-count font-mono">{{ (project.pullRequests || []).length }}</span>
                 </button>
                 <button
                   type="button"
-                  class="v-subtab-btn"
+                  class="v-tab-item"
                   [class.is-active]="gitWorkflowTab() === 'commits'"
                   (click)="gitWorkflowTab.set('commits')"
                 >
-                  <app-icon name="git-commit" [size]="14" />
+                  <app-icon name="git-commit" [size]="13" />
                   <span>Historial de Commits</span>
-                  <span class="v-tab-counter font-mono">{{ (project.commits || []).length }}</span>
+                  <span class="v-tab-count font-mono">{{ (project.commits || []).length }}</span>
                 </button>
-              </div>
-
-              <div class="v-subnav-right">
-                <span class="v-ci-status font-mono">
-                  <span class="ci-live-dot"></span> Vercel Checks: Previews Automáticas Activas
-                </span>
               </div>
             </div>
 
             <!-- TAB 1: Vercel Preview Deployments & PR Cards -->
             @if (gitWorkflowTab() === 'previews') {
-              <div class="vercel-prs-list animate-fade-in">
+              <div class="v-prs-container animate-fade-in">
                 @if ((project.pullRequests || []).length === 0) {
-                  <div class="vercel-empty-state">
+                  <div class="v-empty-box">
                     <app-icon name="git-pull-request" [size]="32" color="var(--text-muted)" />
                     <h4>No hay Pull Requests ni Previews activas</h4>
                     <p>Cada rama o PR que abras creará automáticamente un entorno de prueba en Vercel.</p>
@@ -834,69 +824,75 @@
                 }
 
                 @for (pr of project.pullRequests || []; track pr.id) {
-                  <div class="vercel-pr-card" [class.is-merged]="pr.status === 'merged'">
-                    <div class="vpr-header">
-                      <div class="vpr-title-group">
-                        <div class="vpr-status-pill-row">
-                          <span class="vpr-status-pill vpr-status--{{ pr.status }} font-mono">
+                  <div class="v-pr-item" [class.is-merged]="pr.status === 'merged'">
+                    <div class="v-pr-main-row">
+                      <div class="v-pr-info">
+                        <div class="v-pr-badges-row font-mono">
+                          <span class="v-status-badge v-status--{{ pr.status }}">
                             {{ pr.status === 'merged' ? '✓ MERGED' : '● OPEN' }}
                           </span>
-                          <span class="vpr-number font-mono">#{{ pr.number }}</span>
-                          <span class="vpr-branch-map font-mono">
-                            <span class="branch-pill-src">{{ pr.sourceBranch }}</span>
-                            <span class="branch-arrow">➔</span>
-                            <span class="branch-pill-dst">{{ pr.targetBranch }}</span>
+                          <span class="v-pr-num">#{{ pr.number }}</span>
+                          <span class="v-branch-flow">
+                            <span class="v-br-src">{{ pr.sourceBranch }}</span>
+                            <span class="v-br-arrow">➔</span>
+                            <span class="v-br-dst">{{ pr.targetBranch }}</span>
                           </span>
                         </div>
-                        <h4 class="vpr-title">{{ pr.title }}</h4>
-                        <p class="vpr-desc">{{ pr.description }}</p>
+                        <h4 class="v-pr-title">{{ pr.title }}</h4>
+                        <p class="v-pr-desc">{{ pr.description }}</p>
                       </div>
 
-                      <div class="vpr-checks-group">
+                      <div class="v-pr-preview-box font-mono">
                         @if (pr.status === 'open') {
-                          <div class="vpr-preview-badge font-mono">
-                            <span class="vp-dot"></span>
+                          <div class="v-preview-status">
+                            <span class="v-dot-ok"></span>
                             <span>Preview Ready</span>
-                            <span class="vp-time">({{ pr.buildDuration || '24s' }})</span>
+                            <span class="v-build-time">({{ pr.buildDuration || '24s' }})</span>
                           </div>
-                          <a [href]="pr.previewUrl || 'https://preview.vercel.app'" target="_blank" class="vpr-preview-url font-mono">
+                          <a [href]="pr.previewUrl || 'https://preview.vercel.app'" target="_blank" class="v-preview-url">
                             <span>{{ pr.previewUrl || 'https://kernel-preview.vercel.app' }}</span>
                             <app-icon name="external-link" [size]="11" />
                           </a>
                         } @else {
-                          <div class="vpr-merged-meta font-mono">
-                            <span>Fusionado en main por {{ pr.mergedBy || pr.author }}</span>
-                            <span class="time-ago">{{ pr.mergedAt || pr.timeAgo }}</span>
+                          <div class="v-merged-status">
+                            <span>Fusionado en {{ pr.targetBranch }}</span>
+                            <span class="v-merged-time">{{ pr.mergedAt || pr.timeAgo }}</span>
                           </div>
                         }
                       </div>
                     </div>
 
-                    <div class="vpr-footer">
-                      <div class="vpr-foot-meta font-mono">
-                        <span class="vpr-author">👤 {{ pr.author }}</span>
-                        <span class="vpr-sep">·</span>
-                        <span class="vpr-ci-badge ci--{{ pr.ciStatus }}">CI: {{ pr.ciStatus }}</span>
-                        <span class="vpr-sep">·</span>
-                        <span class="vpr-diff-count">+{{ pr.linesAdded || (pr.codeDiff?.additions?.length || 11) }} / -{{ pr.linesDeleted || (pr.codeDiff?.deletions?.length || 2) }}</span>
-                        <span class="vpr-sep">·</span>
-                        <span class="vpr-reviews-count">{{ (pr.reviews || []).length }} Revisiones</span>
+                    <div class="v-pr-footer-row">
+                      <div class="v-pr-meta font-mono">
+                        <span>👤 {{ pr.author }}</span>
+                        <span class="v-sep">·</span>
+                        <span class="v-ci-text">CI: {{ pr.ciStatus }}</span>
+                        <span class="v-sep">·</span>
+                        <span class="v-diff-text">+{{ pr.linesAdded || (pr.codeDiff?.additions?.length || 11) }} / -{{ pr.linesDeleted || (pr.codeDiff?.deletions?.length || 2) }}</span>
+                        <span class="v-sep">·</span>
+                        <span class="v-reviews-text">
+                          @if ((pr.reviews || []).length > 0) {
+                            ✓ {{ (pr.reviews || []).length }} Revisión (LGTM)
+                          } @else {
+                            Esperando revisión
+                          }
+                        </span>
                       </div>
 
-                      <div class="vpr-actions">
+                      <div class="v-pr-actions">
                         <button type="button" class="btn btn-xs btn-outline font-mono" (click)="openDiffModal(pr)">
                           <app-icon name="file-text" [size]="12" />
-                          <span>Inspeccionar Diff</span>
+                          <span>Ver Diff &amp; Reviews</span>
                         </button>
 
                         @if (clan.isMember && pr.status === 'open') {
                           <button
                             type="button"
-                            class="btn btn-xs btn-primary btn-merge-deploy font-mono"
+                            class="btn btn-xs btn-primary font-mono btn-deploy-action"
                             (click)="mergePrAndDeploy(project.id, pr.id)"
-                            title="Fusionar cambios y desplegar automáticamente a Producción"
+                            title="Fusionar cambios y desplegar a Producción"
                           >
-                            <span>▲ Merge &amp; Desplegar a Prod</span>
+                            <span>▲ Merge &amp; Desplegar</span>
                           </button>
                         }
                       </div>
@@ -908,24 +904,19 @@
 
             <!-- TAB 2: Clean Vercel Commits History -->
             @if (gitWorkflowTab() === 'commits') {
-              <div class="vercel-commits-list animate-fade-in">
+              <div class="v-commits-card animate-fade-in">
                 @for (c of project.commits || []; track c.hash + $index) {
-                  <div class="vercel-commit-row">
-                    <div class="vc-left">
-                      <div class="vc-avatar font-mono">{{ c.author.slice(0, 1) }}</div>
-                      <div class="vc-info">
-                        <p class="vc-message">{{ c.message }}</p>
-                        <div class="vc-meta font-mono">
-                          <span class="vc-author">{{ c.author }}</span>
-                          <span class="vc-sep">·</span>
-                          <span class="vc-branch">🌿 {{ c.branch }}</span>
-                          <span class="vc-sep">·</span>
-                          <span class="vc-time">{{ c.timeAgo }}</span>
-                        </div>
-                      </div>
+                  <div class="v-commit-item">
+                    <div class="v-commit-left">
+                      <span class="v-commit-hash font-mono">{{ c.hash }}</span>
+                      <span class="v-commit-msg">{{ c.message }}</span>
                     </div>
-                    <div class="vc-right font-mono">
-                      <span class="vc-hash">{{ c.hash }}</span>
+                    <div class="v-commit-right font-mono">
+                      <span class="v-commit-author">{{ c.author }}</span>
+                      <span class="v-sep">·</span>
+                      <span class="v-commit-branch">🌿 {{ c.branch }}</span>
+                      <span class="v-sep">·</span>
+                      <span class="v-commit-time">{{ c.timeAgo }}</span>
                     </div>
                   </div>
                 }

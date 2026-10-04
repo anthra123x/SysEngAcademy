@@ -196,16 +196,6 @@
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #0AE98A, #00D9FF);
-  }
-
   @media (max-width: 900px) {
     padding: var(--sp-5);
   }
@@ -411,22 +401,41 @@
 
 .sprint-milestone-info {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 
-  .sprint-chip {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #0AE98A;
-    background: rgba(10, 233, 138, 0.1);
-    border: 1px solid rgba(10, 233, 138, 0.25);
-    padding: 3px 8px;
-    border-radius: 4px;
+  .sprint-milestone-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
-  .sprint-task-stats {
-    font-size: 0.75rem;
+  .badge-sprint {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .sprint-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .sprint-desc {
+    font-size: 0.78rem;
     color: var(--text-muted);
+    margin: 0;
+    line-height: 1.45;
+    max-width: 75ch;
   }
 }
 
@@ -434,50 +443,63 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  flex: 1;
-  max-width: 480px;
+  flex-shrink: 0;
 
   @media (max-width: 900px) {
-    max-width: 100%;
+    width: 100%;
+    justify-content: space-between;
   }
 
-  .level-mini-pill {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--text-secondary);
+  .level-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     white-space: nowrap;
   }
 
+  .level-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  .xp-ratio {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
   .squad-progress-track {
-    flex: 1;
-    height: 7px;
-    background: rgba(0, 0, 0, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    width: 100px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 9999px;
     overflow: hidden;
 
     .squad-progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #0AE98A, #00D9FF);
+      background: var(--primary);
       border-radius: 9999px;
       transition: width 0.4s ease;
     }
   }
 
-  .xp-mini-stats {
+  .level-title-hint {
     font-size: 0.72rem;
-    color: #0AE98A;
-    font-weight: 700;
+    color: var(--text-muted);
     white-space: nowrap;
   }
 }
 
-/* ---------- SQUAD NAVIGATION TABS ---------- */
+/* ---------- SQUAD NAVIGATION TABS (CLEAN SEGMENTED) ---------- */
 .squad-nav-tabs {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 2px;
+  padding-bottom: 8px;
   margin-bottom: var(--sp-6);
   overflow-x: auto;
   scrollbar-width: none;
@@ -488,13 +510,12 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
+  padding: 8px 14px;
   background: transparent;
   border: 1px solid transparent;
-  border-bottom: 2px solid transparent;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
+  font-weight: var(--font-medium);
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
@@ -502,33 +523,33 @@
 
   &:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.04);
   }
 
   &.is-active {
-    color: var(--primary);
-    background: var(--bg-surface);
-    border-color: var(--border);
-    border-bottom-color: var(--primary);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    font-weight: var(--font-semibold);
 
     .tab-counter {
-      background: var(--primary-dim);
-      color: var(--primary);
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
     }
   }
 
   .tab-counter {
-    font-size: 0.7rem;
-    padding: 1px 7px;
+    font-size: 0.68rem;
+    padding: 1px 6px;
     border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
   }
 
   .tab-pill-alert {
     font-size: 0.65rem;
-    font-weight: 800;
-    padding: 2px 7px;
+    font-weight: 700;
+    padding: 1px 6px;
     border-radius: 4px;
     background: rgba(239, 68, 68, 0.15);
     border: 1px solid rgba(239, 68, 68, 0.3);
@@ -694,15 +715,15 @@
   }
 
   &.is-in-progress {
-    border-left: 3px solid #00D9FF;
+    border-color: rgba(255, 255, 255, 0.12);
   }
 
   &.is-in-review {
-    border-left: 3px solid #FFB800;
+    border-color: rgba(255, 255, 255, 0.12);
   }
 
   &.is-completed {
-    border-left: 3px solid #0AE98A;
+    border-color: rgba(255, 255, 255, 0.08);
     opacity: 0.85;
 
     &:hover { opacity: 1; }
@@ -968,7 +989,7 @@
   }
 
   &.is-benchmark {
-    border-left: 3px solid #00D9FF;
+    border-color: rgba(255, 255, 255, 0.14);
   }
 
   &__head {
@@ -1973,9 +1994,8 @@
 }
 
 .teacher-endorsement-banner {
-  background: var(--bg-surface-2);
-  border: 1px solid var(--border-subtle);
-  border-left: 3px solid var(--accent);
+  background: rgba(0, 217, 255, 0.05);
+  border: 1px solid rgba(0, 217, 255, 0.2);
   border-radius: var(--radius-md);
   padding: 8px 12px;
   margin-bottom: var(--sp-3);
@@ -3639,263 +3659,252 @@
   gap: var(--sp-6);
 }
 
-.vercel-prod-card {
+/* Production Environment Card */
+.v-production-card {
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
-  padding: var(--sp-6);
+  padding: var(--sp-5) var(--sp-6);
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--sp-6);
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #0AE98A, #00D9FF);
-  }
-
-  @media (max-width: 900px) {
-    flex-direction: column;
-    padding: var(--sp-4);
-  }
-
-  .vpc-main {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .vpc-status-row {
+  .v-prod-top {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: var(--sp-4);
     flex-wrap: wrap;
   }
 
-  .vpc-env-tag {
-    display: inline-flex;
+  .v-prod-badge-group {
+    display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--border);
-    padding: 2px 7px;
-    border-radius: 4px;
+    gap: 8px;
+    flex-wrap: wrap;
 
-    .vpc-dot {
-      width: 6px;
-      height: 6px;
+    .v-dot-live {
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: #0AE98A;
-      box-shadow: 0 0 6px #0AE98A;
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
     }
-  }
 
-  .vpc-ready-badge {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #0AE98A;
-    background: rgba(10, 233, 138, 0.08);
-    border: 1px solid rgba(10, 233, 138, 0.25);
-    padding: 2px 8px;
-    border-radius: 4px;
-  }
+    .v-env-name {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
 
-  .vpc-branch-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.72rem;
-    color: #00D9FF;
-    background: rgba(0, 217, 255, 0.08);
-    border: 1px solid rgba(0, 217, 255, 0.25);
-    padding: 2px 8px;
-    border-radius: 4px;
-  }
+    .v-prod-status {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #10b981;
+    }
 
-  .vpc-title {
-    font-size: var(--text-lg);
-    font-weight: var(--font-bold);
-    color: var(--text-primary);
-    margin: 0 0 4px;
-  }
-
-  .vpc-desc {
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
-    margin: 0 0 10px;
-    max-width: 70ch;
-  }
-
-  .vpc-meta-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    flex-wrap: wrap;
-
-    .vpc-domain-link {
+    .v-prod-branch {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      color: var(--primary);
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-
-    .vpc-sep {
-      color: rgba(255, 255, 255, 0.15);
-    }
-
-    .vpc-commit-msg {
+      font-size: 0.72rem;
       color: var(--text-secondary);
-    }
-
-    .vpc-hash {
-      color: #FFB800;
-      background: rgba(255, 184, 0, 0.1);
-      padding: 1px 5px;
-      border-radius: 3px;
-      margin-right: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 4px;
     }
   }
 
-  .vpc-actions {
+  .v-prod-actions {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-shrink: 0;
+  }
 
-    @media (max-width: 900px) {
-      width: 100%;
+  .v-prod-domain-row {
+    .v-prod-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+
+      &:hover {
+        color: var(--primary);
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .v-prod-meta-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+
+    .v-meta-commit {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+
+      .v-hash {
+        color: #e2e8f0;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-weight: 600;
+      }
+
+      .v-msg {
+        color: var(--text-secondary);
+      }
+    }
+
+    .v-meta-sep {
+      color: rgba(255, 255, 255, 0.15);
+    }
+
+    .v-meta-time {
+      color: var(--text-muted);
     }
   }
 }
 
-/* Vercel Subnavigation */
-.vercel-subnav {
+/* Sub-navigation Tabs */
+.v-subnav-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 4px;
-  gap: var(--sp-4);
-  flex-wrap: wrap;
+  padding-bottom: 6px;
 
-  .v-subtabs-group {
+  .v-subnav-tabs {
     display: flex;
     gap: 6px;
   }
 
-  .v-subtab-btn {
+  .v-tab-item {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    padding: 8px 14px;
+    padding: 7px 14px;
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-muted);
     background: transparent;
     border: 1px solid transparent;
-    border-bottom: 2px solid transparent;
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    border-radius: var(--radius-md);
     cursor: pointer;
     transition: all var(--transition-fast);
 
     &:hover {
       color: var(--text-primary);
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
     }
 
     &.is-active {
-      color: var(--primary);
-      background: var(--bg-surface);
-      border-color: var(--border);
-      border-bottom-color: var(--primary);
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
 
-      .v-tab-counter {
-        background: var(--primary-dim);
-        color: var(--primary);
+      .v-tab-count {
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
       }
     }
-  }
 
-  .v-tab-counter {
-    font-size: 0.68rem;
-    padding: 1px 6px;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-secondary);
-  }
-
-  .v-ci-status {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    .v-tab-count {
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
   }
 }
 
-/* Vercel PR Cards */
-.vercel-prs-list {
+/* Pull Requests (Preview Deployments) Container */
+.v-prs-container {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
 }
 
-.vercel-pr-card {
+.v-empty-box {
+  background: var(--bg-surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-8) var(--sp-6);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  h4 {
+    margin: 4px 0 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+
+  p {
+    margin: 0 0 12px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+}
+
+.v-pr-item {
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: var(--sp-5);
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: 14px;
   transition: all var(--transition-fast);
 
   &:hover {
     border-color: rgba(255, 255, 255, 0.16);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
   }
 
   &.is-merged {
-    opacity: 0.8;
-    border-left: 3px solid #0AE98A;
+    opacity: 0.85;
 
     &:hover {
       opacity: 1;
     }
   }
 
-  .vpr-header {
+  .v-pr-main-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: var(--sp-4);
-    flex-wrap: wrap;
+
+    @media (max-width: 900px) {
+      flex-direction: column;
+    }
   }
 
-  .vpr-title-group {
+  .v-pr-info {
     flex: 1;
     min-width: 0;
 
-    .vpr-status-pill-row {
+    .v-pr-badges-row {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -3903,109 +3912,108 @@
       flex-wrap: wrap;
     }
 
-    .vpr-status-pill {
+    .v-status-badge {
       font-size: 0.65rem;
-      font-weight: 800;
-      padding: 1px 6px;
+      font-weight: 700;
+      padding: 1px 7px;
       border-radius: 4px;
 
-      &.vpr-status--open {
-        color: #00D9FF;
-        background: rgba(0, 217, 255, 0.12);
-        border: 1px solid rgba(0, 217, 255, 0.3);
+      &.v-status--open {
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.1);
+        border: 1px solid rgba(56, 189, 248, 0.25);
       }
 
-      &.vpr-status--merged {
-        color: #0AE98A;
-        background: rgba(10, 233, 138, 0.12);
-        border: 1px solid rgba(10, 233, 138, 0.3);
+      &.v-status--merged {
+        color: #a1a1aa;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
     }
 
-    .vpr-number {
+    .v-pr-num {
       font-size: 0.75rem;
-      font-weight: 700;
       color: var(--text-muted);
+      font-weight: 600;
     }
 
-    .vpr-branch-map {
-      font-size: 0.72rem;
+    .v-branch-flow {
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      font-size: 0.72rem;
 
-      .branch-pill-src {
-        color: #00D9FF;
-        background: rgba(0, 217, 255, 0.08);
-        padding: 1px 5px;
+      .v-br-src {
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.08);
+        padding: 1px 6px;
         border-radius: 3px;
       }
 
-      .branch-arrow {
+      .v-br-arrow {
         color: var(--text-muted);
       }
 
-      .branch-pill-dst {
+      .v-br-dst {
         color: var(--text-secondary);
         background: rgba(255, 255, 255, 0.06);
-        padding: 1px 5px;
+        padding: 1px 6px;
         border-radius: 3px;
       }
     }
 
-    .vpr-title {
+    .v-pr-title {
       font-size: 0.95rem;
       font-weight: 600;
       color: var(--text-primary);
       margin: 0 0 4px;
+      line-height: 1.35;
     }
 
-    .vpr-desc {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
+    .v-pr-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
       margin: 0;
+      line-height: 1.4;
+      max-width: 70ch;
     }
   }
 
-  .vpr-checks-group {
+  .v-pr-preview-box {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 4px;
+    flex-shrink: 0;
 
     @media (max-width: 900px) {
       align-items: flex-start;
     }
 
-    .vpr-preview-badge {
+    .v-preview-status {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       font-size: 0.72rem;
-      color: #0AE98A;
-      background: rgba(10, 233, 138, 0.08);
-      border: 1px solid rgba(10, 233, 138, 0.25);
-      padding: 2px 8px;
-      border-radius: 4px;
+      color: #10b981;
 
-      .vp-dot {
+      .v-dot-ok {
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: #0AE98A;
-        box-shadow: 0 0 6px #0AE98A;
+        background: #10b981;
       }
 
-      .vp-time {
+      .v-build-time {
         color: var(--text-muted);
       }
     }
 
-    .vpr-preview-url {
+    .v-preview-url {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: var(--text-secondary);
       text-decoration: none;
 
@@ -4015,15 +4023,15 @@
       }
     }
 
-    .vpr-merged-meta {
+    .v-merged-status {
       font-size: 0.72rem;
-      color: #0AE98A;
+      color: var(--text-muted);
       display: flex;
       gap: 6px;
     }
   }
 
-  .vpr-footer {
+  .v-pr-footer-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -4032,7 +4040,7 @@
     gap: 12px;
     flex-wrap: wrap;
 
-    .vpr-foot-meta {
+    .v-pr-meta {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -4040,152 +4048,120 @@
       color: var(--text-muted);
       flex-wrap: wrap;
 
-      .vpr-sep {
+      .v-sep {
         color: rgba(255, 255, 255, 0.12);
       }
 
-      .vpr-ci-badge {
-        color: #0AE98A;
-
-        &.ci--passed {
-          color: #0AE98A;
-        }
+      .v-ci-text {
+        color: #10b981;
       }
 
-      .vpr-diff-count {
+      .v-diff-text {
         color: #38bdf8;
+      }
+
+      .v-reviews-text {
+        color: #10b981;
       }
     }
 
-    .vpr-actions {
+    .v-pr-actions {
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .btn-merge-deploy {
-      background: linear-gradient(135deg, rgba(10, 233, 138, 0.2), rgba(0, 217, 255, 0.15));
-      border: 1px solid #0AE98A;
-      color: #0AE98A;
+    .btn-deploy-action {
+      background: var(--primary);
+      color: #08090D;
       font-weight: 700;
+      border: none;
 
       &:hover {
-        background: #0AE98A;
-        color: #08090D;
-        box-shadow: 0 4px 14px rgba(10, 233, 138, 0.3);
+        background: #00ff9d;
+        box-shadow: 0 0 14px rgba(10, 233, 138, 0.3);
       }
     }
   }
 }
 
-/* Vercel Commits List */
-.vercel-commits-list {
+/* Commits Log */
+.v-commits-card {
   display: flex;
   flex-direction: column;
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-}
 
-.vercel-commit-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  gap: var(--sp-4);
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  .vc-left {
+  .v-commit-item {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    min-width: 0;
-  }
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 14px;
+    transition: background var(--transition-fast);
 
-  .vc-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--bg-surface-2);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--primary);
-    flex-shrink: 0;
-  }
-
-  .vc-info {
-    min-width: 0;
-
-    .vc-message {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0 0 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    &:last-child {
+      border-bottom: none;
     }
 
-    .vc-meta {
+    &:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    @media (max-width: 900px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .v-commit-left {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.7rem;
-      color: var(--text-muted);
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
 
-      .vc-sep {
+      .v-commit-hash {
+        font-size: 0.72rem;
+        color: #e2e8f0;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      .v-commit-msg {
+        font-size: 0.82rem;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .v-commit-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+
+      .v-sep {
         color: rgba(255, 255, 255, 0.12);
       }
 
-      .vc-branch {
-        color: #00D9FF;
+      .v-commit-branch {
+        color: var(--text-secondary);
       }
     }
   }
-
-  .vc-right {
-    .vc-hash {
-      font-size: 0.75rem;
-      color: #FFB800;
-      background: rgba(255, 184, 0, 0.08);
-      border: 1px solid rgba(255, 184, 0, 0.2);
-      padding: 2px 7px;
-      border-radius: 4px;
-    }
-  }
 }
 
-.vercel-empty-state {
-  text-align: center;
-  padding: var(--sp-12) var(--sp-6);
-  background: var(--bg-surface);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-lg);
-
-  h4 {
-    color: var(--text-primary);
-    margin: 8px 0 4px;
-  }
-
-  p {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    margin: 0 0 var(--sp-4);
-  }
-}
 
 /* ========================================================
    MODALS: NEW TASK & CODE DIFF (VERCEL STYLE)
