@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: syseng-backend
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: APP_NAME
+        value: "SysEng Academy API"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: ep-bitter-fog-b5ngref9-pooler.c-7.us-east-2.aws.neon.tech
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        value: neondb
+      - key: DB_USERNAME
+        value: neondb_owner
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSLMODE
+        value: require
+      - key: AI_PROVIDER
+        value: openrouter
+      - key: AI_API_KEY
+        sync: false
