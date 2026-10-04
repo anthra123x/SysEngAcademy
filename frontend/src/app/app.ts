@@ -2,10 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from './layout/navbar/navbar.component';
 import { AiCompanionComponent } from './features/ai-companion/ai-companion.component';
+import { GlobalToastComponent } from './shared/components/global-toast.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavbarComponent, AiCompanionComponent],
+  imports: [RouterOutlet, NavbarComponent, AiCompanionComponent, GlobalToastComponent],
   template: `
     @if (!isClassroomMode()) {
       <app-navbar />
@@ -14,6 +15,7 @@ import { AiCompanionComponent } from './features/ai-companion/ai-companion.compo
       <router-outlet />
     </main>
     <app-ai-companion />
+    <app-global-toast />
   `,
   styles: [`
     main {

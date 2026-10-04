@@ -1,5 +1,7 @@
 import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { AuthService } from './auth.service';
+import { ApiService } from './api.service';
+import { NotificationService } from './notification.service';
 import {
   StudyGroup,
   ResearchLogEntry,
@@ -21,6 +23,8 @@ const CLANS_STORAGE_PREFIX = 'syseng_study_groups_v6_';
 @Injectable({ providedIn: 'root' })
 export class ClansService {
   private auth = inject(AuthService);
+  private api = inject(ApiService);
+  private notification = inject(NotificationService);
 
   readonly studyGroups = signal<StudyGroup[]>([]);
   readonly initialized = signal<boolean>(false);
@@ -75,17 +79,33 @@ export class ClansService {
         if (Array.isArray(parsed) && parsed.length > 0) {
           this.studyGroups.set(this.normalizeClans(parsed));
           this.initialized.set(true);
-          return;
         }
       }
     } catch {
       // fallback
     }
 
-    const defaults = this.getDefaultStudyGroups();
-    this.studyGroups.set(defaults);
-    this.saveToStorage(defaults);
-    this.initialized.set(true);
+    if (this.studyGroups().length === 0) {
+      const defaults = this.getDefaultStudyGroups();
+      this.studyGroups.set(defaults);
+      this.saveToStorage(defaults);
+      this.initialized.set(true);
+    }
+
+    // Carga asíncrona de backend (Laravel API)
+    this.api.get<any[]>('/clans').subscribe({
+      next: (backendClans) => {
+        if (Array.isArray(backendClans) && backendClans.length > 0) {
+          const normalized = this.normalizeClans(backendClans);
+          this.studyGroups.set(normalized);
+          this.saveToStorage(normalized);
+          this.initialized.set(true);
+        }
+      },
+      error: () => {
+        // Fallback silencioso a la caché local o defaults
+      },
+    });
   }
 
   private saveToStorage(groups: StudyGroup[]): void {
@@ -105,8 +125,11 @@ export class ClansService {
   joinClan(clanId: string): void {
     const user = this.auth.user();
     const userName = user?.name || 'Estudiante';
+    let targetClanName = 'Semillero';
+
     const updated = this.studyGroups().map(group => {
       if (group.id === clanId) {
+        targetClanName = group.name;
         const alreadyMember = group.researchers.some(r => r.name === userName || r.isCurrentUser);
         const researchers = alreadyMember
           ? group.researchers.map(r => (r.name === userName ? { ...r, isCurrentUser: true } : r))
@@ -115,7 +138,7 @@ export class ClansService {
               {
                 id: `u_${Date.now()}`,
                 name: userName,
-                role: 'Investigador Junior',
+                role: 'Cadete Investigador',
                 level: 3,
                 contributionsCount: 1,
                 xpContributed: 120,
@@ -153,6 +176,15 @@ export class ClansService {
 
     this.studyGroups.set(updated);
     this.saveToStorage(updated);
+
+    // Notificación toast global
+    this.notification.success('Bienvenido al Semillero', `Te has incorporado a ${targetClanName} (+150 XP)`, 150);
+
+    // Persistir en backend
+    this.api.post(`/clans/${clanId}/join`, {}).subscribe({
+      next: () => {},
+      error: (e) => console.warn('[ClansService] error joining clan', e),
+    });
   }
 
   leaveClan(clanId: string): void {
@@ -172,6 +204,13 @@ export class ClansService {
 
     this.studyGroups.set(updated);
     this.saveToStorage(updated);
+
+    this.notification.info('Membresía Desvinculada', 'Has salido del semillero');
+
+    this.api.post(`/clans/${clanId}/leave`, {}).subscribe({
+      next: () => {},
+      error: (e) => console.warn('[ClansService] error leaving clan', e),
+    });
   }
 
   createClan(data: {
@@ -485,8 +524,53 @@ export class ClansService {
       return g;
     });
 
+    this.notification.success('Sello de Cátedra Otorgado', 'Aval docente oficial concedido al RFC (+80 XP)', 80);
+    const numId = parseInt(logId.replace(/\D/g, ''), 10) || 1;
+    this.api.post(`/clans/${clanId}/posts/${numId}/endorse`, {
+      note: endorsement.note,
+    }).subscribe({
+      next: () => {},
+      error: (e) => console.warn('[ClansService] error endorsing post in backend', e),
+    });
+
     this.studyGroups.set(updated);
     this.saveToStorage(updated);
+  }
+
+  resolveWeeklyDrill(clanId: string): void {
+    const user = this.auth.user();
+    const userName = user?.name || 'Operador Cátedra';
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        return {
+          ...g,
+          currentXp: g.currentXp + 450,
+          weeklyQuest: {
+            ...g.weeklyQuest,
+            currentCount: g.weeklyQuest.targetCount,
+            completed: true,
+          },
+          recentLogs: [
+            {
+              author: userName,
+              message: 'Simulacro de incidencia en producción resuelto (+450 XP)',
+              timeAgo: 'hace un momento',
+            },
+            ...g.recentLogs,
+          ].slice(0, 10),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+
+    this.notification.success('Simulacro SEV Resuelto', 'Incidencia mitigada y parche desplegado (+450 XP)', 450);
+    this.api.post(`/clans/${clanId}/drills/resolve`, {}).subscribe({
+      next: () => {},
+      error: (e) => console.warn('[ClansService] error resolving drill in backend', e),
+    });
   }
 
   teacherEndorseProject(clanId: string, projectId: string, note?: string): void {
@@ -693,6 +777,21 @@ export class ClansService {
       return g;
     });
 
+    const statusLabels: Record<string, string> = {
+      pending: 'Backlog 📋',
+      in_progress: 'En Desarrollo ⚡',
+      review: 'Revisión Técnica 🔍',
+      completed: 'Concluido en Producción ✓',
+    };
+    const label = statusLabels[nextStatus] || nextStatus;
+    const xpDelta = taskCompleted ? 45 : 10;
+    this.notification.success('Estado Actualizado', `Issue movido a "${label}"`, xpDelta);
+
+    this.api.patch(`/clans/${clanId}/projects/${projectId}/tasks/${taskId}/status`, { status: nextStatus }).subscribe({
+      next: () => {},
+      error: (e) => console.warn('[ClansService] error updating task status in backend', e),
+    });
+
     this.studyGroups.set(updated);
     this.saveToStorage(updated);
     return { completed: taskCompleted, allDone };
@@ -716,6 +815,12 @@ export class ClansService {
         return { ...g, projects: projs };
       }
       return g;
+    });
+
+    this.notification.info('Tarea Asignada', `Te has asignado el issue #${taskId}`);
+    this.api.post(`/clans/${clanId}/projects/${projectId}/tasks/${taskId}/assign`, { assigned_to: userName }).subscribe({
+      next: () => {},
+      error: (e) => console.warn('[ClansService] error assigning task', e),
     });
 
     this.studyGroups.set(updated);
@@ -754,6 +859,17 @@ export class ClansService {
         return { ...g, projects: projs };
       }
       return g;
+    });
+
+    this.notification.success('Issue Creado', `Tarea añadida al Backlog del Sprint`, 10);
+    this.api.post(`/clans/${clanId}/projects/${projectId}/tasks`, {
+      title: title.trim(),
+      type,
+      assigned_to: assignedTo || undefined,
+      xp_reward: 45,
+    }).subscribe({
+      next: () => {},
+      error: (e) => console.warn('[ClansService] error adding task in backend', e),
     });
 
     this.studyGroups.set(updated);
@@ -1071,6 +1187,20 @@ export class ClansService {
       return g;
     });
 
+    this.notification.success('Pull Request Abierto', `Entorno de prueba Vercel generado para PR #${createdPr.number}`, xpReward);
+    this.api.post(`/clans/${clanId}/projects/${projectId}/pull-requests`, {
+      title: data.title,
+      description: data.description,
+      source_branch: data.sourceBranch,
+      target_branch: data.targetBranch || 'main',
+      filename: data.filename,
+      code_snippet: data.codeSnippet,
+      linked_issue_id: data.linkedIssueId,
+    }).subscribe({
+      next: () => {},
+      error: (e) => console.warn('[ClansService] error creating PR in backend', e),
+    });
+
     this.studyGroups.set(updated);
     this.saveToStorage(updated);
     return { pr: createdPr, xpEarned: xpReward };
@@ -1132,6 +1262,14 @@ export class ClansService {
               status: allTasksCompleted ? ('concluido' as const) : p.status,
               commits: [mergeCommit, ...(p.commits || [])],
               pullRequests: prs,
+              productionDeployment: {
+                domain: p.productionDeployment?.domain || 'https://syseng-kernel.vercel.app',
+                status: 'ready' as const,
+                commitHash: mergeCommit.hash,
+                commitMessage: mergeCommit.message,
+                branch: 'main',
+                deployedAt: 'hace un momento por ' + userName,
+              },
             };
           }
           return p;
@@ -1152,6 +1290,12 @@ export class ClansService {
         };
       }
       return g;
+    });
+
+    this.notification.success('PR Fusionado a main', 'Despliegue a Producción Vercel actualizado (+90 XP)', xpReward);
+    this.api.post(`/clans/${clanId}/projects/${projectId}/pull-requests/${prId}/merge`, {}).subscribe({
+      next: () => {},
+      error: (e) => console.warn('[ClansService] error merging PR in backend', e),
     });
 
     this.studyGroups.set(updated);
@@ -1212,6 +1356,16 @@ export class ClansService {
         };
       }
       return g;
+    });
+
+    const verdictMsg = review.verdict === 'approved' ? 'Aval de Cátedra (LGTM) concedido' : 'Revisión técnica registrada';
+    this.notification.success('Revisión Técnica', verdictMsg, xpReward);
+    this.api.post(`/clans/${clanId}/projects/${projectId}/pull-requests/${prId}/reviews`, {
+      verdict: review.verdict,
+      comment: review.comment,
+    }).subscribe({
+      next: () => {},
+      error: (e) => console.warn('[ClansService] error reviewing PR in backend', e),
     });
 
     this.studyGroups.set(updated);

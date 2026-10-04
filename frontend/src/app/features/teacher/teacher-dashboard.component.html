@@ -82,6 +82,65 @@
           </div>
         }
 
+        <!-- TABS DE NAVEGACIÓN DOCENTE -->
+        <div class="tabs-nav-bar">
+          <button
+            type="button"
+            class="tab-nav-btn"
+            [class.active]="activeTab() === 'students'"
+            (click)="setTab('students')"
+          >
+            <app-icon name="users" [size]="15" />
+            <span>Alumnos Matriculados</span>
+            <span class="tab-count-pill">{{ totalStudentsCount() }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="tab-nav-btn"
+            [class.active]="activeTab() === 'clans'"
+            (click)="setTab('clans')"
+          >
+            <app-icon name="shield" [size]="15" />
+            <span>Clanes &amp; Squads</span>
+            <span class="tab-count-pill highlight">{{ clansSvc.studyGroups().length }}</span>
+            @if (pendingPrsCount() > 0) {
+              <span class="tab-alert-badge">{{ pendingPrsCount() }} PRs</span>
+            }
+          </button>
+
+          <button
+            type="button"
+            class="tab-nav-btn"
+            [class.active]="activeTab() === 'activities'"
+            (click)="setTab('activities')"
+          >
+            <app-icon name="book-open" [size]="15" />
+            <span>Actividades &amp; Quizzes</span>
+            <span class="tab-count-pill">{{ activities().length }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="tab-nav-btn"
+            [class.active]="activeTab() === 'activity'"
+            (click)="setTab('activity')"
+          >
+            <app-icon name="bar-chart-2" [size]="15" />
+            <span>Analítica de Cohorte</span>
+          </button>
+
+          <button
+            type="button"
+            class="tab-nav-btn"
+            [class.active]="activeTab() === 'ai'"
+            (click)="setTab('ai')"
+          >
+            <app-icon name="cpu" [size]="15" />
+            <span>Copiloto IA Cátedra</span>
+          </button>
+        </div>
+
         <!-- PESTAÑA 1: DIRECTORIO DE ESTUDIANTES -->
         @if (activeTab() === 'students') {
           <div class="surface-panel">
@@ -550,6 +609,525 @@
                 </div>
               }
             </div>
+          </div>
+        }
+
+        <!-- PESTAÑA 5: GESTIÓN DE CLANES & SQUADS DE INGENIERÍA (SEMILLEROS I+D) -->
+        @if (activeTab() === 'clans') {
+          <div class="surface-panel">
+            <div class="panel-head-row">
+              <div>
+                <div class="squad-scope-tag">SUPERVISIÓN DE INGENIERÍA &amp; SEMILLEROS</div>
+                <h2 class="panel-heading">Dirección y Evaluación de Clanes &amp; Squads</h2>
+                <p class="panel-subtext">Supervisión de arquitectura, revisión de Pull Requests con Aval de Cátedra (LGTM), inspección de Sprints y aprobación de RFCs técnicos.</p>
+              </div>
+              <div class="squad-quick-actions">
+                <button type="button" class="btn btn-outline btn-sm" (click)="openNewClanTaskModal()" [disabled]="!selectedClan()">
+                  <span style="display:inline-flex; align-items:center; gap:6px;">
+                    <app-icon name="plus" [size]="13" /> + Asignar Reto de Cátedra
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <!-- FILTRO DE CATEGORÍAS -->
+            <div class="clan-cat-filter-bar">
+              <button
+                type="button"
+                class="clan-cat-chip"
+                [class.active]="clanCategoryFilter() === 'all'"
+                (click)="clanCategoryFilter.set('all')"
+              >
+                Todos los Clanes ({{ clansSvc.studyGroups().length }})
+              </button>
+              <button
+                type="button"
+                class="clan-cat-chip"
+                [class.active]="clanCategoryFilter() === 'systems'"
+                (click)="clanCategoryFilter.set('systems')"
+              >
+                Sistemas [KRNL]
+              </button>
+              <button
+                type="button"
+                class="clan-cat-chip"
+                [class.active]="clanCategoryFilter() === 'backend'"
+                (click)="clanCategoryFilter.set('backend')"
+              >
+                Backend &amp; APIs [ARCH]
+              </button>
+              <button
+                type="button"
+                class="clan-cat-chip"
+                [class.active]="clanCategoryFilter() === 'security'"
+                (click)="clanCategoryFilter.set('security')"
+              >
+                Seguridad Defensiva [SEC]
+              </button>
+              <button
+                type="button"
+                class="clan-cat-chip"
+                [class.active]="clanCategoryFilter() === 'algorithms'"
+                (click)="clanCategoryFilter.set('algorithms')"
+              >
+                Algoritmos [ALGO]
+              </button>
+              <button
+                type="button"
+                class="clan-cat-chip"
+                [class.active]="clanCategoryFilter() === 'ai'"
+                (click)="clanCategoryFilter.set('ai')"
+              >
+                IA &amp; Compiladores [AI]
+              </button>
+            </div>
+
+            <!-- CARDS DE SQUADS / CLANES DISPONIBLES -->
+            <div class="squads-cards-grid">
+              @for (c of filteredClans(); track c.id) {
+                <div
+                  class="squad-card"
+                  [class.is-selected]="selectedClanId() === c.id"
+                  (click)="selectClan(c.id)"
+                >
+                  <div class="squad-card-head">
+                    <div class="squad-tag-badge">{{ c.tag }}</div>
+                    <div class="squad-level-badge">Nv. {{ c.level }} · {{ c.levelTitle }}</div>
+                    <div class="squad-streak-flame">
+                      <app-icon name="flame" [size]="13" color="#FF8A00" />
+                      <span>{{ c.streakDays }}d</span>
+                    </div>
+                  </div>
+
+                  <h3 class="squad-card-title">{{ c.name }}</h3>
+                  <p class="squad-card-desc">{{ c.description }}</p>
+
+                  <div class="squad-card-meta">
+                    <span class="meta-item">
+                      <app-icon name="users" [size]="12" />
+                      {{ c.membersCount }} miembros
+                    </span>
+                    <span class="meta-item xp">
+                      <app-icon name="zap" [size]="12" color="#0ae98a" />
+                      {{ c.currentXp }} XP
+                    </span>
+                    @if (c.projects?.[0]?.pullRequests?.length) {
+                      <span class="meta-item prs">
+                        <app-icon name="git-pull-request" [size]="12" color="#38bdf8" />
+                        {{ c.projects?.[0]?.pullRequests?.length }} PRs
+                      </span>
+                    }
+                  </div>
+
+                  @if (selectedClanId() === c.id) {
+                    <div class="selected-indicator-chip">
+                      <span>✓ Administrando este Squad</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- ESPACIO DE ADMINISTRACIÓN DEL CLAN SELECCIONADO -->
+            @if (selectedClan(); as clan) {
+              <div class="squad-deep-workspace">
+                <!-- CABECERA DEL PROYECTO & ESTADO VERCEL -->
+                <div class="squad-project-header">
+                  <div class="proj-info">
+                    <div class="proj-lead-tag">LÍDER DE I+D: {{ clan.projects[0]?.leadResearcher || 'Cátedra' }}</div>
+                    <h3 class="proj-title">{{ clan.projects[0]?.title || 'Proyecto Modular de Cátedra' }}</h3>
+                    <p class="proj-desc">{{ clan.projects[0]?.description }}</p>
+                    <div class="proj-stack-pills">
+                      @for (tech of clan.projects[0]?.techStack || []; track tech) {
+                        <span class="tech-pill">{{ tech }}</span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- BANNER DE PRODUCCIÓN VERCEL -->
+                  <div class="vercel-prod-box">
+                    <div class="vercel-badge-row">
+                      <span class="vercel-icon">▲ Vercel</span>
+                      <span class="prod-status-dot ready">● Producción</span>
+                    </div>
+                    <div class="vercel-domain-row">
+                      <a [href]="clan.projects[0]?.productionDeployment?.domain || 'https://syseng-kernel.vercel.app'" target="_blank" rel="noopener noreferrer" class="vercel-live-link">
+                        {{ clan.projects[0]?.productionDeployment?.domain || 'https://syseng-kernel.vercel.app' }}
+                        <app-icon name="external-link" [size]="12" />
+                      </a>
+                    </div>
+                    <div class="vercel-commit-meta">
+                      Commit: <code>{{ clan.projects[0]?.productionDeployment?.commitHash || 'd9c359a' }}</code> · {{ clan.projects[0]?.productionDeployment?.commitMessage || 'Release estable' }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SUB-TABS DEL CLAN -->
+                <div class="squad-subtabs-bar">
+                  <button
+                    type="button"
+                    class="squad-subtab-btn"
+                    [class.active]="clanSubTab() === 'prs'"
+                    (click)="setClanSubTab('prs')"
+                  >
+                    <app-icon name="git-pull-request" [size]="14" />
+                    <span>Pull Requests &amp; Avales Docentes</span>
+                    <span class="subtab-count">{{ clan.projects[0]?.pullRequests?.length || 0 }}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="squad-subtab-btn"
+                    [class.active]="clanSubTab() === 'kanban'"
+                    (click)="setClanSubTab('kanban')"
+                  >
+                    <app-icon name="trello" [size]="14" />
+                    <span>Sprint &amp; Tablero Kanban</span>
+                    <span class="subtab-count">{{ clan.projects[0]?.tasks?.length || 0 }}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="squad-subtab-btn"
+                    [class.active]="clanSubTab() === 'rfcs'"
+                    (click)="setClanSubTab('rfcs')"
+                  >
+                    <app-icon name="file-text" [size]="14" />
+                    <span>Bitácora &amp; RFCs Arquitecturales</span>
+                    <span class="subtab-count">{{ clan.researchFeed?.length || 0 }}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="squad-subtab-btn"
+                    [class.active]="clanSubTab() === 'drills'"
+                    (click)="setClanSubTab('drills')"
+                  >
+                    <app-icon name="alert-triangle" [size]="14" color="#f59e0b" />
+                    <span>Simulacros de Fallos (SEV)</span>
+                  </button>
+                </div>
+
+                <!-- SUB-PANEL 1: PULL REQUESTS & AVALES DE CÁTEDRA -->
+                @if (clanSubTab() === 'prs') {
+                  <div class="prs-subpanel">
+                    @if (!clan.projects[0]?.pullRequests?.length) {
+                      <div class="empty-substate">
+                        <app-icon name="git-pull-request" [size]="32" color="var(--text-muted)" />
+                        <p class="empty-title">Sin Pull Requests abiertos</p>
+                        <p class="empty-desc">Los estudiantes del clan aún no han abierto solicitudes de fusión en este sprint.</p>
+                      </div>
+                    } @else {
+                      <div class="prs-list">
+                        @for (pr of clan.projects[0]?.pullRequests || []; track pr.id) {
+                          <div class="pr-card" [class.is-merged]="pr.status === 'merged'">
+                            <div class="pr-card-header">
+                              <div class="pr-header-left">
+                                <span class="pr-status-badge" [class.merged]="pr.status === 'merged'" [class.open]="pr.status === 'open'">
+                                  {{ pr.status === 'merged' ? 'Fusionado ✓' : 'Abierto ●' }}
+                                </span>
+                                <span class="pr-title">#{{ pr.number }} {{ pr.title }}</span>
+                              </div>
+                              <div class="pr-header-right">
+                                <span class="pr-branch-tag"><code>{{ pr.sourceBranch }}</code> → <code>{{ pr.targetBranch }}</code></span>
+                                <span class="pr-ci-badge passed">CI Passed ✓</span>
+                              </div>
+                            </div>
+
+                            <p class="pr-description">{{ pr.description }}</p>
+
+                            <!-- LINK PREVIEW VERCEL -->
+                            @if (pr.previewUrl) {
+                              <div class="pr-vercel-preview-row">
+                                <span class="preview-label">▲ Vercel Preview Deployment:</span>
+                                <a [href]="pr.previewUrl" target="_blank" rel="noopener noreferrer" class="preview-url-link">
+                                  {{ pr.previewUrl }}
+                                  <app-icon name="external-link" [size]="12" />
+                                </a>
+                                <span class="build-dur">Construido en {{ pr.buildDuration || '22s' }}</span>
+                              </div>
+                            }
+
+                            <!-- DIFF DE CÓDIGO -->
+                            @if (pr.codeDiff) {
+                              <div class="pr-diff-box">
+                                <div class="diff-header">
+                                  <app-icon name="file" [size]="12" />
+                                  <span>{{ pr.codeDiff.filename }}</span>
+                                </div>
+                                <div class="diff-body">
+                                  @for (del of pr.codeDiff.deletions; track del) {
+                                    <div class="diff-line del">{{ del }}</div>
+                                  }
+                                  @for (add of pr.codeDiff.additions; track add) {
+                                    <div class="diff-line add">{{ add }}</div>
+                                  }
+                                </div>
+                              </div>
+                            }
+
+                            <!-- REVISIONES Y AVALES EXISTENTES -->
+                            @if (pr.reviews?.length) {
+                              <div class="pr-reviews-row">
+                                <span class="review-row-label">Revisiones Registradas:</span>
+                                @for (rev of pr.reviews; track rev.comment) {
+                                  <div class="review-chip" [class.teacher-review]="rev.isTeacher">
+                                    <app-icon [name]="rev.verdict === 'approved' ? 'check' : 'message-square'" [size]="12" />
+                                    <strong>{{ rev.reviewer }}:</strong>
+                                    <span>{{ rev.comment }}</span>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ACCIONES DOCENTES -->
+                            <div class="pr-actions-bar">
+                              <span class="pr-author-info">
+                                Propuesto por <strong>{{ pr.author }}</strong> ({{ pr.authorRole }}) · {{ pr.timeAgo }}
+                              </span>
+
+                              <div class="pr-btn-group">
+                                @if (pr.status === 'open') {
+                                  <button
+                                    type="button"
+                                    class="btn btn-outline btn-sm"
+                                    (click)="approvePrAsTeacher(clan.id, clan.projects[0].id, pr.id)"
+                                  >
+                                    <span style="display:inline-flex; align-items:center; gap:6px;">
+                                      <app-icon name="check-circle" [size]="13" color="#0ae98a" />
+                                      Conceder Aval de Cátedra (LGTM)
+                                    </span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    class="btn btn-primary btn-sm"
+                                    (click)="mergePrAsTeacher(clan.id, clan.projects[0].id, pr.id)"
+                                  >
+                                    <span style="display:inline-flex; align-items:center; gap:6px;">
+                                      <app-icon name="git-merge" [size]="13" />
+                                      Fusionar a main &amp; Deploy Vercel
+                                    </span>
+                                  </button>
+                                } @else {
+                                  <span class="merged-celebrate-chip">
+                                    <app-icon name="check" [size]="13" color="#0ae98a" />
+                                    Desplegado en Producción Vercel
+                                  </span>
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- SUB-PANEL 2: SPRINT & KANBAN -->
+                @if (clanSubTab() === 'kanban') {
+                  <div class="kanban-subpanel">
+                    <div class="kanban-toolbar">
+                      <span class="kanban-info-text">Visualización en vivo del flujo de trabajo del squad en este sprint.</span>
+                      <button type="button" class="btn btn-outline btn-sm" (click)="openNewClanTaskModal()">
+                        + Añadir Tarea al Backlog
+                      </button>
+                    </div>
+
+                    <div class="kanban-board-grid">
+                      <!-- COLUMNA BACKLOG -->
+                      <div class="kanban-col">
+                        <div class="col-head">
+                          <span class="col-dot pending"></span>
+                          <span class="col-name">Backlog 📋</span>
+                        </div>
+                        <div class="col-cards">
+                          @for (t of clan.projects[0]?.tasks || []; track t.id) {
+                            @if (t.status === 'pending') {
+                              <div class="kanban-task-card">
+                                <div class="task-type-badge" [attr.data-type]="t.type">{{ t.type }}</div>
+                                <h4 class="task-title">{{ t.title }}</h4>
+                                <div class="task-footer">
+                                  <span class="assignee">{{ t.assignedTo || 'Sin asignar' }}</span>
+                                  <span class="xp">+{{ t.xpReward || 45 }} XP</span>
+                                </div>
+                              </div>
+                            }
+                          }
+                        </div>
+                      </div>
+
+                      <!-- COLUMNA EN DESARROLLO -->
+                      <div class="kanban-col">
+                        <div class="col-head">
+                          <span class="col-dot in-progress"></span>
+                          <span class="col-name">En Desarrollo ⚡</span>
+                        </div>
+                        <div class="col-cards">
+                          @for (t of clan.projects[0]?.tasks || []; track t.id) {
+                            @if (t.status === 'in_progress') {
+                              <div class="kanban-task-card in-dev">
+                                <div class="task-type-badge" [attr.data-type]="t.type">{{ t.type }}</div>
+                                <h4 class="task-title">{{ t.title }}</h4>
+                                <div class="task-footer">
+                                  <span class="assignee">{{ t.assignedTo || 'En curso' }}</span>
+                                  <span class="xp">+{{ t.xpReward || 45 }} XP</span>
+                                </div>
+                              </div>
+                            }
+                          }
+                        </div>
+                      </div>
+
+                      <!-- COLUMNA EN REVISIÓN -->
+                      <div class="kanban-col">
+                        <div class="col-head">
+                          <span class="col-dot review"></span>
+                          <span class="col-name">Revisión Técnica 🔍</span>
+                        </div>
+                        <div class="col-cards">
+                          @for (t of clan.projects[0]?.tasks || []; track t.id) {
+                            @if (t.status === 'review') {
+                              <div class="kanban-task-card in-review">
+                                <div class="task-type-badge" [attr.data-type]="t.type">{{ t.type }}</div>
+                                <h4 class="task-title">{{ t.title }}</h4>
+                                <div class="task-footer">
+                                  <span class="assignee">{{ t.assignedTo }}</span>
+                                  <span class="xp">+{{ t.xpReward || 45 }} XP</span>
+                                </div>
+                              </div>
+                            }
+                          }
+                        </div>
+                      </div>
+
+                      <!-- COLUMNA CONCLUIDO EN PRODUCCIÓN -->
+                      <div class="kanban-col">
+                        <div class="col-head">
+                          <span class="col-dot completed"></span>
+                          <span class="col-name">Concluido en Producción ✓</span>
+                        </div>
+                        <div class="col-cards">
+                          @for (t of clan.projects[0]?.tasks || []; track t.id) {
+                            @if (t.status === 'completed' || t.completed) {
+                              <div class="kanban-task-card is-done">
+                                <div class="task-type-badge" [attr.data-type]="t.type">{{ t.type }}</div>
+                                <h4 class="task-title">{{ t.title }}</h4>
+                                <div class="task-footer">
+                                  <span class="assignee">{{ t.assignedTo }}</span>
+                                  <span class="done-check">Completado ✓</span>
+                                </div>
+                              </div>
+                            }
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                <!-- SUB-PANEL 3: RFCS Y PROPUESTAS -->
+                @if (clanSubTab() === 'rfcs') {
+                  <div class="rfcs-subpanel">
+                    @if (!clan.researchFeed?.length) {
+                      <div class="empty-substate">
+                        <p class="empty-title">Sin bitácoras publicadas</p>
+                      </div>
+                    } @else {
+                      <div class="rfcs-list">
+                        @for (entry of clan.researchFeed; track entry.id) {
+                          <div class="rfc-card">
+                            <div class="rfc-card-head">
+                              <span class="rfc-tag">{{ entry.type | uppercase }}</span>
+                              <h4 class="rfc-title">{{ entry.title }}</h4>
+                              <span class="rfc-author">por <strong>{{ entry.author }}</strong> ({{ entry.authorRole }}) · {{ entry.timeAgo }}</span>
+                            </div>
+
+                            <p class="rfc-content">{{ entry.content }}</p>
+
+                            @if (entry.codeSnippet) {
+                              <pre class="rfc-code-box"><code>{{ entry.codeSnippet }}</code></pre>
+                            }
+
+                            <!-- AVAL DE CÁTEDRA -->
+                            @if (entry.teacherEndorsement) {
+                              <div class="endorsement-box">
+                                <div class="endorsement-title">
+                                  <app-icon name="award" [size]="14" color="#0ae98a" />
+                                  <span>Aval de Cátedra Otorgado (+{{ entry.teacherEndorsement.xpAwarded }} XP)</span>
+                                </div>
+                                <p class="endorsement-note">"{{ entry.teacherEndorsement.note }}"</p>
+                                <span class="endorsement-by">Firmado por: {{ entry.teacherEndorsement.teacherName }} · {{ entry.teacherEndorsement.date }}</span>
+                              </div>
+                            } @else {
+                              <div class="endorsement-action-row">
+                                <button
+                                  type="button"
+                                  class="btn btn-outline btn-sm"
+                                  (click)="openEndorseModal(clan.id, entry.id, entry.title)"
+                                >
+                                  <span style="display:inline-flex; align-items:center; gap:6px;">
+                                    <app-icon name="award" [size]="13" color="#0ae98a" />
+                                    Conceder Sello de Cátedra (+80 XP)
+                                  </span>
+                                </button>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- SUB-PANEL 4: SIMULACRO DE PRODUCCIÓN (INCIDENT DRILL) -->
+                @if (clanSubTab() === 'drills') {
+                  <div class="drills-subpanel">
+                    <div class="drill-card">
+                      <div class="drill-head">
+                        <span class="drill-sev-badge">SEV-1 SIMULACRO</span>
+                        <h4 class="drill-title">{{ clan.weeklyQuest.title }}</h4>
+                      </div>
+
+                      <p class="drill-desc">{{ clan.weeklyQuest.description }}</p>
+
+                      <div class="drill-progress-box">
+                        <div class="progress-info">
+                          <span>Mitigaciones del squad:</span>
+                          <strong>{{ clan.weeklyQuest.currentCount }} de {{ clan.weeklyQuest.targetCount }} comprobaciones</strong>
+                        </div>
+                        <div class="progress-bar-rail">
+                          <div
+                            class="progress-bar-fill"
+                            [style.width.%]="(clan.weeklyQuest.currentCount / clan.weeklyQuest.targetCount) * 100"
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div class="drill-actions">
+                        @if (clan.weeklyQuest.completed) {
+                          <div class="drill-solved-badge">
+                            <app-icon name="check-circle" [size]="16" color="#0ae98a" />
+                            <span>Simulacro Superado con Éxito (+{{ clan.weeklyQuest.xpReward }} XP de Squad)</span>
+                          </div>
+                        } @else {
+                          <button
+                            type="button"
+                            class="btn btn-primary btn-sm"
+                            (click)="resolveDrillAsTeacher(clan.id)"
+                          >
+                            <span style="display:inline-flex; align-items:center; gap:6px;">
+                              <app-icon name="shield" [size]="13" />
+                              Validar Resolución y Otorgar +{{ clan.weeklyQuest.xpReward }} XP
+                            </span>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
           </div>
         }
       </div>
@@ -1095,6 +1673,98 @@
                 [disabled]="feedbackSending() || !feedbackTitle().trim() || !feedbackMessage().trim()"
               >
                 {{ feedbackSending() ? 'Registrando...' : (feedbackType() === 'warning_strict' ? 'Emitir Llamado con Penalización' : 'Enviar Retroalimentación Oficial') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- MODAL ASIGNAR RETO / TAREA DE CÁTEDRA A SQUAD -->
+      @if (showNewClanTaskModal()) {
+        <div class="modal-backdrop" (click)="showNewClanTaskModal.set(false)">
+          <div class="modal-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3 class="modal-title">Asignar Reto de Cátedra a {{ selectedClan()?.tag }}</h3>
+              <button type="button" class="btn-close" (click)="showNewClanTaskModal.set(false)">✕</button>
+            </div>
+            <div class="modal-body">
+              <div class="field-group">
+                <label class="field-label">Título del Issue / Reto *</label>
+                <input
+                  type="text"
+                  class="field-input"
+                  placeholder="Ej. Hardening de memoria: Validar contra fugas con ASAN"
+                  [ngModel]="newClanTaskTitle()"
+                  (ngModelChange)="newClanTaskTitle.set($event)"
+                />
+              </div>
+
+              <div class="field-row">
+                <div class="field-group">
+                  <label class="field-label">Tipo de Tarea</label>
+                  <select class="field-select" [ngModel]="newClanTaskType()" (ngModelChange)="newClanTaskType.set($event)">
+                    <option value="arch">Arquitectura (arch)</option>
+                    <option value="feature">Característica (feature)</option>
+                    <option value="perf">Rendimiento (perf)</option>
+                    <option value="security">Seguridad (security)</option>
+                    <option value="bug">Bugfix (bug)</option>
+                  </select>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Recompensa XP</label>
+                  <input
+                    type="number"
+                    class="field-input"
+                    min="20"
+                    max="150"
+                    [ngModel]="newClanTaskXp()"
+                    (ngModelChange)="newClanTaskXp.set($event)"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-ghost" (click)="showNewClanTaskModal.set(false)">Cancelar</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="!newClanTaskTitle().trim()"
+                (click)="submitNewClanTask()"
+              >
+                Asignar al Backlog
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- MODAL CONCEDER AVAL DE CÁTEDRA (SELLO DOCENTE) -->
+      @if (showEndorseModal()) {
+        <div class="modal-backdrop" (click)="showEndorseModal.set(false)">
+          <div class="modal-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3 class="modal-title">Conceder Sello de Cátedra (+80 XP)</h3>
+              <button type="button" class="btn-close" (click)="showEndorseModal.set(false)">✕</button>
+            </div>
+            <div class="modal-body">
+              <p class="endorse-target-info" style="color: #94a3b8; font-size: 0.88rem; margin-bottom: 1rem;">
+                Otorgando aval docente oficial a la publicación: <strong style="color: #f1f5f9;">"{{ endorseTarget()?.title }}"</strong>
+              </p>
+              <div class="field-group">
+                <label class="field-label">Nota o Dictamen de Cátedra</label>
+                <textarea
+                  class="field-textarea"
+                  rows="3"
+                  [ngModel]="endorseNote()"
+                  (ngModelChange)="endorseNote.set($event)"
+                ></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-ghost" (click)="showEndorseModal.set(false)">Cancelar</button>
+              <button type="button" class="btn btn-primary" (click)="submitEndorsement()">
+                Conceder Aval (+80 XP)
               </button>
             </div>
           </div>
