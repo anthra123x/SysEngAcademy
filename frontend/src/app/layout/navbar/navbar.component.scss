@@ -6,19 +6,21 @@
       z-index: 1000;
       width: 100%;
       height: var(--header-height, 64px);
-      background: rgba(14, 16, 26, 0.94);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      background: rgba(8, 9, 13, 0.72);
+      backdrop-filter: blur(18px) saturate(180%);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28);
       display: flex;
       align-items: center;
       transition: all var(--transition-base);
 
       &.is-docente-zone {
-        background: #08090D !important;
-        border-bottom: 1px solid #1E2235 !important;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+        background: rgba(8, 9, 13, 0.76) !important;
+        backdrop-filter: blur(18px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+        border-bottom: 1px solid rgba(30, 34, 53, 0.7) !important;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45) !important;
       }
     }
 

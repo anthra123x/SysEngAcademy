@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { AuthService } from './auth.service';
 import {
   StudyGroup,
@@ -12,7 +12,7 @@ import {
   ChallengeTestCase,
 } from '../models/clan';
 
-const CLANS_STORAGE_PREFIX = 'syseng_study_groups_v4_';
+const CLANS_STORAGE_PREFIX = 'syseng_study_groups_v5_';
 
 @Injectable({ providedIn: 'root' })
 export class ClansService {
@@ -23,6 +23,11 @@ export class ClansService {
 
   /** Clan al que pertenece el usuario actualmente autenticado (computado en tiempo real) */
   readonly userClan = computed<StudyGroup | null>(() => {
+    // Si no está autenticado, no pertenece a ningún clan
+    if (!this.auth.isAuthenticated()) return null;
+    const user = this.auth.user();
+    // Docentes y administradores no tienen clan de estudiante asignado
+    if (user?.role === 'admin' || user?.role === 'instructor') return null;
     return this.studyGroups().find(g => g.isMember) || null;
   });
 
@@ -33,6 +38,13 @@ export class ClansService {
 
   constructor() {
     this.loadClans();
+
+    // Sincronizar inmediatamente al autenticarse, cambiar de cuenta o cerrar sesión
+    effect(() => {
+      this.auth.user();
+      this.loadClans();
+    }, { allowSignalWrites: true });
+
     if (typeof window !== 'undefined') {
       window.addEventListener('storage', (e) => {
         if (e.key && e.key.startsWith('syseng_study_groups_')) {
@@ -44,7 +56,8 @@ export class ClansService {
 
   private getStorageKey(): string {
     const user = this.auth.user();
-    const id = user?.id ?? user?.email ?? 'guest';
+    if (!user) return `${CLANS_STORAGE_PREFIX}guest`;
+    const id = user.id ?? user.email ?? 'guest';
     return `${CLANS_STORAGE_PREFIX}${id}`;
   }
 
@@ -911,13 +924,15 @@ export class ClansService {
           : (fallback?.battleChallenges || []),
         teacherMissions: Array.isArray(g.teacherMissions) ? g.teacherMissions : (fallback?.teacherMissions || []),
         dailyStandupDoneToday: Boolean(g.dailyStandupDoneToday),
-        isMember: Boolean(g.isMember),
+        isMember: (!this.auth.isAuthenticated() || this.auth.user()?.role === 'admin' || this.auth.user()?.role === 'instructor') ? false : Boolean(g.isMember),
         userRole: g.userRole || fallback?.userRole || 'researcher',
       };
     });
   }
 
   getDefaultStudyGroups(): StudyGroup[] {
+    const user = this.auth.user();
+    const isDemoStudent = Boolean(user && user.email === 'demo@syseng.edu' && user.role !== 'admin' && user.role !== 'instructor');
     return [
       {
         id: 'krnl',
@@ -1087,7 +1102,7 @@ export class ClansService {
           },
         ],
         dailyStandupDoneToday: false,
-        isMember: true,
+        isMember: isDemoStudent,
       },
       {
         id: 'algo',
