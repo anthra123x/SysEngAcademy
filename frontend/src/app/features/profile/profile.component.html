@@ -328,14 +328,15 @@
                   </div>
                 </div>
 
-                <div class="section-container">
-                  <div class="section-terminal-bar">
-                    <div class="terminal-bar-title">
-                      <span class="term-prefix">ps aux | grep</span>
-                      <span class="term-arg">faculty_supervision</span>
-                    </div>
-                    <a routerLink="/docente" class="btn btn-xs btn-outline">Ir al Panel Docente Principal →</a>
+                <div class="section-terminal-bar">
+                  <div class="terminal-bar-title">
+                    <span class="term-prefix">ps aux | grep</span>
+                    <span class="term-arg">faculty_supervision</span>
                   </div>
+                  <a routerLink="/docente" class="btn btn-xs btn-outline">Ir al Panel Docente Principal →</a>
+                </div>
+
+                <div class="section-container">
 
                   <div class="teacher-overview-block">
                     <div class="teacher-banner-box">
@@ -563,14 +564,15 @@
                   </div>
                 </div>
 
-                <div class="section-container">
-                  <div class="section-terminal-bar">
-                    <div class="terminal-bar-title">
-                      <span class="term-prefix">ps aux | grep</span>
-                      <span class="term-arg">courses_active</span>
-                    </div>
-                    <span class="term-status-badge">PID_TOTAL: {{ enrollments().length }}</span>
+                <div class="section-terminal-bar">
+                  <div class="terminal-bar-title">
+                    <span class="term-prefix">ps aux | grep</span>
+                    <span class="term-arg">courses_active</span>
                   </div>
+                  <span class="term-status-badge">PID_TOTAL: {{ enrollments().length }}</span>
+                </div>
+
+                <div class="section-container">
 
                   @if (loading()) {
                     <div class="skeleton-list">
