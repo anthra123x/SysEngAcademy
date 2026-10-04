@@ -62,6 +62,29 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
               </div>
             </div>
 
+            <!-- Filtro de Categoría -->
+            <div class="filter-group">
+              <div class="filter-label-row">
+                <label class="filter-label">Categoría</label>
+                @if (filters.category) {
+                  <button type="button" class="filter-clear-link" (click)="selectCategory('')">Todas</button>
+                }
+              </div>
+              <div class="select-wrap">
+                <select
+                  class="filter-select"
+                  [ngModel]="filters.category || ''"
+                  (ngModelChange)="selectCategory($event)"
+                >
+                  <option value="">Todas las categorías</option>
+                  @for (cat of categories(); track cat.id) {
+                    <option [value]="cat.slug">{{ cat.name }}</option>
+                  }
+                </select>
+                <span class="select-chevron"><app-icon name="chevron-down" [size]="13" /></span>
+              </div>
+            </div>
+
             <!-- Filtro de Nivel de Dificultad -->
             <div class="filter-group">
               <div class="filter-label-row">
@@ -398,7 +421,45 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       }
     }
 
+    /* SELECT CON CHEVRON PERSONALIZADO */
+    .select-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
 
+      .filter-select {
+        width: 100%;
+        appearance: none;
+        -webkit-appearance: none;
+        background: #08090D;
+        border: 1px solid #202436;
+        color: #F8FAFC;
+        border-radius: 6px;
+        padding: 8px 30px 8px 10px;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: border-color 0.15s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--primary);
+        }
+
+        option {
+          background: #0E111A;
+          color: #F8FAFC;
+        }
+      }
+
+      .select-chevron {
+        position: absolute;
+        right: 10px;
+        pointer-events: none;
+        color: #64748B;
+        display: flex;
+        align-items: center;
+      }
+    }
 
     /* SEGMENTADO DE DIFICULTAD */
     .difficulty-segmented {

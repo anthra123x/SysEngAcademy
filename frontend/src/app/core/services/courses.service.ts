@@ -15,7 +15,7 @@ import {
   CourseRatingStats,
 } from '../models';
 
-const COURSES_CACHE_KEY = 'syseng_cache_courses_v3';
+const COURSES_CACHE_KEY = 'syseng_cache_courses_v4';
 
 /**
  * Formatea conteos numéricos de valoraciones (ej. 1400 -> "1.4k+", 250 -> "250")
@@ -66,10 +66,15 @@ export class CoursesService {
 
   getAll(filters?: CourseFilters): Observable<PaginatedResponse<Course>> {
     const cached = this.readCache();
-    const hasFilters = filters && Object.keys(filters).length > 0;
+    // Excluir 'page' de los filtros para no bloquear la caché ni la emisión inmediata
+    const filterRecord = (filters ?? {}) as Record<string, unknown>;
+    const activeFilterKeys = Object.keys(filterRecord).filter(
+      k => k !== 'page' && filterRecord[k] !== undefined && filterRecord[k] !== ''
+    );
+    const hasFilters = activeFilterKeys.length > 0;
 
     return new Observable<PaginatedResponse<Course>>(subscriber => {
-      // Si no hay filtros y existe caché local, emitir de inmediato para mejorar FCP
+      // Si no hay filtros de contenido y existe caché local válida, emitir de inmediato para mejorar FCP
       if (!hasFilters && cached) {
         subscriber.next(cached);
       }

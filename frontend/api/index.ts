@@ -2801,11 +2801,122 @@ export default async function handler(req: any, res: any) {
     // -------------------------------------------------------------
     // CLANES Y SEMILLEROS (Cached < 2ms)
     // -------------------------------------------------------------
-    if (method === 'GET' && cleanPath === '/clans') {
-      let formatted = getCached<any[]>('all_clans');
+    // -------------------------------------------------------------
+    // CLANES Y SEMILLEROS (Con proyectos, kanban, commits, PRs en vivo)
+    // -------------------------------------------------------------
+    if (method === 'GET' && (cleanPath === '/clans' || cleanPath.match(/^\/clans\/\d+$/))) {
+      const clanSingleMatch = cleanPath.match(/^\/clans\/(\d+)$/);
+      const targetClanId = clanSingleMatch ? Number(clanSingleMatch[1]) : null;
+
+      const cacheKey = targetClanId ? `clan_single_${targetClanId}` : 'all_clans_v3';
+      let formatted = getCached<any>(cacheKey);
+
       if (!formatted) {
-        const clans: any = await sql`SELECT * FROM clans ORDER BY id ASC`;
-        formatted = (clans as any[]).map((c: any) => ({
+        const [clans, projects, tasks, prs, commits, posts, members]: any = await Promise.all([
+          targetClanId ? sql`SELECT * FROM clans WHERE id = ${targetClanId}` : sql`SELECT * FROM clans ORDER BY id ASC`,
+          sql`SELECT * FROM clan_projects ORDER BY id ASC`,
+          sql`SELECT * FROM clan_project_tasks ORDER BY "order" ASC, id ASC`,
+          sql`SELECT * FROM clan_project_pull_requests ORDER BY id DESC`,
+          sql`SELECT * FROM clan_project_commits ORDER BY id DESC`,
+          sql`SELECT * FROM clan_posts ORDER BY id DESC`,
+          sql`SELECT * FROM clan_members`,
+        ]);
+
+        const tasksByProject = new Map<number, any[]>();
+        for (const t of tasks as any[]) {
+          const pid = Number(t.project_id);
+          if (!tasksByProject.has(pid)) tasksByProject.set(pid, []);
+          tasksByProject.get(pid)!.push({
+            id: t.id,
+            title: t.title,
+            description: t.description || '',
+            status: t.status,
+            priority: t.priority,
+            assignee: t.assignee,
+            branch: t.branch,
+            order: Number(t.order || 0),
+          });
+        }
+
+        const prsByProject = new Map<number, any[]>();
+        for (const p of prs as any[]) {
+          const pid = Number(p.project_id);
+          if (!prsByProject.has(pid)) prsByProject.set(pid, []);
+          prsByProject.get(pid)!.push({
+            id: p.id,
+            number: Number(p.number),
+            title: p.title,
+            description: p.description || '',
+            author: p.author,
+            sourceBranch: p.source_branch,
+            targetBranch: p.target_branch,
+            status: p.status,
+            deploymentStatus: p.deployment_status || 'ready',
+            deploymentUrl: p.deployment_url,
+            buildLogs: Array.isArray(p.build_logs) ? p.build_logs : (typeof p.build_logs === 'string' ? JSON.parse(p.build_logs) : []),
+            diffFiles: Array.isArray(p.diff_files) ? p.diff_files : (typeof p.diff_files === 'string' ? JSON.parse(p.diff_files) : []),
+            reviews: Array.isArray(p.reviews) ? p.reviews : (typeof p.reviews === 'string' ? JSON.parse(p.reviews) : []),
+            createdAt: p.created_at,
+          });
+        }
+
+        const commitsByProject = new Map<number, any[]>();
+        for (const c of commits as any[]) {
+          const pid = Number(c.project_id);
+          if (!commitsByProject.has(pid)) commitsByProject.set(pid, []);
+          commitsByProject.get(pid)!.push({
+            id: c.id,
+            hash: c.hash,
+            message: c.message,
+            author: c.author,
+            branch: c.branch,
+            timeAgo: c.time_ago || 'hace un momento',
+            createdAt: c.created_at,
+          });
+        }
+
+        const projectsByClan = new Map<number, any[]>();
+        for (const p of projects as any[]) {
+          const cid = Number(p.clan_id);
+          if (!projectsByClan.has(cid)) projectsByClan.set(cid, []);
+          projectsByClan.get(cid)!.push({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            description: p.description || '',
+            status: p.status || 'active',
+            techStack: Array.isArray(p.tech_stack) ? p.tech_stack : (typeof p.tech_stack === 'string' ? JSON.parse(p.tech_stack) : ['TypeScript', 'Angular']),
+            tasks: tasksByProject.get(Number(p.id)) || [],
+            pullRequests: prsByProject.get(Number(p.id)) || [],
+            commits: commitsByProject.get(Number(p.id)) || [],
+          });
+        }
+
+        const postsByClan = new Map<number, any[]>();
+        for (const post of posts as any[]) {
+          const cid = Number(post.clan_id);
+          if (!postsByClan.has(cid)) postsByClan.set(cid, []);
+          postsByClan.get(cid)!.push({
+            id: post.id,
+            author: post.author_name || 'Estudiante',
+            role: 'Investigador',
+            title: post.title,
+            content: post.content,
+            type: post.type || 'insight',
+            upvotes: Number(post.upvotes_count || 0),
+            comments: Number(post.comments_count || 0),
+            teacherEndorsed: Boolean(post.teacher_endorsed),
+            createdAt: post.created_at,
+          });
+        }
+
+        const membersByClan = new Map<number, number>();
+        for (const m of members as any[]) {
+          const cid = Number(m.clan_id);
+          membersByClan.set(cid, (membersByClan.get(cid) || 0) + 1);
+        }
+
+        const allFormatted = (clans as any[]).map((c: any) => ({
           id: c.id,
           name: c.name,
           tag: c.tag,
@@ -2815,8 +2926,8 @@ export default async function handler(req: any, res: any) {
           lines_of_research: Array.isArray(c.lines_of_research) ? c.lines_of_research : ['Concurrencia y Memoria', 'Arquitectura de Sistemas'],
           streakDays: Number(c.streak_days || 4),
           streak_days: Number(c.streak_days || 4),
-          membersCount: 1,
-          members_count: 1,
+          membersCount: membersByClan.get(Number(c.id)) ?? 1,
+          members_count: membersByClan.get(Number(c.id)) ?? 1,
           weeklyChallenge: c.weekly_challenge && typeof c.weekly_challenge === 'object'
             ? c.weekly_challenge
             : { title: 'Reto de Arquitectura y Concurrencia', xpReward: 350, completed: false },
@@ -2824,16 +2935,27 @@ export default async function handler(req: any, res: any) {
             ? c.weekly_challenge
             : { title: 'Reto de Arquitectura y Concurrencia', xpReward: 350, completed: false },
           recentLogs: [],
-          projects: [],
-          researchFeed: [],
+          projects: projectsByClan.get(Number(c.id)) || [],
+          researchFeed: postsByClan.get(Number(c.id)) || [],
           libraryPapers: [],
           upcomingSessions: [],
           researchers: [{ id: '1', name: 'Director Cátedra Sistemas', role: 'Director de Semillero', avatar: null }],
           isMember: false,
           is_member: false,
         }));
-        setCache('all_clans', formatted, 60);
+
+        if (targetClanId) {
+          formatted = allFormatted[0] || null;
+          if (!formatted) {
+            return sendJson(res, 404, { error: 'not_found', message: 'Clan no encontrado.' });
+          }
+        } else {
+          formatted = allFormatted;
+        }
+
+        setCache(cacheKey, formatted, 30);
       }
+
       return sendJson(res, 200, formatted, 'public, s-maxage=30, stale-while-revalidate=120');
     }
 
