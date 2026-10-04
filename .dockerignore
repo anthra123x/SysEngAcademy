@@ -1,0 +1,14 @@
+.git
+.github
+frontend
+backend/node_modules
+backend/vendor
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/tests
+backend/phpunit.result.cache
