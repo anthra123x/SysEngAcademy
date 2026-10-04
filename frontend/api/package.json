@@ -1,7 +1,0 @@
-{
-  "type": "module",
-  "dependencies": {
-    "@neondatabase/serverless": "^1.2.0",
-    "bcryptjs": "^3.0.3"
-  }
-}
