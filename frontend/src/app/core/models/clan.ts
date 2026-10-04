@@ -5,6 +5,14 @@ export interface ResearchComment {
   text: string;
   timeAgo: string;
   isCurrentUser?: boolean;
+  isTeacher?: boolean;
+}
+
+export interface TeacherEndorsement {
+  teacherName: string;
+  note: string;
+  date: string;
+  xpAwarded: number;
 }
 
 export interface ResearchLogEntry {
@@ -12,7 +20,7 @@ export interface ResearchLogEntry {
   author: string;
   authorRole: string;
   avatar?: string;
-  type: 'hallazgo' | 'pregunta' | 'paper' | 'benchmark' | 'propuesta';
+  type: 'hallazgo' | 'pregunta' | 'paper' | 'benchmark' | 'propuesta' | 'standup' | 'mision_docente';
   title: string;
   content: string;
   codeSnippet?: string;
@@ -22,13 +30,16 @@ export interface ResearchLogEntry {
   comments: ResearchComment[];
   timeAgo: string;
   isCurrentUser?: boolean;
+  teacherEndorsement?: TeacherEndorsement;
 }
 
 export interface ResearchProjectTask {
   id: string;
   title: string;
   completed: boolean;
+  status?: 'pending' | 'in_progress' | 'completed';
   assignedTo?: string;
+  xpReward?: number;
 }
 
 export interface ResearchProject {
@@ -42,6 +53,8 @@ export interface ResearchProject {
   membersJoined: string[];
   tasks?: ResearchProjectTask[];
   createdAt: string;
+  teacherApproved?: boolean;
+  teacherReviewNote?: string;
 }
 
 export interface ResearchPaper {
@@ -84,6 +97,12 @@ export interface ClanWeeklyQuest {
   completed: boolean;
 }
 
+export interface ChallengeTestCase {
+  input: string;
+  expected: string;
+  description: string;
+}
+
 export interface ClanBattleChallenge {
   id: string;
   title: string;
@@ -93,6 +112,20 @@ export interface ClanBattleChallenge {
   timeLimitMinutes: number;
   xpReward: number;
   completedCount: number;
+  starterCode?: Record<string, string>;
+  testCases?: ChallengeTestCase[];
+  solutionTemplate?: string;
+  isSolvedByCurrentUser?: boolean;
+}
+
+export interface TeacherMission {
+  id: string;
+  teacherName: string;
+  title: string;
+  description: string;
+  deadline: string;
+  xpReward: number;
+  completed: boolean;
 }
 
 export interface StudyGroup {
@@ -122,6 +155,8 @@ export interface StudyGroup {
   upcomingSessions: ResearchSession[];
   researchers: ResearchMember[];
   battleChallenges?: ClanBattleChallenge[];
+  teacherMissions?: TeacherMission[];
+  dailyStandupDoneToday?: boolean;
   isMember: boolean;
   userRole?: 'founder' | 'lead' | 'researcher' | 'apprentice';
 }

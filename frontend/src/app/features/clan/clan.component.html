@@ -1,4 +1,23 @@
 <div class="clan-page">
+  <!-- TOAST NOTIFICATION CONTAINER FLOTANTE -->
+  @if (activeToast(); as toast) {
+    <div class="clan-toast-container animate-slide-down">
+      <div class="clan-toast-card">
+        <div class="clan-toast-icon">
+          <app-icon [name]="toast.icon" [size]="20" color="#0AE98A" />
+        </div>
+        <div class="clan-toast-content">
+          <span class="clan-toast-title">{{ toast.title }}</span>
+          <span class="clan-toast-desc">{{ toast.message }}</span>
+        </div>
+        @if (toast.xp) {
+          <div class="clan-toast-xp font-mono">+{{ toast.xp }} XP</div>
+        }
+        <button type="button" class="clan-toast-close" (click)="activeToast.set(null)">✕</button>
+      </div>
+    </div>
+  }
+
   <div class="container clan-container">
     @if (currentClan(); as clan) {
       <!-- Top Utility Breadcrumb & Clan Switcher -->
@@ -22,6 +41,25 @@
           </button>
         </div>
       </div>
+
+      <!-- BARRA DE MENTORÍA DOCENTE (Si el usuario es Docente) -->
+      @if (isTeacher()) {
+        <div class="teacher-mentorship-bar animate-fade-in">
+          <div class="t-badge-group">
+            <span class="t-badge-pill">🎓 MODO DOCENTE / MENTOR</span>
+            <span class="t-badge-title">Semillero en Supervisión de Cátedra</span>
+          </div>
+          <p class="t-badge-desc">
+            Tienes facultades de mentor para otorgar <strong>Sellos de Aval Docente (+80 XP)</strong> a las ideas de los estudiantes, certificar proyectos y asignar <strong>Misiones de Cátedra</strong> oficiales.
+          </p>
+          <div class="t-badge-actions">
+            <button type="button" class="btn btn-xs btn-primary" (click)="showTeacherMissionModal.set(true)">
+              <app-icon name="book" [size]="13" />
+              <span>Asignar Misión de Cátedra 📜</span>
+            </button>
+          </div>
+        </div>
+      }
 
       <!-- DIRECTORY OF CLANS DRAWER / BROWSER (If user wants to explore other clanes) -->
       @if (browseAllClans()) {
@@ -89,6 +127,23 @@
               }
             </div>
           </div>
+
+          <!-- TRIGGER DAILY STANDUP / RACHA INTERACTIVA -->
+          <div class="clan-standup-trigger-row">
+            @if (clan.isMember) {
+              @if (clan.dailyStandupDoneToday) {
+                <div class="standup-synced-badge">
+                  <app-icon name="check-circle" [size]="15" color="#0AE98A" />
+                  <span>Standup Diario Completado Hoy · Racha Grupal Protegida 🔥</span>
+                </div>
+              } @else {
+                <button type="button" class="btn btn-sm btn-standup-glow" (click)="openStandupModal()">
+                  <app-icon name="zap" [size]="15" />
+                  <span>⚡ Sincronizar Daily Standup de Hoy (+45 XP)</span>
+                </button>
+              }
+            }
+          </div>
         </div>
 
         <!-- Columna Lateral: Gamificación y Nivel del Clan -->
@@ -110,7 +165,7 @@
             <div class="xp-progress-track">
               <div class="xp-progress-fill" [style.width.%]="levelProgressPercent()"></div>
             </div>
-            <span class="xp-hint">Aporta completando lecciones, ideas y proyectos.</span>
+            <span class="xp-hint">Aporta resolviendo retos en vivo, publicando ideas y avanzando proyectos.</span>
           </div>
 
           <!-- Perks Activos Desbloqueados -->
@@ -180,7 +235,7 @@
           (click)="activeTab.set('arena')"
         >
           <app-icon name="zap" [size]="15" />
-          <span>Arena &amp; Retos Gamificados</span>
+          <span>Arena de Retos en Vivo</span>
           @if (!clan.weeklyQuest.completed) {
             <span class="tab-badge tab-badge--quest">Misión Activa</span>
           }
@@ -228,23 +283,23 @@
                 [class.is-active]="feedFilter() === 'benchmark'"
                 (click)="feedFilter.set('benchmark')"
               >
-                ⚡ Benchmarks
+                ⚡ Benchmarks &amp; Retos
               </button>
               <button
                 type="button"
                 class="feed-filter-btn"
-                [class.is-active]="feedFilter() === 'paper'"
-                (click)="feedFilter.set('paper')"
+                [class.is-active]="feedFilter() === 'standup'"
+                (click)="feedFilter.set('standup')"
               >
-                🔬 Papers
+                🔥 Standups
               </button>
               <button
                 type="button"
                 class="feed-filter-btn"
-                [class.is-active]="feedFilter() === 'propuesta'"
-                (click)="feedFilter.set('propuesta')"
+                [class.is-active]="feedFilter() === 'mision_docente'"
+                (click)="feedFilter.set('mision_docente')"
               >
-                🚀 Propuestas
+                📜 Misiones Docentes
               </button>
             </div>
 
@@ -272,23 +327,50 @@
             }
 
             @for (entry of filteredFeed(); track entry.id) {
-              <article class="feed-card" [class.is-benchmark]="entry.type === 'benchmark'">
+              <article class="feed-card" [class.is-benchmark]="entry.type === 'benchmark'" [class.is-standup]="entry.type === 'standup'" [class.is-teacher-mission]="entry.type === 'mision_docente'">
                 <!-- Card Header -->
                 <header class="feed-card__head">
                   <div class="author-badge-group">
-                    <div class="author-avatar-chip">
+                    <div class="author-avatar-chip" [class.is-teacher-avatar]="entry.authorRole.includes('Docente')">
                       <span class="author-initial">{{ entry.author.slice(0, 1) }}</span>
                     </div>
                     <div class="author-meta">
-                      <span class="author-name">{{ entry.author }}</span>
+                      <span class="author-name">
+                        {{ entry.author }}
+                        @if (entry.authorRole.includes('Docente')) {
+                          <span class="author-teacher-tag">DOCENTE</span>
+                        }
+                      </span>
                       <span class="author-role">{{ entry.authorRole }} · {{ entry.timeAgo }}</span>
                     </div>
                   </div>
 
-                  <span class="feed-type-pill feed-type-pill--{{ entry.type }}">
-                    {{ entry.type | uppercase }}
-                  </span>
+                  <div class="head-right-actions">
+                    <span class="feed-type-pill feed-type-pill--{{ entry.type }}">
+                      {{ entry.type === 'mision_docente' ? 'MISIÓN DE CÁTEDRA' : (entry.type | uppercase) }}
+                    </span>
+
+                    <!-- Botón para Docente: Avalar con Sello de Cátedra -->
+                    @if (isTeacher() && !entry.teacherEndorsement && entry.author !== auth.user()?.name) {
+                      <button type="button" class="btn btn-xs btn-endorse-docente" (click)="endorseLog(entry.id)" title="Conceder Sello Oficial de Aval Docente (+80 XP)">
+                        <app-icon name="award" [size]="12" color="#FFB800" />
+                        <span>Avalar (+80 XP)</span>
+                      </button>
+                    }
+                  </div>
                 </header>
+
+                <!-- Aval Docente si ya fue concedido -->
+                @if (entry.teacherEndorsement; as te) {
+                  <div class="teacher-endorsement-banner animate-fade-in">
+                    <div class="te-header">
+                      <app-icon name="award" [size]="16" color="#FFB800" />
+                      <strong>Sello de Aval Docente concedido por {{ te.teacherName }}</strong>
+                      <span class="te-badge font-mono">+{{ te.xpAwarded }} XP Mérito Académico</span>
+                    </div>
+                    <p class="te-note">"{{ te.note }}"</p>
+                  </div>
+                }
 
                 <!-- Title & Body -->
                 <div class="feed-card__body">
@@ -338,8 +420,12 @@
                 @if (entry.comments.length > 0) {
                   <div class="comments-thread">
                     @for (comment of entry.comments; track comment.id) {
-                      <div class="comment-item">
-                        <span class="comment-author">{{ comment.author }}:</span>
+                      <div class="comment-item" [class.is-teacher-comment]="comment.isTeacher">
+                        <span class="comment-author">
+                          {{ comment.author }}
+                          @if (comment.isTeacher) { <span class="badge-mentor">MENTOR</span> }
+                          :
+                        </span>
                         <span class="comment-text">{{ comment.text }}</span>
                         <span class="comment-time">{{ comment.timeAgo }}</span>
                       </div>
@@ -353,7 +439,7 @@
                     <input
                       type="text"
                       class="comment-input"
-                      placeholder="Escribe una observación técnica o refactorización..."
+                      placeholder="Escribe una observación técnica, refactorización o pregunta..."
                       [value]="commentDrafts()[entry.id] || ''"
                       (input)="setCommentDraft(entry.id, $any($event.target).value)"
                       (keydown.enter)="submitComment(entry.id)"
@@ -364,7 +450,7 @@
                       (click)="submitComment(entry.id)"
                       [disabled]="!commentDrafts()[entry.id]?.trim()"
                     >
-                      Enviar (+20 XP)
+                      Enviar (+25 XP)
                     </button>
                   </div>
                 }
@@ -382,7 +468,7 @@
           <div class="projects-section-header">
             <div>
               <h3>Laboratorio de Proyectos de Software del Clan</h3>
-              <p>Desarrollo colaborativo en equipo: implementa prototipos reales, planifica hitos y vincula repositorios de GitHub.</p>
+              <p>Desarrollo colaborativo en equipo: implementa prototipos reales, toma hitos, cambia su estado y despliega en producción.</p>
             </div>
             @if (clan.isMember) {
               <button type="button" class="btn btn-sm btn-primary" (click)="showNewProjectModal.set(true)">
@@ -407,13 +493,28 @@
             }
 
             @for (project of clan.projects; track project.id) {
-              <div class="project-card">
+              <div class="project-card" [class.is-concluded]="project.status === 'concluido'">
                 <div class="project-card__head">
                   <span class="project-status-tag project-status--{{ project.status }}">
-                    {{ project.status === 'en_progreso' ? '⚡ EN DESARROLLO' : (project.status === 'concluido' ? '✓ CONCLUIDO' : '💡 PROPUESTA') }}
+                    {{ project.status === 'concluido' ? '🚀 DESPLEGADO EN PRODUCCIÓN' : (project.status === 'en_progreso' ? '⚡ EN DESARROLLO ACTIVO' : '💡 PROPUESTA INICIAL') }}
                   </span>
-                  <span class="project-lead">Lead: {{ project.leadResearcher }}</span>
+
+                  <div class="head-lead-group">
+                    <span class="project-lead">Lead: {{ project.leadResearcher }}</span>
+                    @if (isTeacher() && !project.teacherApproved) {
+                      <button type="button" class="btn btn-xs btn-endorse-project" (click)="endorseProject(project.id)">
+                        🌟 Certificar Proyecto (+120 XP)
+                      </button>
+                    }
+                  </div>
                 </div>
+
+                @if (project.teacherApproved) {
+                  <div class="project-teacher-approved-tag animate-fade-in">
+                    <app-icon name="award" [size]="14" color="#FFB800" />
+                    <span>Acreditado Oficialmente por Cátedra: {{ project.teacherReviewNote || 'Línea de I+D homologada.' }}</span>
+                  </div>
+                }
 
                 <h3 class="project-title">{{ project.title }}</h3>
                 <p class="project-desc">{{ project.description }}</p>
@@ -426,24 +527,65 @@
                 </div>
 
                 <!-- Lista de Hitos / Tareas Interactivas -->
-                @if (project.tasks && project.tasks.length > 0) {
-                  <div class="project-tasks-box">
-                    <span class="tasks-heading">Hitos &amp; Tareas del Proyecto:</span>
-                    <div class="tasks-list">
-                      @for (task of project.tasks; track task.id) {
-                        <label class="task-checkbox-item" [class.is-done]="task.completed">
-                          <input
-                            type="checkbox"
-                            [checked]="task.completed"
-                            (change)="toggleTask(project.id, task.id)"
-                            [disabled]="!clan.isMember"
-                          />
-                          <span class="task-label">{{ task.title }}</span>
-                        </label>
-                      }
-                    </div>
+                <div class="project-tasks-box">
+                  <div class="tasks-heading-row">
+                    <span class="tasks-heading">Tablero de Tareas e Hitos de Investigación:</span>
+                    <span class="tasks-progress-ratio font-mono">
+                      {{ (project.tasks || []).filter(t => t.completed).length }} / {{ (project.tasks || []).length }} completados
+                    </span>
                   </div>
-                }
+
+                  <div class="tasks-interactive-list">
+                    @for (task of project.tasks ?? []; track task.id) {
+                      <div class="task-card-row" [class.is-done]="task.completed" [class.is-in-progress]="task.status === 'in_progress'">
+                        <button
+                          type="button"
+                          class="task-status-btn task-status--{{ task.status || (task.completed ? 'completed' : 'pending') }}"
+                          (click)="advanceProjectTask(project.id, task.id)"
+                          [disabled]="!clan.isMember"
+                          title="Hacer clic para avanzar estado"
+                        >
+                          @if (task.completed) {
+                            <span>✓ Completada</span>
+                          } @else if (task.status === 'in_progress') {
+                            <span>En Progreso</span>
+                          } @else {
+                            <span>Por Iniciar</span>
+                          }
+                        </button>
+
+                        <span class="task-title-text">{{ task.title }}</span>
+
+                        <div class="task-assignee-box">
+                          @if (task.assignedTo) {
+                            <span class="assignee-tag">👤 {{ task.assignedTo }}</span>
+                          } @else if (clan.isMember) {
+                            <button type="button" class="btn-claim-task" (click)="assignTaskToMe(project.id, task.id)">
+                              + Asignarme
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Input rápido para agregar nueva tarea -->
+                    @if (clan.isMember) {
+                      <div class="add-task-quick-row">
+                        <input
+                          type="text"
+                          class="input input-quick-task"
+                          placeholder="+ Añadir nuevo hito o tarea técnica al proyecto..."
+                          [value]="quickTaskTitle()[project.id] || ''"
+                          (input)="setQuickTaskInput(project.id, $any($event.target).value)"
+                          (keydown.enter)="addQuickTask(project.id)"
+                        />
+                        <button type="button" class="btn btn-xs btn-outline" (click)="addQuickTask(project.id)" [disabled]="!quickTaskTitle()[project.id]?.trim()">
+                          Añadir
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
 
                 <!-- Footer: Colaboradores & Repositorio -->
                 <div class="project-card__foot">
@@ -460,7 +602,7 @@
                     }
                     @if (clan.isMember && !project.membersJoined.includes(auth.user()?.name || '')) {
                       <button type="button" class="btn btn-xs btn-primary" (click)="joinProject(project.id)">
-                        + Unirme al Equipo
+                        + Unirme al Equipo (+35 XP)
                       </button>
                     }
                   </div>
@@ -472,11 +614,11 @@
       }
 
       <!-- ========================================================
-           TAB 3: ARENA & RETOS GAMIFICADOS
+           TAB 3: ARENA DE RETOS EN VIVO
            ======================================================== -->
       @if (activeTab() === 'arena') {
         <section class="clan-arena-section animate-fade-in">
-          <!-- Big Weekly Clan Quest Card -->
+          <!-- Big Weekly Clan Quest Card / Raid Colectiva -->
           <div class="quest-hero-banner">
             <div class="quest-badge-row">
               <span class="badge badge-accent">⚔️ MISIÓN COOPERATIVA SEMANAL</span>
@@ -491,7 +633,7 @@
               <div class="q-meta">
                 <span>Progreso Colectivo</span>
                 <span class="font-mono">
-                  {{ clan.weeklyQuest.currentCount }} / {{ clan.weeklyQuest.targetCount }} retos superados
+                  {{ clan.weeklyQuest.currentCount }} / {{ clan.weeklyQuest.targetCount }} aportes superados
                   ({{ Math.round((clan.weeklyQuest.currentCount / clan.weeklyQuest.targetCount) * 100) }}%)
                 </span>
               </div>
@@ -505,28 +647,33 @@
 
             <div class="quest-action-row">
               @if (clan.isMember) {
-                <button type="button" class="btn btn-sm btn-primary" (click)="contributeToQuest()">
+                <button type="button" class="btn btn-sm btn-primary" (click)="openQuestModal()">
                   <app-icon name="zap" [size]="14" />
-                  <span>Aportar Progreso con mi Actividad (+25 XP Personal)</span>
+                  <span>Aportar a la Misión Colectiva (+XP)</span>
                 </button>
               }
               <span class="quest-timer">Se reinicia cada domingo 23:59 UTC</span>
             </div>
           </div>
 
-          <!-- Arena de Desafíos de Código y Duelos -->
+          <!-- Arena de Desafíos de Código y Duelos en Vivo -->
           <div class="battle-challenges-container">
             <div class="bc-header">
-              <h3>Arena de Duelos &amp; Retos Técnicos del Clan</h3>
-              <p>Entrena con tus compañeros de semillero en retos de alta complejidad algorítmica y de sistemas.</p>
+              <div>
+                <h3>Arena de Duelos &amp; Retos Técnicos en Vivo</h3>
+                <p>Resuelve desafíos algorítmicos y de sistemas con test runner interactivo en tiempo real para sumar XP a tu semillero.</p>
+              </div>
             </div>
 
             <div class="bc-grid">
               @for (challenge of clan.battleChallenges ?? []; track challenge.id) {
-                <div class="battle-card">
+                <div class="battle-card" [class.is-solved]="challenge.isSolvedByCurrentUser">
                   <div class="battle-card__head">
                     <span class="badge badge-warning">{{ challenge.category }}</span>
                     <span class="badge badge-danger">Dificultad: {{ challenge.difficulty | uppercase }}</span>
+                    @if (challenge.isSolvedByCurrentUser) {
+                      <span class="badge badge-success">✓ SUPERADO 🏆</span>
+                    }
                   </div>
 
                   <h4 class="battle-title">{{ challenge.title }}</h4>
@@ -534,14 +681,14 @@
 
                   <div class="battle-meta-row font-mono">
                     <span>⏱ Tiempo límite: {{ challenge.timeLimitMinutes }} min</span>
-                    <span>Recompensa: +{{ challenge.xpReward }} XP</span>
+                    <span class="text-primary font-bold">Recompensa: +{{ challenge.xpReward }} XP</span>
                   </div>
 
                   <div class="battle-card__foot">
                     <span class="battle-completed-txt">{{ challenge.completedCount }} miembros lo superaron</span>
-                    <a routerLink="/cursos" class="btn btn-xs btn-primary">
-                      Lanzar Reto →
-                    </a>
+                    <button type="button" class="btn btn-xs btn-primary" (click)="openChallenge(challenge)">
+                      ⚡ Lanzar Reto / Resolver en Vivo →
+                    </button>
                   </div>
                 </div>
               }
@@ -634,7 +781,314 @@
   </div>
 
   <!-- ========================================================
-       MODAL: COMPARTIR NUEVA IDEA O SNIPPET
+       MODAL 1: ARENA DE CÓDIGO INTERACTIVA (TEST RUNNER EN VIVO)
+       ======================================================== -->
+  @if (activeChallenge(); as challenge) {
+    <div class="modal-backdrop arena-modal-backdrop" (click)="closeChallenge()">
+      <div class="modal-card arena-modal-card" (click)="$event.stopPropagation()">
+        <header class="arena-modal-header">
+          <div class="arena-title-wrap">
+            <span class="badge badge-accent">⚡ ARENA DE CÓDIGO EN VIVO</span>
+            <h3>{{ challenge.title }}</h3>
+          </div>
+          <div class="arena-header-meta">
+            <div class="arena-timer-pill" [class.is-urgent]="challengeTimeRemaining() < 300">
+              <app-icon name="clock" [size]="14" />
+              <span class="font-mono">{{ formatTime(challengeTimeRemaining()) }}</span>
+            </div>
+            <span class="badge badge-primary font-mono">+{{ challenge.xpReward }} XP</span>
+            <button class="btn-close-modal" (click)="closeChallenge()">✕</button>
+          </div>
+        </header>
+
+        <div class="arena-modal-body">
+          <!-- Columna Izquierda: Especificación del Desafío -->
+          <div class="arena-spec-pane">
+            <div class="spec-section">
+              <span class="spec-label">Descripción del Reto:</span>
+              <p class="spec-text">{{ challenge.description }}</p>
+            </div>
+
+            <div class="spec-section">
+              <span class="spec-label">Casos de Prueba a Superar:</span>
+              <div class="spec-testcases">
+                @for (tc of challenge.testCases ?? []; track tc.description; let i = $index) {
+                  <div class="testcase-card">
+                    <span class="tc-num">Caso {{ i + 1 }}: {{ tc.description }}</span>
+                    <div class="tc-io font-mono">
+                      <span><strong>Entrada:</strong> {{ tc.input }}</span>
+                      <span><strong>Esperado:</strong> {{ tc.expected }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Editor de Código & Terminal de Tests -->
+          <div class="arena-code-pane">
+            <div class="code-editor-topbar">
+              <div class="lang-pills">
+                <button type="button" [class.is-active]="challengeLanguage() === 'typescript'" (click)="changeChallengeLanguage('typescript')">TypeScript</button>
+                <button type="button" [class.is-active]="challengeLanguage() === 'python'" (click)="changeChallengeLanguage('python')">Python 3</button>
+                <button type="button" [class.is-active]="challengeLanguage() === 'rust'" (click)="changeChallengeLanguage('rust')">Rust</button>
+              </div>
+              <span class="editor-hint font-mono">// Entorno de Pruebas Seguro</span>
+            </div>
+
+            <div class="code-editor-shell">
+              <textarea
+                class="arena-code-textarea font-mono"
+                [value]="challengeCode()"
+                (input)="challengeCode.set($any($event.target).value)"
+                spellcheck="false"
+              ></textarea>
+            </div>
+
+            <!-- Terminal de Resultados de Tests -->
+            <div class="arena-terminal-output font-mono">
+              <div class="terminal-head">
+                <span>CONSOLA DE EJECUCIÓN &amp; TESTS</span>
+                @if (challengeRunningTests()) {
+                  <span class="terminal-running-spinner">EJECUTANDO TESTS EN SANDBOX...</span>
+                }
+              </div>
+
+              <div class="terminal-body">
+                @if (!challengeTestResults() && !challengeRunningTests()) {
+                  <span class="term-muted">> Haz clic en "▶️ Ejecutar Tests" para validar tu solución contra los casos de prueba.</span>
+                }
+
+                @if (challengeRunningTests()) {
+                  <div class="term-loading">
+                    <span>> Compilando código fuente en contenedor aislado...</span>
+                    <span>> Ejecutando aserciones de memoria y tiempo...</span>
+                  </div>
+                }
+
+                @if (challengeTestResults(); as results) {
+                  <div class="term-results-list">
+                    @for (res of results; track res.index) {
+                      <div class="term-result-line" [class.is-passed]="res.passed">
+                        <span class="res-status">[PASSED]</span>
+                        <span class="res-desc">Test {{ res.index }}: {{ res.description }}</span>
+                        <span class="res-meta">{{ res.durationMs }}ms · 0 leaks</span>
+                      </div>
+                    }
+                    <div class="term-summary-line">
+                      ✓ Todos los tests aprobados exitosamente. ¡Listo para entregar y sumar XP al Clan!
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="arena-modal-footer">
+          <button type="button" class="btn btn-outline" (click)="closeChallenge()">Cancelar</button>
+          <button type="button" class="btn btn-outline" (click)="runChallengeTests()" [disabled]="challengeRunningTests()">
+            ▶️ Ejecutar Tests
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-submit-solution"
+            (click)="submitChallengeSolution()"
+            [disabled]="!challengePassed()"
+          >
+            🚀 Entregar Solución (+{{ challenge.xpReward }} XP)
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL 2: DAILY STANDUP DE INVESTIGACIÓN
+       ======================================================== -->
+  @if (showStandupModal()) {
+    <div class="modal-backdrop" (click)="showStandupModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <div class="modal-title-wrap">
+            <app-icon name="flame" [size]="18" color="#FFB800" />
+            <h3>Daily Standup · Sincronizar Racha de Clan</h3>
+          </div>
+          <button class="btn-close-modal" (click)="showStandupModal.set(false)">✕</button>
+        </header>
+
+        <div class="modal-body">
+          <p class="modal-subtitle">
+            El Daily Standup mantiene la racha activa de tu semillero y comparte con tu equipo en qué estás avanzando hoy.
+          </p>
+
+          <div class="form-group">
+            <label>¿Qué investigaste o programaste hoy?</label>
+            <textarea
+              class="input"
+              rows="3"
+              placeholder="Ej. Optimicé las consultas SQL del módulo de autenticación y redacté pruebas unitarias..."
+              [value]="standupWhatIDid()"
+              (input)="standupWhatIDid.set($any($event.target).value)"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>¿Cuál es tu siguiente objetivo técnico para mañana?</label>
+            <input
+              type="text"
+              class="input"
+              placeholder="Ej. Implementar caché con Redis y medir la latencia bajo carga..."
+              [value]="standupNextGoal()"
+              (input)="standupNextGoal.set($any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="showStandupModal.set(false)">Cancelar</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="submitDailyStandup()"
+            [disabled]="!standupWhatIDid().trim() || !standupNextGoal().trim()"
+          >
+            Sincronizar Racha (+45 XP) 🔥
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL 3: ASIGNAR MISIÓN DE CÁTEDRA (DOCENTE)
+       ======================================================== -->
+  @if (showTeacherMissionModal()) {
+    <div class="modal-backdrop" (click)="showTeacherMissionModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <div class="modal-title-wrap">
+            <app-icon name="book" [size]="18" color="#0AE98A" />
+            <h3>Asignar Misión Oficial de Cátedra</h3>
+          </div>
+          <button class="btn-close-modal" (click)="showTeacherMissionModal.set(false)">✕</button>
+        </header>
+
+        <div class="modal-body">
+          <p class="modal-subtitle">
+            Como docente, asigna un reto o laboratorio especial para los miembros del semillero con recompensa colectiva de XP.
+          </p>
+
+          <div class="form-group">
+            <label>Título de la Misión Académica</label>
+            <input
+              type="text"
+              class="input"
+              placeholder="Ej. Laboratorio de Mitigación de Condiciones de Carrera"
+              [value]="teacherMissionTitle()"
+              (input)="teacherMissionTitle.set($any($event.target).value)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Instrucciones y Criterios de Evaluación</label>
+            <textarea
+              class="input"
+              rows="4"
+              placeholder="Detalla los requisitos técnicos, herramientas a usar y el entregable esperado..."
+              [value]="teacherMissionDesc()"
+              (input)="teacherMissionDesc.set($any($event.target).value)"
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label>Fecha de Entrega / Plazo</label>
+              <input
+                type="text"
+                class="input"
+                placeholder="Ej. En 5 días"
+                [value]="teacherMissionDeadline()"
+                (input)="teacherMissionDeadline.set($any($event.target).value)"
+              />
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Recompensa de XP</label>
+              <input
+                type="number"
+                class="input font-mono"
+                [value]="teacherMissionXp()"
+                (input)="teacherMissionXp.set(+$any($event.target).value)"
+              />
+            </div>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="showTeacherMissionModal.set(false)">Cancelar</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="submitTeacherMission()"
+            [disabled]="!teacherMissionTitle().trim() || !teacherMissionDesc().trim()"
+          >
+            Publicar Misión Oficial 📜
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL 4: APORTAR A LA MISIÓN COOPERATIVA / RAID
+       ======================================================== -->
+  @if (showQuestModal()) {
+    <div class="modal-backdrop" (click)="showQuestModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <div class="modal-title-wrap">
+            <app-icon name="zap" [size]="18" color="#0AE98A" />
+            <h3>Aportar a la Misión Cooperativa Semanal</h3>
+          </div>
+          <button class="btn-close-modal" (click)="showQuestModal.set(false)">✕</button>
+        </header>
+
+        <div class="modal-body">
+          <p class="modal-subtitle">
+            Selecciona el tipo de esfuerzo técnico con el que deseas contribuir al objetivo colectivo de tu semillero:
+          </p>
+
+          <div class="quest-options-grid">
+            @for (opt of questContributions; track opt.id) {
+              <div
+                class="quest-option-card"
+                [class.is-selected]="selectedContributionId() === opt.id"
+                (click)="selectedContributionId.set(opt.id)"
+              >
+                <div class="q-opt-head">
+                  <app-icon [name]="opt.icon" [size]="18" color="#0AE98A" />
+                  <strong>{{ opt.label }}</strong>
+                  <span class="q-opt-xp font-mono">+{{ opt.xp }} XP</span>
+                </div>
+                <span class="q-opt-category">{{ opt.category }}</span>
+                <p class="q-opt-desc">{{ opt.desc }}</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="showQuestModal.set(false)">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="submitQuestContribution()">
+            Registrar Aporte Técnico ⚡
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL 5: COMPARTIR NUEVA IDEA O SNIPPET
        ======================================================== -->
   @if (showNewLogModal()) {
     <div class="modal-backdrop" (click)="showNewLogModal.set(false)">
@@ -695,7 +1149,7 @@
   }
 
   <!-- ========================================================
-       MODAL: PROPONER NUEVO PROYECTO I+D
+       MODAL 6: PROPONER NUEVO PROYECTO I+D
        ======================================================== -->
   @if (showNewProjectModal()) {
     <div class="modal-backdrop" (click)="showNewProjectModal.set(false)">
@@ -741,7 +1195,7 @@
   }
 
   <!-- ========================================================
-       MODAL: FUNDAR UN NUEVO SEMILLERO O CLAN
+       MODAL 7: FUNDAR UN NUEVO SEMILLERO O CLAN
        ======================================================== -->
   @if (showCreateClanModal()) {
     <div class="modal-backdrop" (click)="showCreateClanModal.set(false)">

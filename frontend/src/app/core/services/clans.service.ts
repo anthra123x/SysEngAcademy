@@ -7,9 +7,12 @@ import {
   ResearchComment,
   ResearchMember,
   ClanBattleChallenge,
+  TeacherEndorsement,
+  TeacherMission,
+  ChallengeTestCase,
 } from '../models/clan';
 
-const CLANS_STORAGE_PREFIX = 'syseng_study_groups_v3_';
+const CLANS_STORAGE_PREFIX = 'syseng_study_groups_v4_';
 
 @Injectable({ providedIn: 'root' })
 export class ClansService {
@@ -120,10 +123,9 @@ export class ClansService {
               timeAgo: 'hace un momento',
             },
             ...group.recentLogs,
-          ].slice(0, 8),
+          ].slice(0, 10),
         };
       } else {
-        // En este modelo, el usuario solo pertenece a 1 clan a la vez (eje principal)
         return {
           ...group,
           isMember: false,
@@ -231,21 +233,29 @@ export class ClansService {
       ],
       battleChallenges: [
         {
-          id: 'bat_1',
-          title: 'Optimización de Memoria en Estructuras Dinámicas',
+          id: 'bat_custom1',
+          title: 'Speedcoding: Algoritmo de Compresión Run-Length',
           difficulty: 'medium',
-          category: 'C++ / Algoritmos',
-          description: 'Diseñar una cola de prioridad con costo de inserción en O(log n) y memoria compacta.',
-          timeLimitMinutes: 45,
-          xpReward: 250,
+          category: 'Algoritmos',
+          description: 'Comprimir secuencias de bytes continuas sin pérdida de información.',
+          timeLimitMinutes: 25,
+          xpReward: 200,
           completedCount: 0,
+          starterCode: {
+            typescript: `export function compressRunLength(input: string): string {\n  // Tu solución aquí\n  return input;\n}`,
+            python: `def compress_run_length(text: str) -> str:\n    # Tu solución aquí\n    return text`,
+          },
+          testCases: [
+            { input: '"AABBBCCCC"', expected: '"A2B3C4"', description: 'Compresión básica de caracteres continuos' },
+            { input: '"XYZ"', expected: '"X1Y1Z1"', description: 'Caracteres sin repetición contigua' },
+          ],
         },
       ],
+      dailyStandupDoneToday: false,
       isMember: true,
       userRole: 'founder',
     };
 
-    // Al crear un clan, se convierte en el clan activo del usuario
     const updated = [
       newClan,
       ...this.studyGroups().map(g => ({ ...g, isMember: false })),
@@ -259,17 +269,18 @@ export class ClansService {
   postResearchLog(clanId: string, log: {
     title: string;
     content: string;
-    type: 'hallazgo' | 'pregunta' | 'paper' | 'benchmark' | 'propuesta';
+    type: 'hallazgo' | 'pregunta' | 'paper' | 'benchmark' | 'propuesta' | 'standup' | 'mision_docente';
     codeSnippet?: string;
     codeLanguage?: string;
   }): void {
     const user = this.auth.user();
-    const userName = user?.name || 'Investigador';
+    const isTeacher = user?.role === 'instructor' || user?.role === 'admin';
+    const userName = user?.name || (isTeacher ? 'Profesor / Mentor' : 'Investigador');
 
     const newEntry: ResearchLogEntry = {
       id: `entry_${Date.now()}`,
       author: userName,
-      authorRole: 'Investigador Activo',
+      authorRole: isTeacher ? 'Docente / Mentor' : 'Investigador Activo',
       type: log.type,
       title: log.title,
       content: log.content,
@@ -290,15 +301,364 @@ export class ClansService {
           currentXp: nextXp,
           researchFeed: [newEntry, ...g.researchFeed],
           recentLogs: [
-            { author: userName, message: `Publicó una nueva idea: "${log.title.slice(0, 30)}..."`, timeAgo: 'hace un momento' },
+            { author: userName, message: `Publicó una nueva idea: "${log.title.slice(0, 32)}..."`, timeAgo: 'hace un momento' },
             ...g.recentLogs,
-          ].slice(0, 8),
+          ].slice(0, 10),
           researchers: g.researchers.map(r =>
             r.isCurrentUser || r.name === userName
               ? { ...r, contributionsCount: r.contributionsCount + 1, xpContributed: r.xpContributed + 60 }
               : r
           ),
         };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  recordDailyStandup(clanId: string, standup: { whatIDid: string; nextGoal: string }): { streak: number; xp: number } {
+    const user = this.auth.user();
+    const userName = user?.name || 'Estudiante';
+    let newStreak = 1;
+
+    const newEntry: ResearchLogEntry = {
+      id: `standup_${Date.now()}`,
+      author: userName,
+      authorRole: 'Investigador Activo',
+      type: 'standup',
+      title: `⚡ Daily Standup de Investigación · ${userName}`,
+      content: `📌 Avance: ${standup.whatIDid}\n🎯 Siguiente hito: ${standup.nextGoal}`,
+      upvotes: 2,
+      hasUpvoted: true,
+      comments: [],
+      timeAgo: 'hace un momento',
+      isCurrentUser: true,
+    };
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        newStreak = g.streakDays + 1;
+        return {
+          ...g,
+          streakDays: newStreak,
+          dailyStandupDoneToday: true,
+          currentXp: g.currentXp + 45,
+          researchFeed: [newEntry, ...g.researchFeed],
+          recentLogs: [
+            { author: userName, message: `Completó el Standup diario (+45 XP) · Racha: ${newStreak}d 🔥`, timeAgo: 'hace un momento' },
+            ...g.recentLogs,
+          ].slice(0, 10),
+          researchers: g.researchers.map(r =>
+            r.isCurrentUser || r.name === userName
+              ? { ...r, xpContributed: r.xpContributed + 45 }
+              : r
+          ),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+    return { streak: newStreak, xp: 45 };
+  }
+
+  solveBattleChallenge(
+    clanId: string,
+    challengeId: string,
+    solveDetails: { code: string; language: string; timeSpentSeconds: number }
+  ): { challengeTitle: string; xpAwarded: number } {
+    const user = this.auth.user();
+    const userName = user?.name || 'Estudiante';
+    let challengeTitle = 'Desafío de Código';
+    let xpAwarded = 250;
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const challenges = (g.battleChallenges || []).map(b => {
+          if (b.id === challengeId) {
+            challengeTitle = b.title;
+            xpAwarded = b.xpReward;
+            return {
+              ...b,
+              completedCount: b.completedCount + 1,
+              isSolvedByCurrentUser: true,
+            };
+          }
+          return b;
+        });
+
+        const celebrationFeed: ResearchLogEntry = {
+          id: `sol_${Date.now()}`,
+          author: userName,
+          authorRole: 'Speedcoder',
+          type: 'benchmark',
+          title: `🏆 Desafío Superado: ${challengeTitle}`,
+          content: `Resolvió con éxito el reto técnico en ${solveDetails.timeSpentSeconds}s superando todos los casos de prueba automáticos.`,
+          codeSnippet: solveDetails.code,
+          codeLanguage: solveDetails.language,
+          upvotes: 4,
+          hasUpvoted: true,
+          comments: [
+            { id: `c_${Date.now()}`, author: 'Sistema de Evaluación', text: '✓ 3/3 Tests de estrés aprobados sin desbordamiento de pila.', timeAgo: 'hace un momento' }
+          ],
+          timeAgo: 'hace un momento',
+          isCurrentUser: true,
+        };
+
+        return {
+          ...g,
+          currentXp: g.currentXp + xpAwarded,
+          battleChallenges: challenges,
+          researchFeed: [celebrationFeed, ...g.researchFeed],
+          recentLogs: [
+            { author: userName, message: `Superó el reto "${challengeTitle}" en ${solveDetails.timeSpentSeconds}s (+${xpAwarded} XP)`, timeAgo: 'hace un momento' },
+            ...g.recentLogs,
+          ].slice(0, 10),
+          researchers: g.researchers.map(r =>
+            r.isCurrentUser || r.name === userName
+              ? { ...r, contributionsCount: r.contributionsCount + 1, xpContributed: r.xpContributed + xpAwarded }
+              : r
+          ),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+    return { challengeTitle, xpAwarded };
+  }
+
+  teacherEndorseLog(clanId: string, logId: string, note?: string): void {
+    const user = this.auth.user();
+    const teacherName = user?.name || 'Profesor de Cátedra';
+    const endorsement: TeacherEndorsement = {
+      teacherName,
+      note: note || 'Excelente formulación, rigor metodológico y valor técnico verificado por la cátedra.',
+      date: 'Hoy',
+      xpAwarded: 80,
+    };
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const feed = g.researchFeed.map(entry => {
+          if (entry.id === logId) {
+            return {
+              ...entry,
+              teacherEndorsement: endorsement,
+              upvotes: entry.upvotes + 3,
+            };
+          }
+          return entry;
+        });
+
+        return {
+          ...g,
+          currentXp: g.currentXp + 80,
+          researchFeed: feed,
+          recentLogs: [
+            { author: teacherName, message: `Otorgó Sello de Aval Docente a una investigación (+80 XP)`, timeAgo: 'hace un momento' },
+            ...g.recentLogs,
+          ].slice(0, 10),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  teacherEndorseProject(clanId: string, projectId: string, note?: string): void {
+    const user = this.auth.user();
+    const teacherName = user?.name || 'Profesor de Cátedra';
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const projs = g.projects.map(p => {
+          if (p.id === projectId) {
+            return {
+              ...p,
+              teacherApproved: true,
+              teacherReviewNote: note || 'Proyecto homologado oficialmente como línea de investigación del departamento.',
+            };
+          }
+          return p;
+        });
+
+        return {
+          ...g,
+          currentXp: g.currentXp + 120,
+          projects: projs,
+          recentLogs: [
+            { author: teacherName, message: `Certificó oficialmente el proyecto de investigación (+120 XP)`, timeAgo: 'hace un momento' },
+            ...g.recentLogs,
+          ].slice(0, 10),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  assignTeacherMission(clanId: string, mission: { title: string; description: string; deadline: string; xpReward: number }): void {
+    const user = this.auth.user();
+    const teacherName = user?.name || 'Profesor de Cátedra';
+
+    const newMission: TeacherMission = {
+      id: `m_${Date.now()}`,
+      teacherName,
+      title: mission.title,
+      description: mission.description,
+      deadline: mission.deadline || '7 días',
+      xpReward: mission.xpReward || 250,
+      completed: false,
+    };
+
+    const feedEntry: ResearchLogEntry = {
+      id: `tm_feed_${Date.now()}`,
+      author: teacherName,
+      authorRole: 'Docente Titular',
+      type: 'mision_docente',
+      title: `📜 Misión Oficial de Cátedra: ${mission.title}`,
+      content: `${mission.description}\n\n🎯 Recompensa para el Clan: +${mission.xpReward} XP · Fecha de entrega: ${mission.deadline}`,
+      upvotes: 3,
+      comments: [],
+      timeAgo: 'hace un momento',
+    };
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        return {
+          ...g,
+          teacherMissions: [newMission, ...(g.teacherMissions || [])],
+          researchFeed: [feedEntry, ...g.researchFeed],
+          recentLogs: [
+            { author: teacherName, message: `Asignó una misión académica oficial al clan.`, timeAgo: 'hace un momento' },
+            ...g.recentLogs,
+          ].slice(0, 10),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  advanceProjectTask(clanId: string, projectId: string, taskId: string): { completed: boolean; allDone: boolean } {
+    const user = this.auth.user();
+    const userName = user?.name || 'Investigador';
+    let taskCompleted = false;
+    let allDone = false;
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const projs = g.projects.map(p => {
+          if (p.id === projectId && p.tasks) {
+            const tasks = p.tasks.map(t => {
+              if (t.id === taskId) {
+                const nextStatus: 'pending' | 'in_progress' | 'completed' =
+                  t.status === 'completed' ? 'pending' : t.status === 'in_progress' ? 'completed' : 'in_progress';
+                taskCompleted = nextStatus === 'completed';
+                return {
+                  ...t,
+                  status: nextStatus,
+                  completed: nextStatus === 'completed',
+                  assignedTo: t.assignedTo || userName,
+                };
+              }
+              return t;
+            });
+
+            allDone = tasks.every(t => t.completed);
+            return {
+              ...p,
+              tasks,
+              status: allDone ? ('concluido' as const) : ('en_progreso' as const),
+            };
+          }
+          return p;
+        });
+
+        const xpDelta = allDone ? 200 : taskCompleted ? 45 : 10;
+        return {
+          ...g,
+          currentXp: g.currentXp + xpDelta,
+          projects: projs,
+          recentLogs: [
+            {
+              author: userName,
+              message: allDone
+                ? `🚀 ¡Desplegó en producción el proyecto I+D! (+200 XP)`
+                : taskCompleted
+                ? `Completó un hito del proyecto (+45 XP)`
+                : `Avanzó una tarea en el proyecto`,
+              timeAgo: 'hace un momento',
+            },
+            ...g.recentLogs,
+          ].slice(0, 10),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+    return { completed: taskCompleted, allDone };
+  }
+
+  assignProjectTaskToMe(clanId: string, projectId: string, taskId: string): void {
+    const user = this.auth.user();
+    const userName = user?.name || 'Investigador';
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const projs = g.projects.map(p => {
+          if (p.id === projectId && p.tasks) {
+            return {
+              ...p,
+              tasks: p.tasks.map(t => (t.id === taskId ? { ...t, assignedTo: userName, status: 'in_progress' as const } : t)),
+            };
+          }
+          return p;
+        });
+        return { ...g, projects: projs };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  addProjectTask(clanId: string, projectId: string, title: string): void {
+    if (!title.trim()) return;
+    const newTask = {
+      id: `task_${Date.now()}`,
+      title: title.trim(),
+      completed: false,
+      status: 'pending' as const,
+      xpReward: 40,
+    };
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const projs = g.projects.map(p => {
+          if (p.id === projectId) {
+            return {
+              ...p,
+              tasks: [...(p.tasks || []), newTask],
+            };
+          }
+          return p;
+        });
+        return { ...g, projects: projs };
       }
       return g;
     });
@@ -337,7 +697,8 @@ export class ClansService {
   addCommentToLog(clanId: string, logId: string, commentText: string): void {
     if (!commentText.trim()) return;
     const user = this.auth.user();
-    const userName = user?.name || 'Compañero';
+    const isTeacher = user?.role === 'instructor' || user?.role === 'admin';
+    const userName = user?.name || (isTeacher ? 'Profesor' : 'Compañero');
 
     const newComment: ResearchComment = {
       id: `c_${Date.now()}`,
@@ -345,6 +706,7 @@ export class ClansService {
       text: commentText.trim(),
       timeAgo: 'hace un momento',
       isCurrentUser: true,
+      isTeacher,
     };
 
     const updated = this.studyGroups().map(g => {
@@ -360,7 +722,7 @@ export class ClansService {
         });
         return {
           ...g,
-          currentXp: g.currentXp + 20,
+          currentXp: g.currentXp + 25,
           researchFeed: feed,
         };
       }
@@ -390,9 +752,9 @@ export class ClansService {
       repoUrl: data.repoUrl,
       membersJoined: [userName],
       tasks: [
-        { id: 't1', title: 'Diseñar arquitectura modular y diagrama de componentes', completed: false, assignedTo: userName },
-        { id: 't2', title: 'Configurar entorno de desarrollo y pipeline CI/CD', completed: false },
-        { id: 't3', title: 'Implementar prueba de concepto (PoC)', completed: false },
+        { id: 't1', title: 'Diseñar arquitectura modular y diagrama de componentes', completed: false, status: 'in_progress', assignedTo: userName },
+        { id: 't2', title: 'Configurar entorno de desarrollo y pipeline CI/CD', completed: false, status: 'pending' },
+        { id: 't3', title: 'Implementar prueba de concepto (PoC)', completed: false, status: 'pending' },
       ],
       createdAt: 'hace un momento',
     };
@@ -406,7 +768,7 @@ export class ClansService {
           recentLogs: [
             { author: userName, message: `Creó el proyecto de I+D: "${data.title}"`, timeAgo: 'hace un momento' },
             ...g.recentLogs,
-          ].slice(0, 8),
+          ].slice(0, 10),
           researchers: g.researchers.map(r =>
             r.isCurrentUser || r.name === userName
               ? { ...r, contributionsCount: r.contributionsCount + 1, xpContributed: r.xpContributed + 120 }
@@ -422,27 +784,7 @@ export class ClansService {
   }
 
   toggleProjectTask(clanId: string, projectId: string, taskId: string): void {
-    const updated = this.studyGroups().map(g => {
-      if (g.id === clanId) {
-        const projs = g.projects.map(p => {
-          if (p.id === projectId && p.tasks) {
-            const tasks = p.tasks.map(t => (t.id === taskId ? { ...t, completed: !t.completed } : t));
-            const allDone = tasks.every(t => t.completed);
-            return {
-              ...p,
-              tasks,
-              status: allDone ? ('concluido' as const) : ('en_progreso' as const),
-            };
-          }
-          return p;
-        });
-        return { ...g, currentXp: g.currentXp + 40, projects: projs };
-      }
-      return g;
-    });
-
-    this.studyGroups.set(updated);
-    this.saveToStorage(updated);
+    this.advanceProjectTask(clanId, projectId, taskId);
   }
 
   joinProject(clanId: string, projectId: string): void {
@@ -464,7 +806,7 @@ export class ClansService {
         return {
           ...g,
           projects: projs,
-          currentXp: g.currentXp + 30,
+          currentXp: g.currentXp + 35,
         };
       }
       return g;
@@ -475,19 +817,46 @@ export class ClansService {
   }
 
   completeQuestContribution(clanId: string, amount: number = 1): void {
+    this.contributeToRaidQuest(clanId, {
+      category: 'Actividad Técnica',
+      description: 'Resolución de lecciones e hitos del currículo',
+      xp: 40,
+    });
+  }
+
+  contributeToRaidQuest(
+    clanId: string,
+    contribution: { category: string; description: string; xp: number }
+  ): { questCompleted: boolean; xpEarned: number } {
+    const user = this.auth.user();
+    const userName = user?.name || 'Investigador';
+    let questFinished = false;
+
     const updated = this.studyGroups().map(g => {
       if (g.id === clanId) {
         const quest = g.weeklyQuest;
-        const next = Math.min(quest.targetCount, quest.currentCount + amount);
-        const justFinished = next >= quest.targetCount && !quest.completed;
+        const next = Math.min(quest.targetCount, quest.currentCount + 1);
+        questFinished = next >= quest.targetCount;
+        const bonusXp = questFinished ? quest.xpReward : contribution.xp;
+
         return {
           ...g,
-          currentXp: g.currentXp + (justFinished ? quest.xpReward : amount * 25),
+          currentXp: g.currentXp + bonusXp,
           weeklyQuest: {
             ...quest,
             currentCount: next,
-            completed: next >= quest.targetCount,
+            completed: questFinished,
           },
+          recentLogs: [
+            {
+              author: userName,
+              message: questFinished
+                ? `🎉 ¡COMPLETÓ LA MISIÓN COOPERATIVA SEMANAL! (+${quest.xpReward} XP para el Clan)`
+                : `Aportó a la Misión Semanal: ${contribution.category} (+${contribution.xp} XP)`,
+              timeAgo: 'hace un momento',
+            },
+            ...g.recentLogs,
+          ].slice(0, 10),
         };
       }
       return g;
@@ -495,6 +864,7 @@ export class ClansService {
 
     this.studyGroups.set(updated);
     this.saveToStorage(updated);
+    return { questCompleted: questFinished, xpEarned: contribution.xp };
   }
 
   private normalizeClans(groups: any[]): StudyGroup[] {
@@ -536,7 +906,11 @@ export class ClansService {
         libraryPapers: Array.isArray(g.libraryPapers) ? g.libraryPapers : (fallback?.libraryPapers || []),
         upcomingSessions: Array.isArray(g.upcomingSessions) ? g.upcomingSessions : (fallback?.upcomingSessions || []),
         researchers: Array.isArray(g.researchers) ? g.researchers : (fallback?.researchers || []),
-        battleChallenges: Array.isArray(g.battleChallenges) ? g.battleChallenges : (fallback?.battleChallenges || []),
+        battleChallenges: Array.isArray(g.battleChallenges) && g.battleChallenges.length > 0 && g.battleChallenges[0].starterCode
+          ? g.battleChallenges
+          : (fallback?.battleChallenges || []),
+        teacherMissions: Array.isArray(g.teacherMissions) ? g.teacherMissions : (fallback?.teacherMissions || []),
+        dailyStandupDoneToday: Boolean(g.dailyStandupDoneToday),
         isMember: Boolean(g.isMember),
         userRole: g.userRole || fallback?.userRole || 'researcher',
       };
@@ -560,8 +934,8 @@ export class ClansService {
         nextLevelXp: 5000,
         weeklyChallenge: { title: 'Implementar un Thread Pool en C++20 con mutex POSIX', xpReward: 350, completed: false },
         weeklyQuest: {
-          title: 'Operación Núcleo Seguro',
-          description: 'Resolver 8 retos de llamadas al sistema o bajo nivel en la plataforma.',
+          title: 'Operación Núcleo Seguro: Pruebas de Estrés',
+          description: 'Resolver 8 retos de llamadas al sistema o concurrencia crítica entre los miembros.',
           targetCount: 8,
           currentCount: 5,
           xpReward: 600,
@@ -586,19 +960,21 @@ export class ClansService {
             leadResearcher: 'Director Cátedra Sistemas',
             membersJoined: ['Director Cátedra Sistemas', 'Alex Torres'],
             tasks: [
-              { id: 'tk1', title: 'Rutina de interrupción de timer en Assembly x86', completed: true, assignedTo: 'Director Cátedra' },
-              { id: 'tk2', title: 'Cola de estados de procesos (Ready, Running, Blocked)', completed: true, assignedTo: 'Alex Torres' },
-              { id: 'tk3', title: 'Implementar algoritmo Round-Robin con quantum de 10ms', completed: false, assignedTo: 'Alex Torres' },
+              { id: 'tk1', title: 'Rutina de interrupción de timer en Assembly x86', completed: true, status: 'completed', assignedTo: 'Director Cátedra' },
+              { id: 'tk2', title: 'Cola de estados de procesos (Ready, Running, Blocked)', completed: true, status: 'completed', assignedTo: 'Alex Torres' },
+              { id: 'tk3', title: 'Implementar algoritmo Round-Robin con quantum de 10ms', completed: false, status: 'in_progress', assignedTo: 'Alex Torres' },
             ],
             repoUrl: 'https://github.com/syseng-krnl/microkernel-prototype',
             createdAt: 'hace 3d',
+            teacherApproved: true,
+            teacherReviewNote: 'Aprobado por Dirección de Cátedra: Excelente modelo de paginación y aislamiento de memoria.',
           },
         ],
         researchFeed: [
           {
             id: 'krnl_rf1',
             author: 'Director Cátedra Sistemas',
-            authorRole: 'Director de Semillero',
+            authorRole: 'Docente Titular',
             type: 'benchmark',
             title: 'Medición de latencia: Mutex vs Spinlock en secciones críticas < 50ns',
             content: 'Realizamos 10M de operaciones concurrentes. En secciones críticas breves sin I/O, el spinlock con CPU pause disminuye la latencia en 34% al evitar el context switch al kernel de Linux.',
@@ -609,6 +985,12 @@ export class ClansService {
             comments: [
               { id: 'c1', author: 'Mentor Técnico', text: 'Excelente mitigación; previene que el bus del procesador se sature con cache line invalidations.', timeAgo: 'hace 5h' },
             ],
+            teacherEndorsement: {
+              teacherName: 'Prof. Guillermo Arismendi',
+              note: 'Rigor técnico de cátedra validado. Publicación recomendada para el coloquio semestral.',
+              date: 'Ayer',
+              xpAwarded: 80,
+            },
             timeAgo: 'hace 1d',
           },
           {
@@ -649,33 +1031,63 @@ export class ClansService {
           },
         ],
         researchers: [
-          { id: 'm1', name: 'Director Cátedra Sistemas', role: 'Director de Semillero', level: 16, contributionsCount: 14, xpContributed: 1850 },
+          { id: 'm1', name: 'Prof. Guillermo Arismendi', role: 'Director de Semillero', level: 16, contributionsCount: 14, xpContributed: 1850 },
           { id: 'm2', name: 'Alex Torres', role: 'Investigador Principal', level: 8, contributionsCount: 7, xpContributed: 980 },
           { id: 'm3', name: 'Laura Cifuentes', role: 'Investigadora Junior', level: 5, contributionsCount: 4, xpContributed: 620 },
         ],
         battleChallenges: [
           {
             id: 'krnl_bat1',
-            title: 'Speedcoding: Cola Circular Lock-Free (SPSC)',
+            title: 'Speedcoding: Buffer Circular Lock-Free (SPSC)',
             difficulty: 'hard',
-            category: 'Concurrencia C++',
-            description: 'Implementar un buffer circular de un solo productor y un solo consumidor sin bloqueos usando atomic head/tail.',
-            timeLimitMinutes: 30,
+            category: 'Concurrencia & Sistemas',
+            description: 'Implementar un buffer circular de un solo productor y un solo consumidor sin bloqueos mutuos garantizando orden causal.',
+            timeLimitMinutes: 20,
             xpReward: 350,
             completedCount: 2,
+            starterCode: {
+              typescript: `// Implementa la función ringBufferPush\nexport function ringBufferPush(buffer: number[], capacity: number, item: number): { success: boolean; newBuffer: number[] } {\n  if (buffer.length >= capacity) {\n    return { success: false, newBuffer: buffer };\n  }\n  return { success: true, newBuffer: [...buffer, item] };\n}`,
+              python: `# Implementa la función ring_buffer_push\ndef ring_buffer_push(buffer: list, capacity: int, item: int) -> dict:\n    if len(buffer) >= capacity:\n        return {"success": False, "buffer": buffer}\n    buffer.append(item)\n    return {"success": True, "buffer": buffer}`,
+              rust: `// Buffer de alto rendimiento en Rust\npub fn ring_buffer_push(mut buffer: Vec<i32>, capacity: usize, item: i32) -> (bool, Vec<i32>) {\n    if buffer.len() >= capacity {\n        (false, buffer)\n    } else {\n        buffer.push(item);\n        (true, buffer)\n    }\n}`,
+            },
+            testCases: [
+              { input: 'buffer = [], capacity = 3, item = 42', expected: 'success: true, length: 1', description: 'Inserción en cola vacía con avance de puntero' },
+              { input: 'buffer = [1, 2, 3], capacity = 3, item = 99', expected: 'success: false (overflow mitigado)', description: 'Manejo estricto de saturación sin sobreescritura' },
+              { input: 'test concurrente: 1,000 operaciones', expected: '0 race conditions', description: 'Consistencia de punteros atómicos' },
+            ],
           },
           {
             id: 'krnl_bat2',
             title: 'Detección de Deadlocks en Matrices de Grafos',
             difficulty: 'medium',
             category: 'Algoritmos & SO',
-            description: 'Escribir una función que detecte si un sistema de recursos entra en abrazo mortal (algoritmo del Banquero).',
+            description: 'Escribir una función que verifique si un conjunto de dependencias cíclicas de recursos genera interbloqueo.',
             timeLimitMinutes: 25,
             xpReward: 200,
             completedCount: 4,
+            starterCode: {
+              typescript: `// Detectar ciclo en grafo dirigido de dependencias de procesos\nexport function detectDeadlock(numProcesses: number, edges: [number, number][]): boolean {\n  const adj: number[][] = Array.from({ length: numProcesses }, () => []);\n  for (const [u, v] of edges) adj[u].push(v);\n  // Tu lógica de DFS para detectar ciclo:\n  return false;\n}`,
+              python: `def detect_deadlock(num_processes: int, edges: list) -> bool:\n    # Tu lógica de detección de ciclo en grafo dirigido\n    return False`,
+            },
+            testCases: [
+              { input: 'procesos = 3, aristas = [[0,1], [1,2], [2,0]]', expected: 'true (Ciclo 0->1->2->0)', description: 'Detección de ciclo cerrado simple' },
+              { input: 'procesos = 3, aristas = [[0,1], [1,2]]', expected: 'false (DAG sin ciclo)', description: 'Grafo acíclico sin bloqueo' },
+            ],
           },
         ],
-        isMember: false,
+        teacherMissions: [
+          {
+            id: 'tm_krnl_1',
+            teacherName: 'Prof. Guillermo Arismendi',
+            title: 'Laboratorio de Benchmarking: Algoritmos de Reemplazo LRU vs FIFO',
+            description: 'Implementar simulación de fallos de página con matrices de 10,000 accesos y comparar tasas de hit.',
+            deadline: 'En 4 días',
+            xpReward: 350,
+            completed: false,
+          },
+        ],
+        dailyStandupDoneToday: false,
+        isMember: true,
       },
       {
         id: 'algo',
@@ -700,7 +1112,7 @@ export class ClansService {
           completed: false,
         },
         clanPerks: ['+10% XP en Cursos de Algoritmos', 'Insignia [ALGO] en Perfil'],
-        recentLogs: [{ author: 'Director Cátedra Algoritmia (Lvl 15)', message: 'Publicó el reto de optimización de grafos.', timeAgo: 'hace 2d' }],
+        recentLogs: [{ author: 'Prof. Natalia Gómez', message: 'Publicó el reto de optimización de grafos.', timeAgo: 'hace 2d' }],
         projects: [
           {
             id: 'algo_p1',
@@ -708,11 +1120,11 @@ export class ClansService {
             description: 'Optimización de consultas de distancias mínimas en redes topológicas a gran escala.',
             techStack: ['Python', 'C++', 'Graph Theory'],
             status: 'en_progreso',
-            leadResearcher: 'Director Cátedra Algoritmia',
-            membersJoined: ['Director Cátedra Algoritmia'],
+            leadResearcher: 'Prof. Natalia Gómez',
+            membersJoined: ['Prof. Natalia Gómez'],
             tasks: [
-              { id: 'at1', title: 'Implementar A* con heurística euclidiana y Manhattan', completed: true },
-              { id: 'at2', title: 'Preprocesamiento de grafos para contracción de nodos de grado 2', completed: false },
+              { id: 'at1', title: 'Implementar A* con heurística euclidiana y Manhattan', completed: true, status: 'completed' },
+              { id: 'at2', title: 'Preprocesamiento de grafos para contracción de nodos de grado 2', completed: false, status: 'in_progress' },
             ],
             createdAt: 'hace 5d',
           },
@@ -720,8 +1132,8 @@ export class ClansService {
         researchFeed: [
           {
             id: 'algo_rf1',
-            author: 'Director Cátedra Algoritmia',
-            authorRole: 'Director de Semillero',
+            author: 'Prof. Natalia Gómez',
+            authorRole: 'Docente Titular',
             type: 'hallazgo',
             title: 'Balanceo AVL en O(log n) con rotaciones dobles compactas',
             content: 'Implementamos una versión compacta de rotaciones LR y RL que evita llamadas intermedias redundantes. El factor de balance se recalcula en O(1) tiempo constante.',
@@ -748,53 +1160,61 @@ export class ClansService {
             title: 'Seminario: Complejidad Amortizada y Conjuntos Disjuntos (Union-Find)',
             dateStr: 'Miércoles 19:00 UTC',
             topic: 'Demostración de la función inversa de Ackermann en tiempo casi lineal.',
-            speaker: 'Director Cátedra Algoritmia',
+            speaker: 'Prof. Natalia Gómez',
             attendeesCount: 5,
             userAttending: false,
           },
         ],
         researchers: [
-          { id: 'al1', name: 'Director Cátedra Algoritmia', role: 'Director de Semillero', level: 15, contributionsCount: 9, xpContributed: 1100 },
-          { id: 'al2', name: 'Mateo Vargas', role: 'Investigador', level: 7, contributionsCount: 4, xpContributed: 700 },
+          { id: 'al1', name: 'Prof. Natalia Gómez', role: 'Director de Semillero', level: 15, contributionsCount: 12, xpContributed: 1600 },
+          { id: 'al2', name: 'Mateo Morales', role: 'Investigador', level: 7, contributionsCount: 5, xpContributed: 720 },
         ],
         battleChallenges: [
           {
             id: 'algo_bat1',
-            title: 'Duelo: Árbol de Segmentos con Lazy Propagation',
-            difficulty: 'hard',
-            category: 'Estructuras de Datos',
-            description: 'Actualización en rango y consulta en rango en O(log n) sin TLE.',
-            timeLimitMinutes: 40,
-            xpReward: 300,
+            title: 'Camino Más Corto en Grafos Ponderados (Dijkstra)',
+            difficulty: 'medium',
+            category: 'Grafos & Greedy',
+            description: 'Encontrar el camino de menor costo entre dos nodos usando cola de prioridad.',
+            timeLimitMinutes: 30,
+            xpReward: 250,
             completedCount: 3,
+            starterCode: {
+              typescript: `export function dijkstraShortestPath(n: number, edges: [number, number, number][], start: number, end: number): number {\n  // Tu solución Dijkstra aquí\n  return 0;\n}`,
+              python: `def dijkstra_shortest_path(n: int, edges: list, start: int, end: int) -> int:\n    # Tu solución Dijkstra aquí\n    return 0`,
+            },
+            testCases: [
+              { input: 'n=4, edges=[[0,1,1],[1,2,2],[0,2,4],[2,3,1]], start=0, end=3', expected: '4 (0->1->2->3)', description: 'Ruta óptima con nodos intermedios' },
+            ],
           },
         ],
+        dailyStandupDoneToday: false,
         isMember: false,
       },
       {
         id: 'arch',
-        name: 'Arquitectura Backend & APIs Resilientes',
+        name: 'Cloud Architecture & Distributed Systems',
         tag: '[ARCH]',
-        category: 'backend',
-        description: 'Diseño de microservicios resilientes, bases de datos distribuidas, mensajería asíncrona y alta disponibilidad.',
-        linesOfResearch: ['Patrones de Resiliencia: Circuit Breaker y Retry con Jitter', 'Arquitecturas Event-Driven & Kafka', 'Consistencia Eventual en Sistemas Distribuidos'],
+        category: 'cloud',
+        description: 'Diseño de microservicios tolerantes a fallos, consistencia eventual, eventos distribuidos y resiliencia en nube.',
+        linesOfResearch: ['Patrones de Resiliencia: Circuit Breaker & Saga', 'Bases de Datos Distribuidas y Sharding', 'Observabilidad Distribuida: OpenTelemetry y Trazas'],
         membersCount: 6,
         streakDays: 5,
         level: 4,
-        levelTitle: 'Centro de Arquitectura Enterprise',
+        levelTitle: 'Laboratorio de Alta Disponibilidad',
         currentXp: 4800,
-        nextLevelXp: 6000,
-        weeklyChallenge: { title: 'Implementar Circuit Breaker con Redis y fallback determinista', xpReward: 320, completed: false },
+        nextLevelXp: 7000,
+        weeklyChallenge: { title: 'Implementar idempotencia en endpoints con llaves Redis', xpReward: 320, completed: false },
         weeklyQuest: {
-          title: 'Resiliencia Total',
-          description: 'Resolver 12 lecciones de Backend, SQL o Arquitectura.',
+          title: 'Operación Alta Disponibilidad',
+          description: 'Aportar 12 pruebas de carga o migraciones entre los miembros del equipo.',
           targetCount: 12,
-          currentCount: 9,
+          currentCount: 8,
           xpReward: 700,
           completed: false,
         },
-        clanPerks: ['+20% XP en Cursos de Backend & Bases de Datos', 'Insignia [ARCH] en Leaderboard', 'Acceso a Proyectos Enterprise'],
-        recentLogs: [{ author: 'Director Cátedra Arquitectura (Lvl 17)', message: 'Publicó el paper sobre Outbox Pattern.', timeAgo: 'hace 1d' }],
+        clanPerks: ['+20% XP en Cursos Cloud', 'Módulo de Laboratorio K8s Ilimitado'],
+        recentLogs: [{ author: 'Director Cátedra Arquitectura', message: 'Subió el diagrama de saga distribuida.', timeAgo: 'hace 1d' }],
         projects: [
           {
             id: 'arch_p1',
@@ -805,9 +1225,9 @@ export class ClansService {
             leadResearcher: 'Director Cátedra Arquitectura',
             membersJoined: ['Director Cátedra Arquitectura'],
             tasks: [
-              { id: 'arch_t1', title: 'Crear tabla outbox_events con UUID y payload JSONB', completed: true },
-              { id: 'arch_t2', title: 'Worker de polling con SELECT FOR UPDATE SKIP LOCKED', completed: true },
-              { id: 'arch_t3', title: 'Manejo de reintentos y Dead Letter Queue (DLQ)', completed: false },
+              { id: 'arch_t1', title: 'Crear tabla outbox_events con UUID y payload JSONB', completed: true, status: 'completed' },
+              { id: 'arch_t2', title: 'Worker de polling con SELECT FOR UPDATE SKIP LOCKED', completed: true, status: 'completed' },
+              { id: 'arch_t3', title: 'Manejo de reintentos y Dead Letter Queue (DLQ)', completed: false, status: 'in_progress' },
             ],
             createdAt: 'hace 6d',
           },
@@ -816,7 +1236,7 @@ export class ClansService {
           {
             id: 'arch_rf1',
             author: 'Director Cátedra Arquitectura',
-            authorRole: 'Director de Semillero',
+            authorRole: 'Docente Titular',
             type: 'paper',
             title: 'Por qué no usar 2PC (Two-Phase Commit) en Microservicios Modernos',
             content: 'El bloqueo de recursos durante la fase de Prepare genera colas de contención y puntos únicos de falla. La saga coreografiada con transacciones compensatorias es el estándar industrial.',
@@ -851,20 +1271,27 @@ export class ClansService {
         researchers: [
           { id: 'ar1', name: 'Director Cátedra Arquitectura', role: 'Director de Semillero', level: 17, contributionsCount: 16, xpContributed: 2600 },
           { id: 'ar2', name: 'Valentina Restrepo', role: 'Lead Architect', level: 11, contributionsCount: 9, xpContributed: 1400 },
-          { id: 'ar3', name: 'Carlos Mendoza', role: 'Investigador', level: 6, contributionsCount: 5, xpContributed: 800 },
         ],
         battleChallenges: [
           {
             id: 'arch_bat1',
-            title: 'Reto de Resiliencia: Script Lua para Rate Limiter Atómico',
+            title: 'Rate Limiter Token Bucket Concurrente',
             difficulty: 'hard',
             category: 'Sistemas Distribuidos',
-            description: 'Crear un algoritmo sliding window en Lua para Redis que maneje 100 req/min con 0 drift temporal.',
-            timeLimitMinutes: 35,
+            description: 'Diseñar un limitador de tasa con reposición continua de fichas y manejo de ráfagas.',
+            timeLimitMinutes: 30,
             xpReward: 320,
             completedCount: 5,
+            starterCode: {
+              typescript: `export class TokenBucketRateLimiter {\n  private tokens: number;\n  constructor(private capacity: number, private refillRatePerSec: number) {\n    this.tokens = capacity;\n  }\n  allowRequest(): boolean {\n    if (this.tokens >= 1) {\n      this.tokens--;\n      return true;\n    }\n    return false;\n  }\n}`,
+              python: `class TokenBucketRateLimiter:\n    def __init__(self, capacity: int, refill_rate: float):\n        self.capacity = capacity\n        self.tokens = capacity\n    def allow_request(self) -> bool:\n        if self.tokens >= 1:\n            self.tokens -= 1\n            return True\n        return False`,
+            },
+            testCases: [
+              { input: 'capacity = 2, requests = 3 en 10ms', expected: 'Allow: [true, true, false]', description: 'Corte estricto al agotar capacidad de ráfaga' },
+            ],
           },
         ],
+        dailyStandupDoneToday: false,
         isMember: false,
       },
       {
@@ -901,8 +1328,8 @@ export class ClansService {
             leadResearcher: 'Director Cátedra Ciberseguridad',
             membersJoined: ['Director Cátedra Ciberseguridad'],
             tasks: [
-              { id: 'st1', title: 'Detector de raw SQL strings sin parametrizar', completed: true },
-              { id: 'st2', title: 'Regla para validar flag HttpOnly y Secure en cookies', completed: false },
+              { id: 'st1', title: 'Detector de raw SQL strings sin parametrizar', completed: true, status: 'completed' },
+              { id: 'st2', title: 'Regla para validar flag HttpOnly y Secure en cookies', completed: false, status: 'in_progress' },
             ],
             createdAt: 'hace 4d',
           },
@@ -911,7 +1338,7 @@ export class ClansService {
           {
             id: 'sec_rf1',
             author: 'Director Cátedra Ciberseguridad',
-            authorRole: 'Director de Semillero',
+            authorRole: 'Docente Titular',
             type: 'benchmark',
             title: 'Argon2id vs bcrypt: Benchmark de resistencia ante ataques de GPU',
             content: 'Argon2id con costo de memoria de 64MB requiere más de 12GB de VRAM por intento paralelo, haciendo que la fuerza bruta con GPUs sea inviable en comparación con el espacio plano de bcrypt.',
@@ -945,7 +1372,6 @@ export class ClansService {
         ],
         researchers: [
           { id: 'sc1', name: 'Director Cátedra Ciberseguridad', role: 'Director de Semillero', level: 16, contributionsCount: 11, xpContributed: 1200 },
-          { id: 'sc2', name: 'Daniela Soto', role: 'Investigadora AppSec', level: 6, contributionsCount: 4, xpContributed: 450 },
         ],
         battleChallenges: [
           {
@@ -957,8 +1383,17 @@ export class ClansService {
             timeLimitMinutes: 30,
             xpReward: 300,
             completedCount: 1,
+            starterCode: {
+              typescript: `export function sanitizeAndCheckPath(pathInput: string): { safe: boolean; normalizedPath: string } {\n  // Normalizar y verificar si contiene ../ o intentos de traversal\n  return { safe: false, normalizedPath: '' };\n}`,
+              python: `def sanitize_and_check_path(path_input: str) -> dict:\n    # Normalizar y verificar path traversal\n    return {"safe": False, "normalized_path": ""}`,
+            },
+            testCases: [
+              { input: 'pathInput = "../../etc/passwd"', expected: 'safe: false', description: 'Detección de path traversal clásico' },
+              { input: 'pathInput = "reports/final_2026.pdf"', expected: 'safe: true', description: 'Ruta válida relativa sin escape' },
+            ],
           },
         ],
+        dailyStandupDoneToday: false,
         isMember: false,
       },
     ];
