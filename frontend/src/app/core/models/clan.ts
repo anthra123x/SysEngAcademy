@@ -37,7 +37,8 @@ export interface ResearchProjectTask {
   id: string;
   title: string;
   completed: boolean;
-  status?: 'pending' | 'in_progress' | 'completed';
+  status?: 'pending' | 'in_progress' | 'review' | 'completed';
+  type?: 'feature' | 'bug' | 'perf' | 'security' | 'arch';
   assignedTo?: string;
   xpReward?: number;
 }

@@ -85,159 +85,372 @@
         </div>
       }
 
-      <!-- HERO CYBER BANNER DEL CLAN -->
-      <section class="clan-hero-card">
-        <div class="clan-hero-main">
-          <div class="clan-tag-row">
-            <span class="clan-identity-tag">{{ clan.tag }}</span>
-            <span class="clan-category-badge">{{ clan.category | uppercase }}</span>
-            <span class="clan-streak-badge">
-              <app-icon name="flame" [size]="14" />
-              <span>{{ clan.streakDays }} días de racha grupal</span>
-            </span>
-            @if (clan.isMember) {
-              <span class="badge badge-success clan-member-status">
-                <app-icon name="check" [size]="12" /> Miembro Activo
-              </span>
-            }
-            @if (clan.dailyStandupDoneToday) {
-              <span class="badge badge-outline">
-                <app-icon name="check" [size]="11" /> Standup al día
-              </span>
-            }
+      <!-- ========================================================
+           SQUAD EXECUTIVE HEADER (ESTILO LINEAR / GITHUB)
+           ======================================================== -->
+      <section class="squad-header-card">
+        <!-- Top Row: Identity, Badges, Status & Actions -->
+        <div class="squad-identity-row">
+          <div class="squad-identity-main">
+            <span class="squad-tag font-mono">{{ clan.tag }}</span>
+            <div class="squad-name-wrap">
+              <h1 class="squad-title">{{ clan.name }}</h1>
+              <div class="squad-status-pills">
+                <span class="squad-pill squad-pill--branch font-mono">
+                  <app-icon name="git-branch" [size]="12" color="#00D9FF" />
+                  <span>{{ activeProject()?.activeBranch || 'main' }}</span>
+                </span>
+                <span class="squad-pill squad-pill--ci font-mono">
+                  <span class="ci-live-dot"></span>
+                  <span>CI: Passing</span>
+                </span>
+                <span class="squad-pill squad-pill--streak">
+                  <app-icon name="flame" [size]="12" color="#FFB800" />
+                  <span>{{ clan.streakDays }}d racha</span>
+                </span>
+                @if (clan.isMember) {
+                  <span class="squad-pill squad-pill--member">
+                    <app-icon name="check" [size]="11" /> Core Contributor
+                  </span>
+                }
+              </div>
+            </div>
           </div>
 
-          <h1 class="clan-title">{{ clan.name }}</h1>
-          <p class="clan-desc">{{ clan.description }}</p>
-
-          <!-- Líneas de Investigación -->
-          <div class="lines-of-research">
-            <span class="lor-label">Líneas de I+D:</span>
-            <div class="lor-tags">
-              @for (line of clan.linesOfResearch; track line) {
-                <span class="lor-tag"># {{ line }}</span>
+          <!-- Squad Quick Actions (Fila horizontal limpia) -->
+          <div class="squad-actions-bar">
+            @if (clan.isMember) {
+              @if (!clan.dailyStandupDoneToday) {
+                <button type="button" class="btn btn-sm btn-outline btn-daily" (click)="openStandupModal()">
+                  <app-icon name="zap" [size]="13" color="#FFB800" />
+                  <span>Daily Sync (+45 XP)</span>
+                </button>
               }
-            </div>
+              <button type="button" class="btn btn-sm btn-primary" (click)="openNewPrModal()">
+                <app-icon name="git-pull-request" [size]="13" />
+                <span>+ Abrir PR</span>
+              </button>
+              <button type="button" class="btn-squad-ghost" (click)="leaveCurrentClan()" title="Salir del squad">
+                Abandonar
+              </button>
+            } @else {
+              <button type="button" class="btn btn-sm btn-primary" (click)="joinCurrentClan()">
+                <app-icon name="plus" [size]="14" />
+                <span>Unirme al Squad (+150 XP)</span>
+              </button>
+            }
           </div>
         </div>
 
-        <!-- Columna Lateral: Gamificación y Nivel del Clan -->
-        <div class="clan-hero-level-box">
-          <div class="level-header">
-            <div class="level-rank-badge">
-              <app-icon name="award" [size]="16" color="#0AE98A" />
-              <span>NIVEL {{ clan.level }}</span>
+        <!-- Bottom Row: Sprint Goal & Squad Metrics Bar -->
+        <div class="squad-sprint-bar">
+          <div class="sprint-milestone-info">
+            <div class="sprint-milestone-label">
+              <span class="badge-sprint font-mono">MILESTONE ACTIVO</span>
+              <strong class="sprint-title">
+                {{ activeProject()?.title || clan.weeklyChallenge.title }}
+              </strong>
             </div>
-            <span class="level-title-txt">{{ clan.levelTitle }}</span>
+            <p class="sprint-desc">{{ activeProject()?.description || clan.description }}</p>
           </div>
 
-          <!-- Barra de XP Grupal -->
-          <div class="clan-xp-section">
-            <div class="xp-meta-row">
-              <span class="xp-label">XP Colectiva del Clan</span>
-              <span class="xp-val font-mono">{{ clan.currentXp }} / {{ clan.nextLevelXp }} XP</span>
+          <div class="squad-level-progress-box font-mono">
+            <div class="level-meta-row">
+              <span class="level-badge font-mono">NIVEL {{ clan.level }}</span>
+              <span class="xp-ratio font-mono">{{ clan.currentXp }} / {{ clan.nextLevelXp }} XP</span>
             </div>
-            <div class="xp-progress-track">
-              <div class="xp-progress-fill" [style.width.%]="levelProgressPercent()"></div>
+            <div class="squad-progress-track">
+              <div class="squad-progress-fill" [style.width.%]="levelProgressPercent()"></div>
             </div>
-            <span class="xp-hint">Aporta resolviendo retos en vivo, publicando ideas y avanzando proyectos.</span>
-          </div>
-
-          <!-- Perks Activos Desbloqueados -->
-          <div class="clan-perks-box">
-            <span class="perks-heading">Ventajas Activas del Semillero:</span>
-            <div class="perks-list">
-              @for (perk of clan.clanPerks; track perk) {
-                <span class="perk-pill">
-                  <app-icon name="zap" [size]="11" color="var(--primary)" /> {{ perk }}
-                </span>
-              }
-            </div>
-          </div>
-
-          <!-- Hero Actions -->
-          <div class="clan-hero-actions">
-            @if (clan.isMember) {
-              <button type="button" class="btn btn-sm btn-primary" (click)="showNewLogModal.set(true)">
-                <app-icon name="plus" [size]="14" />
-                <span>Publicar Idea / Snippet</span>
-              </button>
-              <button type="button" class="btn btn-sm btn-outline" (click)="showNewProjectModal.set(true)">
-                <app-icon name="code" [size]="14" />
-                <span>Nuevo Proyecto</span>
-              </button>
-              @if (!clan.dailyStandupDoneToday) {
-                <button type="button" class="btn btn-sm btn-outline" (click)="openStandupModal()">
-                  <app-icon name="zap" [size]="14" />
-                  <span>Check-in Diario (+45 XP)</span>
-                </button>
-              }
-              <button type="button" class="btn-leave-clan" (click)="leaveCurrentClan()" title="Abandonar este semillero">
-                Salir del Clan
-              </button>
-            } @else {
-              <button type="button" class="btn btn-md btn-primary btn-block" (click)="joinCurrentClan()">
-                <app-icon name="plus" [size]="16" />
-                <span>Unirme a {{ clan.tag }} (+150 XP)</span>
-              </button>
-            }
+            <span class="level-title-hint">{{ clan.levelTitle }}</span>
           </div>
         </div>
       </section>
 
-      <!-- NAVIGATION TABS: FEED, PROYECTOS, ARENA, MIEMBROS -->
-      <nav class="clan-nav-tabs">
+      <!-- SQUAD WORKFLOW TABS: SPRINT KANBAN | GIT & PRS | RFCS & ADRS | INCIDENT DRILLS | SQUAD STAFF -->
+      <nav class="squad-nav-tabs">
         <button
           type="button"
-          class="clan-tab-btn"
-          [class.is-active]="activeTab() === 'feed'"
-          (click)="activeTab.set('feed')"
+          class="squad-tab-btn"
+          [class.is-active]="activeTab() === 'sprint'"
+          (click)="activeTab.set('sprint')"
         >
-          <app-icon name="sparkles" [size]="15" />
-          <span>Ideas &amp; Bitácora</span>
-          <span class="tab-badge">{{ clan.researchFeed.length }}</span>
+          <app-icon name="target" [size]="15" />
+          <span>Sprint Board (Kanban)</span>
+          <span class="tab-counter font-mono">{{ (activeProject()?.tasks || []).length }}</span>
         </button>
 
         <button
           type="button"
-          class="clan-tab-btn"
-          [class.is-active]="activeTab() === 'projects'"
-          (click)="activeTab.set('projects')"
+          class="squad-tab-btn"
+          [class.is-active]="activeTab() === 'git'"
+          (click)="activeTab.set('git')"
         >
-          <app-icon name="code" [size]="15" />
-          <span>Proyectos I+D</span>
-          <span class="tab-badge">{{ clan.projects.length }}</span>
+          <app-icon name="git-pull-request" [size]="15" />
+          <span>Repositorio &amp; PRs</span>
+          <span class="tab-counter font-mono">{{ (activeProject()?.pullRequests || []).length }}</span>
         </button>
 
         <button
           type="button"
-          class="clan-tab-btn"
-          [class.is-active]="activeTab() === 'arena'"
-          (click)="activeTab.set('arena')"
+          class="squad-tab-btn"
+          [class.is-active]="activeTab() === 'rfcs'"
+          (click)="activeTab.set('rfcs')"
+        >
+          <app-icon name="file-text" [size]="15" />
+          <span>RFCs &amp; Decisiones (ADRs)</span>
+          <span class="tab-counter font-mono">{{ clan.researchFeed.length }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="squad-tab-btn"
+          [class.is-active]="activeTab() === 'incidents'"
+          (click)="activeTab.set('incidents')"
         >
           <app-icon name="zap" [size]="15" />
-          <span>Arena de Retos en Vivo</span>
+          <span>Simulacros de Fallos (Drills)</span>
           @if (!clan.weeklyQuest.completed) {
-            <span class="tab-badge tab-badge--quest">Misión en curso</span>
+            <span class="tab-pill-alert font-mono">SEV ACTIVO</span>
           }
         </button>
 
         <button
           type="button"
-          class="clan-tab-btn"
+          class="squad-tab-btn"
           [class.is-active]="activeTab() === 'members'"
           (click)="activeTab.set('members')"
         >
-          <app-icon name="trophy" [size]="15" />
-          <span>Salón de Honor &amp; Equipo</span>
-          <span class="tab-badge">{{ clan.researchers.length }}</span>
+          <app-icon name="user" [size]="15" />
+          <span>Squad Staff &amp; Métricas</span>
+          <span class="tab-counter font-mono">{{ clan.membersCount }}</span>
         </button>
       </nav>
 
       <!-- ========================================================
-           TAB 1: IDEAS & BITÁCORA TÉCNICA (FEED COLABORATIVO)
+           TAB 1: SPRINT KANBAN BOARD (ENGINEERING WORKFLOW)
            ======================================================== -->
-      @if (activeTab() === 'feed') {
+      @if (activeTab() === 'sprint') {
+        <section class="squad-sprint-section animate-fade-in">
+          <!-- Sprint Controls & Metric Header -->
+          <div class="sprint-board-header">
+            <div class="sprint-header-left">
+              <div class="sprint-badge-row">
+                <span class="badge-sprint font-mono">SPRINT BOARD</span>
+                <span class="sprint-project-name font-mono">{{ activeProject()?.title || clan.name }}</span>
+              </div>
+              <div class="sprint-stats-line font-mono">
+                <span class="stat-item"><app-icon name="target" [size]="12" /> {{ sprintProgress().completed }}/{{ sprintProgress().total }} issues cerrados ({{ sprintProgress().percent }}%)</span>
+                <span class="stat-sep">·</span>
+                <span class="stat-item"><app-icon name="git-pull-request" [size]="12" /> {{ (activeProject()?.pullRequests || []).filter(pr => pr.status === 'open').length }} PRs en revisión</span>
+              </div>
+            </div>
+
+            <div class="sprint-header-right">
+              @if (clan.isMember) {
+                <div class="sprint-quick-add">
+                  <input
+                    type="text"
+                    class="input input-quick-issue font-mono"
+                    placeholder="+ Añadir issue al sprint..."
+                    [value]="quickTaskTitle()[activeProject()?.id || 'default'] || ''"
+                    (input)="setQuickTaskInput(activeProject()?.id || 'default', $any($event.target).value)"
+                    (keydown.enter)="addQuickTask(activeProject()?.id || 'default')"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-outline"
+                    (click)="addQuickTask(activeProject()?.id || 'default')"
+                    [disabled]="!quickTaskTitle()[activeProject()?.id || 'default']?.trim()"
+                  >
+                    Añadir
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- 4-Column Kanban Board -->
+          <div class="sprint-kanban-grid">
+            <!-- Column 1: Backlog -->
+            <div class="kanban-column">
+              <div class="kanban-column-header">
+                <div class="col-title-wrap">
+                  <span class="col-dot col-dot--backlog"></span>
+                  <span class="col-name font-mono">Backlog / Pendientes</span>
+                </div>
+                <span class="col-count font-mono">{{ kanbanColumns().backlog.length }}</span>
+              </div>
+
+              <div class="kanban-cards-stack">
+                @for (task of kanbanColumns().backlog; track task.id) {
+                  <div class="kanban-issue-card">
+                    <div class="k-card-top font-mono">
+                      <span class="issue-id">#{{ task.id }}</span>
+                      <span class="issue-type-badge type--{{ task.type || 'feature' }}">{{ task.type || 'feat' }}</span>
+                    </div>
+                    <p class="issue-title">{{ task.title }}</p>
+                    <div class="k-card-foot">
+                      <div class="assignee-wrap">
+                        @if (task.assignedTo) {
+                          <span class="assignee-pill font-mono">👤 {{ task.assignedTo }}</span>
+                        } @else if (clan.isMember) {
+                          <button type="button" class="btn-claim-issue" (click)="assignTaskToMe(activeProject()?.id || '', task.id)">
+                            + Asignarme
+                          </button>
+                        }
+                      </div>
+                      <div class="k-card-actions">
+                        @if (clan.isMember) {
+                          <button
+                            type="button"
+                            class="btn-k-action btn-k-action--advance"
+                            (click)="setTaskStatus(activeProject()?.id || '', task.id, 'in_progress')"
+                            title="Mover a En Desarrollo"
+                          >
+                            <span>Iniciar ➔</span>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+                @if (kanbanColumns().backlog.length === 0) {
+                  <div class="kanban-empty-col">No hay issues en backlog</div>
+                }
+              </div>
+            </div>
+
+            <!-- Column 2: In Progress -->
+            <div class="kanban-column">
+              <div class="kanban-column-header">
+                <div class="col-title-wrap">
+                  <span class="col-dot col-dot--progress"></span>
+                  <span class="col-name font-mono">En Desarrollo</span>
+                </div>
+                <span class="col-count font-mono">{{ kanbanColumns().inProgress.length }}</span>
+              </div>
+
+              <div class="kanban-cards-stack">
+                @for (task of kanbanColumns().inProgress; track task.id) {
+                  <div class="kanban-issue-card is-in-progress">
+                    <div class="k-card-top font-mono">
+                      <span class="issue-id">#{{ task.id }}</span>
+                      <span class="issue-type-badge type--{{ task.type || 'feature' }}">{{ task.type || 'feat' }}</span>
+                    </div>
+                    <p class="issue-title">{{ task.title }}</p>
+                    <div class="k-card-foot">
+                      <div class="assignee-wrap">
+                        <span class="assignee-pill font-mono">👤 {{ task.assignedTo || 'Sin asignar' }}</span>
+                      </div>
+                      <div class="k-card-actions">
+                        @if (clan.isMember) {
+                          <button
+                            type="button"
+                            class="btn-k-branch-pr font-mono"
+                            (click)="createBranchForIssue(activeProject()?.id || '', task.id, task.title)"
+                            title="Crear rama y abrir Pull Request para este issue"
+                          >
+                            <app-icon name="git-branch" [size]="11" />
+                            <span>Rama &amp; PR</span>
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-k-action btn-k-action--advance"
+                            (click)="setTaskStatus(activeProject()?.id || '', task.id, 'review')"
+                            title="Mover a Code Review"
+                          >
+                            <span>Review ➔</span>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+                @if (kanbanColumns().inProgress.length === 0) {
+                  <div class="kanban-empty-col">Sin trabajo activo en dev</div>
+                }
+              </div>
+            </div>
+
+            <!-- Column 3: In Review (PR abierto) -->
+            <div class="kanban-column">
+              <div class="kanban-column-header">
+                <div class="col-title-wrap">
+                  <span class="col-dot col-dot--review"></span>
+                  <span class="col-name font-mono">En Code Review (PR)</span>
+                </div>
+                <span class="col-count font-mono">{{ kanbanColumns().review.length }}</span>
+              </div>
+
+              <div class="kanban-cards-stack">
+                @for (task of kanbanColumns().review; track task.id) {
+                  <div class="kanban-issue-card is-in-review">
+                    <div class="k-card-top font-mono">
+                      <span class="issue-id">#{{ task.id }}</span>
+                      <span class="review-status-tag font-mono">🔀 PR PENDIENTE</span>
+                    </div>
+                    <p class="issue-title">{{ task.title }}</p>
+                    <div class="k-card-foot">
+                      <div class="assignee-wrap">
+                        <span class="assignee-pill font-mono">👤 {{ task.assignedTo || 'En revisión' }}</span>
+                      </div>
+                      <div class="k-card-actions">
+                        <button
+                          type="button"
+                          class="btn-k-action btn-k-action--git"
+                          (click)="activeTab.set('git')"
+                          title="Ir al Visor de Pull Requests y Diff"
+                        >
+                          <span>Auditar PR ➔</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+                @if (kanbanColumns().review.length === 0) {
+                  <div class="kanban-empty-col">No hay PRs esperando review</div>
+                }
+              </div>
+            </div>
+
+            <!-- Column 4: Completed / Merged -->
+            <div class="kanban-column">
+              <div class="kanban-column-header">
+                <div class="col-title-wrap">
+                  <span class="col-dot col-dot--done"></span>
+                  <span class="col-name font-mono">Completado / Shipped</span>
+                </div>
+                <span class="col-count font-mono">{{ kanbanColumns().completed.length }}</span>
+              </div>
+
+              <div class="kanban-cards-stack">
+                @for (task of kanbanColumns().completed; track task.id) {
+                  <div class="kanban-issue-card is-completed">
+                    <div class="k-card-top font-mono">
+                      <span class="issue-id">#{{ task.id }}</span>
+                      <span class="shipped-badge font-mono">✓ MERGED</span>
+                    </div>
+                    <p class="issue-title">{{ task.title }}</p>
+                    <div class="k-card-foot">
+                      <span class="assignee-pill font-mono">👤 {{ task.assignedTo || 'Completado' }}</span>
+                      <span class="xp-earned-badge font-mono">+45 XP</span>
+                    </div>
+                  </div>
+                }
+                @if (kanbanColumns().completed.length === 0) {
+                  <div class="kanban-empty-col">Ningún issue cerrado aún</div>
+                }
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- ========================================================
+           TAB 3: RFCS & DECISIONES DE ARQUITECTURA (ADRS)
+           ======================================================== -->
+      @if (activeTab() === 'rfcs') {
         <section class="clan-feed-section animate-fade-in">
           <!-- Feed Header & Controls -->
           <div class="feed-controls-bar">
@@ -248,15 +461,15 @@
                 [class.is-active]="feedFilter() === 'all'"
                 (click)="feedFilter.set('all')"
               >
-                Todas ({{ clan.researchFeed.length }})
+                Todos ({{ clan.researchFeed.length }})
               </button>
               <button
                 type="button"
                 class="feed-filter-btn"
-                [class.is-active]="feedFilter() === 'hallazgo'"
-                (click)="feedFilter.set('hallazgo')"
+                [class.is-active]="feedFilter() === 'propuesta'"
+                (click)="feedFilter.set('propuesta')"
               >
-                Hallazgos
+                RFCs (Propuestas)
               </button>
               <button
                 type="button"
@@ -264,7 +477,23 @@
                 [class.is-active]="feedFilter() === 'benchmark'"
                 (click)="feedFilter.set('benchmark')"
               >
-                Benchmarks
+                ADRs (Decisiones)
+              </button>
+              <button
+                type="button"
+                class="feed-filter-btn"
+                [class.is-active]="feedFilter() === 'paper'"
+                (click)="feedFilter.set('paper')"
+              >
+                Papers
+              </button>
+              <button
+                type="button"
+                class="feed-filter-btn"
+                [class.is-active]="feedFilter() === 'hallazgo'"
+                (click)="feedFilter.set('hallazgo')"
+              >
+                Spikes &amp; Hallazgos
               </button>
               <button
                 type="button"
@@ -287,7 +516,7 @@
             @if (clan.isMember) {
               <button type="button" class="btn btn-sm btn-primary" (click)="showNewLogModal.set(true)">
                 <app-icon name="plus" [size]="14" />
-                <span>Compartir Hallazgo</span>
+                <span>+ Redactar RFC / ADR</span>
               </button>
             }
           </div>
@@ -442,14 +671,14 @@
       }
 
       <!-- ========================================================
-           TAB 2: LABORATORIO DE PROYECTOS I+D
+           TAB 2: REPOSITORIO CENTRAL, GIT FLOW & PRS
            ======================================================== -->
-      @if (activeTab() === 'projects') {
+      @if (activeTab() === 'git') {
         <section class="clan-projects-section animate-fade-in">
           <div class="projects-section-header">
             <div>
-              <h3>Laboratorio de Proyectos de Software del Clan</h3>
-              <p>Desarrollo colaborativo en equipo: implementa prototipos reales, toma hitos, cambia su estado y despliega en producción.</p>
+              <h3>Repositorio Central Git &amp; Code Review Hub</h3>
+              <p>Control de versiones profesional: inspecciona ramas, historial de commits con hashes SHA, revisa Pull Requests con diff visual y fusiona cambios.</p>
             </div>
             @if (clan.isMember) {
               <button type="button" class="btn btn-sm btn-primary" (click)="showNewProjectModal.set(true)">
@@ -930,15 +1159,15 @@
       }
 
       <!-- ========================================================
-           TAB 3: ARENA DE RETOS EN VIVO
+           TAB 4: INCIDENT DRILLS (SIMULACRO DE FALLOS EN PRODUCCIÓN)
            ======================================================== -->
-      @if (activeTab() === 'arena') {
+      @if (activeTab() === 'incidents') {
         <section class="clan-arena-section animate-fade-in">
-          <!-- Big Weekly Clan Quest Card / Raid Colectiva -->
+          <!-- Big Weekly Incident Drill Banner -->
           <div class="quest-hero-banner">
             <div class="quest-badge-row">
-              <span class="badge badge-accent">⚔️ MISIÓN COOPERATIVA SEMANAL</span>
-              <span class="quest-xp-reward">+{{ clan.weeklyQuest.xpReward }} XP PARA EL CLAN</span>
+              <span class="badge badge-accent">🚨 SIMULACRO DE INCIDENCIA EN STAGING / PRODUCCIÓN</span>
+              <span class="quest-xp-reward">+{{ clan.weeklyQuest.xpReward }} XP PARA EL SQUAD</span>
             </div>
 
             <h2 class="quest-title">{{ clan.weeklyQuest.title }}</h2>
@@ -1447,36 +1676,36 @@
         <header class="modal-header">
           <div class="modal-title-wrap">
             <app-icon name="sparkles" [size]="18" color="#0AE98A" />
-            <h3>Compartir Hallazgo o Idea Técnica</h3>
+            <h3>Redactar RFC o Architecture Decision Record (ADR)</h3>
           </div>
           <button class="btn-close-modal" (click)="showNewLogModal.set(false)">✕</button>
         </header>
 
         <div class="modal-body">
           <div class="form-group">
-            <label>Tipo de Publicación</label>
+            <label>Tipo de Documento Técnico</label>
             <div class="type-selector-pills">
-              <button type="button" [class.is-selected]="newLogType() === 'hallazgo'" (click)="newLogType.set('hallazgo')">💡 Hallazgo</button>
-              <button type="button" [class.is-selected]="newLogType() === 'benchmark'" (click)="newLogType.set('benchmark')">⚡ Benchmark</button>
-              <button type="button" [class.is-selected]="newLogType() === 'propuesta'" (click)="newLogType.set('propuesta')">🚀 Propuesta</button>
-              <button type="button" [class.is-selected]="newLogType() === 'paper'" (click)="newLogType.set('paper')">🔬 Paper</button>
-              <button type="button" [class.is-selected]="newLogType() === 'pregunta'" (click)="newLogType.set('pregunta')">❓ Pregunta</button>
+              <button type="button" [class.is-selected]="newLogType() === 'propuesta'" (click)="newLogType.set('propuesta')">🚀 RFC (Propuesta)</button>
+              <button type="button" [class.is-selected]="newLogType() === 'benchmark'" (click)="newLogType.set('benchmark')">⚡ ADR (Decisión)</button>
+              <button type="button" [class.is-selected]="newLogType() === 'hallazgo'" (click)="newLogType.set('hallazgo')">💡 Spike / Hallazgo</button>
+              <button type="button" [class.is-selected]="newLogType() === 'paper'" (click)="newLogType.set('paper')">🔬 Paper / Whitepaper</button>
+              <button type="button" [class.is-selected]="newLogType() === 'pregunta'" (click)="newLogType.set('pregunta')">❓ Consulta Técnica</button>
             </div>
           </div>
 
           <div class="form-group">
-            <label>Título del Hallazgo o Propuesta</label>
-            <input type="text" class="input" placeholder="Ej. Medición de latencia: Mutex vs Spinlock en C++" [value]="newLogTitle()" (input)="newLogTitle.set($any($event.target).value)" />
+            <label>Título del Documento (RFC / ADR / Spike)</label>
+            <input type="text" class="input font-mono" placeholder="Ej: RFC-014: Estrategia de Caching Distribuido con Redis Cluster" [value]="newLogTitle()" (input)="newLogTitle.set($any($event.target).value)" />
           </div>
 
           <div class="form-group">
-            <label>Explicación Técnica y Rationale</label>
-            <textarea class="input" rows="4" placeholder="Describe el contexto, la arquitectura, los datos obtenidos o el problema a resolver..." [value]="newLogContent()" (input)="newLogContent.set($any($event.target).value)"></textarea>
+            <label>Contexto, Rationale &amp; Consecuencias Arquitectónicas</label>
+            <textarea class="input" rows="5" placeholder="Describe el contexto del problema, alternativas consideradas, trade-offs técnicos y razones de la decisión de ingeniería..." [value]="newLogContent()" (input)="newLogContent.set($any($event.target).value)"></textarea>
           </div>
 
           <div class="form-group">
             <div class="label-with-addon">
-              <label>Snippet de Código (Opcional)</label>
+              <label>Snippet de Código o Esquema (Opcional)</label>
               <select class="input select-lang" [value]="newLogLanguage()" (change)="newLogLanguage.set($any($event.target).value)">
                 <option value="typescript">TypeScript</option>
                 <option value="cpp">C++</option>
@@ -1485,14 +1714,14 @@
                 <option value="sql">SQL</option>
               </select>
             </div>
-            <textarea class="input font-mono code-input" rows="4" placeholder="// Inserta aquí el código relevante..." [value]="newLogCode()" (input)="newLogCode.set($any($event.target).value)"></textarea>
+            <textarea class="input font-mono code-input" rows="4" placeholder="// Inserta aquí el código, pseudo-código o diagrama..." [value]="newLogCode()" (input)="newLogCode.set($any($event.target).value)"></textarea>
           </div>
         </div>
 
         <footer class="modal-footer">
           <button type="button" class="btn btn-outline" (click)="showNewLogModal.set(false)">Cancelar</button>
           <button type="button" class="btn btn-primary" (click)="submitNewLog()" [disabled]="!newLogTitle().trim() || !newLogContent().trim()">
-            Publicar al Clan (+60 XP)
+            Publicar al Squad (+60 XP)
           </button>
         </footer>
       </div>

@@ -51,8 +51,8 @@ export class ClanComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   readonly Math = Math;
 
-  // Tabs de navegación interna del Clan
-  activeTab = signal<'feed' | 'projects' | 'arena' | 'members'>('feed');
+  // Tabs de navegación interna del Squad de Ingeniería
+  activeTab = signal<'sprint' | 'git' | 'rfcs' | 'incidents' | 'members'>('sprint');
   selectedClanId = signal<string | null>(null);
   feedFilter = signal<'all' | 'hallazgo' | 'benchmark' | 'paper' | 'propuesta' | 'standup' | 'mision_docente'>('all');
   browseAllClans = signal<boolean>(false);
@@ -256,6 +256,35 @@ export class ClanComponent implements OnInit, OnDestroy {
     return [...clan.researchers].sort((a, b) => b.xpContributed - a.xpContributed);
   });
 
+  /** Proyecto I+D central activo para el Sprint y el repositorio Git */
+  readonly activeProject = computed<ResearchProject | null>(() => {
+    const clan = this.currentClan();
+    if (!clan || !clan.projects || clan.projects.length === 0) return null;
+    return clan.projects[0];
+  });
+
+  /** Tablero Kanban del Sprint agrupado por columnas estándar de ingeniería */
+  readonly kanbanColumns = computed(() => {
+    const proj = this.activeProject();
+    const tasks = proj?.tasks || [];
+    return {
+      backlog: tasks.filter(t => !t.status || t.status === 'pending'),
+      inProgress: tasks.filter(t => t.status === 'in_progress'),
+      review: tasks.filter(t => t.status === 'review'),
+      completed: tasks.filter(t => t.status === 'completed' || t.completed),
+    };
+  });
+
+  /** Métricas de avance del Sprint / Milestone activo */
+  readonly sprintProgress = computed(() => {
+    const tasks = this.activeProject()?.tasks || [];
+    if (tasks.length === 0) return { completed: 0, total: 0, percent: 100 };
+    const completed = tasks.filter(t => t.completed || t.status === 'completed').length;
+    const total = tasks.length;
+    const percent = Math.round((completed / total) * 100);
+    return { completed, total, percent };
+  });
+
   ngOnInit() {
     this.route.queryParamMap.subscribe(params => {
       const id = params.get('id');
@@ -263,8 +292,14 @@ export class ClanComponent implements OnInit, OnDestroy {
         this.selectedClanId.set(id);
       }
       const tab = params.get('tab');
-      if (tab === 'projects' || tab === 'arena' || tab === 'members' || tab === 'feed') {
+      if (tab === 'sprint' || tab === 'git' || tab === 'rfcs' || tab === 'incidents' || tab === 'members') {
         this.activeTab.set(tab);
+      } else if (tab === 'projects') {
+        this.activeTab.set('git');
+      } else if (tab === 'feed') {
+        this.activeTab.set('rfcs');
+      } else if (tab === 'arena') {
+        this.activeTab.set('incidents');
       }
       const browse = params.get('browse');
       if (browse === 'true') {
@@ -800,6 +835,33 @@ export class ClanComponent implements OnInit, OnDestroy {
     }
   }
 
+  setTaskStatus(
+    projectId: string,
+    taskId: string,
+    nextStatus: 'pending' | 'in_progress' | 'review' | 'completed'
+  ): void {
+    const clan = this.currentClan();
+    if (!clan) return;
+
+    const res = this.clansService.setProjectTaskStatus(clan.id, projectId, taskId, nextStatus);
+    const label =
+      nextStatus === 'completed'
+        ? 'Completado ✓'
+        : nextStatus === 'review'
+        ? 'En Code Review 🔀'
+        : nextStatus === 'in_progress'
+        ? 'En Desarrollo ⚡'
+        : 'Backlog';
+
+    if (res.allDone) {
+      this.showToast('🚀 SPRINT FINALIZADO', 'Todos los issues han sido cerrados en producción. +200 XP.', 'check-circle', 200);
+    } else if (res.completed) {
+      this.showToast('Issue Cerrado ✓', 'Merge y pruebas validadas con éxito. +45 XP.', 'check', 45);
+    } else {
+      this.showToast('Estado Actualizado', `Issue movido a "${label}"`, 'check');
+    }
+  }
+
   assignTaskToMe(projectId: string, taskId: string): void {
     const clan = this.currentClan();
     if (!clan) return;
@@ -910,7 +972,7 @@ export class ClanComponent implements OnInit, OnDestroy {
     this.newProjectDesc.set('');
     this.newProjectRepo.set('');
     this.showNewProjectModal.set(false);
-    this.activeTab.set('projects');
+    this.activeTab.set('git');
     this.showToast(
       'Proyecto I+D Creado 🛠️',
       'Iniciativa abierta para colaboración de los miembros del semillero.',

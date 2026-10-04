@@ -579,8 +579,14 @@ export class ClansService {
           if (p.id === projectId && p.tasks) {
             const tasks = p.tasks.map(t => {
               if (t.id === taskId) {
-                const nextStatus: 'pending' | 'in_progress' | 'completed' =
-                  t.status === 'completed' ? 'pending' : t.status === 'in_progress' ? 'completed' : 'in_progress';
+                const nextStatus: 'pending' | 'in_progress' | 'review' | 'completed' =
+                  t.status === 'completed'
+                    ? 'pending'
+                    : t.status === 'review'
+                    ? 'completed'
+                    : t.status === 'in_progress'
+                    ? 'review'
+                    : 'in_progress';
                 taskCompleted = nextStatus === 'completed';
                 return {
                   ...t,
@@ -619,6 +625,68 @@ export class ClansService {
             },
             ...g.recentLogs,
           ].slice(0, 10),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+    return { completed: taskCompleted, allDone };
+  }
+
+  setProjectTaskStatus(
+    clanId: string,
+    projectId: string,
+    taskId: string,
+    nextStatus: 'pending' | 'in_progress' | 'review' | 'completed'
+  ): { completed: boolean; allDone: boolean } {
+    const user = this.auth.user();
+    const userName = user?.name || 'Investigador';
+    const taskCompleted = nextStatus === 'completed';
+    let allDone = false;
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const projs = g.projects.map(p => {
+          if (p.id === projectId && p.tasks) {
+            const tasks = p.tasks.map(t => {
+              if (t.id === taskId) {
+                return {
+                  ...t,
+                  status: nextStatus,
+                  completed: taskCompleted,
+                  assignedTo: t.assignedTo || userName,
+                };
+              }
+              return t;
+            });
+
+            allDone = tasks.every(t => t.completed);
+            return {
+              ...p,
+              tasks,
+              status: allDone ? ('concluido' as const) : ('en_progreso' as const),
+            };
+          }
+          return p;
+        });
+
+        const xpDelta = taskCompleted ? 45 : 10;
+        return {
+          ...g,
+          currentXp: g.currentXp + xpDelta,
+          projects: projs,
+          recentLogs: taskCompleted
+            ? [
+                {
+                  author: userName,
+                  message: `Completó el issue #${taskId} en el Sprint (+45 XP)`,
+                  timeAgo: 'hace un momento',
+                },
+                ...g.recentLogs,
+              ].slice(0, 10)
+            : g.recentLogs,
         };
       }
       return g;
@@ -932,8 +1000,16 @@ export class ClansService {
               ? existingBranches
               : [...existingBranches, { name: sourceBranch, isDefault: false, aheadCount: 1, behindCount: 0 }];
 
+            let updatedTasks = p.tasks;
+            if (data.linkedIssueId && updatedTasks) {
+              updatedTasks = updatedTasks.map(t =>
+                t.id === data.linkedIssueId ? { ...t, status: 'review' as const } : t
+              );
+            }
+
             return {
               ...p,
+              tasks: updatedTasks,
               activeBranch: sourceBranch,
               branches: updatedBranches,
               commits: [newCommit, ...(p.commits || [])],

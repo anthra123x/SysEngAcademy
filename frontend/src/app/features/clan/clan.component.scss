@@ -185,19 +185,16 @@
   }
 }
 
-/* ---------- HERO CYBER BANNER ---------- */
-.clan-hero-card {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: var(--sp-6);
+/* ---------- SQUAD EXECUTIVE HEADER ---------- */
+.squad-header-card {
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
-  padding: var(--sp-8);
-  margin-bottom: var(--sp-8);
+  padding: var(--sp-6) var(--sp-8);
+  margin-bottom: var(--sp-6);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 
   &::before {
     content: '';
@@ -210,244 +207,275 @@
   }
 
   @media (max-width: 900px) {
-    grid-template-columns: 1fr;
     padding: var(--sp-5);
   }
 }
 
-.clan-hero-main {
-  min-width: 0;
-}
-
-.clan-tag-row {
+.squad-header-main {
   display: flex;
-  align-items: center;
-  gap: var(--sp-2);
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-6);
   flex-wrap: wrap;
-  margin-bottom: var(--sp-3);
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+    gap: var(--sp-4);
+  }
 }
 
-.clan-identity-tag {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: var(--primary);
-  background: rgba(10, 233, 138, 0.12);
-  border: 1px solid rgba(10, 233, 138, 0.3);
-  padding: 3px 10px;
-  border-radius: var(--radius-sm);
-  letter-spacing: 0.06em;
-}
-
-.clan-category-badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-}
-
-.clan-streak-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #F59E0B;
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.2);
-  padding: 3px 9px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-}
-
-.clan-member-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.clan-title {
-  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  margin: 0 0 var(--sp-3);
-}
-
-.clan-desc {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  line-height: 1.6;
-  max-width: 65ch;
-  margin: 0 0 var(--sp-5);
-}
-
-.lines-of-research {
+.squad-identity-row {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-4);
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+}
 
-  .lor-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
+.squad-emblem-box {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(10, 233, 138, 0.12), rgba(0, 217, 255, 0.08));
+  border: 1px solid rgba(10, 233, 138, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 
-  .lor-tags {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .lor-tag {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    background: var(--bg-surface-2);
-    border: 1px solid var(--border);
-    padding: 3px 9px;
-    border-radius: var(--radius-sm);
+  .emblem-symbol {
+    font-size: 1.5rem;
+    line-height: 1;
   }
 }
 
-/* Columna de Nivel y Gamificación */
-.clan-hero-level-box {
+.squad-titles {
+  min-width: 0;
+
+  .squad-name {
+    font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+  }
+
+  .squad-desc {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    line-height: 1.5;
+    max-width: 65ch;
+    margin: 0 0 var(--sp-3);
+  }
+}
+
+.squad-status-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.squad-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border-radius: 4px;
   background: var(--bg-surface-2);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--sp-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
+  color: var(--text-muted);
+
+  &--branch {
+    color: #00D9FF;
+    border-color: rgba(0, 217, 255, 0.25);
+    background: rgba(0, 217, 255, 0.06);
+    font-weight: 700;
+  }
+
+  &--ci {
+    color: #0AE98A;
+    border-color: rgba(10, 233, 138, 0.25);
+    background: rgba(10, 233, 138, 0.06);
+  }
+
+  &--streak {
+    color: #FFB800;
+    border-color: rgba(255, 184, 0, 0.25);
+    background: rgba(255, 184, 0, 0.06);
+    font-weight: 700;
+  }
 }
 
-.level-header {
+.ci-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #0AE98A;
+  box-shadow: 0 0 8px #0AE98A;
+  display: inline-block;
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+.squad-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+
+  @media (max-width: 900px) {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.btn-daily {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(10, 233, 138, 0.15), rgba(10, 233, 138, 0.05));
+  border: 1px solid rgba(10, 233, 138, 0.4);
+  color: #0AE98A;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: rgba(10, 233, 138, 0.22);
+    border-color: #0AE98A;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(10, 233, 138, 0.25);
+  }
+}
+
+.btn-squad-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &.is-joined {
+    color: var(--text-muted);
+    font-size: 0.74rem;
+
+    &:hover {
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.05);
+    }
+  }
+}
+
+/* SPRINT PROGRESS MILESTONE FOOTER IN HEADER */
+.squad-sprint-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--sp-6);
+  padding-top: var(--sp-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
 
-  .level-rank-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 800;
-    color: var(--primary);
-    background: rgba(10, 233, 138, 0.12);
-    padding: 2px 8px;
-    border-radius: 4px;
-    letter-spacing: 0.06em;
-  }
-
-  .level-title-txt {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    font-weight: 600;
+  @media (max-width: 900px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-3);
   }
 }
 
-.clan-xp-section {
+.sprint-milestone-info {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 10px;
 
-  .xp-meta-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
-
-    .xp-label { color: var(--text-secondary); }
-    .xp-val { color: var(--primary); font-weight: 700; }
+  .sprint-chip {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #0AE98A;
+    background: rgba(10, 233, 138, 0.1);
+    border: 1px solid rgba(10, 233, 138, 0.25);
+    padding: 3px 8px;
+    border-radius: 4px;
   }
 
-  .xp-progress-track {
-    height: 8px;
-    background: #090B10;
-    border: 1px solid var(--border);
-    border-radius: 4px;
+  .sprint-task-stats {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+}
+
+.squad-level-progress-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  max-width: 480px;
+
+  @media (max-width: 900px) {
+    max-width: 100%;
+  }
+
+  .level-mini-pill {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .squad-progress-track {
+    flex: 1;
+    height: 7px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 9999px;
     overflow: hidden;
 
-    .xp-progress-fill {
+    .squad-progress-fill {
       height: 100%;
       background: linear-gradient(90deg, #0AE98A, #00D9FF);
-      border-radius: 4px;
+      border-radius: 9999px;
       transition: width 0.4s ease;
     }
   }
 
-  .xp-hint {
-    font-size: 0.68rem;
-    color: var(--text-muted);
-  }
-}
-
-.clan-perks-box {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  .perks-heading {
-    font-size: 0.68rem;
+  .xp-mini-stats {
+    font-size: 0.72rem;
+    color: #0AE98A;
     font-weight: 700;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    letter-spacing: 0.05em;
-  }
-
-  .perks-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .perk-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    background: rgba(0, 0, 0, 0.2);
-    padding: 3px 8px;
-    border-radius: 4px;
-    border-left: 2px solid var(--primary);
+    white-space: nowrap;
   }
 }
 
-.clan-hero-actions {
+/* ---------- SQUAD NAVIGATION TABS ---------- */
+.squad-nav-tabs {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: auto;
-
-  .btn {
-    justify-content: center;
-  }
-
-  .btn-leave-clan {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 0.72rem;
-    cursor: pointer;
-    text-align: center;
-    padding: 4px;
-    &:hover { color: var(--danger); text-decoration: underline; }
-  }
-}
-
-/* ---------- NAVIGATION TABS ---------- */
-.clan-nav-tabs {
-  display: flex;
-  gap: 8px;
+  gap: 6px;
   border-bottom: 1px solid var(--border);
   padding-bottom: 2px;
   margin-bottom: var(--sp-6);
@@ -456,7 +484,7 @@
   &::-webkit-scrollbar { display: none; }
 }
 
-.clan-tab-btn {
+.squad-tab-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -483,26 +511,388 @@
     border-color: var(--border);
     border-bottom-color: var(--primary);
 
-    .tab-badge {
+    .tab-counter {
       background: var(--primary-dim);
       color: var(--primary);
     }
   }
 
-  .tab-badge {
-    font-family: var(--font-mono);
+  .tab-counter {
     font-size: 0.7rem;
-    padding: 1px 6px;
+    padding: 1px 7px;
     border-radius: 9999px;
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-secondary);
+  }
 
-    &--quest {
-      background: var(--accent-dim);
-      color: var(--accent);
+  .tab-pill-alert {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #EF4444;
+  }
+}
+
+/* ---------- TAB 1: SPRINT KANBAN WORKFLOW ---------- */
+.squad-sprint-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.sprint-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+
+  .sprint-title-wrap {
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-bold);
+      color: var(--text-primary);
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    p {
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      margin: 0;
+    }
+  }
+
+  .sprint-badge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #0AE98A;
+    background: rgba(10, 233, 138, 0.12);
+    border: 1px solid rgba(10, 233, 138, 0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+}
+
+.sprint-quick-add {
+  display: flex;
+  gap: 8px;
+
+  .btn-quick-issue {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    background: rgba(10, 233, 138, 0.1);
+    border: 1px solid rgba(10, 233, 138, 0.3);
+    color: #0AE98A;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background: rgba(10, 233, 138, 0.2);
+      border-color: #0AE98A;
+    }
+  }
+}
+
+.sprint-kanban-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-4);
+  align-items: flex-start;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kanban-column {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4);
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.kanban-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+  .col-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .col-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+
+    &--backlog { background: #94A3B8; }
+    &--progress { background: #00D9FF; box-shadow: 0 0 6px rgba(0, 217, 255, 0.6); }
+    &--review { background: #FFB800; box-shadow: 0 0 6px rgba(255, 184, 0, 0.6); }
+    &--done { background: #0AE98A; box-shadow: 0 0 6px rgba(10, 233, 138, 0.6); }
+  }
+
+  .col-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .col-count {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 2px 7px;
+    border-radius: 9999px;
+  }
+}
+
+.kanban-cards-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  flex: 1;
+}
+
+.kanban-issue-card {
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+
+  &.is-in-progress {
+    border-left: 3px solid #00D9FF;
+  }
+
+  &.is-in-review {
+    border-left: 3px solid #FFB800;
+  }
+
+  &.is-completed {
+    border-left: 3px solid #0AE98A;
+    opacity: 0.85;
+
+    &:hover { opacity: 1; }
+  }
+
+  .k-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+
+    .issue-id {
+      font-size: 0.72rem;
+      color: var(--text-muted);
       font-weight: 700;
     }
   }
+
+  .issue-type-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    &.type--feature { color: #00D9FF; background: rgba(0, 217, 255, 0.1); }
+    &.type--bug { color: #EF4444; background: rgba(239, 68, 68, 0.1); }
+    &.type--perf { color: #FFB800; background: rgba(255, 184, 0, 0.1); }
+    &.type--security { color: #F43F5E; background: rgba(244, 63, 94, 0.1); }
+    &.type--arch { color: #A855F7; background: rgba(168, 85, 247, 0.1); }
+  }
+
+  .review-status-tag {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #FFB800;
+    background: rgba(255, 184, 0, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .shipped-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #0AE98A;
+    background: rgba(10, 233, 138, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .issue-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .k-card-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    flex-wrap: wrap;
+  }
+
+  .assignee-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .assignee-pill {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 2px 6px;
+    border-radius: 4px;
+    max-width: 130px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-claim-issue {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 4px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .k-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-k-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &--start {
+      background: rgba(0, 217, 255, 0.12);
+      border-color: rgba(0, 217, 255, 0.3);
+      color: #00D9FF;
+
+      &:hover {
+        background: rgba(0, 217, 255, 0.25);
+      }
+    }
+
+    &--advance {
+      background: rgba(255, 184, 0, 0.12);
+      border-color: rgba(255, 184, 0, 0.3);
+      color: #FFB800;
+
+      &:hover {
+        background: rgba(255, 184, 0, 0.25);
+      }
+    }
+
+    &--git {
+      background: rgba(168, 85, 247, 0.12);
+      border-color: rgba(168, 85, 247, 0.3);
+      color: #C084FC;
+
+      &:hover {
+        background: rgba(168, 85, 247, 0.25);
+      }
+    }
+  }
+
+  .btn-k-branch-pr {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: rgba(10, 233, 138, 0.1);
+    border: 1px solid rgba(10, 233, 138, 0.3);
+    color: #0AE98A;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background: rgba(10, 233, 138, 0.22);
+      border-color: #0AE98A;
+    }
+  }
+
+  .xp-earned-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #0AE98A;
+    background: rgba(10, 233, 138, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+}
+
+.kanban-empty-col {
+  padding: var(--sp-6) var(--sp-3);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 /* ---------- TAB 1: FEED & BITÁCORA TÉCNICA ---------- */
