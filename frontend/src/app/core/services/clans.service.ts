@@ -10,9 +10,12 @@ import {
   TeacherEndorsement,
   TeacherMission,
   ChallengeTestCase,
+  GitCommit,
+  GitPullRequest,
+  GitBranch,
 } from '../models/clan';
 
-const CLANS_STORAGE_PREFIX = 'syseng_study_groups_v5_';
+const CLANS_STORAGE_PREFIX = 'syseng_study_groups_v6_';
 
 @Injectable({ providedIn: 'root' })
 export class ClansService {
@@ -764,6 +767,21 @@ export class ClansService {
       techStack: data.techStack.length > 0 ? data.techStack : ['TypeScript', 'Node.js'],
       repoUrl: data.repoUrl,
       membersJoined: [userName],
+      activeBranch: 'main',
+      branches: [{ name: 'main', isDefault: true, lastCommit: `chore: initial commit for ${data.title}` }],
+      commits: [
+        {
+          hash: Math.random().toString(16).substring(2, 9),
+          message: `chore: initial commit for ${data.title}`,
+          author: userName,
+          branch: 'main',
+          timeAgo: 'hace un momento',
+          filesChanged: 2,
+          insertions: 30,
+          deletions: 0,
+        },
+      ],
+      pullRequests: [],
       tasks: [
         { id: 't1', title: 'Diseñar arquitectura modular y diagrama de componentes', completed: false, status: 'in_progress', assignedTo: userName },
         { id: 't2', title: 'Configurar entorno de desarrollo y pipeline CI/CD', completed: false, status: 'pending' },
@@ -825,6 +843,339 @@ export class ClansService {
       return g;
     });
 
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  /** Crea un nuevo Pull Request técnico con commit asociado y corrida de CI */
+  createProjectPullRequest(
+    clanId: string,
+    projectId: string,
+    data: {
+      title: string;
+      description: string;
+      sourceBranch: string;
+      targetBranch?: string;
+      commitMessage: string;
+      filename?: string;
+      codeSnippet?: string;
+      linkedIssueId?: string;
+    }
+  ): { pr: GitPullRequest; xpEarned: number } {
+    const user = this.auth.user();
+    const userName = user?.name || 'Investigador';
+    const isTeacher = user?.role === 'admin' || user?.role === 'instructor';
+    const userRole = isTeacher ? 'Docente Titular' : 'Investigador de Clan';
+    const xpReward = 65;
+
+    let createdPr!: GitPullRequest;
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const projs = g.projects.map(p => {
+          if (p.id === projectId) {
+            const nextPrNum = (p.pullRequests?.length || 0) + 1;
+            const newCommitHash = Math.random().toString(16).substring(2, 9);
+            const sourceBranch = data.sourceBranch.trim().toLowerCase().replace(/\s+/g, '-');
+            const targetBranch = data.targetBranch || 'main';
+
+            const additions = data.codeSnippet
+              ? data.codeSnippet.split('\n').map(l => (l.startsWith('+') ? l : `+ ${l}`))
+              : [`+ // Implementación: ${data.title}`, `+ // Hash: ${newCommitHash}`];
+
+            createdPr = {
+              id: `pr_${Date.now()}`,
+              number: nextPrNum,
+              title: data.title,
+              description: data.description,
+              author: userName,
+              authorRole: userRole,
+              sourceBranch,
+              targetBranch,
+              status: 'open',
+              ciStatus: 'passed',
+              codeDiff: {
+                filename: data.filename || 'src/main.cpp',
+                additions,
+                deletions: ['- // TODO: pendiente de implementación'],
+              },
+              reviews: isTeacher
+                ? [
+                    {
+                      reviewer: userName,
+                      isTeacher: true,
+                      verdict: 'approved',
+                      comment: 'Validación docente: Implementación y tests conformes con el estándar.',
+                      timeAgo: 'hace un momento',
+                    },
+                  ]
+                : [],
+              xpReward,
+              linkedIssueId: data.linkedIssueId,
+              timeAgo: 'hace un momento',
+            };
+
+            const newCommit: GitCommit = {
+              hash: newCommitHash,
+              message: data.commitMessage || data.title,
+              author: userName,
+              branch: sourceBranch,
+              timeAgo: 'hace un momento',
+              filesChanged: 1,
+              insertions: additions.length,
+              deletions: 1,
+            };
+
+            const existingBranches = p.branches || [{ name: 'main', isDefault: true }];
+            const branchExists = existingBranches.some(b => b.name === sourceBranch);
+            const updatedBranches = branchExists
+              ? existingBranches
+              : [...existingBranches, { name: sourceBranch, isDefault: false, aheadCount: 1, behindCount: 0 }];
+
+            return {
+              ...p,
+              activeBranch: sourceBranch,
+              branches: updatedBranches,
+              commits: [newCommit, ...(p.commits || [])],
+              pullRequests: [createdPr, ...(p.pullRequests || [])],
+            };
+          }
+          return p;
+        });
+
+        // Contar como avance en la Misión Semanal del clan
+        const quest = g.weeklyQuest;
+        const nextQuestCount = Math.min(quest.targetCount, quest.currentCount + 1);
+
+        return {
+          ...g,
+          currentXp: g.currentXp + xpReward,
+          weeklyQuest: {
+            ...quest,
+            currentCount: nextQuestCount,
+            completed: nextQuestCount >= quest.targetCount,
+          },
+          projects: projs,
+          researchFeed: [
+            {
+              id: `rf_pr_${Date.now()}`,
+              author: userName,
+              authorRole: userRole,
+              type: 'propuesta' as const,
+              title: `Abrió Pull Request #${createdPr.number}: ${data.title}`,
+              content: `Aporte técnico en la rama \`${data.sourceBranch}\` hacia \`main\`. ${data.description}`,
+              codeSnippet: data.codeSnippet,
+              codeLanguage: data.filename?.endsWith('.py') ? 'python' : 'cpp',
+              upvotes: 1,
+              hasUpvoted: false,
+              comments: [],
+              timeAgo: 'hace un momento',
+            },
+            ...g.researchFeed,
+          ],
+          recentLogs: [
+            {
+              author: userName,
+              message: `Abrió PR #${createdPr.number} (${data.sourceBranch} -> main) (+${xpReward} XP)`,
+              timeAgo: 'hace un momento',
+            },
+            ...g.recentLogs,
+          ].slice(0, 10),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+    return { pr: createdPr, xpEarned: xpReward };
+  }
+
+  /** Hace merge de un Pull Request a main, cierra tareas vinculadas y genera commit */
+  mergeProjectPullRequest(
+    clanId: string,
+    projectId: string,
+    prId: string
+  ): { success: boolean; xpEarned: number } {
+    const user = this.auth.user();
+    const userName = user?.name || 'Investigador';
+    const xpReward = 90;
+    let mergedTitle = '';
+    let linkedTaskId: string | undefined;
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const projs = g.projects.map(p => {
+          if (p.id === projectId && p.pullRequests) {
+            const prs = p.pullRequests.map(pr => {
+              if (pr.id === prId) {
+                mergedTitle = pr.title;
+                linkedTaskId = pr.linkedIssueId;
+                return {
+                  ...pr,
+                  status: 'merged' as const,
+                  mergedAt: 'hace un momento',
+                  mergedBy: userName,
+                };
+              }
+              return pr;
+            });
+
+            // Si hay un issue vinculado, marcarlo como completado
+            let tasks = p.tasks;
+            if (linkedTaskId && tasks) {
+              tasks = tasks.map(t => (t.id === linkedTaskId ? { ...t, completed: true, status: 'completed' as const } : t));
+            }
+
+            const mergeCommit: GitCommit = {
+              hash: Math.random().toString(16).substring(2, 9),
+              message: `Merge pull request #${p.pullRequests.find(pr => pr.id === prId)?.number || ''} into main`,
+              author: userName,
+              branch: 'main',
+              timeAgo: 'hace un momento',
+              filesChanged: 2,
+              insertions: 25,
+              deletions: 5,
+            };
+
+            const allTasksCompleted = tasks ? tasks.every(t => t.completed) : false;
+
+            return {
+              ...p,
+              activeBranch: 'main',
+              tasks,
+              status: allTasksCompleted ? ('concluido' as const) : p.status,
+              commits: [mergeCommit, ...(p.commits || [])],
+              pullRequests: prs,
+            };
+          }
+          return p;
+        });
+
+        return {
+          ...g,
+          currentXp: g.currentXp + xpReward,
+          projects: projs,
+          recentLogs: [
+            {
+              author: userName,
+              message: `Hizo Merge de PR: "${mergedTitle}" a main (+${xpReward} XP)`,
+              timeAgo: 'hace un momento',
+            },
+            ...g.recentLogs,
+          ].slice(0, 10),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+    return { success: true, xpEarned: xpReward };
+  }
+
+  /** Permite a compañeros o docentes dejar un Code Review en un PR */
+  reviewProjectPullRequest(
+    clanId: string,
+    projectId: string,
+    prId: string,
+    review: { verdict: 'approved' | 'changes_requested' | 'comment'; comment: string }
+  ): void {
+    const user = this.auth.user();
+    const userName = user?.name || 'Revisor';
+    const isTeacher = user?.role === 'admin' || user?.role === 'instructor';
+    const xpReward = 30;
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const projs = g.projects.map(p => {
+          if (p.id === projectId && p.pullRequests) {
+            const prs = p.pullRequests.map(pr => {
+              if (pr.id === prId) {
+                const newReview = {
+                  reviewer: userName,
+                  isTeacher,
+                  verdict: review.verdict,
+                  comment: review.comment,
+                  timeAgo: 'hace un momento',
+                };
+                return {
+                  ...pr,
+                  reviews: [...pr.reviews, newReview],
+                  ciStatus: review.verdict === 'approved' ? ('passed' as const) : pr.ciStatus,
+                };
+              }
+              return pr;
+            });
+            return { ...p, pullRequests: prs };
+          }
+          return p;
+        });
+
+        return {
+          ...g,
+          currentXp: g.currentXp + xpReward,
+          projects: projs,
+          recentLogs: [
+            {
+              author: userName,
+              message: `Completó Code Review: "${review.verdict === 'approved' ? 'LGTM / Aprobado' : 'Feedback técnico'}" (+${xpReward} XP)`,
+              timeAgo: 'hace un momento',
+            },
+            ...g.recentLogs,
+          ].slice(0, 10),
+        };
+      }
+      return g;
+    });
+
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  /** Cambia la rama activa del proyecto */
+  switchProjectBranch(clanId: string, projectId: string, branchName: string): void {
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const projs = g.projects.map(p => {
+          if (p.id === projectId) {
+            return { ...p, activeBranch: branchName };
+          }
+          return p;
+        });
+        return { ...g, projects: projs };
+      }
+      return g;
+    });
+    this.studyGroups.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  /** Crea una nueva rama en el proyecto */
+  createProjectBranch(clanId: string, projectId: string, branchName: string): void {
+    const cleanName = branchName.trim().toLowerCase().replace(/\s+/g, '-');
+    if (!cleanName) return;
+
+    const updated = this.studyGroups().map(g => {
+      if (g.id === clanId) {
+        const projs = g.projects.map(p => {
+          if (p.id === projectId) {
+            const branches = p.branches || [{ name: 'main', isDefault: true }];
+            if (branches.some(b => b.name === cleanName)) {
+              return { ...p, activeBranch: cleanName };
+            }
+            return {
+              ...p,
+              activeBranch: cleanName,
+              branches: [...branches, { name: cleanName, isDefault: false, aheadCount: 0, behindCount: 0 }],
+            };
+          }
+          return p;
+        });
+        return { ...g, projects: projs };
+      }
+      return g;
+    });
     this.studyGroups.set(updated);
     this.saveToStorage(updated);
   }
@@ -914,7 +1265,27 @@ export class ClansService {
         },
         clanPerks: Array.isArray(g.clanPerks) ? g.clanPerks : (fallback?.clanPerks || []),
         recentLogs: Array.isArray(g.recentLogs) ? g.recentLogs : (fallback?.recentLogs || []),
-        projects: Array.isArray(g.projects) ? g.projects : (fallback?.projects || []),
+        projects: Array.isArray(g.projects)
+          ? g.projects.map((p: any) => {
+              const fallbackP = fallback?.projects?.find(fp => fp.id === p.id);
+              return {
+                ...p,
+                activeBranch: p.activeBranch || fallbackP?.activeBranch || 'main',
+                branches:
+                  Array.isArray(p.branches) && p.branches.length > 0
+                    ? p.branches
+                    : fallbackP?.branches || [{ name: 'main', isDefault: true }],
+                commits:
+                  Array.isArray(p.commits) && p.commits.length > 0
+                    ? p.commits
+                    : fallbackP?.commits || [],
+                pullRequests:
+                  Array.isArray(p.pullRequests) && p.pullRequests.length > 0
+                    ? p.pullRequests
+                    : fallbackP?.pullRequests || [],
+              };
+            })
+          : fallback?.projects || [],
         researchFeed: Array.isArray(g.researchFeed) ? g.researchFeed : (fallback?.researchFeed || []),
         libraryPapers: Array.isArray(g.libraryPapers) ? g.libraryPapers : (fallback?.libraryPapers || []),
         upcomingSessions: Array.isArray(g.upcomingSessions) ? g.upcomingSessions : (fallback?.upcomingSessions || []),
@@ -974,6 +1345,146 @@ export class ClansService {
             status: 'en_progreso',
             leadResearcher: 'Director Cátedra Sistemas',
             membersJoined: ['Director Cátedra Sistemas', 'Alex Torres'],
+            activeBranch: 'main',
+            branches: [
+              { name: 'main', isDefault: true, lastCommit: 'Merge pull request #3 from syseng/state-queue' },
+              { name: 'feature/round-robin-quantum', isDefault: false, aheadCount: 2, behindCount: 0, lastCommit: 'feat(sched): dispatch quantum slicing with PIT tick' },
+              { name: 'fix/page-fault-handler', isDefault: false, aheadCount: 1, behindCount: 1, lastCommit: 'fix(mmu): handle CR2 register fault address' },
+              { name: 'test/posix-stress', isDefault: false, aheadCount: 1, behindCount: 0, lastCommit: 'test(sched): 10k context switches simulation' },
+            ],
+            commits: [
+              {
+                hash: 'c9f81a2',
+                message: 'feat(sched): implement round-robin scheduler with 10ms quantum',
+                author: 'Alex Torres',
+                branch: 'feature/round-robin-quantum',
+                timeAgo: 'hace 4h',
+                filesChanged: 3,
+                insertions: 142,
+                deletions: 18,
+              },
+              {
+                hash: 'b4a1120',
+                message: 'test(sched): unit tests for task queue starvation edge case',
+                author: 'Alex Torres',
+                branch: 'feature/round-robin-quantum',
+                timeAgo: 'hace 5h',
+                filesChanged: 2,
+                insertions: 65,
+                deletions: 4,
+              },
+              {
+                hash: '87e22df',
+                message: 'Merge pull request #3 from syseng/state-queue',
+                author: 'Director Cátedra Sistemas',
+                branch: 'main',
+                timeAgo: 'hace 1d',
+                filesChanged: 4,
+                insertions: 210,
+                deletions: 32,
+              },
+              {
+                hash: '4a1b0c9',
+                message: 'feat(core): process state table (READY, RUNNING, BLOCKED)',
+                author: 'Director Cátedra Sistemas',
+                branch: 'main',
+                timeAgo: 'hace 1d',
+                filesChanged: 2,
+                insertions: 98,
+                deletions: 12,
+              },
+              {
+                hash: '109ef3a',
+                message: 'chore(init): initial micro-kernel bootstrap with Assembly x86 PIT interrupt',
+                author: 'Director Cátedra Sistemas',
+                branch: 'main',
+                timeAgo: 'hace 3d',
+                filesChanged: 5,
+                insertions: 320,
+                deletions: 0,
+              },
+            ],
+            pullRequests: [
+              {
+                id: 'pr_krnl_4',
+                number: 4,
+                title: 'feat(sched): Implementar algoritmo Round-Robin con quantum de 10ms',
+                description: 'Conecta la interrupción periódica del temporizador (IRQ0) con la cola circular de tareas. Cada 10ms guarda el contexto del frame actual en el PCB y conmuta hacia la siguiente tarea en cola de listos.',
+                author: 'Alex Torres',
+                authorRole: 'Investigador Junior',
+                sourceBranch: 'feature/round-robin-quantum',
+                targetBranch: 'main',
+                status: 'open',
+                ciStatus: 'passed',
+                linkedIssueId: 'tk3',
+                codeDiff: {
+                  filename: 'kernel/sched/round_robin.cpp',
+                  additions: [
+                    '+ void ScheduleNextProcess(InterruptFrame* frame) {',
+                    '+     ProcessControlBlock* current = GetRunningProcess();',
+                    '+     if (current && current->state == ProcessState::RUNNING) {',
+                    '+         current->saved_esp = frame->esp;',
+                    '+         current->state = ProcessState::READY;',
+                    '+         ready_queue.push(current);',
+                    '+     }',
+                    '+     ProcessControlBlock* next = ready_queue.pop();',
+                    '+     next->state = ProcessState::RUNNING;',
+                    '+     SwitchContext(frame, next->saved_esp);',
+                    '+ }',
+                  ],
+                  deletions: [
+                    '- // TODO: Implementar conmutación de quantum',
+                    '- HalHaltCpuUntilNextInterrupt();',
+                  ],
+                },
+                reviews: [
+                  {
+                    reviewer: 'Director Cátedra Sistemas',
+                    isTeacher: true,
+                    verdict: 'approved',
+                    comment: 'Revisión técnica de cátedra: Conmutación atómica de pila validada. Sin condiciones de carrera en el frame.',
+                    timeAgo: 'hace 2h',
+                  },
+                ],
+                xpReward: 90,
+                timeAgo: 'hace 4h',
+              },
+              {
+                id: 'pr_krnl_3',
+                number: 3,
+                title: 'feat(core): Cola circular de estados de procesos (Ready, Running, Blocked)',
+                description: 'Estructura lock-free para gestión de estados con atomic compare-and-swap en memoria x86.',
+                author: 'Director Cátedra Sistemas',
+                authorRole: 'Docente Titular',
+                sourceBranch: 'feature/process-queue',
+                targetBranch: 'main',
+                status: 'merged',
+                ciStatus: 'passed',
+                linkedIssueId: 'tk2',
+                codeDiff: {
+                  filename: 'kernel/process/state_queue.cpp',
+                  additions: [
+                    '+ bool EnqueueProcess(ProcessControlBlock* pcb) {',
+                    '+     return atomic_ring_buffer_push(&process_pool, pcb);',
+                    '+ }',
+                  ],
+                  deletions: ['- static ProcessControlBlock* single_process;'],
+                },
+                reviews: [
+                  {
+                    reviewer: 'Prof. Guillermo Arismendi',
+                    isTeacher: true,
+                    verdict: 'approved',
+                    comment: 'Excelente arquitectura de cola lock-free con ring buffer.',
+                    timeAgo: 'hace 1d',
+                  },
+                ],
+                xpReward: 80,
+                timeAgo: 'hace 1d',
+                mergedAt: 'hace 1d',
+                mergedBy: 'Director Cátedra Sistemas',
+              },
+            ],
             tasks: [
               { id: 'tk1', title: 'Rutina de interrupción de timer en Assembly x86', completed: true, status: 'completed', assignedTo: 'Director Cátedra' },
               { id: 'tk2', title: 'Cola de estados de procesos (Ready, Running, Blocked)', completed: true, status: 'completed', assignedTo: 'Alex Torres' },

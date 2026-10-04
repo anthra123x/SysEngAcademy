@@ -42,6 +42,67 @@ export interface ResearchProjectTask {
   xpReward?: number;
 }
 
+export interface GitCommit {
+  id?: string;
+  hash: string;
+  message: string;
+  author: string;
+  branch: string;
+  timeAgo: string;
+  timestamp?: string;
+  filesChanged?: number;
+  insertions?: number;
+  deletions?: number;
+}
+
+export interface GitPullRequestReview {
+  id?: string;
+  reviewer: string;
+  isTeacher?: boolean;
+  verdict: 'approved' | 'changes_requested' | 'comment';
+  comment: string;
+  timeAgo: string;
+  createdAt?: string;
+}
+
+export interface GitPullRequest {
+  id: string;
+  number: number;
+  title: string;
+  description: string;
+  author: string;
+  authorRole: string;
+  sourceBranch: string;
+  targetBranch: string;
+  status: 'open' | 'merged' | 'closed';
+  ciStatus: 'pending' | 'passed' | 'failed';
+  type?: 'feat' | 'test' | 'perf' | 'fix' | 'docs';
+  filename?: string;
+  codeSnippet?: string;
+  linesAdded?: number;
+  linesDeleted?: number;
+  createdAt?: string;
+  codeDiff?: {
+    filename: string;
+    additions: string[];
+    deletions: string[];
+  };
+  reviews: GitPullRequestReview[];
+  xpReward: number;
+  linkedIssueId?: string;
+  timeAgo: string;
+  mergedAt?: string;
+  mergedBy?: string;
+}
+
+export interface GitBranch {
+  name: string;
+  isDefault?: boolean;
+  aheadCount?: number;
+  behindCount?: number;
+  lastCommit?: string;
+}
+
 export interface ResearchProject {
   id: string;
   title: string;
@@ -55,6 +116,10 @@ export interface ResearchProject {
   createdAt: string;
   teacherApproved?: boolean;
   teacherReviewNote?: string;
+  activeBranch?: string;
+  branches?: GitBranch[];
+  commits?: GitCommit[];
+  pullRequests?: GitPullRequest[];
 }
 
 export interface ResearchPaper {

@@ -11,6 +11,9 @@ import {
   ResearchProject,
   ClanBattleChallenge,
   TeacherMission,
+  GitCommit,
+  GitPullRequest,
+  GitBranch,
 } from '../../core/models/clan';
 
 export interface ToastAlert {
@@ -27,6 +30,11 @@ export interface QuestContributionOption {
   desc: string;
   xp: number;
   icon: string;
+  type: 'feat' | 'test' | 'perf' | 'fix' | 'docs';
+  defaultBranch: string;
+  commitMessage: string;
+  filename: string;
+  snippet: string;
 }
 
 @Component({
@@ -97,31 +105,46 @@ export class ClanComponent implements OnInit, OnDestroy {
   teacherMissionDeadline = signal<string>('5 días');
   teacherMissionXp = signal<number>(300);
 
-  // Opciones de Contribución a la Misión Semanal / Raid
+  // Opciones de Contribución Técnica a la Misión Semanal con Flujo Git
   readonly questContributions: QuestContributionOption[] = [
     {
       id: 'tests',
       label: 'Suite de Tests y Casos de Estrés',
       category: 'Testing & Validación',
-      desc: 'Ejecutar batería de pruebas concurrentes y reportar memory leaks.',
+      desc: 'Ejecutar batería de pruebas concurrentes y reportar memory leaks en la cola de tareas.',
       xp: 45,
       icon: 'zap',
+      type: 'test',
+      defaultBranch: 'test/concurrency-race-conditions',
+      commitMessage: 'test(kernel): suite de pruebas de estrés para condiciones de carrera',
+      filename: 'tests/test_concurrency_stress.cpp',
+      snippet: `// Suite de pruebas de estrés concurrentes\nTEST(SchedulerStress, NoDeadlockUnderHighLoad) {\n    Spinlock lock;\n    std::atomic<int> counter{0};\n    std::vector<std::thread> workers;\n    for (int i = 0; i < 4; ++i) {\n        workers.emplace_back([&]() {\n            for (int j = 0; j < 500; ++j) {\n                std::lock_guard<Spinlock> guard(lock);\n                counter.fetch_add(1, std::memory_order_relaxed);\n            }\n        });\n    }\n    for (auto& w : workers) w.join();\n    ASSERT_EQ(counter.load(), 2000);\n}`,
     },
     {
       id: 'sast',
       label: 'Auditoría SAST y Sanitización',
       category: 'Seguridad & OWASP',
-      desc: 'Revisar control de parámetros, headers y sanitización en frontera.',
+      desc: 'Revisar control de parámetros, headers y sanitización de punteros en memoria.',
       xp: 60,
       icon: 'shield',
+      type: 'fix',
+      defaultBranch: 'fix/sast-memory-sanitizer',
+      commitMessage: 'fix(security): sanitizar punteros en memoria y validar límites en Ring 0',
+      filename: 'kernel/security/pointer_sanitizer.cpp',
+      snippet: `// Sanitización de punteros de usuario para evitar buffer overflow\nbool ValidateUserPointer(const void* ptr, size_t length) {\n    uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);\n    if (addr == 0 || (addr + length) > USER_SPACE_MAX_ADDR) {\n        TriggerSecurityAuditLog("Violación de límites de puntero en espacio de usuario");\n        return false;\n    }\n    return true;\n}`,
     },
     {
       id: 'bench',
       label: 'Benchmarking de Rendimiento',
       category: 'Optimización de Latencia',
-      desc: 'Medir tiempos de respuesta en ráfagas y cuellos de botella.',
+      desc: 'Medir tiempos de respuesta en ráfagas de syscalls y cuellos de botella.',
       xp: 75,
       icon: 'cpu',
+      type: 'perf',
+      defaultBranch: 'perf/tlb-invalidation-fastpath',
+      commitMessage: 'perf(mmu): optimización de TLB flush y caché de tablas de páginas',
+      filename: 'benchmarks/context_switch_bench.cpp',
+      snippet: `// Benchmark de conmutación de contexto con micro-segundos de latencia\nBENCHMARK(ContextSwitchFastpath) {\n    Timer timer;\n    timer.Start();\n    for (int i = 0; i < 10000; ++i) {\n        SwitchToNextReadyTask();\n    }\n    double elapsed_us = timer.ElapsedMicroseconds();\n    RecordMetric("latency_p99_us", elapsed_us / 10000.0);\n}`,
     },
     {
       id: 'arch',
@@ -130,9 +153,42 @@ export class ClanComponent implements OnInit, OnDestroy {
       desc: 'Diagramas de secuencia, esquema de interfaces y RFC técnico.',
       xp: 35,
       icon: 'book',
+      type: 'docs',
+      defaultBranch: 'docs/syscalls-rfc',
+      commitMessage: 'docs(arch): especificación técnica y RFC de llamadas al sistema',
+      filename: 'docs/architecture/rfc_syscalls.md',
+      snippet: `# Especificación Técnica: Flujo de Syscalls y Aislamiento de Memoria\n1. Usuario invoca syscall(SYS_read, fd, buf, count) (Ring 3).\n2. CPU cambia a Ring 0 mediante SYSENTER / SYSCALL.\n3. Validar que buf pertenezca al espacio de memoria del proceso.\n4. Conmutar a la cola del descriptor sin bloquear el hilo principal.`,
     },
   ];
   selectedContributionId = signal<string>('tests');
+  questSnippetDraft = signal<string>('');
+
+  readonly selectedContribution = computed(() => {
+    return this.questContributions.find(c => c.id === this.selectedContributionId()) || this.questContributions[0];
+  });
+
+  selectContribution(id: string): void {
+    this.selectedContributionId.set(id);
+    const opt = this.questContributions.find(c => c.id === id);
+    if (opt) {
+      this.questSnippetDraft.set(opt.snippet);
+    }
+  }
+
+  // Git Workflow en Proyectos
+  projectGitTab = signal<Record<string, 'prs' | 'issues' | 'commits' | 'terminal'>>({});
+  expandedPrId = signal<string | null>('pr_krnl_4');
+  showNewPrModal = signal<boolean>(false);
+  targetPrProjectId = signal<string>('');
+  newPrTitle = signal<string>('');
+  newPrBranch = signal<string>('');
+  newPrType = signal<'feat' | 'test' | 'perf' | 'fix' | 'docs'>('test');
+  newPrDesc = signal<string>('');
+  newPrFilename = signal<string>('kernel/sched/scheduler.cpp');
+  newPrSnippet = signal<string>('');
+  newPrLinkedIssueId = signal<string>('');
+  prReviewComment = signal<Record<string, string>>({});
+  terminalOutput = signal<Record<string, string>>({});
 
   // Input rápido para nuevas tareas en proyectos
   quickTaskTitle = signal<Record<string, string>>({});
@@ -454,6 +510,8 @@ export class ClanComponent implements OnInit, OnDestroy {
   // RAID QUEST SEMANAL INTERACTIVA
   // ==========================================
   openQuestModal(): void {
+    const opt = this.questContributions.find(c => c.id === this.selectedContributionId()) || this.questContributions[0];
+    this.questSnippetDraft.set(opt.snippet);
     this.showQuestModal.set(true);
   }
 
@@ -461,29 +519,265 @@ export class ClanComponent implements OnInit, OnDestroy {
     const clan = this.currentClan();
     if (!clan) return;
     const opt = this.questContributions.find(c => c.id === this.selectedContributionId()) || this.questContributions[0];
+    const proj = clan.projects[0];
+    const snippetToSubmit = this.questSnippetDraft().trim() || opt.snippet;
 
-    const res = this.clansService.contributeToRaidQuest(clan.id, {
-      category: opt.category,
-      description: opt.label,
-      xp: opt.xp,
-    });
+    if (proj) {
+      this.clansService.createProjectPullRequest(clan.id, proj.id, {
+        title: opt.commitMessage,
+        description: opt.desc,
+        sourceBranch: opt.defaultBranch,
+        commitMessage: opt.commitMessage,
+        filename: opt.filename,
+        codeSnippet: snippetToSubmit,
+      });
+    } else {
+      this.clansService.contributeToRaidQuest(clan.id, {
+        category: opt.category,
+        description: opt.label,
+        xp: opt.xp,
+      });
+    }
 
     this.showQuestModal.set(false);
-    if (res.questCompleted) {
+    this.showToast(
+      '🚀 Pull Request Técnico Registrado',
+      `Aporte enviado en rama '${opt.defaultBranch}' con diff de código. +${opt.xp} XP colectivos.`,
+      opt.icon,
+      opt.xp
+    );
+  }
+
+  // ==========================================
+  // GIT WORKFLOW EN PROYECTOS I+D
+  // ==========================================
+  getProjectGitTab(projectId: string): 'prs' | 'issues' | 'commits' | 'terminal' {
+    return this.projectGitTab()[projectId] || 'prs';
+  }
+
+  setProjectGitTab(projectId: string, tab: 'prs' | 'issues' | 'commits' | 'terminal'): void {
+    this.projectGitTab.update(m => ({ ...m, [projectId]: tab }));
+    if (tab === 'terminal' && !this.terminalOutput()[projectId]) {
+      this.runGitCommand(projectId, 'git status');
+    }
+  }
+
+  toggleExpandPr(prId: string): void {
+    this.expandedPrId.update(curr => (curr === prId ? null : prId));
+  }
+
+  openNewPrModal(
+    projectId?: string,
+    issueId?: string,
+    defaultTitle?: string,
+    type: 'feat' | 'test' | 'perf' | 'fix' | 'docs' = 'test'
+  ): void {
+    const clan = this.currentClan();
+    const proj = projectId ? clan?.projects.find(p => p.id === projectId) : clan?.projects[0];
+    if (!proj) return;
+
+    this.targetPrProjectId.set(proj.id);
+    this.newPrLinkedIssueId.set(issueId || '');
+    this.newPrType.set(type);
+
+    const template = this.getPrTemplate(type);
+    this.newPrTitle.set(defaultTitle || template.title);
+    this.newPrBranch.set(template.branch);
+    this.newPrFilename.set(template.filename);
+    this.newPrSnippet.set(template.snippet);
+    this.newPrDesc.set(`Aporte técnico para el proyecto "${proj.title}". Implementación validada con pruebas unitarias.`);
+    this.showNewPrModal.set(true);
+  }
+
+  selectPrType(type: 'feat' | 'test' | 'perf' | 'fix' | 'docs'): void {
+    this.newPrType.set(type);
+    const template = this.getPrTemplate(type);
+    this.newPrTitle.set(template.title);
+    this.newPrBranch.set(template.branch);
+    this.newPrFilename.set(template.filename);
+    this.newPrSnippet.set(template.snippet);
+  }
+
+  getPrTemplate(type: 'feat' | 'test' | 'perf' | 'fix' | 'docs'): { title: string; branch: string; filename: string; snippet: string } {
+    switch (type) {
+      case 'feat':
+        return {
+          title: 'feat(core): despachador de interrupciones y conmutación de contexto',
+          branch: 'feature/interrupt-dispatcher',
+          filename: 'kernel/sched/dispatcher.cpp',
+          snippet: `// Despachador de contexto seguro para llamadas al sistema\nextern "C" void context_switch_dispatcher(ContextFrame* prev, ContextFrame* next) {\n    if (!prev || !next) return;\n    save_cpu_registers(prev);\n    load_cpu_registers(next);\n    atomic_signal_fence(std::memory_order_seq_cst);\n}`,
+        };
+      case 'test':
+        return {
+          title: 'test(kernel): suite de pruebas de estrés para condiciones de carrera',
+          branch: 'test/concurrency-race-conditions',
+          filename: 'tests/test_concurrency_stress.cpp',
+          snippet: `// Suite de pruebas de estrés concurrentes\nTEST(SchedulerStress, NoDeadlockUnderHighLoad) {\n    Spinlock lock;\n    std::atomic<int> counter{0};\n    std::vector<std::thread> workers;\n    for (int i = 0; i < 4; ++i) {\n        workers.emplace_back([&]() {\n            for (int j = 0; j < 500; ++j) {\n                std::lock_guard<Spinlock> guard(lock);\n                counter.fetch_add(1, std::memory_order_relaxed);\n            }\n        });\n    }\n    for (auto& w : workers) w.join();\n    ASSERT_EQ(counter.load(), 2000);\n}`,
+        };
+      case 'perf':
+        return {
+          title: 'perf(mmu): optimización de TLB flush y caché de tablas de páginas',
+          branch: 'perf/tlb-invalidation-fastpath',
+          filename: 'kernel/mmu/page_table.cpp',
+          snippet: `// Invalidación selectiva de página en TLB en lugar de flush global\ninline void flush_tlb_single_page(uintptr_t virtual_addr) {\n    #if defined(__x86_64__)\n    asm volatile("invlpg (%0)" :: "r"(virtual_addr) : "memory");\n    #endif\n}`,
+        };
+      case 'fix':
+        return {
+          title: 'fix(mmu): corregir lectura de dirección de fallo en registro CR2',
+          branch: 'fix/page-fault-cr2-boundary',
+          filename: 'kernel/interrupts/page_fault.cpp',
+          snippet: `// Previene kernel panic al deserializar la dirección virtual de fallo\nvoid handle_page_fault(InterruptFrame* frame) {\n    uintptr_t fault_addr = read_cr2_register();\n    if (fault_addr == 0 || fault_addr >= KERNEL_SPACE_LIMIT) {\n        log_security_violation("Null dereference o violación de espacio kernel");\n        terminate_faulty_process(frame);\n        return;\n    }\n    allocate_demand_page(fault_addr);\n}`,
+        };
+      case 'docs':
+        return {
+          title: 'docs(arch): especificación técnica y RFC de llamadas al sistema',
+          branch: 'docs/syscalls-rfc',
+          filename: 'docs/architecture/rfc_syscalls.md',
+          snippet: `# Especificación Técnica: Flujo de Syscalls y Aislamiento de Memoria\n1. Usuario invoca syscall(SYS_read, fd, buf, count) (Ring 3).\n2. CPU cambia a Ring 0 mediante SYSENTER / SYSCALL.\n3. Validar que buf pertenezca al espacio de memoria del proceso.\n4. Conmutar a la cola del descriptor sin bloquear el hilo principal.`,
+        };
+    }
+  }
+
+  submitNewPr(): void {
+    const clan = this.currentClan();
+    const projId = this.targetPrProjectId();
+    if (!clan || !projId || !this.newPrTitle().trim()) return;
+
+    const res = this.clansService.createProjectPullRequest(clan.id, projId, {
+      title: this.newPrTitle().trim(),
+      description: this.newPrDesc().trim(),
+      sourceBranch: this.newPrBranch().trim(),
+      commitMessage: this.newPrTitle().trim(),
+      filename: this.newPrFilename().trim(),
+      codeSnippet: this.newPrSnippet().trim(),
+      linkedIssueId: this.newPrLinkedIssueId() || undefined,
+    });
+
+    this.showNewPrModal.set(false);
+    this.expandedPrId.set(res.pr.id);
+    this.setProjectGitTab(projId, 'prs');
+
+    this.showToast(
+      `🚀 Pull Request #${res.pr.number} Abierto con Éxito`,
+      `Rama '${res.pr.sourceBranch}' enviada a 'main'. CI Tests: PASSED. +${res.xpEarned} XP.`,
+      'code',
+      res.xpEarned
+    );
+  }
+
+  mergePr(projectId: string, prId: string): void {
+    const clan = this.currentClan();
+    if (!clan) return;
+
+    const res = this.clansService.mergeProjectPullRequest(clan.id, projectId, prId);
+    if (res.success) {
       this.showToast(
-        '¡MISIÓN SEMANAL COMPLETADA! 🎉',
-        'El semillero ha alcanzado el 100% de la meta. ¡+500 XP colectivos!',
-        'award',
-        500
-      );
-    } else {
-      this.showToast(
-        'Aporte de Investigación Registrado ⚡',
-        `Aportaste en: ${opt.label}. La barra colectiva ha progresado.`,
-        opt.icon,
+        '🔀 Pull Request Fusionado a main',
+        `Squash & Merge completado en producción. Hito resuelto. +${res.xpEarned} XP.`,
+        'git-merge',
         res.xpEarned
       );
     }
+  }
+
+  setReviewDraft(prId: string, val: string): void {
+    this.prReviewComment.update(m => ({ ...m, [prId]: val }));
+  }
+
+  reviewPr(projectId: string, prId: string, verdict: 'approved' | 'changes_requested' | 'comment'): void {
+    const clan = this.currentClan();
+    if (!clan) return;
+    const comment =
+      this.prReviewComment()[prId]?.trim() ||
+      (verdict === 'approved' ? 'LGTM! Código limpio y conforme con la arquitectura.' : 'Sugerencia técnica anotada.');
+
+    this.clansService.reviewProjectPullRequest(clan.id, projectId, prId, {
+      verdict,
+      comment,
+    });
+
+    this.prReviewComment.update(m => ({ ...m, [prId]: '' }));
+    this.showToast(
+      verdict === 'approved' ? '✓ Pull Request Aprobado (LGTM)' : 'Feedback Técnico Publicado',
+      'Tu revisión técnica ha sido registrada en el historial del PR. +30 XP.',
+      'check',
+      30
+    );
+  }
+
+  switchBranch(projectId: string, branchName: string): void {
+    const clan = this.currentClan();
+    if (!clan) return;
+    this.clansService.switchProjectBranch(clan.id, projectId, branchName);
+    this.showToast('🌿 Rama Activa Cambiada', `Ahora trabajando en '${branchName}'`, 'git-branch');
+    if (this.projectGitTab()[projectId] === 'terminal') {
+      this.runGitCommand(projectId, 'git status');
+    }
+  }
+
+  createBranchForIssue(projectId: string, taskId: string, taskTitle: string): void {
+    const branchName = `feature/issue-${taskId}`;
+    const clan = this.currentClan();
+    if (!clan) return;
+    this.clansService.createProjectBranch(clan.id, projectId, branchName);
+    this.openNewPrModal(projectId, taskId, `feat: resolver ${taskTitle.toLowerCase()}`, 'feat');
+  }
+
+  runGitCommand(projectId: string, cmd: string): void {
+    const clan = this.currentClan();
+    const proj = clan?.projects.find(p => p.id === projectId);
+    if (!proj) return;
+
+    const branch = proj.activeBranch || 'main';
+    const openPrs = proj.pullRequests?.filter(pr => pr.status === 'open') || [];
+    let out = `$ ${cmd}\n`;
+
+    if (cmd === 'git status') {
+      out += `On branch ${branch}\n`;
+      if (branch === 'main') {
+        out += `Your branch is up to date with 'origin/main'.\n`;
+      } else {
+        out += `Your branch is ahead of 'origin/main' by 1 commit.\n  (use "git push" to publish your local commits)\n`;
+      }
+      if (openPrs.length > 0) {
+        out += `\nPull Requests activos pendientes de revisión:\n`;
+        openPrs.forEach(pr => {
+          out += `  * PR #${pr.number} (${pr.sourceBranch} -> ${pr.targetBranch}): ${pr.title}\n`;
+        });
+      }
+      out += `\nnothing to commit, working tree clean\n`;
+    } else if (cmd === 'git branch -a') {
+      const branches = proj.branches || [{ name: 'main', isDefault: true }];
+      branches.forEach(b => {
+        const isCurrent = b.name === branch;
+        out += `${isCurrent ? '* ' : '  '}${b.name}\n`;
+      });
+      out += `  remotes/origin/main\n`;
+    } else if (cmd.startsWith('git log')) {
+      const commits = proj.commits || [];
+      commits.slice(0, 5).forEach(c => {
+        out += `commit ${c.hash} (${c.branch})\n`;
+        out += `Author: ${c.author}\n`;
+        out += `Date:   ${c.timeAgo}\n\n`;
+        out += `    ${c.message}\n\n`;
+      });
+    } else if (cmd === 'git diff') {
+      const latestPr = openPrs[0];
+      if (latestPr && latestPr.codeDiff) {
+        out += `diff --git a/${latestPr.codeDiff.filename} b/${latestPr.codeDiff.filename}\n`;
+        out += `index 3e8a10..f90bc2 100644\n`;
+        out += `--- a/${latestPr.codeDiff.filename}\n`;
+        out += `+++ b/${latestPr.codeDiff.filename}\n`;
+        latestPr.codeDiff.deletions.forEach(d => (out += `${d}\n`));
+        latestPr.codeDiff.additions.forEach(a => (out += `${a}\n`));
+      } else {
+        out += `No uncommitted changes in '${branch}'. Working tree is clean.\n`;
+      }
+    } else {
+      out += `Command '${cmd}' executed cleanly.\n`;
+    }
+
+    this.terminalOutput.update(m => ({ ...m, [projectId]: out }));
   }
 
   // ==========================================

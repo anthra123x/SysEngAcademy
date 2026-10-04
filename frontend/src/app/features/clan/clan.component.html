@@ -507,66 +507,401 @@
                   }
                 </div>
 
-                <!-- Lista de Hitos / Tareas Interactivas -->
-                <div class="project-tasks-box">
-                  <div class="tasks-heading-row">
-                    <span class="tasks-heading">Tablero de Tareas e Hitos de Investigación:</span>
-                    <span class="tasks-progress-ratio font-mono">
-                      {{ (project.tasks || []).filter(t => t.completed).length }} / {{ (project.tasks || []).length }} completados
-                    </span>
+                <!-- Git Repository Toolbar & Branch Selector -->
+                <div class="project-git-toolbar">
+                  <div class="git-branch-selector">
+                    <app-icon name="git-branch" [size]="14" color="#00D9FF" />
+                    <span class="branch-label font-mono">Branch:</span>
+                    <select
+                      class="branch-select font-mono"
+                      [value]="project.activeBranch || 'main'"
+                      (change)="switchBranch(project.id, $any($event.target).value)"
+                    >
+                      @for (b of project.branches || [{ name: 'main', isDefault: true }]; track b.name) {
+                        <option [value]="b.name">
+                          {{ b.name }} {{ b.isDefault ? '(default)' : '' }}
+                        </option>
+                      }
+                    </select>
                   </div>
 
-                  <div class="tasks-interactive-list">
-                    @for (task of project.tasks ?? []; track task.id) {
-                      <div class="task-card-row" [class.is-done]="task.completed" [class.is-in-progress]="task.status === 'in_progress'">
-                        <button
-                          type="button"
-                          class="task-status-btn task-status--{{ task.status || (task.completed ? 'completed' : 'pending') }}"
-                          (click)="advanceProjectTask(project.id, task.id)"
-                          [disabled]="!clan.isMember"
-                          title="Hacer clic para avanzar estado"
-                        >
-                          @if (task.completed) {
-                            <span>✓ Completada</span>
-                          } @else if (task.status === 'in_progress') {
-                            <span>En Progreso</span>
-                          } @else {
-                            <span>Por Iniciar</span>
-                          }
-                        </button>
-
-                        <span class="task-title-text">{{ task.title }}</span>
-
-                        <div class="task-assignee-box">
-                          @if (task.assignedTo) {
-                            <span class="assignee-tag">👤 {{ task.assignedTo }}</span>
-                          } @else if (clan.isMember) {
-                            <button type="button" class="btn-claim-task" (click)="assignTaskToMe(project.id, task.id)">
-                              + Asignarme
-                            </button>
-                          }
-                        </div>
-                      </div>
-                    }
-
-                    <!-- Input rápido para agregar nueva tarea -->
+                  <div class="git-toolbar-stats">
+                    <span class="git-stat-pill" [class.has-open]="(project.pullRequests || []).length > 0">
+                      <app-icon name="git-pull-request" [size]="12" />
+                      {{ (project.pullRequests || []).filter(pr => pr.status === 'open').length }} PRs abiertas
+                    </span>
+                    <span class="git-stat-pill">
+                      <app-icon name="check-circle" [size]="12" />
+                      {{ (project.tasks || []).filter(t => t.completed).length }}/{{ (project.tasks || []).length }} hitos
+                    </span>
                     @if (clan.isMember) {
-                      <div class="add-task-quick-row">
-                        <input
-                          type="text"
-                          class="input input-quick-task"
-                          placeholder="+ Añadir nuevo hito o tarea técnica al proyecto..."
-                          [value]="quickTaskTitle()[project.id] || ''"
-                          (input)="setQuickTaskInput(project.id, $any($event.target).value)"
-                          (keydown.enter)="addQuickTask(project.id)"
-                        />
-                        <button type="button" class="btn btn-xs btn-outline" (click)="addQuickTask(project.id)" [disabled]="!quickTaskTitle()[project.id]?.trim()">
-                          Añadir
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        class="btn-new-pr-cta"
+                        (click)="openNewPrModal(project.id)"
+                      >
+                        <app-icon name="git-pull-request" [size]="12" />
+                        <span>+ Abrir PR</span>
+                      </button>
                     }
                   </div>
                 </div>
+
+                <!-- Git Sub-tabs: PRs | Issues/Hitos | Commits | Terminal -->
+                <div class="project-git-nav">
+                  <button
+                    type="button"
+                    class="git-nav-tab"
+                    [class.is-active]="getProjectGitTab(project.id) === 'prs'"
+                    (click)="setProjectGitTab(project.id, 'prs')"
+                  >
+                    <app-icon name="git-pull-request" [size]="13" />
+                    <span>Pull Requests</span>
+                    <span class="nav-count-badge">{{ (project.pullRequests || []).length }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="git-nav-tab"
+                    [class.is-active]="getProjectGitTab(project.id) === 'issues'"
+                    (click)="setProjectGitTab(project.id, 'issues')"
+                  >
+                    <app-icon name="target" [size]="13" />
+                    <span>Issues &amp; Hitos</span>
+                    <span class="nav-count-badge">{{ (project.tasks || []).length }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="git-nav-tab"
+                    [class.is-active]="getProjectGitTab(project.id) === 'commits'"
+                    (click)="setProjectGitTab(project.id, 'commits')"
+                  >
+                    <app-icon name="git-merge" [size]="13" />
+                    <span>Commits</span>
+                    <span class="nav-count-badge">{{ (project.commits || []).length }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="git-nav-tab"
+                    [class.is-active]="getProjectGitTab(project.id) === 'terminal'"
+                    (click)="setProjectGitTab(project.id, 'terminal')"
+                  >
+                    <app-icon name="terminal" [size]="13" />
+                    <span>Terminal Git</span>
+                  </button>
+                </div>
+
+                <!-- TAB VIEW 1: Pull Requests (Code Review + Diff Viewer + Merge) -->
+                @if (getProjectGitTab(project.id) === 'prs') {
+                  <div class="git-tab-content git-prs-view animate-fade-in">
+                    @if ((project.pullRequests || []).length === 0) {
+                      <div class="git-empty-state">
+                        <app-icon name="git-pull-request" [size]="24" color="#64748b" />
+                        <p>No hay Pull Requests registrados aún en este proyecto.</p>
+                        @if (clan.isMember) {
+                          <button type="button" class="btn btn-xs btn-outline" (click)="openNewPrModal(project.id)">
+                            Crear el primer Pull Request
+                          </button>
+                        }
+                      </div>
+                    } @else {
+                      <div class="prs-list">
+                        @for (pr of project.pullRequests || []; track pr.id) {
+                          <div class="pr-card" [class.is-open]="pr.status === 'open'" [class.is-merged]="pr.status === 'merged'">
+                            <div class="pr-card-header" (click)="toggleExpandPr(pr.id)">
+                              <div class="pr-status-col">
+                                <span class="pr-badge pr-badge--{{ pr.status }}">
+                                  <app-icon [name]="pr.status === 'merged' ? 'git-merge' : 'git-pull-request'" [size]="12" />
+                                  {{ pr.status === 'merged' ? 'Merged' : (pr.status === 'open' ? 'Open' : 'Closed') }}
+                                </span>
+                                <span class="pr-number font-mono">#{{ pr.number }}</span>
+                              </div>
+
+                              <div class="pr-meta-col">
+                                <div class="pr-title-row">
+                                  <strong class="pr-title-text">{{ pr.title }}</strong>
+                                  <span class="pr-type-tag pr-type--{{ pr.type }}">{{ pr.type }}</span>
+                                </div>
+                                <div class="pr-branches-row font-mono">
+                                  <span class="branch-pill">{{ pr.sourceBranch }}</span>
+                                  <span class="branch-arrow">➔</span>
+                                  <span class="branch-pill">{{ pr.targetBranch }}</span>
+                                  <span class="pr-author-text">por {{ pr.author }}</span>
+                                  <span class="pr-date-text">{{ pr.createdAt ? (pr.createdAt | date:'shortDate') : pr.timeAgo }}</span>
+                                </div>
+                              </div>
+
+                              <div class="pr-ci-col">
+                                <span class="ci-badge ci-badge--{{ pr.ciStatus }}" title="Estado de la Integración Continua">
+                                  <span class="ci-dot"></span>
+                                  {{ pr.ciStatus === 'passed' ? 'CI: passed' : pr.ciStatus }}
+                                </span>
+                                <span class="pr-diff-stat font-mono">
+                                  <span class="stat-add">+{{ pr.linesAdded || (pr.codeDiff?.additions?.length || 15) }}</span>
+                                  <span class="stat-del">-{{ pr.linesDeleted || (pr.codeDiff?.deletions?.length || 2) }}</span>
+                                </span>
+                                <button type="button" class="btn-expand-pr">
+                                  {{ expandedPrId() === pr.id ? 'Ocultar ▲' : 'Ver Diff ▼' }}
+                                </button>
+                              </div>
+                            </div>
+
+                            <!-- Expandable PR Diff & Reviews -->
+                            @if (expandedPrId() === pr.id) {
+                              <div class="pr-card-expanded animate-fade-in">
+                                <div class="pr-desc-box">
+                                  <p>{{ pr.description }}</p>
+                                </div>
+
+                                <!-- Diff Viewer -->
+                                <div class="git-diff-viewer">
+                                  <div class="diff-viewer-header">
+                                    <div class="diff-file-info font-mono">
+                                      <app-icon name="file-text" [size]="12" />
+                                      <span>{{ pr.filename || pr.codeDiff?.filename || 'kernel/sched/scheduler.cpp' }}</span>
+                                    </div>
+                                    <span class="diff-badge font-mono">+{{ pr.linesAdded || (pr.codeDiff?.additions?.length || 15) }} / -{{ pr.linesDeleted || (pr.codeDiff?.deletions?.length || 2) }}</span>
+                                  </div>
+                                  <div class="diff-code-body font-mono">
+                                    <pre><code>{{ pr.codeSnippet || (pr.codeDiff?.additions?.join('\n') || '// Código del cambio') }}</code></pre>
+                                  </div>
+                                </div>
+
+                                <!-- Code Reviews Thread -->
+                                <div class="pr-reviews-section">
+                                  <h5 class="reviews-title">
+                                    <app-icon name="chat" [size]="12" />
+                                    Revisiones Técnicas (Code Review)
+                                  </h5>
+
+                                  @if ((pr.reviews || []).length === 0) {
+                                    <p class="no-reviews-text">Aún no hay revisiones de pares en este PR. ¡Sé el primero en auditar el código!</p>
+                                  } @else {
+                                    <div class="reviews-list">
+                                      @for (rev of pr.reviews || []; track rev.reviewer + $index) {
+                                        <div class="review-item" [class.review-approved]="rev.verdict === 'approved'">
+                                          <div class="review-header">
+                                            <span class="reviewer-name font-mono">👤 {{ rev.reviewer }}</span>
+                                            <span class="review-verdict-badge verdict--{{ rev.verdict }}">
+                                              {{ rev.verdict === 'approved' ? '✓ LGTM (Aprobado)' : (rev.verdict === 'changes_requested' ? '⚠️ Cambios Solicitados' : '💬 Comentario') }}
+                                            </span>
+                                            <span class="review-date">{{ rev.createdAt ? (rev.createdAt | date:'short') : rev.timeAgo }}</span>
+                                          </div>
+                                          <p class="review-comment-body">{{ rev.comment }}</p>
+                                        </div>
+                                      }
+                                    </div>
+                                  }
+
+                                  <!-- Review Actions (Members) -->
+                                  @if (clan.isMember && pr.status === 'open') {
+                                    <div class="pr-review-form">
+                                      <input
+                                        type="text"
+                                        class="input input-review font-mono"
+                                        placeholder="Escribe tu observación técnica (ej: Algoritmo O(n), verificar concurrencia...)"
+                                        [value]="prReviewComment()[pr.id] || ''"
+                                        (input)="setReviewDraft(pr.id, $any($event.target).value)"
+                                      />
+                                      <div class="review-buttons-row">
+                                        <button
+                                          type="button"
+                                          class="btn btn-xs btn-outline"
+                                          (click)="reviewPr(project.id, pr.id, 'comment')"
+                                        >
+                                          💬 Comentar
+                                        </button>
+                                        <button
+                                          type="button"
+                                          class="btn btn-xs btn-secondary"
+                                          (click)="reviewPr(project.id, pr.id, 'changes_requested')"
+                                        >
+                                          ⚠️ Pedir Cambios
+                                        </button>
+                                        <button
+                                          type="button"
+                                          class="btn btn-xs btn-primary"
+                                          (click)="reviewPr(project.id, pr.id, 'approved')"
+                                        >
+                                          ✓ Aprobar (LGTM) (+30 XP)
+                                        </button>
+                                      </div>
+                                    </div>
+                                  }
+
+                                  <!-- Merge Action Bar -->
+                                  @if (pr.status === 'open' && clan.isMember) {
+                                    <div class="pr-merge-banner">
+                                      <div class="merge-info">
+                                        <strong class="merge-title">Listo para integración continua</strong>
+                                        <span class="merge-subtitle">Esta rama no tiene conflictos con {{ pr.targetBranch }}.</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        class="btn btn-sm btn-merge"
+                                        (click)="mergePr(project.id, pr.id)"
+                                      >
+                                        <app-icon name="git-merge" [size]="14" />
+                                        Squash and Merge (+85 XP)
+                                      </button>
+                                    </div>
+                                  } @else if (pr.status === 'merged') {
+                                    <div class="pr-merged-banner">
+                                      <app-icon name="git-merge" [size]="14" color="#0AE98A" />
+                                      <span>Fusionado en <code>main</code> por <strong>{{ pr.mergedBy }}</strong></span>
+                                    </div>
+                                  }
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- TAB VIEW 2: Issues & Hitos de Investigación -->
+                @if (getProjectGitTab(project.id) === 'issues') {
+                  <div class="git-tab-content git-issues-view animate-fade-in">
+                    <div class="tasks-heading-row">
+                      <span class="tasks-heading">Issues &amp; Hitos de Investigación:</span>
+                      <span class="tasks-progress-ratio font-mono">
+                        {{ (project.tasks || []).filter(t => t.completed).length }} / {{ (project.tasks || []).length }} completados
+                      </span>
+                    </div>
+
+                    <div class="tasks-interactive-list">
+                      @for (task of project.tasks ?? []; track task.id) {
+                        <div class="task-card-row" [class.is-done]="task.completed" [class.is-in-progress]="task.status === 'in_progress'">
+                          <button
+                            type="button"
+                            class="task-status-btn task-status--{{ task.status || (task.completed ? 'completed' : 'pending') }}"
+                            (click)="advanceProjectTask(project.id, task.id)"
+                            [disabled]="!clan.isMember"
+                            title="Hacer clic para avanzar estado"
+                          >
+                            @if (task.completed) {
+                              <span>✓ Resuelto</span>
+                            } @else if (task.status === 'in_progress') {
+                              <span>En Progreso</span>
+                            } @else {
+                              <span>Abierto</span>
+                            }
+                          </button>
+
+                          <span class="task-title-text">{{ task.title }}</span>
+
+                          <div class="task-assignee-box">
+                            @if (task.assignedTo) {
+                              <span class="assignee-tag font-mono">👤 {{ task.assignedTo }}</span>
+                            } @else if (clan.isMember) {
+                              <button type="button" class="btn-claim-task" (click)="assignTaskToMe(project.id, task.id)">
+                                + Asignarme
+                              </button>
+                            }
+
+                            @if (clan.isMember && !task.completed) {
+                              <button
+                                type="button"
+                                class="btn-create-branch-pr"
+                                (click)="createBranchForIssue(project.id, task.id, task.title)"
+                                title="Crear rama de trabajo y abrir Pull Request para este hito"
+                              >
+                                <app-icon name="git-branch" [size]="11" />
+                                <span>Rama &amp; PR</span>
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
+
+                      <!-- Quick Add Task -->
+                      @if (clan.isMember) {
+                        <div class="add-task-quick-row">
+                          <input
+                            type="text"
+                            class="input input-quick-task"
+                            placeholder="+ Añadir nuevo issue técnico al proyecto..."
+                            [value]="quickTaskTitle()[project.id] || ''"
+                            (input)="setQuickTaskInput(project.id, $any($event.target).value)"
+                            (keydown.enter)="addQuickTask(project.id)"
+                          />
+                          <button type="button" class="btn btn-xs btn-outline" (click)="addQuickTask(project.id)" [disabled]="!quickTaskTitle()[project.id]?.trim()">
+                            Añadir
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- TAB VIEW 3: Commits Timeline -->
+                @if (getProjectGitTab(project.id) === 'commits') {
+                  <div class="git-tab-content git-commits-view animate-fade-in">
+                    <div class="commits-timeline">
+                      @for (c of project.commits || []; track c.hash) {
+                        <div class="commit-item">
+                          <div class="commit-dot-col">
+                            <span class="commit-dot"></span>
+                            <span class="commit-line"></span>
+                          </div>
+                          <div class="commit-body">
+                            <div class="commit-title-row">
+                              <span class="commit-hash font-mono">{{ c.hash }}</span>
+                              <span class="commit-msg font-mono">{{ c.message }}</span>
+                              <span class="commit-branch-tag font-mono">{{ c.branch }}</span>
+                            </div>
+                            <div class="commit-meta-row font-mono">
+                              <span class="commit-author">👤 {{ c.author }}</span>
+                              <span class="commit-time">{{ c.timeAgo || (c.timestamp ? (c.timestamp | date:'short') : 'reciente') }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- TAB VIEW 4: Terminal Git Simulator -->
+                @if (getProjectGitTab(project.id) === 'terminal') {
+                  <div class="git-tab-content git-terminal-view animate-fade-in">
+                    <div class="terminal-quick-cmds">
+                      <span class="quick-cmd-label font-mono">Comandos rápidos:</span>
+                      <button type="button" class="quick-cmd-pill font-mono" (click)="runGitCommand(project.id, 'git status')">
+                        git status
+                      </button>
+                      <button type="button" class="quick-cmd-pill font-mono" (click)="runGitCommand(project.id, 'git branch -a')">
+                        git branch -a
+                      </button>
+                      <button type="button" class="quick-cmd-pill font-mono" (click)="runGitCommand(project.id, 'git log --oneline')">
+                        git log --oneline
+                      </button>
+                      <button type="button" class="quick-cmd-pill font-mono" (click)="runGitCommand(project.id, 'git diff HEAD~1')">
+                        git diff HEAD~1
+                      </button>
+                    </div>
+
+                    <div class="git-terminal-screen font-mono">
+                      <div class="terminal-screen-header">
+                        <span class="term-dot term-dot--red"></span>
+                        <span class="term-dot term-dot--yellow"></span>
+                        <span class="term-dot term-dot--green"></span>
+                        <span class="term-title">bash — syseng@clan-repo: ~/projects/{{ project.id }}</span>
+                      </div>
+                      <pre class="terminal-output-text"><code>{{ terminalOutput()[project.id] || '$ git status\nOn branch ' + (project.activeBranch || 'main') + '\nYour branch is up to date with \'origin/main\'.' }}</code></pre>
+                      <div class="terminal-input-row">
+                        <span class="term-prompt font-mono">syseng@repo:~$</span>
+                        <input
+                          type="text"
+                          class="terminal-cli-input font-mono"
+                          placeholder="Escribe git status, git log, git branch..."
+                          #termInp
+                          (keydown.enter)="runGitCommand(project.id, termInp.value); termInp.value = ''"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                }
 
                 <!-- Footer: Colaboradores & Repositorio -->
                 <div class="project-card__foot">
@@ -1021,11 +1356,11 @@
   }
 
   <!-- ========================================================
-       MODAL 4: APORTAR A LA MISIÓN COOPERATIVA / RAID
+       MODAL 4: APORTAR A LA MISIÓN COOPERATIVA / RAID (GIT WORKFLOW)
        ======================================================== -->
   @if (showQuestModal()) {
     <div class="modal-backdrop" (click)="showQuestModal.set(false)">
-      <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-card modal-card--lg" (click)="$event.stopPropagation()">
         <header class="modal-header">
           <div class="modal-title-wrap">
             <app-icon name="zap" [size]="18" color="#0AE98A" />
@@ -1036,7 +1371,7 @@
 
         <div class="modal-body">
           <p class="modal-subtitle">
-            Selecciona el tipo de esfuerzo técnico con el que deseas contribuir al objetivo colectivo de tu semillero:
+            Selecciona el esfuerzo técnico con el que deseas aportar. Cada aporte abrirá una rama y Pull Request en el repositorio del clan:
           </p>
 
           <div class="quest-options-grid">
@@ -1044,7 +1379,7 @@
               <div
                 class="quest-option-card"
                 [class.is-selected]="selectedContributionId() === opt.id"
-                (click)="selectedContributionId.set(opt.id)"
+                (click)="selectContribution(opt.id)"
               >
                 <div class="q-opt-head">
                   <app-icon [name]="opt.icon" [size]="18" color="#0AE98A" />
@@ -1056,12 +1391,47 @@
               </div>
             }
           </div>
+
+          <!-- Git Technical Contribution Workspace / Editor -->
+          @if (selectedContribution(); as contrib) {
+            <div class="quest-git-details-box animate-fade-in">
+              <div class="git-meta-header">
+                <div class="meta-field">
+                  <span class="meta-label font-mono">🌿 Rama de trabajo:</span>
+                  <code class="meta-value font-mono">{{ contrib.defaultBranch }}</code>
+                </div>
+                <div class="meta-field">
+                  <span class="meta-label font-mono">📄 Archivo destino:</span>
+                  <code class="meta-value font-mono">{{ contrib.filename }}</code>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top: 12px;">
+                <label>
+                  Código / Parche que enviarás en el Pull Request
+                  <span class="label-hint">(puedes adaptar el código o usar el snippet propuesto)</span>:
+                </label>
+                <textarea
+                  class="input input-snippet-editor font-mono"
+                  rows="7"
+                  [value]="questSnippetDraft()"
+                  (input)="questSnippetDraft.set($any($event.target).value)"
+                  placeholder="// Escribe o ajusta la implementación técnica de tu aporte..."
+                ></textarea>
+              </div>
+
+              <div class="git-terminal-preview font-mono">
+                <span class="term-prompt font-mono">git pipeline:</span>
+                <code>$ git checkout -b {{ contrib.defaultBranch }} &amp;&amp; git commit -m "{{ contrib.commitMessage }}"</code>
+              </div>
+            </div>
+          }
         </div>
 
         <footer class="modal-footer">
           <button type="button" class="btn btn-outline" (click)="showQuestModal.set(false)">Cancelar</button>
           <button type="button" class="btn btn-primary" (click)="submitQuestContribution()">
-            Registrar Aporte Técnico ⚡
+            Registrar Aporte y Abrir PR (+{{ selectedContribution().xp }} XP) ⚡
           </button>
         </footer>
       </div>
@@ -1232,4 +1602,145 @@
       </div>
     </div>
   }
+
+  <!-- ========================================================
+       MODAL 8: ABRIR NUEVO PULL REQUEST EN PROYECTO
+       ======================================================== -->
+  @if (showNewPrModal()) {
+    <div class="modal-backdrop" (click)="showNewPrModal.set(false)">
+      <div class="modal-card modal-card--lg" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <div class="modal-title-wrap">
+            <app-icon name="git-pull-request" [size]="18" color="#0AE98A" />
+            <h3>Abrir Pull Request (PR) al Repositorio</h3>
+          </div>
+          <button class="btn-close-modal" (click)="showNewPrModal.set(false)">✕</button>
+        </header>
+
+        <div class="modal-body">
+          @if (newPrLinkedIssueId()) {
+            <div class="linked-issue-callout font-mono">
+              <app-icon name="target" [size]="14" color="#00D9FF" />
+              <span>Vinculado al Hito de Proyecto <strong>#{{ newPrLinkedIssueId() }}</strong> (Cierre automático al fusionar)</span>
+            </div>
+          }
+
+          <div class="form-group">
+            <label>Tipo de Contribución (Conventional Commits)</label>
+            <div class="type-selector-pills">
+              <button
+                type="button"
+                [class.is-selected]="newPrType() === 'feat'"
+                (click)="selectPrType('feat')"
+              >
+                ✨ feat
+              </button>
+              <button
+                type="button"
+                [class.is-selected]="newPrType() === 'test'"
+                (click)="selectPrType('test')"
+              >
+                🧪 test
+              </button>
+              <button
+                type="button"
+                [class.is-selected]="newPrType() === 'perf'"
+                (click)="selectPrType('perf')"
+              >
+                ⚡ perf
+              </button>
+              <button
+                type="button"
+                [class.is-selected]="newPrType() === 'fix'"
+                (click)="selectPrType('fix')"
+              >
+                🐛 fix
+              </button>
+              <button
+                type="button"
+                [class.is-selected]="newPrType() === 'docs'"
+                (click)="selectPrType('docs')"
+              >
+                📚 docs
+              </button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label>Rama Origen (Source Branch)</label>
+              <input
+                type="text"
+                class="input font-mono"
+                placeholder="feature/..."
+                [value]="newPrBranch()"
+                (input)="newPrBranch.set($any($event.target).value)"
+              />
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Rama Destino</label>
+              <input type="text" class="input font-mono" value="main" disabled />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Título del Pull Request</label>
+            <input
+              type="text"
+              class="input font-mono"
+              placeholder="feat(modulo): descripción concisa del cambio"
+              [value]="newPrTitle()"
+              (input)="newPrTitle.set($any($event.target).value)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Archivo Principal Modificado</label>
+            <input
+              type="text"
+              class="input font-mono"
+              placeholder="kernel/sched/scheduler.cpp"
+              [value]="newPrFilename()"
+              (input)="newPrFilename.set($any($event.target).value)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Diff / Código a Proponer</label>
+            <textarea
+              class="input input-snippet-editor font-mono"
+              rows="6"
+              placeholder="// Escribe el código o suite de tests..."
+              [value]="newPrSnippet()"
+              (input)="newPrSnippet.set($any($event.target).value)"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Descripción / Rationale Técnico</label>
+            <textarea
+              class="input"
+              rows="2"
+              placeholder="Explica qué problema soluciona, qué algoritmo implementa y cómo fue probado..."
+              [value]="newPrDesc()"
+              (input)="newPrDesc.set($any($event.target).value)"
+            ></textarea>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="showNewPrModal.set(false)">Cancelar</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="submitNewPr()"
+            [disabled]="!newPrTitle().trim() || !newPrBranch().trim()"
+          >
+            Publicar Pull Request (+50 XP) 🚀
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
 </div>
+
