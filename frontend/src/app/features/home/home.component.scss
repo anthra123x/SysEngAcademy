@@ -58,6 +58,44 @@
         gap: var(--sp-4);
         margin-bottom: var(--sp-8);
 
+        .btn-primary {
+          background: var(--primary);
+          color: #08090D !important;
+          border: 1px solid var(--primary);
+          font-weight: var(--font-semibold);
+
+          &:visited {
+            color: #08090D !important;
+          }
+
+          &:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: #08090D !important;
+            box-shadow: 0 4px 16px var(--primary-dim);
+            transform: translateY(-1px);
+          }
+        }
+
+        .btn-outline,
+        .btn-secondary {
+          background: transparent;
+          border: 1px solid var(--primary);
+          color: var(--primary) !important;
+          font-weight: var(--font-medium);
+
+          &:visited {
+            color: var(--primary) !important;
+          }
+
+          &:hover {
+            background: var(--primary-dim);
+            border-color: var(--primary-hover);
+            color: var(--primary-hover) !important;
+            transform: translateY(-1px);
+          }
+        }
+
         @media (max-width: 540px) {
           flex-direction: column;
           width: 100%;

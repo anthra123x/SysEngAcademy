@@ -55,19 +55,19 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
                 </div>
               </div>
 
-              <!-- Direct Path Actions -->
+              <!-- Direct Path Actions (Canonical Style: Solid Primary + Green Outline) -->
               <div class="path-hero__actions">
                 @if (firstCourseSlug()) {
                   <a [routerLink]="['/cursos', firstCourseSlug()]" class="btn btn-primary btn-lg">
-                    Comenzar Ruta: Primer Curso →
+                    Comenzar Ruta
                   </a>
                 } @else {
                   <a routerLink="/cursos" class="btn btn-primary btn-lg">
-                    Explorar Catálogo de Cursos →
+                    Explorar Rutas
                   </a>
                 }
-                <a href="#roadmap-stations" class="btn btn-secondary btn-lg">
-                  Ver Estaciones del Mapa ↓
+                <a href="#roadmap-stations" class="btn btn-outline btn-lg">
+                  Ver Estaciones
                 </a>
               </div>
             </div>
@@ -358,6 +358,44 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       gap: var(--sp-4);
       margin-top: var(--sp-6);
       flex-wrap: wrap;
+
+      .btn-primary {
+        background: var(--primary);
+        color: #08090D !important;
+        font-weight: var(--font-semibold);
+        border: 1px solid var(--primary);
+
+        &:visited {
+          color: #08090D !important;
+        }
+
+        &:hover {
+          background: var(--primary-hover);
+          border-color: var(--primary-hover);
+          color: #08090D !important;
+          box-shadow: 0 4px 16px var(--primary-dim);
+          transform: translateY(-1px);
+        }
+      }
+
+      .btn-outline,
+      .btn-secondary {
+        background: transparent;
+        border: 1px solid var(--primary);
+        color: var(--primary) !important;
+        font-weight: var(--font-medium);
+
+        &:visited {
+          color: var(--primary) !important;
+        }
+
+        &:hover {
+          background: var(--primary-dim);
+          border-color: var(--primary-hover);
+          color: var(--primary-hover) !important;
+          transform: translateY(-1px);
+        }
+      }
 
       @media (max-width: 540px) {
         flex-direction: column;
