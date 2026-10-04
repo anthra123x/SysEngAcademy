@@ -13,6 +13,7 @@ import {
   GitCommit,
   GitPullRequest,
   GitBranch,
+  ResearchProjectTask,
 } from '../models/clan';
 
 const CLANS_STORAGE_PREFIX = 'syseng_study_groups_v6_';
@@ -721,14 +722,22 @@ export class ClansService {
     this.saveToStorage(updated);
   }
 
-  addProjectTask(clanId: string, projectId: string, title: string): void {
+  addProjectTask(
+    clanId: string,
+    projectId: string,
+    title: string,
+    type: 'feature' | 'bug' | 'perf' | 'security' | 'arch' = 'feature',
+    assignedTo?: string
+  ): void {
     if (!title.trim()) return;
-    const newTask = {
-      id: `task_${Date.now()}`,
+    const newTask: ResearchProjectTask = {
+      id: `tk${Date.now().toString().slice(-4)}`,
       title: title.trim(),
       completed: false,
-      status: 'pending' as const,
-      xpReward: 40,
+      status: 'pending',
+      type,
+      assignedTo: assignedTo || undefined,
+      xpReward: 45,
     };
 
     const updated = this.studyGroups().map(g => {
@@ -1493,6 +1502,8 @@ export class ClansService {
                 status: 'open',
                 ciStatus: 'passed',
                 linkedIssueId: 'tk3',
+                previewUrl: 'https://kernel-sched-pr4.vercel.app',
+                buildDuration: '24s',
                 codeDiff: {
                   filename: 'kernel/sched/round_robin.cpp',
                   additions: [
@@ -1537,6 +1548,8 @@ export class ClansService {
                 status: 'merged',
                 ciStatus: 'passed',
                 linkedIssueId: 'tk2',
+                previewUrl: 'https://kernel-proc-pr3.vercel.app',
+                buildDuration: '19s',
                 codeDiff: {
                   filename: 'kernel/process/state_queue.cpp',
                   additions: [
@@ -1561,6 +1574,14 @@ export class ClansService {
                 mergedBy: 'Director Cátedra Sistemas',
               },
             ],
+            productionDeployment: {
+              domain: 'https://syseng-kernel.vercel.app',
+              status: 'ready',
+              commitHash: 'd9c359a',
+              commitMessage: 'Merge PR #3: Cola de estados de procesos (Ready, Running, Blocked)',
+              branch: 'main',
+              deployedAt: 'hace 2h por Alex Torres',
+            },
             tasks: [
               { id: 'tk1', title: 'Rutina de interrupción de timer en Assembly x86', completed: true, status: 'completed', assignedTo: 'Director Cátedra' },
               { id: 'tk2', title: 'Cola de estados de procesos (Ready, Running, Blocked)', completed: true, status: 'completed', assignedTo: 'Alex Torres' },

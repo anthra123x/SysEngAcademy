@@ -91,6 +91,8 @@ export interface GitPullRequest {
   reviews: GitPullRequestReview[];
   xpReward: number;
   linkedIssueId?: string;
+  previewUrl?: string;
+  buildDuration?: string;
   timeAgo: string;
   mergedAt?: string;
   mergedBy?: string;
@@ -121,6 +123,14 @@ export interface ResearchProject {
   branches?: GitBranch[];
   commits?: GitCommit[];
   pullRequests?: GitPullRequest[];
+  productionDeployment?: {
+    domain: string;
+    status: 'ready' | 'building' | 'error';
+    commitHash: string;
+    commitMessage: string;
+    branch: string;
+    deployedAt: string;
+  };
 }
 
 export interface ResearchPaper {

@@ -175,8 +175,10 @@ export class ClanComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Git Workflow en Proyectos
+  // Git Workflow en Proyectos & Vercel Deployments
   projectGitTab = signal<Record<string, 'prs' | 'issues' | 'commits' | 'terminal'>>({});
+  gitWorkflowTab = signal<'previews' | 'commits'>('previews');
+  selectedPrForDiff = signal<GitPullRequest | null>(null);
   expandedPrId = signal<string | null>('pr_krnl_4');
   showNewPrModal = signal<boolean>(false);
   targetPrProjectId = signal<string>('');
@@ -189,6 +191,16 @@ export class ClanComponent implements OnInit, OnDestroy {
   newPrLinkedIssueId = signal<string>('');
   prReviewComment = signal<Record<string, string>>({});
   terminalOutput = signal<Record<string, string>>({});
+
+  // Drag and Drop en el Sprint Kanban Board
+  draggedTask = signal<{ projectId: string; taskId: string } | null>(null);
+  dragOverColumn = signal<'pending' | 'in_progress' | 'review' | 'completed' | null>(null);
+
+  // Modal para nuevo Issue / Tarea en el Sprint
+  showNewTaskModal = signal<boolean>(false);
+  newTaskTitle = signal<string>('');
+  newTaskType = signal<'feature' | 'bug' | 'perf' | 'security' | 'arch'>('feature');
+  newTaskAssignToMe = signal<boolean>(true);
 
   // Input rápido para nuevas tareas en proyectos
   quickTaskTitle = signal<Record<string, string>>({});
@@ -867,6 +879,84 @@ export class ClanComponent implements OnInit, OnDestroy {
     if (!clan) return;
     this.clansService.assignProjectTaskToMe(clan.id, projectId, taskId);
     this.showToast('Tarea Asignada a Ti 👤', 'Has tomado la responsabilidad de este hito.', 'user');
+  }
+
+  onTaskDragStart(event: DragEvent, projectId: string, taskId: string): void {
+    this.draggedTask.set({ projectId, taskId });
+    if (event.dataTransfer) {
+      event.dataTransfer.setData('text/plain', taskId);
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  onTaskDragOver(event: DragEvent, column: 'pending' | 'in_progress' | 'review' | 'completed'): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    this.dragOverColumn.set(column);
+  }
+
+  onTaskDragLeave(event: DragEvent): void {
+    this.dragOverColumn.set(null);
+  }
+
+  onTaskDrop(event: DragEvent, column: 'pending' | 'in_progress' | 'review' | 'completed'): void {
+    event.preventDefault();
+    this.dragOverColumn.set(null);
+    const dragged = this.draggedTask();
+    if (dragged) {
+      this.setTaskStatus(dragged.projectId, dragged.taskId, column);
+      this.draggedTask.set(null);
+    }
+  }
+
+  openNewTaskModal(defaultType: 'feature' | 'bug' | 'perf' | 'security' | 'arch' = 'feature'): void {
+    this.newTaskTitle.set('');
+    this.newTaskType.set(defaultType);
+    this.newTaskAssignToMe.set(true);
+    this.showNewTaskModal.set(true);
+  }
+
+  submitNewTask(): void {
+    const title = this.newTaskTitle().trim();
+    if (!title) return;
+    const clan = this.currentClan();
+    const proj = this.activeProject();
+    if (!clan || !proj) return;
+
+    const user = this.auth.user();
+    const assignee = this.newTaskAssignToMe() ? (user?.name || 'Yo') : undefined;
+
+    this.clansService.addProjectTask(clan.id, proj.id, title, this.newTaskType(), assignee);
+    this.showNewTaskModal.set(false);
+    this.newTaskTitle.set('');
+    this.showToast('Issue Creado en el Sprint 🎯', `"${title}" agregado al Backlog (+45 XP al cerrar)`, 'check', 10);
+  }
+
+  openDiffModal(pr: GitPullRequest): void {
+    this.selectedPrForDiff.set(pr);
+  }
+
+  closeDiffModal(): void {
+    this.selectedPrForDiff.set(null);
+  }
+
+  mergePrAndDeploy(projectId: string, prId: string): void {
+    const clan = this.currentClan();
+    if (!clan) return;
+    const res = this.clansService.mergeProjectPullRequest(clan.id, projectId, prId);
+    if (res.success) {
+      if (this.selectedPrForDiff()?.id === prId) {
+        this.selectedPrForDiff.set(null);
+      }
+      this.showToast(
+        '▲ Despliegue en Producción Exitoso',
+        `PR mergeado a main. Build Vercel en vivo: +${res.xpEarned} XP.`,
+        'check-circle',
+        res.xpEarned
+      );
+    }
   }
 
   addQuickTask(projectId: string): void {
