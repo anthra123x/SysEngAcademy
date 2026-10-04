@@ -1301,6 +1301,69 @@ export default async function handler(req: any, res: any) {
       return sendJson(res, 200, { data: list, total: list.length, current_page: 1, last_page: 1 }, 'public, s-maxage=60, stale-while-revalidate=300');
     }
 
+    const COMPLEMENTARY_META_BY_COURSE_ID: Record<number, { badge: string; reason: string }> = {
+      // Path 1 (Fundamentos de Programación)
+      92: { badge: 'Recomendado', reason: 'Práctica inicial en pseudocódigo y diagramas de flujo previa a codificar en entornos reales.' },
+      97: { badge: 'Recomendado', reason: 'Refuerzo de pensamiento algorítmico y modelado sistemático de problemas.' },
+      3:  { badge: 'Interdisciplinario', reason: 'Introducción transversal del catálogo a persistencia y bases de datos relacionales.' },
+      // Path 2 (Desarrollo Orientado a Objetos)
+      94: { badge: 'Profundización', reason: 'Casos prácticos de jerarquías de herencia, ligadura dinámica y composición.' },
+      100: { badge: 'Profundización', reason: 'Diseño modular, abstracción estricta y contratos desacoplados mediante interfaces.' },
+      // Path 3 (Desarrollo Backend)
+      102: { badge: 'Recomendado', reason: 'Fundamentos de red, anatomía de paquetes HTTP y ciclo request/response.' },
+      103: { badge: 'Recomendado', reason: 'Diseño RESTful profesional, especificación OpenAPI y versionado de endpoints.' },
+      // Path 4 (Desarrollo Frontend)
+      4:  { badge: 'Recomendado', reason: 'Panorama general de la arquitectura web, protocolos y renderizado en clientes.' },
+      104: { badge: 'Especialización', reason: 'Maquetación moderna con Flexbox, CSS Grid y diseño adaptativo multidispositivo.' },
+      105: { badge: 'Especialización', reason: 'Tipado estricto, interfaces avanzadas y patrones enterprise en TypeScript.' },
+      // Path 6 (DevOps)
+      107: { badge: 'Recomendado', reason: 'Orquestación local multiservicio de contenedores, redes y volúmenes persistentes.' },
+      // Path 8 (Ingeniería de Requerimientos)
+      109: { badge: 'Profundización', reason: 'Plantillas de especificación IEEE 830, criterios de aceptación y diagramas formales.' },
+      // Path 9 (Desarrollo con IA)
+      108: { badge: 'Especialización', reason: 'Arquitectura RAG, bases de datos vectoriales y memoria contextual para LLMs.' },
+    };
+
+    const PATH_CROSS_RECOMMENDED_COURSES: Record<number, Array<{ course_id: number; reason: string }>> = {
+      1: [
+        { course_id: 18, reason: 'Control de versiones esencial con Git para guardar y respaldar tu código desde el primer día.' },
+        { course_id: 15, reason: 'Comandos y terminal Linux para dominar el entorno de ejecución de tus programas.' },
+        { course_id: 3,  reason: 'Persistencia de datos y consultas SQL para dar soporte a tus programas estructurados.' },
+      ],
+      2: [
+        { course_id: 18, reason: 'Control de versiones con Git en arquitecturas orientadas a objetos y paquetes.' },
+        { course_id: 20, reason: 'Identificación de entidades y clases a partir de requerimientos de software reales.' },
+      ],
+      3: [
+        { course_id: 16, reason: 'Empaqueta tus APIs en contenedores Docker para pruebas locales y despliegue.' },
+        { course_id: 18, reason: 'Gestión de ramas y colaboración en equipos de desarrollo de servicios backend.' },
+      ],
+      4: [
+        { course_id: 12, reason: 'Conexión de componentes frontend con endpoints y servicios backend reales.' },
+        { course_id: 18, reason: 'Control de versiones y ramas para trabajar en proyectos frontend colaborativos.' },
+      ],
+      5: [
+        { course_id: 15, reason: 'Administración de servidores Linux donde viven tus aplicaciones Full Stack.' },
+        { course_id: 16, reason: 'Contenedores Docker para estandarizar el stack en desarrollo y producción.' },
+      ],
+      6: [
+        { course_id: 18, reason: 'Flujos avanzados de Git para pipelines de integración y entrega continua (GitOps).' },
+        { course_id: 5,  reason: 'Conocimiento de la arquitectura backend para aprovisionar su infraestructura idónea.' },
+      ],
+      7: [
+        { course_id: 15, reason: 'Terminal y scripting Bash para automatizar comandos frecuentes de Git.' },
+        { course_id: 17, reason: 'Integración continua con GitHub Actions para validar commits y pull requests.' },
+      ],
+      8: [
+        { course_id: 18, reason: 'Trazabilidad de requerimientos en repositorios de código y tableros colaborativos.' },
+        { course_id: 23, reason: 'Herramientas de IA para sintetizar especificaciones y redactar criterios de aceptación.' },
+      ],
+      9: [
+        { course_id: 98, reason: 'Python estructurado como lenguaje base para scripts de automatización e inteligencia artificial.' },
+        { course_id: 6,  reason: 'Desarrollo de APIs REST para exponer inferencias y servicios de IA a clientes web.' },
+      ],
+    };
+
     const pathDetailMatch = cleanPath.match(/^\/learning-paths\/([^/]+)$/);
     if (method === 'GET' && pathDetailMatch) {
       const slug = decodeURIComponent(pathDetailMatch[1]);
@@ -1341,16 +1404,70 @@ export default async function handler(req: any, res: any) {
           category: c.category_name ? { name: c.category_name, slug: c.category_slug, color: c.category_color } : null,
         }));
 
+        const crossRecConfig = PATH_CROSS_RECOMMENDED_COURSES[Number(p.id)] || [];
+        const crossRecIds = crossRecConfig.map((r) => r.course_id);
+        let crossCourses: any[] = [];
+        if (crossRecIds.length > 0) {
+          const recRows: any = await sql`
+            SELECT c.*, cat.name as category_name, cat.slug as category_slug, cat.color as category_color
+            FROM courses c
+            LEFT JOIN categories cat ON c.category_id = cat.id
+            WHERE c.id = ANY(${crossRecIds})
+          `;
+          const recReasonMap = new Map(crossRecConfig.map((r) => [r.course_id, r.reason]));
+          crossCourses = (recRows as any[]).map((c: any) => ({
+            ...c,
+            id: Number(c.id),
+            lessons_count: countMap.get(Number(c.id)) ?? 6,
+            category: c.category_name ? { name: c.category_name, slug: c.category_slug, color: c.category_color } : null,
+            reason: recReasonMap.get(Number(c.id)) || 'Habilidad transversal recomendada para complementar tu ruta.',
+            is_complementary: true,
+            complementary_badge: 'Recomendado',
+          }));
+        }
+
+        const levelsMapped = (levels as any[]).map((l: any) => {
+          const lvlCourses = coursesList.filter((c: any) => Number(c.learning_path_level_id) === Number(l.id));
+          let hasPrimary = false;
+          const enhanced = lvlCourses.map((c: any) => {
+            const meta = COMPLEMENTARY_META_BY_COURSE_ID[Number(c.id)];
+            const isComp = Boolean(meta) || (hasPrimary && lvlCourses.length > 1);
+            if (!isComp && !hasPrimary) {
+              hasPrimary = true;
+              return {
+                ...c,
+                is_primary: true,
+                is_complementary: false,
+              };
+            }
+            return {
+              ...c,
+              is_primary: false,
+              is_complementary: true,
+              complementary_badge: meta?.badge || 'Recomendado',
+              complementary_reason: meta?.reason || 'Curso recomendado para complementar competencias técnicas en este hito.',
+            };
+          });
+
+          if (!hasPrimary && enhanced.length > 0) {
+            enhanced[0].is_primary = true;
+            enhanced[0].is_complementary = false;
+          }
+
+          return {
+            ...l,
+            id: Number(l.id),
+            courses: enhanced,
+          };
+        });
+
         cachedPath = {
           ...p,
           id: Number(p.id),
           category: catRows[0] || null,
-          levels: (levels as any[]).map((l: any) => ({
-            ...l,
-            id: Number(l.id),
-            courses: coursesList.filter((c: any) => Number(c.learning_path_level_id) === Number(l.id)),
-          })),
+          levels: levelsMapped,
           courses: coursesList,
+          complementary_courses: crossCourses,
         };
         setCache(cacheKey, cachedPath, 60);
       }

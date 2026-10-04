@@ -31,6 +31,7 @@ export interface LearningPath {
   levels?: LearningPathLevel[];
   courses?: Course[];
   courses_count?: number;
+  complementary_courses?: Course[];
 }
 
 export interface LearningPathLevel {
@@ -67,6 +68,11 @@ export interface Course {
   rating_avg?: number;
   rating_count?: number;
   user_review?: CourseReview | null;
+  is_primary?: boolean;
+  is_complementary?: boolean;
+  complementary_badge?: string;
+  complementary_reason?: string;
+  reason?: string;
 }
 
 export interface CourseReview {

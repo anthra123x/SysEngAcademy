@@ -56,7 +56,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
                     </span>
                     <span class="meta-item">
                       <app-icon name="trophy" [size]="13" />
-                      <span>{{ path.levels?.length ?? 0 }} niveles</span>
+                      <span>{{ path.levels?.length ?? 0 }} hitos</span>
                     </span>
                   </div>
                 </div>
