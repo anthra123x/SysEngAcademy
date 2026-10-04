@@ -6,6 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { CoursesService } from '../../core/services/courses.service';
 import { StreakService } from '../../core/services/streak.service';
+import { ClansService } from '../../core/services/clans.service';
 import { TeacherService, TeacherStudent, TeacherActivity, TeacherOverviewResponse, StudentFeedbackItem } from '../../core/services/teacher.service';
 import { Enrollment } from '../../core/models';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
@@ -167,6 +168,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   readonly streakService = inject(StreakService);
+  readonly clansService = inject(ClansService);
 
   enrollments = signal<Enrollment[]>([]);
   loading = signal(true);
@@ -1568,8 +1570,7 @@ for (let paso = 1; paso <= 3; paso++) {
   }
 
   openGuildWorkspace(guild: StudyGroup) {
-    this.selectedGuild.set(guild);
-    this.activeGuildSection.set('feed');
+    this.router.navigate(['/clan'], { queryParams: { id: guild.id } });
   }
 
   closeGuildWorkspace() {
@@ -1577,32 +1578,31 @@ for (let paso = 1; paso <= 3; paso++) {
   }
 
   joinGuild(id: string) {
+    this.clansService.joinClan(id);
+    this.streakService.recordActivity('pulse');
+    this.studyGroups.update(groups =>
+      groups.map(g => ({ ...g, isMember: g.id === id }))
+    );
     const email = this.currentStudentEmail();
     this.api.post<{ success: boolean; message: string }>(`/clans/${id}/join`, { email }).subscribe({
       next: () => {
         this.loadClans();
-        this.streakService.recordActivity('pulse');
       },
-      error: () => {
-        // Fallback local
-        this.studyGroups.update(groups =>
-          groups.map(g => ({ ...g, isMember: g.id === id }))
-        );
-      }
+      error: () => {}
     });
   }
 
   leaveGuild(id: string) {
+    this.clansService.leaveClan(id);
+    this.studyGroups.update(groups =>
+      groups.map(g => g.id === id ? { ...g, isMember: false } : g)
+    );
     const email = this.currentStudentEmail();
     this.api.post<{ success: boolean; message: string }>(`/clans/${id}/leave`, { email }).subscribe({
       next: () => {
         this.loadClans();
       },
-      error: () => {
-        this.studyGroups.update(groups =>
-          groups.map(g => g.id === id ? { ...g, isMember: false } : g)
-        );
-      }
+      error: () => {}
     });
   }
 

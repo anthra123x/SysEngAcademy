@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/ro
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { StreakService } from '../../core/services/streak.service';
+import { ClansService } from '../../core/services/clans.service';
 import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from '../../core/constants/ascii-avatars';
 
 @Component({
@@ -15,6 +16,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   router = inject(Router);
   streakService = inject(StreakService);
+  clansService = inject(ClansService);
 
   dropdownOpen = signal(false);
   mobileOpen   = signal(false);
@@ -116,6 +118,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   readonly studentStreak = computed(() => {
     return this.streakService.currentStreak();
+  });
+
+  readonly userClan = computed(() => {
+    return this.clansService.userClan();
   });
 
   initials() {

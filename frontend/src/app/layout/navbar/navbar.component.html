@@ -48,6 +48,19 @@
             <a routerLink="/cursos" routerLinkActive="active" class="nav-pill">
               <span class="nav-pill__text">Cursos</span>
             </a>
+            @if (userClan()) {
+              <a routerLink="/clan" routerLinkActive="active" class="nav-pill nav-pill--clan" [title]="'Clan: ' + userClan()!.name">
+                <span class="clan-pill-tag">{{ userClan()!.tag }}</span>
+                <span class="nav-pill__text">Mi Clan</span>
+                @if (userClan()!.streakDays > 0) {
+                  <span class="clan-pill-fire" title="Racha grupal activa">🔥 {{ userClan()!.streakDays }}d</span>
+                }
+              </a>
+            } @else {
+              <a routerLink="/perfil" [queryParams]="{ tab: 'guilds' }" class="nav-pill nav-pill--clans-explore" title="Explorar Clanes & Semilleros">
+                <span class="nav-pill__text">Clanes</span>
+              </a>
+            }
             @if (isTeacher()) {
               <a routerLink="/docente" routerLinkActive="active" class="nav-pill nav-pill--teacher-badge">
                 <span class="nav-pill__text">Panel Docente</span>
@@ -110,6 +123,17 @@
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                       Mi Perfil
                     </a>
+                    @if (userClan()) {
+                      <a routerLink="/clan" (click)="dropdownOpen.set(false)" class="dropdown-item dropdown-item--clan">
+                        <span class="clan-drop-tag">{{ userClan()!.tag }}</span>
+                        <span>Mi Clan: {{ userClan()!.name }}</span>
+                      </a>
+                    } @else {
+                      <a routerLink="/perfil" [queryParams]="{ tab: 'guilds' }" (click)="dropdownOpen.set(false)" class="dropdown-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        Clanes de Estudio
+                      </a>
+                    }
                     <a routerLink="/rutas" (click)="dropdownOpen.set(false)" class="dropdown-item">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>
                       Rutas de Aprendizaje
@@ -168,6 +192,17 @@
               <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="mobileOpen.set(false)">Inicio</a>
               <a routerLink="/rutas" routerLinkActive="active" (click)="mobileOpen.set(false)">Rutas de Aprendizaje</a>
               <a routerLink="/cursos" routerLinkActive="active" (click)="mobileOpen.set(false)">Cursos</a>
+              @if (userClan()) {
+                <a routerLink="/clan" routerLinkActive="active" (click)="mobileOpen.set(false)" class="mobile-clan-link">
+                  <span class="clan-pill-tag">{{ userClan()!.tag }}</span>
+                  <span>Mi Clan: {{ userClan()!.name }}</span>
+                  @if (userClan()!.streakDays > 0) {
+                    <span class="clan-pill-fire">🔥 {{ userClan()!.streakDays }}d</span>
+                  }
+                </a>
+              } @else {
+                <a routerLink="/perfil" [queryParams]="{ tab: 'guilds' }" (click)="mobileOpen.set(false)">Clanes &amp; Semilleros</a>
+              }
             }
           </nav>
 

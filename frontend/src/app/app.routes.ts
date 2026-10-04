@@ -43,6 +43,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'clan',
+    loadComponent: () => import('./features/clan/clan.component').then(m => m.ClanComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'docente',
     loadComponent: () => import('./features/teacher/teacher-dashboard.component').then(m => m.TeacherDashboardComponent),
     canActivate: [teacherGuard]

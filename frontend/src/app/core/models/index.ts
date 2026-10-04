@@ -320,4 +320,5 @@ export interface AiPracticeQuiz {
 }
 
 export * from './forum';
+export * from './clan';
 
