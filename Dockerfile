@@ -2,7 +2,7 @@
 # Dockerfile Raíz para Render / Railway / PaaS
 # Construye el backend de Laravel 13 con FrankenPHP + PostgreSQL directamente
 # ==============================================================================
-FROM dunglas/frankenphp:1-php8.3-alpine
+FROM dunglas/frankenphp:1-php8.4-alpine
 
 # Instalar extensiones PHP necesarias para Laravel y Neon PostgreSQL
 RUN install-php-extensions \
@@ -28,13 +28,14 @@ RUN composer install \
     --no-interaction \
     --no-scripts \
     --prefer-dist \
-    --optimize-autoloader
+    --optimize-autoloader \
+    --ignore-platform-reqs
 
 # Copiar el código fuente completo de Laravel
 COPY backend/ .
 
 # Finalizar autoloading optimizado
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload --optimize --no-dev --ignore-platform-reqs
 
 # Copiar configuración de Caddyfile y script de entrada
 COPY backend/Caddyfile /etc/caddy/Caddyfile

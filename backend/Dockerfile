@@ -2,7 +2,7 @@
 # Dockerfile de Producción para SysEng Academy (Laravel 13 + FrankenPHP + PostgreSQL)
 # Diseñado para despliegue de alto rendimiento en Render, Railway o Fly.io
 # ==============================================================================
-FROM dunglas/frankenphp:1-php8.3-alpine
+FROM dunglas/frankenphp:1-php8.4-alpine
 
 # Instalar extensiones PHP necesarias para Laravel y Neon PostgreSQL
 RUN install-php-extensions \
@@ -28,13 +28,14 @@ RUN composer install \
     --no-interaction \
     --no-scripts \
     --prefer-dist \
-    --optimize-autoloader
+    --optimize-autoloader \
+    --ignore-platform-reqs
 
 # Copiar el código fuente completo de Laravel
 COPY . .
 
 # Finalizar autoloading optimizado
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload --optimize --no-dev --ignore-platform-reqs
 
 # Copiar configuración de Caddyfile y script de entrada
 COPY Caddyfile /etc/caddy/Caddyfile
