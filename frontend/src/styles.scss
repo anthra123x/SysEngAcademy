@@ -126,6 +126,9 @@ a {
   color: var(--primary);
   text-decoration: none;
   transition: color var(--transition-fast);
+  &:visited {
+    color: inherit;
+  }
   &:hover { color: var(--primary-hover); }
 }
 

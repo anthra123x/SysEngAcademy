@@ -155,11 +155,13 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
                             <div class="pcc-footer">
                               <div class="pcc-meta">
                                 <span class="pcc-time"><app-icon name="clock" [size]="12" /> {{ primary.duration_hours }}h</span>
-                                <span class="pcc-lessons">· <app-icon name="book" [size]="12" /> {{ primary.lessons_count ?? 0 }} lecciones</span>
+                                <span class="pcc-divider">·</span>
+                                <span class="pcc-lessons"><app-icon name="book" [size]="12" /> {{ primary.lessons_count ?? 0 }} lecciones</span>
                               </div>
-                              <span class="pcc-action btn btn-sm btn-primary">
-                                Iniciar Curso Troncal →
-                              </span>
+                              <div class="pcc-cta pcc-cta--primary">
+                                <span>Iniciar Curso Troncal</span>
+                                <span class="pcc-cta-arrow" aria-hidden="true">→</span>
+                              </div>
                             </div>
                           </a>
                         </div>
@@ -210,9 +212,13 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
                                 <div class="pcc-footer">
                                   <div class="pcc-meta">
                                     <span class="pcc-time"><app-icon name="clock" [size]="12" /> {{ comp.duration_hours }}h</span>
-                                    <span class="pcc-lessons">· <app-icon name="book" [size]="12" /> {{ comp.lessons_count ?? 0 }} lecc.</span>
+                                    <span class="pcc-divider">·</span>
+                                    <span class="pcc-lessons"><app-icon name="book" [size]="12" /> {{ comp.lessons_count ?? 0 }} lecc.</span>
                                   </div>
-                                  <span class="pcc-action">Ver complementario →</span>
+                                  <div class="pcc-cta pcc-cta--comp">
+                                    <span>Ver complementario</span>
+                                    <span class="pcc-cta-arrow" aria-hidden="true">→</span>
+                                  </div>
                                 </div>
                               </a>
                             }
@@ -641,28 +647,35 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       border-radius: var(--radius-lg);
       padding: var(--sp-5);
       text-decoration: none;
+      color: inherit;
       transition: all var(--transition-base);
 
       &:hover {
         border-color: var(--primary);
         box-shadow: var(--shadow-primary);
         transform: translateY(-2px);
-
-        .pcc-action {
-          color: var(--primary);
-          transform: translateX(3px);
-        }
       }
     }
 
     .path-course-card--primary {
-      background: linear-gradient(135deg, rgba(10, 233, 138, 0.04) 0%, var(--bg-surface-2) 100%);
-      border: 1px solid rgba(10, 233, 138, 0.35);
+      background: linear-gradient(135deg, rgba(10, 233, 138, 0.05) 0%, var(--bg-surface-2) 100%);
+      border: 1px solid rgba(10, 233, 138, 0.28);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 
       &:hover {
         border-color: var(--primary);
         box-shadow: 0 8px 30px rgba(10, 233, 138, 0.16);
+
+        .pcc-cta--primary {
+          background: var(--primary);
+          color: #08090D !important;
+          border-color: var(--primary);
+          box-shadow: 0 0 16px rgba(10, 233, 138, 0.45);
+
+          .pcc-cta-arrow {
+            transform: translateX(4px);
+          }
+        }
       }
 
       .pcc-title {
@@ -734,9 +747,11 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: var(--sp-3);
       padding-top: var(--sp-3);
       border-top: 1px solid rgba(42, 42, 62, 0.6);
       font-size: var(--text-xs);
+      flex-wrap: wrap;
     }
 
     .pcc-meta {
@@ -744,13 +759,45 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       font-family: var(--font-mono);
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      font-size: 0.75rem;
+
+      .pcc-divider {
+        opacity: 0.5;
+      }
     }
 
-    .pcc-action {
-      color: var(--text-secondary);
+    .pcc-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.75rem;
       font-weight: var(--font-semibold);
-      transition: all var(--transition-fast);
+      font-family: var(--font-mono);
+      letter-spacing: 0.02em;
+      line-height: 1;
+      white-space: nowrap;
+      transition: all var(--transition-base);
+
+      .pcc-cta-arrow {
+        display: inline-block;
+        font-size: 0.85rem;
+        transition: transform var(--transition-base);
+      }
+
+      &--primary {
+        background: rgba(10, 233, 138, 0.08);
+        border: 1px solid rgba(10, 233, 138, 0.32);
+        color: var(--primary) !important;
+      }
+
+      &--comp {
+        background: rgba(255, 184, 0, 0.08);
+        border: 1px solid rgba(255, 184, 0, 0.28);
+        color: #FFB800 !important;
+      }
     }
 
     /* Milestone Complementary Section */
@@ -803,10 +850,17 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
       &:hover {
         border-color: #FFB800;
-        box-shadow: 0 4px 18px rgba(255, 184, 0, 0.12);
+        box-shadow: 0 4px 18px rgba(255, 184, 0, 0.14);
 
-        .pcc-action {
-          color: #FFB800;
+        .pcc-cta--comp {
+          background: #FFB800;
+          color: #08090D !important;
+          border-color: #FFB800;
+          box-shadow: 0 0 14px rgba(255, 184, 0, 0.35);
+
+          .pcc-cta-arrow {
+            transform: translateX(4px);
+          }
         }
       }
     }
