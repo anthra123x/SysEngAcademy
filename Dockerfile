@@ -1,28 +1,36 @@
 # ==============================================================================
-# Dockerfile Raíz para Render / Railway / PaaS
-# Construye el backend de Laravel 13 con FrankenPHP + PostgreSQL directamente
+# Dockerfile de Producción para SysEng Academy (Laravel 13 + PHP-FPM 8.4 + Nginx)
+# Compatible con Render, Railway y cualquier PaaS / VPS
 # ==============================================================================
-FROM dunglas/frankenphp:1-php8.4-alpine
+FROM php:8.4-fpm-alpine
 
-# Instalar extensiones PHP necesarias para Laravel y Neon PostgreSQL
-RUN install-php-extensions \
+# Instalar dependencias del sistema, Nginx, Supervisor y extensiones nativas
+RUN apk add --no-cache \
+    nginx \
+    supervisor \
+    curl \
+    libzip-dev \
+    postgresql-dev \
+    icu-dev \
+    oniguruma-dev
+
+# Instalar extensiones PHP requeridas por Laravel y PostgreSQL
+RUN docker-php-ext-install \
     pdo_pgsql \
     pgsql \
     bcmath \
     opcache \
     zip \
-    pcntl \
-    intl
+    intl \
+    pcntl
 
 # Copiar Composer binario oficial
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copiar manifiestos de dependencias para caché eficiente de Docker
+# Copiar manifiestos e instalar dependencias de producción
 COPY backend/composer.json backend/composer.lock ./
-
-# Instalar dependencias de producción
 RUN composer install \
     --no-dev \
     --no-interaction \
@@ -31,18 +39,19 @@ RUN composer install \
     --optimize-autoloader \
     --ignore-platform-reqs
 
-# Copiar el código fuente completo de Laravel
+# Copiar código fuente
 COPY backend/ .
 
-# Finalizar autoloading optimizado
+# Generar autoload optimizado
 RUN composer dump-autoload --optimize --no-dev --ignore-platform-reqs
 
-# Copiar configuración de Caddyfile y script de entrada
-COPY backend/Caddyfile /etc/caddy/Caddyfile
-COPY backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+# Copiar configuraciones de Nginx, Supervisor y Entrypoint
+COPY backend/docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY backend/docker/supervisord.conf /etc/supervisord.conf
+COPY backend/docker/entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chmod +x /usr/local/bin/docker-entrypoint
 
-EXPOSE 8000
+EXPOSE 8000 10000
 
 ENTRYPOINT ["docker-entrypoint"]
-CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord.conf"]
