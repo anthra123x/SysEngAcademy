@@ -634,6 +634,56 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         }
       }
 
+      @media (max-width: 600px) {
+        flex-direction: row;
+        border-radius: 12px;
+        align-items: stretch;
+
+        &:hover {
+          transform: none;
+        }
+
+        &__thumb {
+          width: 86px;
+          height: auto;
+          min-height: 96px;
+          flex-shrink: 0;
+          border-right: 1px solid #1E2536;
+          border-bottom: none;
+          padding: 0 8px;
+        }
+
+        .course-thumb__icon svg {
+          width: 32px !important;
+          height: 32px !important;
+        }
+
+        &__body {
+          padding: 0.75rem 0.85rem;
+          gap: 0.35rem;
+
+          .card-badges {
+            flex-wrap: wrap;
+            gap: 4px;
+          }
+
+          h3 {
+            font-size: 0.88rem;
+            line-height: 1.25;
+          }
+
+          p {
+            display: none;
+          }
+        }
+
+        .meta {
+          padding-top: 0.3rem;
+          font-size: 0.68rem;
+          gap: 0.4rem;
+        }
+      }
+
       &__thumb {
         position: relative;
         height: 112px;

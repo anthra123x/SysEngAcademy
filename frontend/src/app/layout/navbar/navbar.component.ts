@@ -148,6 +148,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
   }
 
+  onUserChipClick() {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      this.router.navigate(['/perfil']);
+      this.dropdownOpen.set(false);
+    } else {
+      this.toggleDropdown();
+    }
+  }
+
   toggleDropdown() { this.dropdownOpen.update(v => !v); }
   toggleMobile()   { this.mobileOpen.update(v => !v); }
 

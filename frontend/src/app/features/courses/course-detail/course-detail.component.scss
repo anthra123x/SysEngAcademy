@@ -168,6 +168,22 @@
       margin-bottom: var(--sp-6);
     }
 
+    .mobile-course-hero-cta {
+      display: none;
+      @media (max-width: 1024px) {
+        display: block;
+        margin-bottom: var(--sp-6);
+
+        .btn {
+          width: 100%;
+          justify-content: center;
+          padding: 13px 20px;
+          font-size: 15px;
+          border-radius: var(--radius-md);
+        }
+      }
+    }
+
     .path-card-chip {
       display: flex;
       align-items: center;

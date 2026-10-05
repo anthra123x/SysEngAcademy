@@ -89,7 +89,7 @@
                 }
               </a>
             }
-            <div class="user-chip" (click)="toggleDropdown()" [class.is-open]="dropdownOpen()" [class.user-chip--teacher]="isTeacher()">
+            <div class="user-chip" (click)="onUserChipClick()" [class.is-open]="dropdownOpen()" [class.user-chip--teacher]="isTeacher()">
               <div class="avatar-ascii-badge" [class.avatar-ascii-badge--teacher]="isTeacher()" title="Firma ASCII animada de tu perfil">
                 <pre class="mini-ascii-pre">{{ currentMiniFrame() }}</pre>
               </div>

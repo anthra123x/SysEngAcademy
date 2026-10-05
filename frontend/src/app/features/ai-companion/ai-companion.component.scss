@@ -1026,9 +1026,14 @@
     .byte-mobile-fab {
       display: none;
       position: fixed;
-      right: 18px;
-      bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+      right: 16px;
+      bottom: calc(var(--bottom-nav-height, 58px) + env(safe-area-inset-bottom, 0px) + 14px);
       z-index: 1220;
+
+      main.classroom-mode ~ app-ai-companion &,
+      body:has(.classroom-mode) & {
+        bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+      }
       width: 52px;
       height: 52px;
       border-radius: 50%;

@@ -72,6 +72,23 @@
               </div>
 
               <p class="course-desc">{{ course()!.description }}</p>
+
+              <!-- Mobile Quick Action CTA: acceso inmediato para el pulgar en móviles sin scrollear hasta el fondo -->
+              <div class="mobile-course-hero-cta">
+                @if (!auth.isAuthenticated()) {
+                  <a routerLink="/auth/registro" class="btn btn-primary btn-block btn-lg">
+                    Empezar Gratis — Crear Cuenta
+                  </a>
+                } @else {
+                  <button type="button" class="btn btn-primary btn-block btn-lg" (click)="goToFirstLesson()" [disabled]="enrolling()">
+                    @if (enrolling()) {
+                      <span>Inscribiendo al curso...</span>
+                    } @else {
+                      <span>{{ completedLessonsCount() > 0 ? 'Continuar Curso (' + courseProgressPercent() + '%) →' : 'Empezar a Aprender →' }}</span>
+                    }
+                  </button>
+                }
+              </div>
             </header>
 
             <!-- Navigation Tabs: Temario & Foro & Reseñas -->

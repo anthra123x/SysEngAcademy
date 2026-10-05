@@ -91,6 +91,7 @@
   // Layout & Safe Area (PWA / Mobile)
   --container-max: 1600px;
   --header-height: 64px;
+  --bottom-nav-height: 58px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
@@ -429,10 +430,40 @@ pre, code {
 @media (max-width: 640px) {
   .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; gap: var(--sp-4); }
   .container { padding: 0 16px; }
-  .section { padding: var(--sp-10) 0; }
-  .section-header { margin-bottom: var(--sp-6); }
+  .section { padding: var(--sp-8) 0; }
+  .section-header { margin-bottom: var(--sp-5); }
   .section-title { font-size: var(--text-2xl); }
-  .input { font-size: 16px; } // Prevents iOS Safari auto-zoom on focus
+  .input { font-size: 16px; } // Evita auto-zoom molesto en iOS Safari al enfocar
+
+  // Ergonometría móvil: padding respirable en tarjetas para que no se vean apretadas
+  .card {
+    padding: var(--sp-4);
+    border-radius: var(--radius-md);
+  }
+
+  // Touch targets ergonómicos (mínimo 42px para pulgares)
+  .btn {
+    min-height: 42px;
+    touch-action: manipulation;
+  }
+}
+
+// === TOUCH FEEDBACK & DESACOPLE DE HOVER PEGAJOSO ===
+@media (hover: none) {
+  // En pantallas táctiles, desactivar transiciones hover que se quedan trabadas
+  .card:hover,
+  .card-interactive:hover,
+  .btn:hover {
+    transform: none !important;
+  }
+
+  // Respuesta táctil activa instantánea
+  .btn:active,
+  .card-interactive:active,
+  button:active {
+    transform: scale(0.97) !important;
+    transition: transform 0.08s ease !important;
+  }
 }
 
 .btn-block {
@@ -493,4 +524,5 @@ pre, code {
     padding-top: env(safe-area-inset-top, 0px);
   }
 }
+
 
