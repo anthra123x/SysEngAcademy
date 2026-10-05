@@ -105,8 +105,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     .path-card {
       display: flex;
       flex-direction: column;
-      background: rgba(16, 18, 28, 0.85);
-      border: 1px solid var(--border);
+      background: rgba(16, 20, 32, 0.88);
+      border: 1.5px dashed color-mix(in srgb, var(--c, var(--primary)) 35%, rgba(255, 255, 255, 0.14));
       border-radius: var(--radius-xl);
       overflow: hidden;
       text-decoration: none;
@@ -115,20 +115,10 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       transition: all var(--transition-base);
       position: relative;
 
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--c, var(--primary)), transparent 80%);
-        opacity: 0.95;
-      }
-
       &:hover {
-        border-color: color-mix(in srgb, var(--c, var(--primary)) 45%, var(--border));
-        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 0 24px color-mix(in srgb, var(--c, var(--primary)) 20%, transparent);
+        border-color: var(--c, var(--primary));
+        border-style: dashed;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 0 24px color-mix(in srgb, var(--c, var(--primary)) 22%, transparent);
         transform: translateY(-4px);
 
         .arrow {
@@ -137,6 +127,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         }
 
         .cat-icon {
+          border-color: var(--c, var(--primary));
+          background: color-mix(in srgb, var(--c, var(--primary)) 14%, transparent) !important;
           transform: scale(1.08);
         }
       }
@@ -164,8 +156,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          transition: transform var(--transition-fast);
+          border: 1.5px dashed color-mix(in srgb, var(--c, var(--primary)) 50%, rgba(255, 255, 255, 0.18));
+          transition: all var(--transition-fast);
         }
 
         .cat-name {
