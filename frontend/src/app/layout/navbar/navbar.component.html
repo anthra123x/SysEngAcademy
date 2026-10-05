@@ -161,66 +161,7 @@
               <a routerLink="/auth/registro" class="btn-register">Registrarse</a>
             </div>
           }
-
-          <!-- Mobile Hamburger -->
-          <button class="hamburger-btn" (click)="toggleMobile()" aria-label="Abrir menú de navegación">
-            <span class="ham-line" [class.open]="mobileOpen()"></span>
-            <span class="ham-line" [class.open]="mobileOpen()"></span>
-            <span class="ham-line" [class.open]="mobileOpen()"></span>
-          </button>
         </div>
       </header>
     </div>
 
-    <!-- Mobile Drawer -->
-    @if (mobileOpen()) {
-      <div class="mobile-drawer" (click)="mobileOpen.set(false)">
-        <div class="mobile-drawer__panel" (click)="$event.stopPropagation()">
-          <div class="mobile-drawer__head">
-            <span class="logo-title">SysEng<strong>Academy</strong></span>
-            <button class="close-btn" (click)="mobileOpen.set(false)">✕</button>
-          </div>
-
-          <nav class="mobile-nav-links">
-            @if (isTeacherDocenteZone()) {
-              @if (isDocenteRoute()) {
-                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" [class.active]="currentTeacherTab() === 'students'" (click)="mobileOpen.set(false)">Alumnos</a>
-                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" [class.active]="currentTeacherTab() === 'activities'" (click)="mobileOpen.set(false)">Actividades &amp; Quizzes</a>
-                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" [class.active]="currentTeacherTab() === 'activity'" (click)="mobileOpen.set(false)">Rendimiento</a>
-                <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" [class.active]="currentTeacherTab() === 'ai'" (click)="mobileOpen.set(false)">Byte Asistente IA</a>
-              } @else {
-                <a routerLink="/docente" routerLinkActive="active" (click)="mobileOpen.set(false)">Panel Docente</a>
-              }
-              <a routerLink="/perfil" routerLinkActive="active" (click)="mobileOpen.set(false)">Mi Perfil</a>
-              <a routerLink="/" (click)="mobileOpen.set(false)" class="mobile-switch-link">Vista Estudiante</a>
-            } @else {
-              @if (isTeacher()) {
-                <a routerLink="/docente" routerLinkActive="active" (click)="mobileOpen.set(false)">Panel Docente</a>
-              }
-              <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="mobileOpen.set(false)">Inicio</a>
-              <a routerLink="/rutas" routerLinkActive="active" (click)="mobileOpen.set(false)">Rutas de Aprendizaje</a>
-              <a routerLink="/cursos" routerLinkActive="active" (click)="mobileOpen.set(false)">Cursos</a>
-              @if (auth.isAuthenticated() && !isTeacher() && userClan()) {
-                <a routerLink="/clan" routerLinkActive="active" (click)="mobileOpen.set(false)" class="mobile-clan-link">
-                  <span class="clan-pill-tag">{{ userClan()!.tag }}</span>
-                  <span>Mi Clan: {{ userClan()!.name }}</span>
-                  @if (userClan()!.streakDays > 0) {
-                    <span class="clan-pill-fire">🔥 {{ userClan()!.streakDays }}d</span>
-                  }
-                </a>
-              }
-            }
-          </nav>
-
-          <div class="mobile-auth-section">
-            @if (auth.isAuthenticated()) {
-              <a routerLink="/perfil" class="btn btn-outline btn-block" (click)="mobileOpen.set(false)">Mi Perfil</a>
-              <button class="btn btn-danger btn-block" (click)="logout()">Cerrar Sesión</button>
-            } @else {
-              <a routerLink="/auth/login" class="btn btn-outline btn-block" (click)="mobileOpen.set(false)">Iniciar Sesión</a>
-              <a routerLink="/auth/registro" class="btn btn-primary btn-block" (click)="mobileOpen.set(false)">Registrarse</a>
-            }
-          </div>
-        </div>
-      </div>
-    }

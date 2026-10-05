@@ -1024,7 +1024,7 @@
 
     /* Mobile Floating Action Button (FAB) */
     .byte-mobile-fab {
-      display: none;
+      display: none !important;
       position: fixed;
       right: 16px;
       bottom: calc(var(--bottom-nav-height, 58px) + env(safe-area-inset-bottom, 0px) + 14px);
@@ -1127,9 +1127,9 @@
         display: none !important;
       }
 
-      /* Show compact FAB */
+      /* Ocultar FAB flotante en móvil: Byte IA ya se encuentra en la barra de navegación inferior */
       .byte-mobile-fab {
-        display: flex !important;
+        display: none !important;
       }
 
       /* Fullscreen Terminal Modal for phone screens with safe-area spacing */

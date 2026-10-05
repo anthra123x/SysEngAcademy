@@ -19,7 +19,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   clansService = inject(ClansService);
 
   dropdownOpen = signal(false);
-  mobileOpen   = signal(false);
   readonly currentUrl = signal<string>(this.router.url);
 
   // Estados del avatar ASCII animado
@@ -158,12 +157,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   toggleDropdown() { this.dropdownOpen.update(v => !v); }
-  toggleMobile()   { this.mobileOpen.update(v => !v); }
 
   logout() {
     this.auth.logout();
     this.dropdownOpen.set(false);
-    this.mobileOpen.set(false);
   }
 
   @HostListener('document:click', ['$event'])
