@@ -101,6 +101,9 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
 
     Route::get('/profile/feedbacks', [ProfileController::class, 'feedbacks']);
     Route::get('/student/feedbacks', [ProfileController::class, 'feedbacks']);
+    Route::post('/student/feedbacks/{id}/remediate', [ProfileController::class, 'remediateFeedback']);
+    Route::post('/student/feedbacks/{id}/dismiss', [ProfileController::class, 'dismissFeedback']);
+    Route::post('/student/feedbacks/clear-resolved', [ProfileController::class, 'clearResolvedFeedbacks']);
 
     // Teacher & Admin Dashboard routes
     Route::prefix('teacher')->group(function () {

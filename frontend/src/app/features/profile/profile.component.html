@@ -1491,34 +1491,40 @@
 
                 <!-- VISTA SUB-TAB 2: LLAMADOS DE ATENCIÓN -->
                 @if (advisorSubTab() === 'llamados') {
-                  @if (activeWarnings().length > 0) {
-                    <div class="academic-warning-banner">
-                      <div class="warn-banner-icon">
-                        <app-icon name="alert-triangle" [size]="26" color="#EF4444" />
+                  @if (activeUnresolvedWarnings().length > 0) {
+                    <div class="academic-warning-banner-minimal animate-fade-in">
+                      <div class="warn-banner-top">
+                        <span class="warn-pulse-dot"></span>
+                        <span class="warn-mono-tag">[EXPEDIENTE ACADÉMICO]</span>
+                        <span class="warn-headline">
+                          {{ activeUnresolvedWarnings().length === 1 ? '1 llamado de atención vigente' : activeUnresolvedWarnings().length + ' llamados de atención vigentes' }}
+                        </span>
+                        @if (totalPenalizedXp() > 0) {
+                          <span class="warn-penalty-chip">-{{ totalPenalizedXp() }} XP EN RANKING</span>
+                        }
                       </div>
-                      <div class="warn-banner-body">
-                        <div class="warn-banner-header">
-                          <strong class="warn-banner-title">LLAMADOS DE ATENCIÓN VIGENTES ({{ activeWarnings().length }})</strong>
-                          @if (totalPenalizedXp() > 0) {
-                            <span class="warn-penalty-chip">-{{ totalPenalizedXp() }} XP DEDUCIDOS EN RANKING</span>
-                          }
-                        </div>
-                        <p class="warn-banner-desc">
-                          El cuerpo docente ha emitido llamados de atención en tu expediente por bajo rendimiento o inactividad. Las deducciones de experiencia han reducido tu puntuación de XP acumulada, desplazándote a puestos inferiores en el Ranking global de la academia. Regulariza tus entregas prácticas para restaurar tu rendimiento.
-                        </p>
-                      </div>
+                      <p class="warn-subtext">
+                        Puedes subsanar cada llamado completando el reto técnico o entrega práctica requerida. Al subsanar, se restituye inmediatamente el XP deducido a tu expediente.
+                      </p>
                     </div>
                   }
 
                   <div class="feedback-section-box">
                     <div class="terminal-subhead" style="background: #090c12;">
-                      <span class="term-dot" [style.background]="activeWarnings().length > 0 ? '#EF4444' : '#0AE98A'" [style.box-shadow]="activeWarnings().length > 0 ? '0 0 6px #EF4444' : '0 0 6px #0AE98A'"></span>
-                      <span class="term-subhead-title" [style.color]="activeWarnings().length > 0 ? '#EF4444' : '#0AE98A'">
+                      <span class="term-dot" [style.background]="activeUnresolvedWarnings().length > 0 ? '#F43F5E' : '#0AE98A'" [style.box-shadow]="activeUnresolvedWarnings().length > 0 ? '0 0 6px #F43F5E' : '0 0 6px #0AE98A'"></span>
+                      <span class="term-subhead-title" [style.color]="activeUnresolvedWarnings().length > 0 ? '#F43F5E' : '#0AE98A'">
                         HISTORIAL DE LLAMADOS DE ATENCIÓN ({{ activeWarnings().length }})
                       </span>
-                      <button type="button" class="btn btn-xs btn-outline" style="margin-left: auto;" (click)="loadTeacherFeedbacks()">
-                        ↻ Actualizar
-                      </button>
+                      <div class="subhead-actions" style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+                        @if (resolvedWarnings().length > 0) {
+                          <button type="button" class="btn btn-xs btn-outline-success" (click)="clearAllResolvedWarnings()" title="Limpiar todas las notificaciones subsanadas">
+                            ✓ Limpiar Subsanados ({{ resolvedWarnings().length }})
+                          </button>
+                        }
+                        <button type="button" class="btn btn-xs btn-outline" (click)="loadTeacherFeedbacks()">
+                          ↻ Actualizar
+                        </button>
+                      </div>
                     </div>
 
                     <div class="feedback-feed-list">
@@ -1536,38 +1542,138 @@
                         </div>
                       } @else {
                         @for (f of activeWarnings(); track f.id) {
-                          <div class="feedback-card" [class.type-strict]="f.type === 'warning_strict'" [class.type-mild]="f.type === 'warning_mild'">
+                          <div class="feedback-card-minimal"
+                               [class.is-resolved]="f.is_resolved"
+                               [class.type-strict]="f.type === 'warning_strict' && !f.is_resolved"
+                               [class.type-mild]="f.type === 'warning_mild' && !f.is_resolved">
+
                             <div class="card-head">
                               <div class="type-pill-wrap">
-                                @if (f.type === 'warning_strict') {
-                                  <span class="badge-type-pill pill-danger">
-                                    <app-icon name="alert-triangle" [size]="12" /> LLAMADO FORMAL POR RENDIMIENTO
+                                @if (f.is_resolved) {
+                                  <span class="badge-status-pill pill-resolved">
+                                    <app-icon name="check-circle" [size]="12" /> SUBSANADO Y APROBADO
+                                  </span>
+                                  @if (f.xp_impact < 0) {
+                                    <span class="restituted-tag">+{{ Math.abs(f.xp_impact) }} XP RESTITUIDOS</span>
+                                  }
+                                } @else if (f.type === 'warning_strict') {
+                                  <span class="badge-status-pill pill-danger">
+                                    <app-icon name="alert-triangle" [size]="11" /> LLAMADO POR RENDIMIENTO
                                   </span>
                                   @if (f.xp_impact < 0) {
                                     <span class="penalty-tag">{{ f.xp_impact }} XP EN RANKING</span>
                                   }
                                 } @else if (f.type === 'warning_mild') {
-                                  <span class="badge-type-pill pill-warning">
-                                    <app-icon name="alert-circle" [size]="12" /> LLAMADO PREVENTIVO
+                                  <span class="badge-status-pill pill-warning">
+                                    <app-icon name="alert-circle" [size]="11" /> LLAMADO PREVENTIVO
                                   </span>
                                 }
                               </div>
-                              <div class="card-author-meta">
+
+                              <div class="card-meta-actions">
                                 <span class="author-name">👨‍🏫 {{ f.teacher_name }}</span>
                                 <span class="author-date">{{ f.created_at | date:'d MMM y, HH:mm' }}</span>
+                                <button type="button"
+                                        class="btn-dismiss-feedback"
+                                        (click)="dismissFeedback(f.id)"
+                                        [title]="f.is_resolved ? 'Limpiar notificación subsanada del expediente' : 'Limpiar / Ocultar notificación'">
+                                  ✕ Limpiar
+                                </button>
                               </div>
                             </div>
 
-                            <h4 class="feedback-card-title">{{ f.title }}</h4>
-                            <p class="feedback-card-body">{{ f.message }}</p>
+                            <h4 class="feedback-title" [class.is-resolved-txt]="f.is_resolved">{{ f.title }}</h4>
+                            <p class="feedback-body">{{ f.message }}</p>
 
                             @if (f.ai_context_summary) {
-                              <div class="feedback-ai-quote">
-                                <span class="ai-quote-label">
-                                  <app-icon name="sparkles" [size]="12" color="#00f0ff" />
+                              <div class="feedback-ai-citation">
+                                <span class="citation-label">
+                                  <app-icon name="sparkles" [size]="11" color="#00f0ff" />
                                   Fundamentado en el Análisis del Agente de Cátedra:
                                 </span>
-                                <p class="ai-quote-text">"{{ f.ai_context_summary }}"</p>
+                                <p class="citation-text">"{{ f.ai_context_summary }}"</p>
+                              </div>
+                            }
+
+                            <!-- ACCIÓN DE SUBSANACIÓN ("quitarse la apelación haciendo lo que se le apela") -->
+                            @if (!f.is_resolved) {
+                              <div class="remediation-box">
+                                <div class="remediation-prompt-row">
+                                  <div class="prompt-text-group">
+                                    <span class="remediation-kicker">⚡ ACCIÓN PARA LEVANTAR EL LLAMADO</span>
+                                    <p class="remediation-instructions">
+                                      Para subsanar esta apelación y restaurar los {{ Math.abs(f.xp_impact) }} XP a tu ranking, completa el reto práctico de regularización.
+                                    </p>
+                                  </div>
+                                  <button type="button"
+                                          class="btn-open-remediation"
+                                          [class.is-active]="activeRemediationFeedbackId() === f.id"
+                                          (click)="toggleRemediation(f.id)">
+                                    <span>{{ activeRemediationFeedbackId() === f.id ? 'Cerrar Reto ▲' : 'Resolver Reto de Subsanación ▼' }}</span>
+                                  </button>
+                                </div>
+
+                                @if (activeRemediationFeedbackId() === f.id) {
+                                  <div class="remediation-interactive-panel animate-fade-in">
+                                    <div class="panel-header">
+                                      <span class="panel-tag">[SIMULADOR DE CÁTEDRA · VALIDACIÓN RÁPIDA]</span>
+                                      <span class="panel-sub">Resuelve este requerimiento técnico para levantar la sanción</span>
+                                    </div>
+
+                                    <div class="drill-question-box">
+                                      <p class="drill-question-text">{{ getRemediationDrill(f).question }}</p>
+                                      @if (getRemediationDrill(f).code) {
+                                        <pre class="drill-snippet"><code>{{ getRemediationDrill(f).code }}</code></pre>
+                                      }
+                                    </div>
+
+                                    <div class="drill-options">
+                                      @for (opt of getRemediationDrill(f).options; track opt) {
+                                        <button type="button"
+                                                class="drill-opt-btn"
+                                                [class.is-chosen]="selectedRemediationOption() === opt"
+                                                [disabled]="remediatingFeedback()"
+                                                (click)="selectedRemediationOption.set(opt)">
+                                          <span class="opt-bullet">{{ selectedRemediationOption() === opt ? '◉' : '○' }}</span>
+                                          <span class="opt-val font-mono">{{ opt }}</span>
+                                        </button>
+                                      }
+                                    </div>
+
+                                    @if (remediationErrorNotice()) {
+                                      <div class="remediation-alert remediation-alert--error animate-fade-in">
+                                        <span>✕ {{ remediationErrorNotice() }}</span>
+                                      </div>
+                                    }
+
+                                    <div class="panel-actions">
+                                      <button type="button"
+                                              class="btn-submit-remediation"
+                                              [disabled]="!selectedRemediationOption() || remediatingFeedback()"
+                                              (click)="submitRemediation(f)">
+                                        @if (remediatingFeedback()) {
+                                          <span class="mini-spinner"></span> Validando entrega...
+                                        } @else {
+                                          <span>Subsanar y Restituir {{ Math.abs(f.xp_impact) }} XP 🔥</span>
+                                        }
+                                      </button>
+                                      <a [routerLink]="['/cursos']" class="btn-goto-courses" title="O completar entregas en tus cursos inscritos">
+                                        O ir a mis cursos prácticos →
+                                      </a>
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            } @else {
+                              <div class="resolved-badge-bar">
+                                <span class="badge-icon">✓</span>
+                                <div class="resolved-info">
+                                  <strong>Llamado subsanado exitosamente</strong>
+                                  <span>Se restituyeron +{{ Math.abs(f.xp_impact) }} XP a tu perfil ({{ f.remediation_action || 'Reto de cátedra superado' }}).</span>
+                                </div>
+                                <button type="button" class="btn-clear-single" (click)="dismissFeedback(f.id)">
+                                  Limpiar Notificación ✕
+                                </button>
                               </div>
                             }
                           </div>

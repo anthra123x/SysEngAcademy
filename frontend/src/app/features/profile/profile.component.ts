@@ -517,20 +517,31 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ]);
 
   // Estados para Retroalimentación y Comunicados del Docente
+  protected readonly Math = Math;
+
+  // Estados para Retroalimentación y Comunicados del Docente
   studentFeedbacks = signal<StudentFeedbackItem[]>([]);
   feedbacksLoading = signal<boolean>(false);
   advisorSubTab = signal<'comunicados' | 'llamados'>('comunicados');
 
   readonly activeWarnings = computed(() =>
-    this.studentFeedbacks().filter(f => f.type === 'warning_strict' || f.type === 'warning_mild')
+    this.studentFeedbacks().filter(f => (f.type === 'warning_strict' || f.type === 'warning_mild') && !f.is_dismissed)
+  );
+
+  readonly activeUnresolvedWarnings = computed(() =>
+    this.activeWarnings().filter(f => !f.is_resolved)
+  );
+
+  readonly resolvedWarnings = computed(() =>
+    this.activeWarnings().filter(f => f.is_resolved)
   );
 
   readonly catedraFeedbacks = computed(() =>
-    this.studentFeedbacks().filter(f => f.type !== 'warning_strict' && f.type !== 'warning_mild')
+    this.studentFeedbacks().filter(f => f.type !== 'warning_strict' && f.type !== 'warning_mild' && !f.is_dismissed)
   );
 
   readonly totalPenalizedXp = computed(() =>
-    this.studentFeedbacks()
+    this.activeUnresolvedWarnings()
       .filter(f => f.xp_impact < 0)
       .reduce((acc, f) => acc + Math.abs(f.xp_impact), 0)
   );
@@ -540,6 +551,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .filter(f => f.xp_impact > 0)
       .reduce((acc, f) => acc + f.xp_impact, 0)
   );
+
+  // Estados para la subsanación interactiva de llamados de atención
+  activeRemediationFeedbackId = signal<number | null>(null);
+  remediatingFeedback = signal<boolean>(false);
+  remediationSuccessNotice = signal<{ feedbackId: number; message: string; restoredXp: number } | null>(null);
+  remediationErrorNotice = signal<string | null>(null);
+  selectedRemediationOption = signal<string>('');
 
   currentDiagQuestionIndex = signal(0);
   selectedDiagAnswer = signal<string | null>(null);
@@ -1067,6 +1085,108 @@ for (let paso = 1; paso <= 3; paso++) {
         this.feedbacksLoading.set(false);
       },
       error: () => this.feedbacksLoading.set(false)
+    });
+  }
+
+  toggleRemediation(feedbackId: number) {
+    if (this.activeRemediationFeedbackId() === feedbackId) {
+      this.activeRemediationFeedbackId.set(null);
+    } else {
+      this.activeRemediationFeedbackId.set(feedbackId);
+      this.selectedRemediationOption.set('');
+      this.remediationErrorNotice.set(null);
+    }
+  }
+
+  getRemediationDrill(feedback: StudentFeedbackItem) {
+    const t = (feedback.title + ' ' + (feedback.message || '')).toLowerCase();
+    if (t.includes('rezago') || t.includes('rendimiento') || t.includes('entrega') || t.includes('inactividad')) {
+      return {
+        question: 'Para subsanar el rezago y regularizar tu estado de cátedra, ¿qué comando en Git confirma tus cambios en el área de preparación registrando formalmente tu entrega con mensaje?',
+        code: '$ git ______ -m "Entrega regularizacion practica de catedra"',
+        options: ['commit', 'push', 'checkout', 'reset'],
+        answer: 'commit',
+        hint: 'El comando para confirmar cambios locales con un mensaje descriptivo es commit.',
+      };
+    }
+    return {
+      question: 'Para regularizar tu actividad práctica y verificar la ejecución en el simulador, selecciona el comando que otorga permisos de ejecución (+x) a tu script de entrega:',
+      code: '$ _____ +x solucion_entrega.sh',
+      options: ['chmod', 'chown', 'touch', 'cat'],
+      answer: 'chmod',
+      hint: 'El comando para cambiar los modos o permisos de acceso a un archivo es chmod.',
+    };
+  }
+
+  submitRemediation(feedback: StudentFeedbackItem) {
+    const drill = this.getRemediationDrill(feedback);
+    const selected = this.selectedRemediationOption();
+    if (!selected) {
+      this.remediationErrorNotice.set('Por favor selecciona una opción técnica para validar la subsanación.');
+      return;
+    }
+
+    if (selected.toLowerCase().trim() !== drill.answer.toLowerCase().trim()) {
+      this.remediationErrorNotice.set(`Respuesta incorrecta. Pista: ${drill.hint}`);
+      return;
+    }
+
+    this.remediatingFeedback.set(true);
+    this.remediationErrorNotice.set(null);
+
+    const email = this.currentStudentEmail();
+    this.teacherSvc.remediateFeedback(feedback.id, 'Reto práctico de regularización completado en el simulador', email).subscribe({
+      next: (res) => {
+        this.remediatingFeedback.set(false);
+        this.activeRemediationFeedbackId.set(null);
+        this.remediationSuccessNotice.set({
+          feedbackId: feedback.id,
+          message: res.message || 'Llamado subsanado con éxito.',
+          restoredXp: res.restored_xp || 0,
+        });
+
+        // Actualizar el estado local del feedback
+        this.studentFeedbacks.update(list =>
+          list.map(item => item.id === feedback.id ? { ...item, is_resolved: true, status: 'resolved', remediation_action: 'Reto de regularización completado' } : item)
+        );
+
+        // Si el usuario actual tiene XP, actualizarlo en auth
+        if (res.student_xp) {
+          const u = this.auth.user();
+          if (u) {
+            u.xp = res.student_xp;
+          }
+        }
+      },
+      error: (err) => {
+        this.remediatingFeedback.set(false);
+        this.remediationErrorNotice.set(err.error?.message || 'Error al subsanar el llamado de atención.');
+      }
+    });
+  }
+
+  dismissFeedback(feedbackId: number) {
+    const email = this.currentStudentEmail();
+    this.teacherSvc.dismissFeedback(feedbackId, email).subscribe({
+      next: () => {
+        this.studentFeedbacks.update(list => list.filter(f => f.id !== feedbackId));
+      },
+      error: () => {
+        // Fallback optimista local
+        this.studentFeedbacks.update(list => list.filter(f => f.id !== feedbackId));
+      }
+    });
+  }
+
+  clearAllResolvedWarnings() {
+    const email = this.currentStudentEmail();
+    this.teacherSvc.clearResolvedFeedbacks(email).subscribe({
+      next: () => {
+        this.studentFeedbacks.update(list => list.filter(f => !f.is_resolved));
+      },
+      error: () => {
+        this.studentFeedbacks.update(list => list.filter(f => !f.is_resolved));
+      }
     });
   }
 

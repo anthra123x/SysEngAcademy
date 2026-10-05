@@ -83,6 +83,12 @@ export interface StudentFeedbackItem {
   ai_context_summary?: string;
   xp_impact: number;
   is_read: boolean;
+  status?: string;
+  is_resolved?: boolean;
+  resolved_at?: string;
+  is_dismissed?: boolean;
+  dismissed_at?: string;
+  remediation_action?: string;
   created_at: string;
 }
 
@@ -942,6 +948,33 @@ export class TeacherService {
         }
         return of([]);
       })
+    );
+  }
+
+  remediateFeedback(feedbackId: number, actionName?: string, email?: string): Observable<{ success: boolean; message: string; feedback: StudentFeedbackItem; restored_xp: number; student_xp: number }> {
+    const payload = {
+      action_name: actionName || 'Reto práctico de regularización completado',
+      email,
+    };
+    return this.api.post<{ success: boolean; message: string; feedback: StudentFeedbackItem; restored_xp: number; student_xp: number }>(
+      `/student/feedbacks/${feedbackId}/remediate`,
+      payload
+    );
+  }
+
+  dismissFeedback(feedbackId: number, email?: string): Observable<{ success: boolean; message: string; feedback_id: number }> {
+    const payload = { email };
+    return this.api.post<{ success: boolean; message: string; feedback_id: number }>(
+      `/student/feedbacks/${feedbackId}/dismiss`,
+      payload
+    );
+  }
+
+  clearResolvedFeedbacks(email?: string): Observable<{ success: boolean; message: string; cleared_count: number }> {
+    const payload = { email };
+    return this.api.post<{ success: boolean; message: string; cleared_count: number }>(
+      `/student/feedbacks/clear-resolved`,
+      payload
     );
   }
 }

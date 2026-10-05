@@ -22,11 +22,21 @@ class StudentFeedback extends Model
         'ai_context_summary',
         'xp_impact',
         'is_read',
+        'status',
+        'is_resolved',
+        'resolved_at',
+        'is_dismissed',
+        'dismissed_at',
+        'remediation_action',
     ];
 
     protected $casts = [
         'xp_impact' => 'integer',
         'is_read' => 'boolean',
+        'is_resolved' => 'boolean',
+        'is_dismissed' => 'boolean',
+        'resolved_at' => 'datetime',
+        'dismissed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
