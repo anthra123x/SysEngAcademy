@@ -29,8 +29,8 @@ export const routes: Routes = [
   },
   {
     path: 'asistente',
-    loadComponent: () => import('./features/ai-chat/ai-chat.component').then(m => m.AiChatComponent),
-    canActivate: [authGuard]
+    redirectTo: '/?openByte=true',
+    pathMatch: 'full'
   },
   {
     path: 'onboarding',

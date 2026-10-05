@@ -1,338 +1,378 @@
-<!-- ===== FAB / 3D ACTOR ===== -->
-    @if (!hidden()) {
-      <!-- Desktop Interactive 3D Actor -->
-      <div class="byte-freewalk-zone" [class.is-open]="open()">
-        <!-- Dynamic Speech Bubble (Alineado con el diseño SysEng: tarjetas oscuras con acento verde/cyan) -->
-        @if (currentBubbleMessage() && !open()) {
-          <div
-            class="byte-speech-bubble"
-            [class.byte-speech-bubble--teacher]="isTeacherMode()"
-            (click)="openPanel()"
-            [attr.aria-label]="'Consejo de Byte: ' + currentBubbleMessage()!.text"
-            title="Haz clic para abrir Byte Console"
-          >
-            <span class="bubble-icon" aria-hidden="true"><app-icon [name]="currentBubbleMessage()!.icon" [size]="16"/></span>
-            <div class="bubble-content">
-              <span class="bubble-tag">{{ isTeacherMode() ? 'Docente & Admin' : 'Tip de Ingeniería' }}</span>
-              <span class="bubble-text">{{ currentBubbleMessage()!.text }}</span>
-            </div>
-            <span class="bubble-tail" aria-hidden="true"></span>
-          </div>
-        }
+<!-- ===== FAB / 3D ACTOR (Desktop) ===== -->
+@if (!hidden()) {
+  <!-- Desktop Interactive 3D Actor -->
+  <div class="byte-freewalk-zone" [class.is-open]="open()">
+    <!-- Dynamic Speech Bubble -->
+    @if (currentBubbleMessage() && !open()) {
+      <div
+        class="byte-speech-bubble"
+        [class.byte-speech-bubble--teacher]="isTeacherMode()"
+        (click)="openPanel()"
+        [attr.aria-label]="'Consejo de Byte: ' + currentBubbleMessage()!.text"
+        title="Haz clic para abrir el chat con Byte"
+      >
+        <span class="bubble-icon" aria-hidden="true"><app-icon [name]="currentBubbleMessage()!.icon" [size]="16"/></span>
+        <div class="bubble-content">
+          <span class="bubble-tag">{{ isTeacherMode() ? 'Docente & Admin' : 'Tip de Ingeniería' }}</span>
+          <span class="bubble-text">{{ currentBubbleMessage()!.text }}</span>
+        </div>
+        <span class="bubble-tail" aria-hidden="true"></span>
+      </div>
+    }
 
-        <!-- 3D Robot Actor cargado de forma diferida (on idle) para no inflar el bundle inicial con Three.js -->
-        @defer (on idle) {
-          <app-byte-robot-3d
-            [isHovered]="isHovered()"
-            [isOpen]="open()"
-            [isThinking]="busy() || streaming()"
-            (robotClick)="togglePanel()"
-            (hoverChange)="onRobotHover($event)"
-          ></app-byte-robot-3d>
-        } @placeholder {
-          <div
-            class="robot-canvas-container robot-placeholder-container"
-            (click)="togglePanel()"
-            role="button"
-            tabindex="0"
-            aria-label="Byte - Asistente IA"
-            title="Haz clic para chatear con Byte"
-          >
-            <div class="byte-placeholder-glow">
-              <app-icon [name]="'bot'" [size]="36"/>
-            </div>
+    <!-- 3D Robot Actor cargado on idle para optimizar carga inicial -->
+    @defer (on idle) {
+      <app-byte-robot-3d
+        [isHovered]="isHovered()"
+        [isOpen]="open()"
+        [isThinking]="busy() || streaming()"
+        (robotClick)="togglePanel()"
+        (hoverChange)="onRobotHover($event)"
+      ></app-byte-robot-3d>
+    } @placeholder {
+      <div
+        class="robot-canvas-container robot-placeholder-container"
+        (click)="togglePanel()"
+        role="button"
+        tabindex="0"
+        aria-label="Byte - Asistente IA"
+        title="Haz clic para chatear con Byte"
+      >
+        <div class="byte-placeholder-glow">
+          <app-icon [name]="'bot'" [size]="36"/>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Mobile Floating FAB (oculto en móvil para no tapar contenido; el acceso es desde la barra inferior) -->
+  @if (!open()) {
+    <button
+      type="button"
+      class="byte-mobile-fab"
+      [class.byte-mobile-fab--teacher]="isTeacherMode()"
+      (click)="togglePanel()"
+      aria-label="Abrir asistente IA Byte"
+      title="Byte - Asistente IA"
+    >
+      <span class="byte-mobile-fab__pulse" aria-hidden="true"></span>
+      <span class="byte-mobile-fab__icon">
+        <app-icon [name]="isTeacherMode() ? 'zap' : 'bot'" [size]="22" />
+      </span>
+      @if (currentBubbleMessage()) {
+        <span class="byte-mobile-fab__dot" aria-hidden="true"></span>
+      }
+    </button>
+  }
+}
+
+<!-- ===== VENTANA / MODAL DE CHAT CON BYTE ===== -->
+@if (open()) {
+  <section
+    class="byte-panel"
+    [class.byte-panel--teacher]="isTeacherMode()"
+    id="byte-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Asistente Byte AI"
+    (keydown.escape)="closePanel()"
+    tabindex="-1"
+  >
+    <!-- 1. Header Moderno -->
+    <header class="byte-header" [class.byte-header--teacher]="isTeacherMode()">
+      <div class="byte-header__left">
+        <div class="byte-header__avatar">
+          <div class="byte-header__icon-glow">
+            <app-icon [name]="isTeacherMode() ? 'zap' : 'bot'" [size]="18" />
           </div>
-        }
+          <span class="byte-status-indicator" [class.is-busy]="busy() || streaming()" title="En línea"></span>
+        </div>
+
+        <div class="byte-header__meta">
+          <div class="byte-header__title-row">
+            <h2 class="byte-header__title">{{ isTeacherMode() ? 'Byte Docente' : 'Byte AI' }}</h2>
+            <span class="byte-role-badge">{{ isTeacherMode() ? 'Académico' : 'Tutor IA' }}</span>
+          </div>
+          <div class="byte-header__subtitle">
+            @if (streaming() || busy()) {
+              <span class="status-typing">
+                <span class="typing-dot"></span>
+                <span>Generando respuesta...</span>
+              </span>
+            } @else {
+              <span class="status-online">En línea · Tutor de Sistemas</span>
+            }
+          </div>
+        </div>
       </div>
 
-      <!-- Dedicated Compact Mobile FAB (Evita que el robot 3D tape las tarjetas en móviles) -->
-      @if (!open()) {
+      <div class="byte-header__actions">
+        @if (isTeacher()) {
+          <button
+            type="button"
+            class="byte-mode-btn"
+            (click)="toggleMode()"
+            [title]="isTeacherMode() ? 'Cambiar a sesión Estudiante' : 'Cambiar a sesión Docente'"
+          >
+            {{ isTeacherMode() ? '⇄ Alumno' : '⇄ Docente' }}
+          </button>
+        }
+
         <button
           type="button"
-          class="byte-mobile-fab"
-          [class.byte-mobile-fab--teacher]="isTeacherMode()"
-          (click)="togglePanel()"
-          aria-label="Abrir asistente IA Byte"
-          title="Byte - Asistente IA"
+          class="byte-icon-btn"
+          (click)="resetConversation()"
+          title="Reiniciar chat"
+          aria-label="Limpiar conversación"
         >
-          <span class="byte-mobile-fab__pulse" aria-hidden="true"></span>
-          <span class="byte-mobile-fab__icon">
-            <app-icon [name]="isTeacherMode() ? 'zap' : 'bot'" [size]="22" />
-          </span>
-          @if (currentBubbleMessage()) {
-            <span class="byte-mobile-fab__dot" aria-hidden="true"></span>
-          }
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+            <path d="M21 3v5h-5"/>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+            <path d="M8 16H3v5"/>
+          </svg>
         </button>
-      }
+
+        <button
+          type="button"
+          class="byte-icon-btn byte-icon-btn--close"
+          (click)="closePanel()"
+          title="Cerrar (✕)"
+          aria-label="Cerrar chat"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. Alerta sin conexión (si aplica) -->
+    @if (offline()) {
+      <div class="byte-offline-banner">
+        <span class="offline-tag">Modo Offline</span>
+        <p>Motor de inferencia local activo.</p>
+        <button type="button" (click)="offline.set(false)" aria-label="Descartar">✕</button>
+      </div>
     }
 
-    <!-- ===== CONSOLA DE CHAT BYTE (Estilo Híbrido Windows Terminal + WSL Linux) ===== -->
-    @if (open()) {
-      <section
-        class="byte-panel"
-        [class.byte-panel--teacher]="isTeacherMode()"
-        id="byte-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Terminal Byte"
-        (keydown.escape)="closePanel()"
-        tabindex="-1"
-      >
-        <!-- Windows Terminal Titlebar / Tab Strip -->
-        <header class="term-tab-strip">
-          <div class="term-tab term-tab--active" [class.term-tab--teacher]="isTeacherMode()">
-            <span class="tab-glyph" aria-hidden="true"><app-icon [name]="isTeacherMode() ? 'zap' : 'terminal'" [size]="13"/></span>
-            <span class="tab-label">{{ isTeacherMode() ? 'PowerShell (Docente)' : 'Ubuntu-WSL: byte@syseng' }}</span>
-            <span class="tab-status-dot" [class.is-busy]="busy()" title="Conexión activa"></span>
-          </div>
+    <!-- 3. Contexto de lección (si está viendo una lección) -->
+    @if (lessonContext(); as ctx) {
+      <div class="byte-context-bar">
+        <span class="ctx-icon">📖</span>
+        <span class="ctx-label">Lección actual:</span>
+        <span class="ctx-title" [title]="ctx.title">{{ ctx.title }}</span>
+      </div>
+    }
 
-          <div class="term-caption-bar">
-            @if (isTeacher()) {
-              <button
-                type="button"
-                class="term-mode-pill"
-                (click)="toggleMode()"
-                [title]="isTeacherMode() ? 'Cambiar a sesión Estudiante' : 'Cambiar a sesión Docente'"
-              >
-                {{ isTeacherMode() ? '⇄ Alumno' : '⇄ Docente' }}
-              </button>
-            }
-
-            <button
-              class="term-cap-btn"
-              type="button"
-              (click)="resetConversation()"
-              title="Limpiar sesión (clear)"
-              aria-label="Limpiar"
-            >
-              <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-              </svg>
-            </button>
-            <button
-              class="term-cap-btn"
-              type="button"
-              (click)="closePanel()"
-              title="Minimizar (—)"
-              aria-label="Minimizar"
-            >
-              <span>—</span>
-            </button>
-            <button
-              class="term-cap-btn term-cap-btn--close"
-              type="button"
-              (click)="closePanel()"
-              title="Cerrar (✕)"
-              aria-label="Cerrar"
-            >
-              <span>✕</span>
-            </button>
-          </div>
-        </header>
-
-        <!-- Banner sin conexión del proveedor (si aplica) -->
-        @if (offline()) {
-          <div class="term-alert-line">
-            <span class="alert-tag">[WARN]</span>
-            <p>Modo autónomo offline activo (simulación local sin latencia).</p>
-            <button type="button" (click)="offline.set(false)" aria-label="Descartar">✕</button>
-          </div>
+    <!-- 4. Chips de Preguntas Sugeridas / Atajos Rápidos -->
+    <div class="byte-chips-wrapper" [class.byte-chips-wrapper--teacher]="isTeacherMode()">
+      <div class="byte-chips-track">
+        @if (isTeacherMode()) {
+          <button type="button" class="byte-chip" (click)="askTeacherAnalytics()" [disabled]="busy()">
+            <span class="chip-emoji">📊</span> Rendimiento de Alumnos
+          </button>
+          <button type="button" class="byte-chip" (click)="askTeacherQuizGen()" [disabled]="busy()">
+            <span class="chip-emoji">📝</span> Generar Evaluación
+          </button>
+          <button type="button" class="byte-chip" (click)="askTeacherAtRisk()" [disabled]="busy()">
+            <span class="chip-emoji">⚠️</span> Alumnos en Riesgo
+          </button>
+          <button type="button" class="byte-chip" (click)="askTeacherPedagogy()" [disabled]="busy()">
+            <span class="chip-emoji">💡</span> Laboratorio Práctico
+          </button>
+        } @else if (lessonContext(); as ctx) {
+          <button type="button" class="byte-chip" (click)="askHint()" [disabled]="busy()">
+            <span class="chip-emoji">💡</span> Pista Socrática
+          </button>
+          <button type="button" class="byte-chip" (click)="explainLesson()" [disabled]="busy()">
+            <span class="chip-emoji">🔍</span> Explicar Concepto
+          </button>
+          <button type="button" class="byte-chip" (click)="practiceLesson()" [disabled]="busy()">
+            <span class="chip-emoji">⚡</span> Quiz Rápido
+          </button>
+          <button type="button" class="byte-chip" (click)="askRoadmap()" [disabled]="busy()">
+            <span class="chip-emoji">🧭</span> Siguiente Paso
+          </button>
+        } @else {
+          <button type="button" class="byte-chip" (click)="askCodeHelp()" [disabled]="busy()">
+            <span class="chip-emoji">🐞</span> ¿Cómo depuro un bug?
+          </button>
+          <button type="button" class="byte-chip" (click)="askGeneralTips()" [disabled]="busy()">
+            <span class="chip-emoji">✨</span> Tips de Clean Code
+          </button>
+          <button type="button" class="byte-chip" (click)="askDailyChallenge()" [disabled]="busy()">
+            <span class="chip-emoji">🎯</span> Reto del Día
+          </button>
+          <button type="button" class="byte-chip" (click)="askGeneralRoadmap()" [disabled]="busy()">
+            <span class="chip-emoji">🗺️</span> Rutas Recomendadas
+          </button>
         }
+      </div>
+    </div>
 
-        <!-- Auth gate -->
-        @if (authRequired()) {
-          <div class="byte-auth">
-            <div class="byte-auth__icon">&lt;/&gt;</div>
-            <p class="byte-auth__text">Inicia sesión en SysEngAcademy para interactuar con Byte</p>
-            <a class="btn btn-primary" routerLink="/auth/login" (click)="closePanel()">Iniciar Sesión</a>
+    <!-- 5. Cuerpo de Mensajes -->
+    <div class="byte-messages" #byteMessages (click)="onMessagesClick($event)">
+      @if (loading()) {
+        <div class="byte-loading-state">
+          <div class="byte-spinner-circle"></div>
+          <span>Sincronizando con Byte...</span>
+        </div>
+      }
+
+      @for (msg of messages(); track msg.id) {
+        @if (msg.role === 'user') {
+          <!-- Mensaje de Usuario (Derecha) -->
+          <div class="chat-row chat-row--user">
+            <div class="chat-bubble chat-bubble--user">
+              <div class="bubble-text">{{ msg.content }}</div>
+            </div>
           </div>
         } @else {
-          <!-- Barra de Comandos / Alias rápidos (Minimalista tipo flags de Linux) -->
-          <div class="cli-flags-bar" [class.cli-flags-bar--teacher]="isTeacherMode()">
-            <span class="cli-flags-prefix">{{ isTeacherMode() ? 'PS>' : '$' }}</span>
-            <div class="cli-flags-scroll">
-              @if (isTeacherMode()) {
-                <button type="button" class="cli-flag" (click)="askTeacherAnalytics()" [disabled]="busy()">--analitica</button>
-                <button type="button" class="cli-flag" (click)="askTeacherQuizGen()" [disabled]="busy()">--crear-quiz</button>
-                <button type="button" class="cli-flag" (click)="askTeacherAtRisk()" [disabled]="busy()">--alumnos-riesgo</button>
-                <button type="button" class="cli-flag" (click)="askTeacherPedagogy()" [disabled]="busy()">--ideas-lab</button>
-              } @else if (lessonContext(); as ctx) {
-                <button type="button" class="cli-flag" (click)="askHint()" [disabled]="busy()">--pista</button>
-                <button type="button" class="cli-flag" (click)="explainLesson()" [disabled]="busy()">--explicar</button>
-                <button type="button" class="cli-flag" (click)="practiceLesson()" [disabled]="busy()">--quiz</button>
-                <button type="button" class="cli-flag" (click)="askRoadmap()" [disabled]="busy()">--siguiente</button>
-              } @else {
-                <button type="button" class="cli-flag" (click)="askGeneralRoadmap()" [disabled]="busy()">--rutas</button>
-                <button type="button" class="cli-flag" (click)="askGeneralTips()" [disabled]="busy()">--tips</button>
-                <button type="button" class="cli-flag" (click)="askCodeHelp()" [disabled]="busy()">--debug</button>
-                <button type="button" class="cli-flag" (click)="askDailyChallenge()" [disabled]="busy()">--reto</button>
-              }
-            </div>
-          </div>
-
-          <!-- Historial de mensajes (Terminal stdout/stdin stream) -->
-          <div class="term-body" #byteMessages (click)="onMessagesClick($event)">
-            <!-- Terminal MOTD line -->
-            <div class="term-motd">
-              <span class="motd-dim">SysEng Terminal v2.4 (WSL-x86_64) · </span>
-              <span class="motd-hl">{{ isTeacherMode() ? 'Sesión Docente Activa' : 'Byte AI Mentor Conectado' }}</span>
+          <!-- Mensaje de Byte (Izquierda) -->
+          <div class="chat-row chat-row--assistant" [class.chat-row--teacher]="isTeacherMode()">
+            <div class="chat-avatar">
+              <app-icon [name]="isTeacherMode() ? 'zap' : 'bot'" [size]="14" />
             </div>
 
-            @if (loading()) {
-              <div class="term-loading">
-                <span class="term-spinner"></span>
-                <span>cargando sesión de terminal...</span>
-              </div>
-            }
-
-            @for (msg of messages(); track msg.id) {
-              @if (msg.role === 'user') {
-                <!-- Línea de comando del usuario (stdin) -->
-                <div class="term-entry term-entry--user">
-                  <div class="term-prompt">
-                    <span class="prompt-user">{{ isTeacherMode() ? 'docente' : 'estudiante' }}</span><span class="prompt-at">@</span><span class="prompt-host">syseng</span>:<span class="prompt-path">~</span><span class="prompt-sym">{{ isTeacherMode() ? '>' : '$' }}</span>
+            <div class="chat-bubble-container">
+              <span class="chat-sender-label">{{ isTeacherMode() ? 'ByteDocente' : 'Byte' }}</span>
+              <div class="chat-bubble chat-bubble--assistant">
+                @if (msg.error) {
+                  <div class="chat-error-notice">
+                    <strong>Aviso del sistema:</strong> {{ msg.content }}
                   </div>
-                  <div class="term-user-cmd">{{ msg.content }}</div>
-                </div>
-              } @else {
-                <!-- Salida del asistente (stdout) -->
-                <div class="term-entry term-entry--byte" [class.term-entry--teacher]="isTeacherMode()">
-                  <div class="term-byte-header">
-                    <span class="byte-prefix">{{ isTeacherMode() ? 'PS>' : '❯' }}</span>
-                    <span class="byte-name">{{ isTeacherMode() ? 'ByteDocente' : 'Byte' }}</span>
-                    <span class="byte-tag">{{ isTeacherMode() ? '[adm]' : '[ia]' }}</span>
-                  </div>
-                  <div class="term-byte-content">
-                    @if (msg.error) {
-                      <div class="term-err-box">
-                        <span class="err-tag">stderr:</span> {{ msg.content }}
-                      </div>
-                    } @else {
-                      <div class="byte-markdown" [innerHTML]="msg.html ?? ''"></div>
-                    }
-                  </div>
-                </div>
-              }
-            }
-
-            <!-- Pensando / streaming -->
-            @if (busy() && !quiz()) {
-              <div class="term-entry term-entry--byte term-entry--thinking" [class.term-entry--teacher]="isTeacherMode()">
-                <div class="term-byte-header">
-                  <span class="byte-prefix">{{ isTeacherMode() ? 'PS>' : '❯' }}</span>
-                  <span class="byte-name">{{ isTeacherMode() ? 'ByteDocente' : 'Byte' }}</span>
-                  <span class="term-thinking-text">{{ assistantStream() ? 'outputting...' : 'executing...' }}</span>
-                </div>
-                <div class="term-byte-content">
-                  @if (assistantStream()) {
-                    <div class="byte-markdown">{{ assistantStream() }}<span class="term-cursor">▋</span></div>
-                  } @else {
-                    <div class="term-blinking-dots">
-                      <span></span><span></span><span></span>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-
-            <!-- Quiz interactivo inline -->
-            @if (quiz(); as q) {
-              <div class="term-quiz-box">
-                <div class="term-quiz-head">
-                  <span class="quiz-badge">TEST</span>
-                  <strong>{{ q.title }}</strong>
-                  @if (quizScore(); as score) {
-                    <span class="quiz-score-pill" [class.passed]="score.correct / score.total >= 0.6">
-                      {{ score.correct }}/{{ score.total }}
-                    </span>
-                  }
-                </div>
-
-                @for (question of q.questions; track $index; let qi = $index) {
-                  <div
-                    class="term-quiz-q"
-                    [class.is-correct]="quizChecked() && isQCorrect(qi)"
-                    [class.is-wrong]="quizChecked() && !isQCorrect(qi)"
-                  >
-                    <p class="q-title">{{ qi + 1 }}. {{ question.question }}</p>
-                    <div class="q-options" role="radiogroup">
-                      @for (answer of question.answers; track $index) {
-                        <label class="q-option-label" [class.selected]="quizSelections()[qi] === $index">
-                          <input
-                            type="radio"
-                            name="byte-q{{ qi }}"
-                            [value]="$index"
-                            [checked]="quizSelections()[qi] === $index"
-                            [disabled]="quizChecked()"
-                            (change)="selectAnswer(qi, $index)"
-                          />
-                          <span>{{ answer }}</span>
-                        </label>
-                      }
-                    </div>
-                    @if (quizChecked()) {
-                      <div class="q-feedback">
-                        <span class="feedback-tag" [class.ok]="isQCorrect(qi)">
-                          {{ isQCorrect(qi) ? '✓ Correcto' : '✗ Incorrecto' }}
-                        </span>
-                        <p>{{ question.explanation }}</p>
-                      </div>
-                    }
-                  </div>
+                } @else {
+                  <div class="byte-markdown" [innerHTML]="msg.html ?? ''"></div>
                 }
-
-                <div class="quiz-footer">
-                  @if (!quizChecked()) {
-                    <button
-                      type="button"
-                      class="btn-term-primary"
-                      (click)="checkQuiz()"
-                      [disabled]="!allAnswered()"
-                    >
-                      [↵ Comprobar Respuestas]
-                    </button>
-                  } @else {
-                    <div class="quiz-footer-actions">
-                      <button type="button" class="btn-term-outline" (click)="practiceLesson()" [disabled]="busy()">
-                        Repetir Práctica
-                      </button>
-                      <button type="button" class="btn-term-ghost" (click)="dismissQuiz()">
-                        Continuar
-                      </button>
-                    </div>
-                  }
-                </div>
               </div>
-            }
-          </div>
-
-          <!-- Prompt de Entrada Terminal (stdin interactive prompt) -->
-          <div class="term-input-bar" [class.term-input-bar--teacher]="isTeacherMode()">
-            <div class="term-input-prompt">
-              <span class="term-user-sym">{{ isTeacherMode() ? 'PS C:\\SysEng>' : '❯' }}</span>
             </div>
-            <textarea
-              #byteInput
-              class="term-input-textarea"
-              [(ngModel)]="inputText"
-              [placeholder]="isTeacherMode() ? 'consulta o comando para docencia...' : 'pregunta o comando para Byte...'"
-              rows="1"
-              (keydown.enter)="onEnter($event)"
-              [disabled]="streaming()"
-              aria-label="Comando para Byte"
-            ></textarea>
-            <button
-              class="term-send-btn"
-              type="button"
-              (click)="sendText()"
-              [disabled]="!inputText.trim() || busy()"
-              title="Ejecutar [Enter]"
-              aria-label="Enviar"
-            >
-              ↵
-            </button>
           </div>
         }
-      </section>
-    }
+      }
+
+      <!-- Indicador de pensando / generando stream -->
+      @if (busy() && !quiz()) {
+        <div class="chat-row chat-row--assistant chat-row--thinking" [class.chat-row--teacher]="isTeacherMode()">
+          <div class="chat-avatar">
+            <app-icon [name]="isTeacherMode() ? 'zap' : 'bot'" [size]="14" />
+          </div>
+
+          <div class="chat-bubble-container">
+            <span class="chat-sender-label">{{ isTeacherMode() ? 'ByteDocente' : 'Byte' }}</span>
+            <div class="chat-bubble chat-bubble--assistant">
+              @if (assistantStream()) {
+                <div class="byte-markdown">{{ assistantStream() }}<span class="stream-beam"></span></div>
+              } @else {
+                <div class="typing-bouncing-dots">
+                  <span></span><span></span><span></span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Quiz interactivo inline -->
+      @if (quiz(); as q) {
+        <div class="byte-quiz-container">
+          <div class="quiz-card-head">
+            <span class="quiz-badge">QUIZ PRÁCTICO</span>
+            <strong class="quiz-title">{{ q.title }}</strong>
+            @if (quizScore(); as score) {
+              <span class="quiz-score-pill" [class.passed]="score.correct / score.total >= 0.6">
+                {{ score.correct }}/{{ score.total }} aciertos
+              </span>
+            }
+          </div>
+
+          @for (question of q.questions; track $index; let qi = $index) {
+            <div
+              class="quiz-card-q"
+              [class.is-correct]="quizChecked() && isQCorrect(qi)"
+              [class.is-wrong]="quizChecked() && !isQCorrect(qi)"
+            >
+              <p class="q-title">{{ qi + 1 }}. {{ question.question }}</p>
+              <div class="q-options" role="radiogroup">
+                @for (answer of question.answers; track $index) {
+                  <label class="q-option-label" [class.selected]="quizSelections()[qi] === $index">
+                    <input
+                      type="radio"
+                      name="byte-q{{ qi }}"
+                      [value]="$index"
+                      [checked]="quizSelections()[qi] === $index"
+                      [disabled]="quizChecked()"
+                      (change)="selectAnswer(qi, $index)"
+                    />
+                    <span>{{ answer }}</span>
+                  </label>
+                }
+              </div>
+              @if (quizChecked()) {
+                <div class="q-feedback">
+                  <span class="feedback-tag" [class.ok]="isQCorrect(qi)">
+                    {{ isQCorrect(qi) ? '✓ Correcto' : '✗ Incorrecto' }}
+                  </span>
+                  <p>{{ question.explanation }}</p>
+                </div>
+              }
+            </div>
+          }
+
+          <div class="quiz-actions-footer">
+            @if (!quizChecked()) {
+              <button
+                type="button"
+                class="btn-quiz-check"
+                (click)="checkQuiz()"
+                [disabled]="!allAnswered()"
+              >
+                Comprobar Respuestas
+              </button>
+            } @else {
+              <div class="quiz-retry-row">
+                <button type="button" class="btn-quiz-retry" (click)="practiceLesson()" [disabled]="busy()">
+                  Repetir Práctica
+                </button>
+                <button type="button" class="btn-quiz-done" (click)="dismissQuiz()">
+                  Continuar
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- 6. Barra de Entrada Inferior Moderna -->
+    <footer class="byte-footer" [class.byte-footer--teacher]="isTeacherMode()">
+      <div class="byte-input-container">
+        <textarea
+          #byteInput
+          class="byte-textarea"
+          [(ngModel)]="inputText"
+          [placeholder]="isTeacherMode() ? 'Consulta o instrucción docente...' : 'Pregúntale a Byte sobre código, bugs, algoritmos...'"
+          rows="1"
+          (keydown.enter)="onEnter($event)"
+          [disabled]="streaming()"
+          aria-label="Pregunta para Byte"
+        ></textarea>
+
+        <button
+          class="byte-send-btn"
+          type="button"
+          (click)="sendText()"
+          [disabled]="!inputText.trim() || busy()"
+          title="Enviar mensaje"
+          aria-label="Enviar"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </footer>
+  </section>
+}

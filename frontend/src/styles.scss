@@ -98,6 +98,12 @@
   --safe-right: env(safe-area-inset-right, 0px);
 }
 
+@media (max-width: 768px) {
+  :root {
+    --header-height: 0px;
+  }
+}
+
 // === TYPOGRAPHY IMPORT ===
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 

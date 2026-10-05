@@ -10,7 +10,7 @@ import {
   ElementRef,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { filter, firstValueFrom, Subscription } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
@@ -62,7 +62,7 @@ REGLAS ESTRICTAS:
 @Component({
   selector: 'app-ai-companion',
   standalone: true,
-  imports: [FormsModule, RouterLink, ByteRobot3dComponent, AppIconComponent],
+  imports: [FormsModule, ByteRobot3dComponent, AppIconComponent],
   templateUrl: './ai-companion.component.html',
   styleUrl: './ai-companion.component.scss',
 })
@@ -143,16 +143,24 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
 
   private routerSub?: Subscription;
   private resizeHandler = () => this.syncRoute();
-  private companionHandler: EventListener = (event: Event) => {
+  private companionOpenHandler: EventListener = (event: Event) => {
     const detail = (event as CustomEvent<{ lesson_id?: number; lesson_title?: string }>).detail ?? {};
     this.onCompanionOpen(detail);
+  };
+  private companionToggleHandler: EventListener = () => {
+    this.togglePanel();
+  };
+  private companionCloseHandler: EventListener = () => {
+    this.closePanel();
   };
 
   ngOnInit() {
     this.routerSub = this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(() => this.syncRoute());
-    window.addEventListener('ai-companion:open', this.companionHandler);
+    window.addEventListener('ai-companion:open', this.companionOpenHandler);
+    window.addEventListener('ai-companion:toggle', this.companionToggleHandler);
+    window.addEventListener('ai-companion:close', this.companionCloseHandler);
     window.addEventListener('resize', this.resizeHandler);
     this.syncRoute();
 
@@ -163,7 +171,9 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
 
   ngOnDestroy() {
     this.routerSub?.unsubscribe();
-    window.removeEventListener('ai-companion:open', this.companionHandler);
+    window.removeEventListener('ai-companion:open', this.companionOpenHandler);
+    window.removeEventListener('ai-companion:toggle', this.companionToggleHandler);
+    window.removeEventListener('ai-companion:close', this.companionCloseHandler);
     window.removeEventListener('resize', this.resizeHandler);
     if (this.bubbleTimer) clearInterval(this.bubbleTimer);
   }
@@ -181,11 +191,13 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
     const isTeacherRoute = url.startsWith('/docente') || (url.startsWith('/perfil') && this.isTeacherMode());
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
     const isLessonMobile = url.includes('/leccion/') && isMobile;
-    const shouldHide = url.startsWith('/asistente') || url.startsWith('/auth') || isTeacherRoute || isLessonMobile;
+    const shouldHide = isTeacherRoute || isLessonMobile;
     this.hidden.set(shouldHide);
     if (shouldHide) this.closePanel();
-    this.lessonContext.set(null);
-    this.quickActions.set(false);
+
+    if (url.includes('openByte=true') || url.includes('byte=open')) {
+      setTimeout(() => this.openPanel(), 80);
+    }
   }
 
   toggleMode() {
@@ -206,10 +218,16 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
     this.authRequired.set(false);
     this.ensureConversationLoaded();
     this.focusInput();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ai-companion:state', { detail: { open: true } }));
+    }
   }
 
   closePanel() {
     this.open.set(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ai-companion:state', { detail: { open: false } }));
+    }
   }
 
   private getStorageKey(): string {
@@ -254,24 +272,24 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
       if (this.isTeacherMode()) {
         this.pushMessage(
           'assistant',
-          '### [SISTEMA: BYTEDOCENTE v2.4]\n\nConsola académica conectada a **SysEng Academy**. Ejecuta comandos de la barra superior o escribe directamente:\n\n- `--analitica` : Dashboard ejecutivo de rendimiento y retención.\n- `--crear-quiz` : Generador de evaluaciones y retos técnicos.\n- `--alumnos-riesgo` : Detección temprana y soporte a rezagados.\n- `--ideas-lab` : Laboratorios prácticos para currículo.'
+          '¡Hola! Soy **ByteDocente**, tu copiloto de ingeniería y analítica para **SysEng Academy**.\n\nPuedes consultarme sobre el progreso de tus alumnos, diseñar evaluaciones y laboratorios prácticos, o auditar métricas de retención.'
         );
       } else {
         this.pushMessage(
           'assistant',
-          '### [SISTEMA: BYTE MENTOR v2.4]\n\nConsola de ingeniería de software conectada. Disponible para depuración, clean code, algoritmos y pistas socráticas:\n\n- `--debug` : Estrategia de aislamiento de bugs.\n- `--tips` : 3 reglas de oro de Clean Code.\n- `--rutas` : Secuencia de aprendizaje recomendada.\n- `--reto` : Desafío de lógica del día.'
+          '¡Hola! Soy **Byte**, tu tutor interactivo de programación e ingeniería de software.\n\nPuedo ayudarte a comprender conceptos complejos, depurar errores de código, optimizar algoritmos o resolver desafíos paso a paso. ¿En qué estás trabajando hoy?'
         );
       }
     }
   }
 
   private onCompanionOpen(detail: { lesson_id?: number; lesson_title?: string }) {
-    const lessonId = detail.lesson_id;
-    if (!lessonId) return;
-    this.lessonContext.set({ id: lessonId, title: detail.lesson_title?.trim() || 'esta lección' });
-    this.quickActions.set(true);
+    if (detail.lesson_id) {
+      this.lessonContext.set({ id: detail.lesson_id, title: detail.lesson_title?.trim() || 'esta lección' });
+      this.quickActions.set(true);
+      this.ensureContextBubble();
+    }
     this.openPanel();
-    this.ensureContextBubble();
     this.focusInput();
   }
 

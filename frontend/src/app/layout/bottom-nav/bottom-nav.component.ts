@@ -1,6 +1,5 @@
-import { Component, inject, computed } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { Component, inject, computed, signal, OnInit, OnDestroy } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { StreakService } from '../../core/services/streak.service';
 import { ClansService } from '../../core/services/clans.service';
@@ -18,6 +17,7 @@ import { ClansService } from '../../core/services/clans.service';
           routerLinkActive="is-active"
           [routerLinkActiveOptions]="{ exact: true }"
           class="nav-tab-item"
+          (click)="onTabClick()"
         >
           <div class="nav-tab-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -33,6 +33,7 @@ import { ClansService } from '../../core/services/clans.service';
           routerLink="/rutas"
           routerLinkActive="is-active"
           class="nav-tab-item"
+          (click)="onTabClick()"
         >
           <div class="nav-tab-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -48,6 +49,7 @@ import { ClansService } from '../../core/services/clans.service';
           routerLink="/cursos"
           routerLinkActive="is-active"
           class="nav-tab-item"
+          (click)="onTabClick()"
         >
           <div class="nav-tab-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -58,53 +60,24 @@ import { ClansService } from '../../core/services/clans.service';
           <span class="nav-tab-label">Cursos</span>
         </a>
 
-        <!-- 4. Clan o Panel Docente -->
-        @if (isTeacher()) {
-          <a
-            routerLink="/docente"
-            routerLinkActive="is-active"
-            class="nav-tab-item"
-          >
-            <div class="nav-tab-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-              </svg>
-            </div>
-            <span class="nav-tab-label">Docente</span>
-          </a>
-        } @else if (auth.isAuthenticated()) {
-          <a
-            routerLink="/clan"
-            routerLinkActive="is-active"
-            class="nav-tab-item nav-tab-item--clan"
-          >
-            <div class="nav-tab-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-              @if (userClan() && userClan()!.streakDays > 0) {
-                <span class="tab-badge-fire" title="Racha grupal activa">🔥</span>
-              }
-            </div>
-            <span class="nav-tab-label">Clan</span>
-          </a>
-        } @else {
-          <a
-            routerLink="/asistente"
-            routerLinkActive="is-active"
-            class="nav-tab-item"
-          >
-            <div class="nav-tab-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-                <rect x="9" y="9" width="6" height="6"></rect>
-                <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path>
-              </svg>
-            </div>
-            <span class="nav-tab-label">Byte IA</span>
-          </a>
-        }
+        <!-- 4. Byte IA (Tutor interactivo de ingeniería) -->
+        <button
+          type="button"
+          class="nav-tab-item nav-tab-item--byte"
+          [class.is-active]="isByteOpen()"
+          (click)="toggleByte($event)"
+          aria-label="Abrir asistente IA Byte"
+        >
+          <div class="nav-tab-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+              <rect x="9" y="9" width="6" height="6"></rect>
+              <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path>
+            </svg>
+            <span class="byte-live-dot" aria-hidden="true"></span>
+          </div>
+          <span class="nav-tab-label">Byte IA</span>
+        </button>
 
         <!-- 5. Perfil o Ingreso -->
         @if (auth.isAuthenticated()) {
@@ -112,6 +85,7 @@ import { ClansService } from '../../core/services/clans.service';
             routerLink="/perfil"
             routerLinkActive="is-active"
             class="nav-tab-item nav-tab-item--profile"
+            (click)="onTabClick()"
           >
             <div class="nav-tab-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -131,6 +105,7 @@ import { ClansService } from '../../core/services/clans.service';
             routerLink="/auth/login"
             routerLinkActive="is-active"
             class="nav-tab-item"
+            (click)="onTabClick()"
           >
             <div class="nav-tab-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -165,7 +140,7 @@ import { ClansService } from '../../core/services/clans.service';
         z-index: 1100;
         height: calc(58px + env(safe-area-inset-bottom, 0px));
         padding-bottom: env(safe-area-inset-bottom, 0px);
-        background: rgba(8, 10, 15, 0.92);
+        background: rgba(8, 10, 15, 0.94);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -216,6 +191,31 @@ import { ClansService } from '../../core/services/clans.service';
             border-radius: 0 0 2px 2px;
             box-shadow: 0 0 8px var(--primary, #0AE98A);
           }
+        }
+      }
+
+      .nav-tab-item--byte {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        outline: none;
+
+        .byte-live-dot {
+          position: absolute;
+          top: -1px;
+          right: -1px;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #00D9FF;
+          box-shadow: 0 0 6px #00D9FF;
+          animation: byte-pulse 2s infinite ease-in-out;
+        }
+
+        &.is-active .byte-live-dot {
+          background: var(--primary, #0AE98A);
+          box-shadow: 0 0 8px var(--primary, #0AE98A);
         }
       }
 
@@ -277,20 +277,59 @@ import { ClansService } from '../../core/services/clans.service';
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.2); }
       }
+
+      @keyframes byte-pulse {
+        0%, 100% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 10px #00D9FF; }
+      }
     }
   `]
 })
-export class MobileBottomNavComponent {
+export class MobileBottomNavComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   router = inject(Router);
   streakService = inject(StreakService);
   clansService = inject(ClansService);
 
+  readonly isByteOpen = signal(false);
+
+  private byteStateHandler = (e: Event) => {
+    const detail = (e as CustomEvent<{ open?: boolean }>).detail;
+    if (detail && typeof detail.open === 'boolean') {
+      this.isByteOpen.set(detail.open);
+    }
+  };
+
+  ngOnInit() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ai-companion:state', this.byteStateHandler);
+    }
+  }
+
+  ngOnDestroy() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('ai-companion:state', this.byteStateHandler);
+    }
+  }
+
+  toggleByte(e: Event) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ai-companion:toggle'));
+    }
+  }
+
+  onTabClick() {
+    if (this.isByteOpen() && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ai-companion:close'));
+    }
+  }
+
   readonly isVisible = computed(() => {
     const url = this.router.url;
-    // Ocultar en aula/lección y pantallas de autenticación limpia
+    // Ocultar únicamente en aula interactiva / reproductor de lecciones
     if (url.includes('/leccion/')) return false;
-    if (url.startsWith('/auth/')) return false;
     return true;
   });
 
