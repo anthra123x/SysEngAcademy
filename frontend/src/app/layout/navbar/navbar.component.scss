@@ -786,7 +786,7 @@
     .streak-nav-pill {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       padding: 3px 9px;
       background: rgba(255, 136, 0, 0.12);
       border: 1px solid rgba(255, 136, 0, 0.35);
@@ -798,10 +798,64 @@
       color: #ff9d33;
       transition: all var(--transition-fast, 0.15s ease);
 
+      .streak-icon-wrap {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+
       &:hover {
         background: rgba(255, 136, 0, 0.22);
         border-color: #ff9d33;
         transform: translateY(-1px);
+      }
+
+      &--active {
+        background: linear-gradient(135deg, rgba(255, 107, 0, 0.18), rgba(255, 184, 0, 0.18));
+        border-color: rgba(255, 136, 0, 0.6);
+        color: #ffaa33;
+        box-shadow: 0 0 10px rgba(255, 136, 0, 0.25);
+        animation: flame-glow-pulse 2.4s infinite alternate ease-in-out;
+      }
+
+      &--pending {
+        background: rgba(245, 158, 11, 0.12);
+        border-color: rgba(245, 158, 11, 0.35);
+        color: #fbbf24;
+      }
+
+      &--extinguished {
+        background: rgba(100, 116, 139, 0.12);
+        border-color: rgba(100, 116, 139, 0.3);
+        color: #94a3b8;
+        box-shadow: none;
+
+        .streak-icon-wrap {
+          filter: grayscale(100%) opacity(0.5);
+        }
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.12);
+          border-color: rgba(239, 68, 68, 0.4);
+          color: #f87171;
+
+          .streak-icon-wrap {
+            filter: grayscale(0%) opacity(0.85);
+          }
+        }
+      }
+
+      .streak-nav-recover-tag {
+        font-size: 8.5px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        background: #f97316;
+        color: #06080e;
+        padding: 1px 5px;
+        border-radius: 4px;
+        animation: recover-badge-blink 1.8s infinite ease-in-out;
       }
 
       @media (max-width: 500px) {
@@ -809,4 +863,14 @@
         font-size: 10px;
         svg { width: 10px; height: 10px; }
       }
+    }
+
+    @keyframes flame-glow-pulse {
+      0% { box-shadow: 0 0 6px rgba(255, 136, 0, 0.2); }
+      100% { box-shadow: 0 0 14px rgba(255, 136, 0, 0.5); }
+    }
+
+    @keyframes recover-badge-blink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.95); }
     }

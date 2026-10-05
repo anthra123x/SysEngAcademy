@@ -120,6 +120,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return this.streakService.currentStreak();
   });
 
+  readonly isStreakActive = computed(() => this.streakService.isStreakActive());
+  readonly isStreakPending = computed(() => this.streakService.isStreakPending());
+  readonly isStreakExtinguished = computed(() => this.streakService.isStreakExtinguished());
+  readonly canRecoverStreak = computed(() => this.streakService.canRecoverStreak());
+  readonly previousStreak = computed(() => this.streakService.previousStreak());
+
+  readonly streakNavTooltip = computed(() => {
+    if (this.canRecoverStreak()) {
+      return `¡Racha apagada! Perdiste ${this.previousStreak()}d. Haz clic para recuperarla con un ejercicio sencillo.`;
+    }
+    if (this.isStreakExtinguished()) {
+      return 'Racha apagada (0 días). Realiza un reto o estudia para encenderla.';
+    }
+    if (this.isStreakPending()) {
+      return `Racha de ${this.studentStreak()}d en pausa. ¡Estudia hoy para mantenerla!`;
+    }
+    return `🔥 Racha de ${this.studentStreak()}d activa hoy. ¡Excelente constancia!`;
+  });
+
   readonly userClan = computed(() => {
     return this.clansService.userClan();
   });

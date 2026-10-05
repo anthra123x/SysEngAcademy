@@ -13,8 +13,8 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password', 'avatar', 'role',
-        'current_streak', 'max_streak', 'last_activity_date',
-        'today_study_seconds', 'total_study_seconds', 'xp', 'specialization',
+        'current_streak', 'previous_streak', 'max_streak', 'last_activity_date',
+        'streak_recovered_at', 'today_study_seconds', 'total_study_seconds', 'xp', 'specialization',
     ];
 
     protected $hidden = [
@@ -27,7 +27,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'last_activity_date' => 'date',
+            'streak_recovered_at' => 'datetime',
             'current_streak' => 'integer',
+            'previous_streak' => 'integer',
             'max_streak' => 'integer',
             'today_study_seconds' => 'integer',
             'total_study_seconds' => 'integer',

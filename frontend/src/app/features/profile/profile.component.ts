@@ -489,8 +489,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   // Streak state
   readonly currentStreak = computed(() => this.streakService.currentStreak());
+  readonly previousStreak = computed(() => this.streakService.previousStreak());
   readonly maxStreak = computed(() => this.streakService.maxStreak());
-  todayCheckedIn = signal(true);
+  readonly canRecoverStreak = computed(() => this.streakService.canRecoverStreak());
+  readonly flameState = computed(() => this.streakService.flameState());
+  readonly isStreakActive = computed(() => this.streakService.isStreakActive());
+  readonly isStreakPending = computed(() => this.streakService.isStreakPending());
+  readonly isStreakExtinguished = computed(() => this.streakService.isStreakExtinguished());
+  readonly todayCheckedIn = computed(() => this.streakService.isActiveToday());
+  readonly recoveryDrill = computed(() => this.streakService.recoveryDrill());
+  readonly isRecovering = computed(() => this.streakService.isRecovering());
+  readonly recoverySuccessMessage = computed(() => this.streakService.recoverySuccessMessage());
+  readonly recoveryErrorMessage = computed(() => this.streakService.recoveryErrorMessage());
+  readonly selectedRecoveryOption = signal<string>('');
 
   // Diagnostic & Advisor AI state
   diagnosticCompleted = signal(false);
@@ -1225,8 +1236,30 @@ for (let paso = 1; paso <= 3; paso++) {
   });
 
   doDailyCheckIn() {
-    this.todayCheckedIn.set(true);
     this.streakService.recordActivity('pulse');
+  }
+
+  selectRecoveryOption(opt: string) {
+    this.selectedRecoveryOption.set(opt);
+  }
+
+  refreshRecoveryDrill() {
+    const currentId = this.recoveryDrill()?.id;
+    this.selectedRecoveryOption.set('');
+    this.streakService.fetchRecoveryDrill(currentId);
+  }
+
+  submitRecoveryDrill() {
+    const drill = this.recoveryDrill();
+    const answer = this.selectedRecoveryOption();
+    if (!drill || !answer || this.isRecovering()) return;
+
+    this.streakService.recoverStreak(drill.id, answer).subscribe({
+      next: () => {
+        this.selectedRecoveryOption.set('');
+      },
+      error: () => {},
+    });
   }
 
   askAdvisor(suggestedPrompt?: string) {

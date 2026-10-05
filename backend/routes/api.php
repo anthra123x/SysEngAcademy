@@ -41,6 +41,8 @@ Route::get('/clans', [ClanController::class, 'index']);
 Route::get('/clans/{id}', [ClanController::class, 'show']);
 Route::post('/user/activity-ping', [StreakController::class, 'ping']);
 Route::get('/user/streak', [StreakController::class, 'status']);
+Route::get('/user/streak/recovery-drill', [StreakController::class, 'recoveryDrill']);
+Route::post('/user/streak/recover', [StreakController::class, 'recover']);
 Route::post('/clans/{id}/join', [ClanController::class, 'join']);
 Route::post('/clans/{id}/leave', [ClanController::class, 'leave']);
 Route::post('/clans/{id}/posts', [ClanController::class, 'storePost']);
