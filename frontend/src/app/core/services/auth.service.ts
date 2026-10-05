@@ -30,9 +30,17 @@ export class AuthService {
     return this.api.post<{ user: User; token: string; verification_required?: boolean; verification_code?: string }>('/auth/register', data, 25000).pipe(
       tap(res => this.setSession(res)),
       catchError(err => {
-        const message = err?.error?.message
-          || 'No se pudo completar el registro. Por favor verifica tu conexión e intenta de nuevo.';
-        return throwError(() => ({ error: { message } }));
+        const errors = err?.error?.errors;
+        const firstField = errors ? (Object.values(errors)[0] as string[])?.[0] : null;
+        const message = firstField
+          || err?.error?.message
+          || 'No se pudo completar el registro. Por favor verifica los datos ingresados e intenta de nuevo.';
+        return throwError(() => ({
+          error: {
+            message,
+            errors,
+          }
+        }));
       })
     );
   }
@@ -44,9 +52,17 @@ export class AuthService {
     }, 25000).pipe(
       tap(res => this.setSession(res)),
       catchError(err => {
-        const message = err?.error?.message
+        const errors = err?.error?.errors;
+        const firstField = errors ? (Object.values(errors)[0] as string[])?.[0] : null;
+        const message = firstField
+          || err?.error?.message
           || 'Las credenciales no son correctas. Por favor verifica tu correo y contraseña.';
-        return throwError(() => ({ error: { message } }));
+        return throwError(() => ({
+          error: {
+            message,
+            errors,
+          }
+        }));
       })
     );
   }

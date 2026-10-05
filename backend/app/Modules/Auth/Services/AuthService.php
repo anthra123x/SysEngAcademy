@@ -19,13 +19,29 @@ class AuthService
      */
     public function register(RegisterDTO $dto): array
     {
-        $user = User::create([
-            'name'              => $dto->name,
-            'email'             => $dto->email,
-            'password'          => $dto->password,
-            'role'              => $dto->role,
-            'email_verified_at' => now(),
-        ]);
+        try {
+            $user = User::create([
+                'name'                => $dto->name,
+                'email'               => $dto->email,
+                'password'            => $dto->password,
+                'role'                => $dto->role,
+                'email_verified_at'   => now(),
+                'current_streak'      => 1,
+                'max_streak'          => 1,
+                'last_activity_date'  => now()->toDateString(),
+                'today_study_seconds' => 0,
+                'total_study_seconds' => 0,
+                'xp'                  => 50,
+            ]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException|\Illuminate\Database\QueryException $e) {
+            // Manejo preventivo si ocurre concurrencia o colisión en BD
+            if (str_contains($e->getMessage(), 'users_email_unique') || (string) $e->getCode() === '23505') {
+                throw ValidationException::withMessages([
+                    'email' => ['Este correo electrónico ya se encuentra registrado. ¿Deseas iniciar sesión?'],
+                ]);
+            }
+            throw $e;
+        }
 
         $token = AuthTokenService::issue($user);
 

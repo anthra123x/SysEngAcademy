@@ -17,10 +17,30 @@ class AuthController extends Controller
 
     public function register(Request $request): JsonResponse
     {
+        // 1. Sanitizar y normalizar entradas en la frontera (OWASP)
+        $cleanEmail = strtolower(trim((string) $request->input('email', '')));
+        $cleanName  = trim(preg_replace('/\s+/', ' ', (string) $request->input('name', '')));
+
+        $request->merge([
+            'email' => $cleanEmail,
+            'name'  => $cleanName,
+        ]);
+
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'name'     => 'required|string|min:3|max:255',
+            'email'    => 'required|string|email|max:255|unique:users,email',
+            'password' => ['required', 'string', 'min:8', 'confirmed', 'regex:/[a-zA-Z]/', 'regex:/[0-9]/'],
+        ], [
+            'name.required'      => 'El nombre completo es obligatorio.',
+            'name.min'           => 'El nombre debe contener al menos 3 caracteres.',
+            'name.max'           => 'El nombre no puede exceder los 255 caracteres.',
+            'email.required'     => 'El correo electrónico es obligatorio.',
+            'email.email'        => 'Por favor ingresa un correo electrónico válido (ejemplo: usuario@correo.com).',
+            'email.unique'       => 'Este correo electrónico ya se encuentra registrado. ¿Deseas iniciar sesión?',
+            'password.required'  => 'La contraseña es obligatoria.',
+            'password.min'       => 'La contraseña debe contener al menos 8 caracteres.',
+            'password.confirmed' => 'Las contraseñas no coinciden. Por favor verifica ambos campos.',
+            'password.regex'     => 'Por seguridad, la contraseña debe contener al menos una letra y un número.',
         ]);
 
         $dto = RegisterDTO::fromArray($validated);
@@ -61,9 +81,17 @@ class AuthController extends Controller
 
     public function login(Request $request): JsonResponse
     {
+        $request->merge([
+            'email' => strtolower(trim((string) $request->input('email', ''))),
+        ]);
+
         $validated = $request->validate([
-            'email'    => 'required|email',
+            'email'    => 'required|string|email',
             'password' => 'required|string',
+        ], [
+            'email.required'    => 'El correo electrónico es obligatorio.',
+            'email.email'       => 'Por favor ingresa un correo electrónico válido.',
+            'password.required' => 'La contraseña es obligatoria.',
         ]);
 
         $dto = LoginDTO::fromArray($validated);
