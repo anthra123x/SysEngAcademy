@@ -103,134 +103,165 @@
   }
 }
 
-<!-- ===== EXPERIENCIA MINIMALISTA BYTE MOBILE & DESKTOP (ESTILO GEMINI) ===== -->
+<!-- ===== EXPERIENCIA BYTE: MOBILE (GEMINI) Y DESKTOP PC (TERMINAL LINUX CON ILUMINACIÓN DINÁMICA) ===== -->
 @if (open()) {
-  <section
-    class="byte-panel"
-    [class.byte-panel--teacher]="isTeacherMode()"
-    [class.state-idle]="uiState() === 'idle'"
-    [class.state-asking]="uiState() === 'asking'"
-    [class.state-responding]="uiState() === 'responding'"
-    id="byte-panel"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Asistente Byte IA"
-    (keydown.escape)="closePanel()"
-    tabindex="-1"
-  >
-    <!-- Capa de Iluminación Ambiental / Aurora (Reacciona a Pedir vs Responder) -->
-    <div class="byte-ambient-aura" aria-hidden="true">
-      <div class="aura-glow-core"></div>
-      <div class="aura-glow-spread"></div>
-    </div>
+  @if (isMobileView()) {
+    <!-- ===== EXPERIENCIA MINIMALISTA BYTE MOBILE (ESTILO GEMINI) ===== -->
+    <section
+      class="byte-panel byte-panel--mobile"
+      [class.byte-panel--teacher]="isTeacherMode()"
+      [class.state-idle]="uiState() === 'idle'"
+      [class.state-asking]="uiState() === 'asking'"
+      [class.state-responding]="uiState() === 'responding'"
+      id="byte-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Asistente Byte IA"
+      (keydown.escape)="closePanel()"
+      tabindex="-1"
+    >
+      <!-- Capa de Iluminación Ambiental / Aurora (Reacciona a Pedir vs Responder) -->
+      <div class="byte-ambient-aura" aria-hidden="true">
+        <div class="aura-glow-core"></div>
+        <div class="aura-glow-spread"></div>
+      </div>
 
-    <!-- 1. Top Bar Minimalista -->
-    <header class="byte-min-topbar">
-      <div class="topbar-left">
-        <button
-          type="button"
-          class="model-selector-pill"
-          (click)="isTeacher() ? toggleMode() : null"
-          [class.is-clickable]="isTeacher()"
-          [title]="isTeacher() ? 'Cambiar entre sesión Docente y Alumno' : 'Modelo Byte 2.5 Fast'"
-        >
-          <span class="model-pulse-dot" [class.is-busy]="busy() || streaming()"></span>
-          <span class="model-name">
-            {{ isTeacherMode() ? 'Byte Docente' : 'Byte 2.5 Fast' }}
-          </span>
-          @if (isTeacher()) {
-            <svg class="model-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
+      <!-- 1. Top Bar Minimalista -->
+      <header class="byte-min-topbar">
+        <div class="topbar-left">
+          <button
+            type="button"
+            class="model-selector-pill"
+            (click)="isTeacher() ? toggleMode() : null"
+            [class.is-clickable]="isTeacher()"
+            [title]="isTeacher() ? 'Cambiar entre sesión Docente y Alumno' : 'Modelo Byte 2.5 Fast'"
+          >
+            <span class="model-pulse-dot" [class.is-busy]="busy() || streaming()"></span>
+            <span class="model-name">
+              {{ isTeacherMode() ? 'Byte Docente' : 'Byte 2.5 Fast' }}
+            </span>
+            @if (isTeacher()) {
+              <svg class="model-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            }
+          </button>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Botón Reiniciar Conversación (Icono circular de reinicio) -->
+          <button
+            type="button"
+            class="btn-top-action"
+            (click)="resetConversation()"
+            title="Reiniciar chat"
+            aria-label="Reiniciar chat"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
             </svg>
-          }
-        </button>
-      </div>
+          </button>
 
-      <div class="topbar-right">
-        <!-- Botón Reiniciar Conversación (Icono circular de reinicio) -->
-        <button
-          type="button"
-          class="btn-top-action"
-          (click)="resetConversation()"
-          title="Reiniciar chat"
-          aria-label="Reiniciar chat"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-            <path d="M3 3v5h5"></path>
-          </svg>
-        </button>
-
-        <!-- Botón Cerrar (✕) -->
-        <button
-          type="button"
-          class="btn-top-action btn-top-action--close"
-          (click)="closePanel()"
-          title="Cerrar"
-          aria-label="Cerrar chat"
-        >
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-    </header>
-
-    <!-- 2. Área Central de Contenido -->
-    <main class="byte-content-area">
-      <!-- Banner sin conexión (si aplica) -->
-      @if (offline()) {
-        <div class="byte-offline-badge">
-          <span>Modo local autónomo activo</span>
-          <button type="button" (click)="offline.set(false)">✕</button>
+          <!-- Botón Cerrar (✕) -->
+          <button
+            type="button"
+            class="btn-top-action btn-top-action--close"
+            (click)="closePanel()"
+            title="Cerrar"
+            aria-label="Cerrar chat"
+          >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
-      }
+      </header>
 
-      <!-- CASO A: Estado Inicial / Vacío (Ultra Minimalista Estilo Gemini) -->
-      @if (!hasMessages()) {
-        <div class="byte-gemini-hero">
-          <!-- Mascota Byte IA 3D (Cabecita Interactiva Basada en Modelo de Referencia) -->
-          <div class="byte-mascot-head-container">
-            <div class="byte-mascot-aura"></div>
-            <app-byte-head-3d
-              [isThinking]="busy() || streaming()"
-              [uiState]="uiState()"
-            ></app-byte-head-3d>
+      <!-- 2. Área Central de Contenido -->
+      <main class="byte-content-area">
+        <!-- Banner sin conexión (si aplica) -->
+        @if (offline()) {
+          <div class="byte-offline-badge">
+            <span>Modo local autónomo activo</span>
+            <button type="button" (click)="offline.set(false)">✕</button>
           </div>
+        }
 
-          <!-- Pregunta Principal Centrada -->
-          <h1 class="gemini-hero-title">¿En qué nos enfocamos hoy?</h1>
-
-          @if (lessonContext(); as ctx) {
-            <div class="gemini-context-pill">
-              <span class="ctx-pill-dot"></span>
-              <span class="ctx-pill-text">Lección: {{ ctx.title }}</span>
+        <!-- CASO A: Estado Inicial / Vacío (Ultra Minimalista Estilo Gemini) -->
+        @if (!hasMessages()) {
+          <div class="byte-gemini-hero">
+            <!-- Mascota Byte IA 3D (Cabecita Interactiva Basada en Modelo de Referencia) -->
+            <div class="byte-mascot-head-container">
+              <div class="byte-mascot-aura"></div>
+              <app-byte-head-3d
+                [isThinking]="busy() || streaming()"
+                [uiState]="uiState()"
+              ></app-byte-head-3d>
             </div>
-          }
-        </div>
-      } @else {
-        <!-- CASO B: Flujo Conversacional Activo -->
-        <div class="byte-messages-scroll" #byteMessages (click)="onMessagesClick($event)">
-          @if (loading()) {
-            <div class="byte-loading-pulse">
-              <span class="pulse-ring"></span>
-              <span>Cargando conversación...</span>
-            </div>
-          }
 
-          @for (msg of messages(); track msg.id) {
-            @if (msg.role === 'user') {
-              <!-- Mensaje del usuario (Píldora minimalista a la derecha) -->
-              <div class="conv-row conv-row--user">
-                <div class="conv-bubble conv-bubble--user">
-                  {{ msg.content }}
-                </div>
+            <!-- Pregunta Principal Centrada -->
+            <h1 class="gemini-hero-title">¿En qué nos enfocamos hoy?</h1>
+
+            @if (lessonContext(); as ctx) {
+              <div class="gemini-context-pill">
+                <span class="ctx-pill-dot"></span>
+                <span class="ctx-pill-text">Lección: {{ ctx.title }}</span>
               </div>
-            } @else {
-              <!-- Mensaje de Byte (Limpio a la izquierda con estrella mini) -->
-              <div class="conv-row conv-row--assistant">
-                <div class="assistant-glyph-mini" title="Byte IA">
+            }
+          </div>
+        } @else {
+          <!-- CASO B: Flujo Conversacional Activo -->
+          <div class="byte-messages-scroll" #byteMessages (click)="onMessagesClick($event)">
+            @if (loading()) {
+              <div class="byte-loading-pulse">
+                <span class="pulse-ring"></span>
+                <span>Cargando conversación...</span>
+              </div>
+            }
+
+            @for (msg of messages(); track msg.id) {
+              @if (msg.role === 'user') {
+                <!-- Mensaje del usuario (Píldora minimalista a la derecha) -->
+                <div class="conv-row conv-row--user">
+                  <div class="conv-bubble conv-bubble--user">
+                    {{ msg.content }}
+                  </div>
+                </div>
+              } @else {
+                <!-- Mensaje de Byte (Limpio a la izquierda con estrella mini) -->
+                <div class="conv-row conv-row--assistant">
+                  <div class="assistant-glyph-mini" title="Byte IA">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                      <rect x="2.5" y="3" width="19" height="15" rx="3.5" fill="#0B132B" stroke="#00D9FF" stroke-width="1.6"/>
+                      <rect x="10" y="18" width="4" height="2" fill="#475569" rx="0.5"/>
+                      <rect x="8" y="20" width="8" height="1.5" fill="#334155" rx="0.75"/>
+                      <rect x="6.5" y="7.5" width="2.2" height="4.5" rx="1" fill="#00F0FF"/>
+                      <path d="M14.5 10.5C15 9 17 9 17.5 10.5" stroke="#00F0FF" stroke-width="1.4" stroke-linecap="round"/>
+                      <path d="M11 13.5C11.5 14.3 12.5 14.3 13 13.5" stroke="#00F0FF" stroke-width="1.2" stroke-linecap="round"/>
+                      <circle cx="5.5" cy="12.5" r="1.1" fill="#F43F5E" opacity="0.85"/>
+                      <circle cx="18.5" cy="12.5" r="1.1" fill="#F43F5E" opacity="0.85"/>
+                    </svg>
+                  </div>
+
+                  <div class="conv-body">
+                    @if (msg.error) {
+                      <div class="conv-error-callout">
+                        {{ msg.content }}
+                      </div>
+                    } @else {
+                      <div class="byte-markdown" [innerHTML]="msg.html ?? ''"></div>
+                    }
+                  </div>
+                </div>
+              }
+            }
+
+            <!-- Estado de Streaming / Generando respuesta -->
+            @if (busy() && !quiz()) {
+              <div class="conv-row conv-row--assistant conv-row--streaming">
+                <div class="assistant-glyph-mini glyph-pulsing" title="Byte pensando">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
                     <rect x="2.5" y="3" width="19" height="15" rx="3.5" fill="#0B132B" stroke="#00D9FF" stroke-width="1.6"/>
                     <rect x="10" y="18" width="4" height="2" fill="#475569" rx="0.5"/>
@@ -244,9 +275,321 @@
                 </div>
 
                 <div class="conv-body">
+                  @if (assistantStream()) {
+                    <div class="byte-markdown">{{ assistantStream() }}<span class="stream-beam"></span></div>
+                  } @else {
+                    <div class="gemini-thinking-dots">
+                      <span></span><span></span><span></span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Quiz Interactivo inline (si aplica) -->
+            @if (quiz(); as q) {
+              <div class="gemini-quiz-card">
+                <div class="quiz-card-header">
+                  <span class="quiz-pill-badge">EVALUACIÓN RÁPIDA</span>
+                  <strong class="quiz-title-text">{{ q.title }}</strong>
+                  @if (quizScore(); as score) {
+                    <span class="quiz-score-badge" [class.passed]="score.correct / score.total >= 0.6">
+                      {{ score.correct }}/{{ score.total }}
+                    </span>
+                  }
+                </div>
+
+                @for (question of q.questions; track $index; let qi = $index) {
+                  <div
+                    class="quiz-q-item"
+                    [class.is-correct]="quizChecked() && isQCorrect(qi)"
+                    [class.is-wrong]="quizChecked() && !isQCorrect(qi)"
+                  >
+                    <p class="quiz-q-text">{{ qi + 1 }}. {{ question.question }}</p>
+                    <div class="quiz-options-group">
+                      @for (answer of question.answers; track $index) {
+                        <label class="quiz-option-pill" [class.selected]="quizSelections()[qi] === $index">
+                          <input
+                            type="radio"
+                            name="byte-q{{ qi }}"
+                            [value]="$index"
+                            [checked]="quizSelections()[qi] === $index"
+                            [disabled]="quizChecked()"
+                            (change)="selectAnswer(qi, $index)"
+                          />
+                          <span>{{ answer }}</span>
+                        </label>
+                      }
+                    </div>
+                    @if (quizChecked()) {
+                      <div class="quiz-explanation-box">
+                        <span class="res-tag" [class.ok]="isQCorrect(qi)">
+                          {{ isQCorrect(qi) ? '✓ Correcto' : '✗ Incorrecto' }}
+                        </span>
+                        <p>{{ question.explanation }}</p>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <div class="quiz-footer-row">
+                  @if (!quizChecked()) {
+                    <button
+                      type="button"
+                      class="btn-quiz-submit"
+                      (click)="checkQuiz()"
+                      [disabled]="!allAnswered()"
+                    >
+                      Comprobar
+                    </button>
+                  } @else {
+                    <button type="button" class="btn-quiz-retry" (click)="practiceLesson()" [disabled]="busy()">
+                      Repetir
+                    </button>
+                    <button type="button" class="btn-quiz-dismiss" (click)="dismissQuiz()">
+                      Continuar
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </main>
+
+      <!-- 3. Menú Flotante de Atajos Rápidos (Cuando se presiona el '+') -->
+      @if (showQuickMenu()) {
+        <div class="gemini-quick-tray" (click)="$event.stopPropagation()">
+          <div class="tray-header">
+            <span>Acciones Rápidas</span>
+            <button type="button" class="tray-close" (click)="showQuickMenu.set(false)">✕</button>
+          </div>
+          <div class="tray-chips">
+            @if (isTeacherMode()) {
+              <button type="button" class="tray-chip" (click)="askTeacherAnalytics()">📊 Analítica general</button>
+              <button type="button" class="tray-chip" (click)="askTeacherQuizGen()">📝 Generar quiz</button>
+              <button type="button" class="tray-chip" (click)="askTeacherAtRisk()">⚠️ Alumnos en riesgo</button>
+              <button type="button" class="tray-chip" (click)="askTeacherPedagogy()">💡 Laboratorios prácticos</button>
+            } @else if (lessonContext(); as ctx) {
+              <button type="button" class="tray-chip" (click)="askHint()">💡 Pista socrática</button>
+              <button type="button" class="tray-chip" (click)="explainLesson()">🔍 Explicar paso a paso</button>
+              <button type="button" class="tray-chip" (click)="practiceLesson()">⚡ Mini quiz</button>
+              <button type="button" class="tray-chip" (click)="askRoadmap()">🧭 Siguiente tema</button>
+            } @else {
+              <button type="button" class="tray-chip" (click)="askCodeHelp()">🐞 Depurar mi código</button>
+              <button type="button" class="tray-chip" (click)="askGeneralTips()">✨ Clean Code</button>
+              <button type="button" class="tray-chip" (click)="askDailyChallenge()">🎯 Reto del día</button>
+              <button type="button" class="tray-chip" (click)="askGeneralRoadmap()">🗺️ Rutas de aprendizaje</button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- 4. Barra de Entrada Flotante Estilo Gemini ('Ask Byte') -->
+      <footer class="byte-floating-input-wrap">
+        <div class="gemini-input-pill" [class.is-focused]="isInputFocused()">
+          <!-- Botón '+' para atajos rápidos -->
+          <button
+            type="button"
+            class="pill-btn-plus"
+            (click)="showQuickMenu.update(v => !v)"
+            [class.is-active]="showQuickMenu()"
+            title="Atajos rápidos"
+            aria-label="Atajos"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+
+          <!-- Campo de Texto -->
+          <textarea
+            #byteInput
+            class="pill-textarea"
+            [(ngModel)]="inputText"
+            [placeholder]="isTeacherMode() ? 'Pregúntale a Byte Docente...' : 'Pregúntale a Byte...'"
+            rows="1"
+            (focus)="isInputFocused.set(true)"
+            (blur)="isInputFocused.set(false)"
+            (keydown.enter)="onEnter($event)"
+            [disabled]="streaming()"
+            aria-label="Pregunta para Byte"
+          ></textarea>
+
+          <!-- Botón de Envío / Estado Waveform -->
+          <button
+            type="button"
+            class="pill-btn-send"
+            (click)="sendText()"
+            [disabled]="!inputText.trim() || busy()"
+            [class.can-send]="inputText.trim().length > 0 && !busy()"
+            title="Enviar"
+            aria-label="Enviar pregunta"
+          >
+            @if (busy() || streaming()) {
+              <span class="btn-spinner-ring"></span>
+            } @else if (inputText.trim().length > 0) {
+              <!-- Flecha de envío activa -->
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5"></line>
+                <polyline points="5 12 12 5 19 12"></polyline>
+              </svg>
+            } @else {
+              <!-- Icono de ondas auditivas / asistente tipo Gemini cuando está vacío -->
+              <div class="gemini-waveform-icon" aria-hidden="true">
+                <span></span><span></span><span></span><span></span>
+              </div>
+            }
+          </button>
+        </div>
+      </footer>
+    </section>
+  } @else {
+    <!-- ===== EXPERIENCIA DESKTOP PC (TERMINAL LINUX / WSL CON ILUMINACIÓN DINÁMICA) ===== -->
+    <section
+      class="byte-panel byte-panel--terminal"
+      [class.byte-panel--teacher]="isTeacherMode()"
+      [class.state-idle]="uiState() === 'idle'"
+      [class.state-asking]="uiState() === 'asking'"
+      [class.state-responding]="uiState() === 'responding'"
+      id="byte-panel"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="isTeacherMode() ? 'Terminal Docente' : 'Terminal Linux Byte'"
+      (keydown.escape)="closePanel()"
+      tabindex="-1"
+    >
+      <!-- Capa de Iluminación Dinámica / Aurora Reactiva (Cyber underglow & neon halo) -->
+      <div class="byte-ambient-aura" aria-hidden="true">
+        <div class="aura-glow-core"></div>
+        <div class="aura-glow-spread"></div>
+      </div>
+
+      <div class="term-window-frame">
+        <!-- Windows/Linux Terminal Titlebar / Tab Strip -->
+        <header class="term-tab-strip">
+          <div class="term-tab" [class.term-tab--teacher]="isTeacherMode()">
+            <span class="tab-glyph">💻</span>
+            <span class="tab-label">{{ isTeacherMode() ? 'PowerShell: byte@docente' : 'Ubuntu-WSL: byte@syseng' }}</span>
+            <span class="tab-status-dot" [class.is-busy]="busy() || streaming()"></span>
+          </div>
+
+          <div class="term-caption-bar">
+            <!-- Botón reiniciar terminal -->
+            <button
+              type="button"
+              class="term-cap-btn"
+              (click)="resetConversation()"
+              title="Reiniciar sesión de terminal"
+              aria-label="Reiniciar sesión"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+            </button>
+
+            @if (isTeacher()) {
+              <button
+                type="button"
+                class="term-mode-pill"
+                (click)="toggleMode()"
+                [title]="isTeacherMode() ? 'Cambiar a modo Estudiante' : 'Cambiar a modo Docente'"
+              >
+                {{ isTeacherMode() ? 'MODO: DOCENTE' : 'MODO: ALUMNO' }}
+              </button>
+            }
+
+            <button
+              type="button"
+              class="term-cap-btn"
+              (click)="closePanel()"
+              title="Minimizar terminal"
+              aria-label="Minimizar terminal"
+            >
+              —
+            </button>
+
+            <button
+              type="button"
+              class="term-cap-btn term-cap-btn--close"
+              (click)="closePanel()"
+              title="Cerrar terminal"
+              aria-label="Cerrar terminal"
+            >
+              ✕
+            </button>
+          </div>
+        </header>
+
+        <!-- Banner offline si aplica -->
+        @if (offline()) {
+          <div class="term-alert-line">
+            <p><strong>[OFFLINE]</strong> Modo local autónomo activo</p>
+            <button type="button" (click)="offline.set(false)">✕</button>
+          </div>
+        }
+
+        <!-- Flags CLI rápidos -->
+        <div class="cli-flags-bar" [class.cli-flags-bar--teacher]="isTeacherMode()">
+          <span class="cli-flags-prefix">$</span>
+          <div class="cli-flags-scroll">
+            @if (isTeacherMode()) {
+              <button type="button" class="cli-flag" (click)="askTeacherAnalytics()" [disabled]="busy()">--analitica</button>
+              <button type="button" class="cli-flag" (click)="askTeacherQuizGen()" [disabled]="busy()">--gen-quiz</button>
+              <button type="button" class="cli-flag" (click)="askTeacherAtRisk()" [disabled]="busy()">--en-riesgo</button>
+              <button type="button" class="cli-flag" (click)="askTeacherPedagogy()" [disabled]="busy()">--pedagogia</button>
+            } @else if (lessonContext(); as ctx) {
+              <button type="button" class="cli-flag" (click)="askHint()" [disabled]="busy()">--pista</button>
+              <button type="button" class="cli-flag" (click)="explainLesson()" [disabled]="busy()">--explicar</button>
+              <button type="button" class="cli-flag" (click)="practiceLesson()" [disabled]="busy()">--practica</button>
+              <button type="button" class="cli-flag" (click)="askRoadmap()" [disabled]="busy()">--ruta</button>
+            } @else {
+              <button type="button" class="cli-flag" (click)="askGeneralTips()" [disabled]="busy()">--tips</button>
+              <button type="button" class="cli-flag" (click)="askCodeHelp()" [disabled]="busy()">--debug</button>
+              <button type="button" class="cli-flag" (click)="askDailyChallenge()" [disabled]="busy()">--reto</button>
+              <button type="button" class="cli-flag" (click)="askGeneralRoadmap()" [disabled]="busy()">--rutas</button>
+            }
+          </div>
+        </div>
+
+        <!-- Historial de mensajes (Terminal stdout/stdin stream) -->
+        <div class="term-body" #byteMessages (click)="onMessagesClick($event)">
+          <!-- Terminal MOTD line -->
+          <div class="term-motd">
+            <span class="motd-dim">SysEng Terminal v2.4 (WSL-x86_64) · </span>
+            <span class="motd-hl">{{ isTeacherMode() ? 'Sesión Docente Activa' : 'Byte AI Mentor Conectado' }}</span>
+          </div>
+
+          @if (loading()) {
+            <div class="term-loading">
+              <span class="term-spinner"></span>
+              <span>cargando sesión de terminal...</span>
+            </div>
+          }
+
+          @for (msg of messages(); track msg.id) {
+            @if (msg.role === 'user') {
+              <!-- Línea de comando del usuario (stdin) -->
+              <div class="term-entry term-entry--user">
+                <div class="term-prompt">
+                  <span class="prompt-user">{{ isTeacherMode() ? 'docente' : 'estudiante' }}</span><span class="prompt-at">@</span><span class="prompt-host">syseng</span>:<span class="prompt-path">~</span><span class="prompt-sym">{{ isTeacherMode() ? '>' : '$' }}</span>
+                </div>
+                <div class="term-user-cmd">{{ msg.content }}</div>
+              </div>
+            } @else {
+              <!-- Salida del asistente (stdout) -->
+              <div class="term-entry term-entry--byte" [class.term-entry--teacher]="isTeacherMode()">
+                <div class="term-byte-header">
+                  <span class="byte-prefix">{{ isTeacherMode() ? 'PS>' : '❯' }}</span>
+                  <span class="byte-name">{{ isTeacherMode() ? 'ByteDocente' : 'Byte' }}</span>
+                  <span class="byte-tag">{{ isTeacherMode() ? '[adm]' : '[ia]' }}</span>
+                </div>
+                <div class="term-byte-content">
                   @if (msg.error) {
-                    <div class="conv-error-callout">
-                      {{ msg.content }}
+                    <div class="term-err-box">
+                      <span class="err-tag">stderr:</span> {{ msg.content }}
                     </div>
                   } @else {
                     <div class="byte-markdown" [innerHTML]="msg.html ?? ''"></div>
@@ -256,27 +599,19 @@
             }
           }
 
-          <!-- Estado de Streaming / Generando respuesta -->
+          <!-- Pensando / streaming -->
           @if (busy() && !quiz()) {
-            <div class="conv-row conv-row--assistant conv-row--streaming">
-              <div class="assistant-glyph-mini glyph-pulsing" title="Byte pensando">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                  <rect x="2.5" y="3" width="19" height="15" rx="3.5" fill="#0B132B" stroke="#00D9FF" stroke-width="1.6"/>
-                  <rect x="10" y="18" width="4" height="2" fill="#475569" rx="0.5"/>
-                  <rect x="8" y="20" width="8" height="1.5" fill="#334155" rx="0.75"/>
-                  <rect x="6.5" y="7.5" width="2.2" height="4.5" rx="1" fill="#00F0FF"/>
-                  <path d="M14.5 10.5C15 9 17 9 17.5 10.5" stroke="#00F0FF" stroke-width="1.4" stroke-linecap="round"/>
-                  <path d="M11 13.5C11.5 14.3 12.5 14.3 13 13.5" stroke="#00F0FF" stroke-width="1.2" stroke-linecap="round"/>
-                  <circle cx="5.5" cy="12.5" r="1.1" fill="#F43F5E" opacity="0.85"/>
-                  <circle cx="18.5" cy="12.5" r="1.1" fill="#F43F5E" opacity="0.85"/>
-                </svg>
+            <div class="term-entry term-entry--byte term-entry--thinking" [class.term-entry--teacher]="isTeacherMode()">
+              <div class="term-byte-header">
+                <span class="byte-prefix">{{ isTeacherMode() ? 'PS>' : '❯' }}</span>
+                <span class="byte-name">{{ isTeacherMode() ? 'ByteDocente' : 'Byte' }}</span>
+                <span class="term-thinking-text">{{ assistantStream() ? 'outputting...' : 'executing...' }}</span>
               </div>
-
-              <div class="conv-body">
+              <div class="term-byte-content">
                 @if (assistantStream()) {
-                  <div class="byte-markdown">{{ assistantStream() }}<span class="stream-beam"></span></div>
+                  <div class="byte-markdown">{{ assistantStream() }}<span class="term-cursor">▋</span></div>
                 } @else {
-                  <div class="gemini-thinking-dots">
+                  <div class="term-blinking-dots">
                     <span></span><span></span><span></span>
                   </div>
                 }
@@ -284,14 +619,14 @@
             </div>
           }
 
-          <!-- Quiz Interactivo inline (si aplica) -->
+          <!-- Quiz interactivo inline -->
           @if (quiz(); as q) {
-            <div class="gemini-quiz-card">
-              <div class="quiz-card-header">
-                <span class="quiz-pill-badge">EVALUACIÓN RÁPIDA</span>
-                <strong class="quiz-title-text">{{ q.title }}</strong>
+            <div class="term-quiz-box">
+              <div class="term-quiz-head">
+                <span class="quiz-badge">TEST</span>
+                <strong>{{ q.title }}</strong>
                 @if (quizScore(); as score) {
-                  <span class="quiz-score-badge" [class.passed]="score.correct / score.total >= 0.6">
+                  <span class="quiz-score-pill" [class.passed]="score.correct / score.total >= 0.6">
                     {{ score.correct }}/{{ score.total }}
                   </span>
                 }
@@ -299,17 +634,17 @@
 
               @for (question of q.questions; track $index; let qi = $index) {
                 <div
-                  class="quiz-q-item"
+                  class="term-quiz-q"
                   [class.is-correct]="quizChecked() && isQCorrect(qi)"
                   [class.is-wrong]="quizChecked() && !isQCorrect(qi)"
                 >
-                  <p class="quiz-q-text">{{ qi + 1 }}. {{ question.question }}</p>
-                  <div class="quiz-options-group">
+                  <p class="quiz-q-title">{{ qi + 1 }}. {{ question.question }}</p>
+                  <div class="q-options" role="radiogroup">
                     @for (answer of question.answers; track $index) {
-                      <label class="quiz-option-pill" [class.selected]="quizSelections()[qi] === $index">
+                      <label class="q-option-label" [class.selected]="quizSelections()[qi] === $index">
                         <input
                           type="radio"
-                          name="byte-q{{ qi }}"
+                          name="byte-term-q{{ qi }}"
                           [value]="$index"
                           [checked]="quizSelections()[qi] === $index"
                           [disabled]="quizChecked()"
@@ -320,8 +655,8 @@
                     }
                   </div>
                   @if (quizChecked()) {
-                    <div class="quiz-explanation-box">
-                      <span class="res-tag" [class.ok]="isQCorrect(qi)">
+                    <div class="q-feedback">
+                      <span class="feedback-tag" [class.ok]="isQCorrect(qi)">
                         {{ isQCorrect(qi) ? '✓ Correcto' : '✗ Incorrecto' }}
                       </span>
                       <p>{{ question.explanation }}</p>
@@ -330,117 +665,60 @@
                 </div>
               }
 
-              <div class="quiz-footer-row">
+              <div class="quiz-footer">
                 @if (!quizChecked()) {
                   <button
                     type="button"
-                    class="btn-quiz-submit"
+                    class="btn-term-primary"
                     (click)="checkQuiz()"
                     [disabled]="!allAnswered()"
                   >
-                    Comprobar
+                    [↵ Comprobar Respuestas]
                   </button>
                 } @else {
-                  <button type="button" class="btn-quiz-retry" (click)="practiceLesson()" [disabled]="busy()">
-                    Repetir
-                  </button>
-                  <button type="button" class="btn-quiz-dismiss" (click)="dismissQuiz()">
-                    Continuar
-                  </button>
+                  <div class="quiz-footer-actions">
+                    <button type="button" class="btn-term-outline" (click)="practiceLesson()" [disabled]="busy()">
+                      Repetir Práctica
+                    </button>
+                    <button type="button" class="btn-term-ghost" (click)="dismissQuiz()">
+                      Continuar
+                    </button>
+                  </div>
                 }
               </div>
             </div>
           }
         </div>
-      }
-    </main>
 
-    <!-- 3. Menú Flotante de Atajos Rápidos (Cuando se presiona el '+') -->
-    @if (showQuickMenu()) {
-      <div class="gemini-quick-tray" (click)="$event.stopPropagation()">
-        <div class="tray-header">
-          <span>Acciones Rápidas</span>
-          <button type="button" class="tray-close" (click)="showQuickMenu.set(false)">✕</button>
-        </div>
-        <div class="tray-chips">
-          @if (isTeacherMode()) {
-            <button type="button" class="tray-chip" (click)="askTeacherAnalytics()">📊 Analítica general</button>
-            <button type="button" class="tray-chip" (click)="askTeacherQuizGen()">📝 Generar quiz</button>
-            <button type="button" class="tray-chip" (click)="askTeacherAtRisk()">⚠️ Alumnos en riesgo</button>
-            <button type="button" class="tray-chip" (click)="askTeacherPedagogy()">💡 Laboratorios prácticos</button>
-          } @else if (lessonContext(); as ctx) {
-            <button type="button" class="tray-chip" (click)="askHint()">💡 Pista socrática</button>
-            <button type="button" class="tray-chip" (click)="explainLesson()">🔍 Explicar paso a paso</button>
-            <button type="button" class="tray-chip" (click)="practiceLesson()">⚡ Mini quiz</button>
-            <button type="button" class="tray-chip" (click)="askRoadmap()">🧭 Siguiente tema</button>
-          } @else {
-            <button type="button" class="tray-chip" (click)="askCodeHelp()">🐞 Depurar mi código</button>
-            <button type="button" class="tray-chip" (click)="askGeneralTips()">✨ Clean Code</button>
-            <button type="button" class="tray-chip" (click)="askDailyChallenge()">🎯 Reto del día</button>
-            <button type="button" class="tray-chip" (click)="askGeneralRoadmap()">🗺️ Rutas de aprendizaje</button>
-          }
+        <!-- Prompt de Entrada Terminal (stdin interactive prompt) -->
+        <div class="term-input-bar" [class.term-input-bar--teacher]="isTeacherMode()">
+          <div class="term-input-prompt">
+            <span class="term-user-sym">{{ isTeacherMode() ? 'PS C:\\SysEng>' : '❯' }}</span>
+          </div>
+          <textarea
+            #byteInput
+            class="term-input-textarea"
+            [(ngModel)]="inputText"
+            [placeholder]="isTeacherMode() ? 'consulta o comando para docencia...' : 'pregunta o comando para Byte...'"
+            rows="1"
+            (focus)="isInputFocused.set(true)"
+            (blur)="isInputFocused.set(false)"
+            (keydown.enter)="onEnter($event)"
+            [disabled]="streaming()"
+            aria-label="Comando para Byte"
+          ></textarea>
+          <button
+            class="term-send-btn"
+            type="button"
+            (click)="sendText()"
+            [disabled]="!inputText.trim() || busy()"
+            title="Ejecutar [Enter]"
+            aria-label="Enviar"
+          >
+            ↵
+          </button>
         </div>
       </div>
-    }
-
-    <!-- 4. Barra de Entrada Flotante Estilo Gemini ('Ask Byte') -->
-    <footer class="byte-floating-input-wrap">
-      <div class="gemini-input-pill" [class.is-focused]="isInputFocused()">
-        <!-- Botón '+' para atajos rápidos -->
-        <button
-          type="button"
-          class="pill-btn-plus"
-          (click)="showQuickMenu.update(v => !v)"
-          [class.is-active]="showQuickMenu()"
-          title="Atajos rápidos"
-          aria-label="Atajos"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-        </button>
-
-        <!-- Campo de Texto -->
-        <textarea
-          #byteInput
-          class="pill-textarea"
-          [(ngModel)]="inputText"
-          [placeholder]="isTeacherMode() ? 'Pregúntale a Byte Docente...' : 'Pregúntale a Byte...'"
-          rows="1"
-          (focus)="isInputFocused.set(true)"
-          (blur)="isInputFocused.set(false)"
-          (keydown.enter)="onEnter($event)"
-          [disabled]="streaming()"
-          aria-label="Pregunta para Byte"
-        ></textarea>
-
-        <!-- Botón de Envío / Estado Waveform -->
-        <button
-          type="button"
-          class="pill-btn-send"
-          (click)="sendText()"
-          [disabled]="!inputText.trim() || busy()"
-          [class.can-send]="inputText.trim().length > 0 && !busy()"
-          title="Enviar"
-          aria-label="Enviar pregunta"
-        >
-          @if (busy() || streaming()) {
-            <span class="btn-spinner-ring"></span>
-          } @else if (inputText.trim().length > 0) {
-            <!-- Flecha de envío activa -->
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="19" x2="12" y2="5"></line>
-              <polyline points="5 12 12 5 19 12"></polyline>
-            </svg>
-          } @else {
-            <!-- Icono de ondas auditivas / asistente tipo Gemini cuando está vacío -->
-            <div class="gemini-waveform-icon" aria-hidden="true">
-              <span></span><span></span><span></span><span></span>
-            </div>
-          }
-        </button>
-      </div>
-    </footer>
-  </section>
+    </section>
+  }
 }

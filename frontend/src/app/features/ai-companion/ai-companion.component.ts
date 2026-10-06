@@ -160,8 +160,15 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   quizChecked    = signal(false);
   quizScore      = signal<{ correct: number; total: number } | null>(null);
 
+  readonly isMobileView = signal(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+
   private routerSub?: Subscription;
-  private resizeHandler = () => this.syncRoute();
+  private resizeHandler = () => {
+    if (typeof window !== 'undefined') {
+      this.isMobileView.set(window.innerWidth <= 768);
+    }
+    this.syncRoute();
+  };
   private companionOpenHandler: EventListener = (event: Event) => {
     const detail = (event as CustomEvent<{ lesson_id?: number; lesson_title?: string }>).detail ?? {};
     this.onCompanionOpen(detail);
@@ -184,6 +191,7 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
     window.addEventListener('ai-companion:toggle', this.companionToggleHandler);
     window.addEventListener('ai-companion:close', this.companionCloseHandler);
     window.addEventListener('resize', this.resizeHandler);
+    this.isMobileView.set(typeof window !== 'undefined' && window.innerWidth <= 768);
     this.syncRoute();
     this.triggerRouteTip();
 

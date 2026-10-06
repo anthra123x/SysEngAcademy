@@ -232,12 +232,771 @@ app-byte-robot-3d {
   }
 }
 
-/* ================= VENTANA / PANEL MINIMALISTA TIPO GEMINI ================= */
+/* ================= VENTANAS DE CONSOLA BYTE ================= */
 .byte-panel {
+  position: fixed;
+  z-index: 1210;
+  outline: none;
+}
+
+/* ================= 1. EXPERIENCIA DESKTOP PC: TERMINAL LINUX / WSL CON ILUMINACIÓN DINÁMICA ================= */
+.byte-panel--terminal {
+  right: 24px;
+  bottom: 140px;
+  width: 410px;
+  max-width: calc(100vw - 32px);
+  height: min(72vh, 520px);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  background: transparent;
+  animation: byte-panel-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom right;
+
+  /* Capa de Iluminación Ambiental Dinámica / Aurora */
+  .byte-ambient-aura {
+    position: absolute;
+    inset: -15px -15px -25px -15px;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: opacity 0.5s ease;
+
+    .aura-glow-core {
+      position: absolute;
+      inset: 8px;
+      border-radius: inherit;
+      filter: blur(35px);
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .aura-glow-spread {
+      position: absolute;
+      inset: -12px;
+      border-radius: inherit;
+      filter: blur(55px);
+      transition: all 0.6s ease;
+    }
+  }
+
+  /* Estados Reactivos de Iluminación Dinámica */
+  &.state-idle {
+    .term-window-frame {
+      border-color: rgba(0, 240, 255, 0.22);
+      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.82), 0 0 16px rgba(0, 240, 255, 0.08);
+    }
+    .aura-glow-core {
+      opacity: 0.55;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.22) 0%, rgba(10, 233, 138, 0.12) 50%, transparent 75%);
+    }
+    .aura-glow-spread {
+      opacity: 0.35;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, transparent 70%);
+    }
+  }
+
+  &.state-asking {
+    .term-window-frame {
+      border-color: rgba(0, 240, 255, 0.52);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.85), 0 0 28px rgba(0, 240, 255, 0.22);
+    }
+    .aura-glow-core {
+      opacity: 0.85;
+      transform: scale(1.04) translateY(8px);
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.38) 0%, rgba(99, 102, 241, 0.22) 50%, transparent 75%);
+      filter: blur(32px);
+    }
+    .aura-glow-spread {
+      opacity: 0.6;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.22) 0%, rgba(99, 102, 241, 0.12) 60%, transparent 80%);
+    }
+    .term-input-bar {
+      border-top-color: rgba(0, 240, 255, 0.45);
+      background: rgba(0, 240, 255, 0.04);
+      box-shadow: inset 0 1px 12px rgba(0, 240, 255, 0.12);
+    }
+  }
+
+  &.state-responding {
+    .term-window-frame {
+      border-color: rgba(10, 233, 138, 0.55);
+      box-shadow: 0 20px 54px rgba(0, 0, 0, 0.88), 0 0 32px rgba(10, 233, 138, 0.25);
+      animation: term-border-pulse 2.2s infinite alternate ease-in-out;
+    }
+    .aura-glow-core {
+      opacity: 0.95;
+      animation: aurora-breathe 2.4s infinite alternate ease-in-out;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.4) 0%, rgba(10, 233, 138, 0.3) 40%, rgba(99, 102, 241, 0.2) 70%, transparent 85%);
+      filter: blur(42px);
+    }
+    .aura-glow-spread {
+      opacity: 0.75;
+      animation: aurora-wave 3.2s infinite alternate ease-in-out;
+      background: radial-gradient(circle, rgba(10, 233, 138, 0.25) 0%, rgba(0, 240, 255, 0.2) 50%, transparent 75%);
+    }
+  }
+
+  /* Marco principal de la ventana de terminal */
+  .term-window-frame {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: rgba(10, 13, 20, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 240, 255, 0.22);
+    border-radius: 10px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.2);
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  }
+
+  &--teacher {
+    .term-window-frame {
+      border-color: rgba(0, 217, 255, 0.35);
+    }
+    .tab-status-dot {
+      background: var(--accent, #00D9FF);
+      box-shadow: 0 0 6px var(--accent, #00D9FF);
+    }
+  }
+}
+
+@keyframes byte-panel-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes term-border-pulse {
+  0% {
+    border-color: rgba(0, 240, 255, 0.45);
+    box-shadow: 0 20px 54px rgba(0, 0, 0, 0.88), 0 0 20px rgba(0, 240, 255, 0.18);
+  }
+  50% {
+    border-color: rgba(10, 233, 138, 0.65);
+    box-shadow: 0 20px 54px rgba(0, 0, 0, 0.88), 0 0 34px rgba(10, 233, 138, 0.28);
+  }
+  100% {
+    border-color: rgba(99, 102, 241, 0.55);
+    box-shadow: 0 20px 54px rgba(0, 0, 0, 0.88), 0 0 26px rgba(99, 102, 241, 0.22);
+  }
+}
+
+/* Windows Terminal Titlebar / Tab Strip */
+.term-tab-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  background: rgba(8, 10, 15, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  user-select: none;
+  flex-shrink: 0;
+  padding-left: 6px;
+}
+
+.term-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  margin-top: 5px;
+  padding: 0 12px;
+  background: rgba(20, 24, 35, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: none;
+  border-top: 2px solid var(--primary, #0AE98A);
+  border-radius: 4px 4px 0 0;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.74rem;
+  color: #F1F5F9;
+
+  &--teacher {
+    border-top-color: var(--accent, #00D9FF);
+  }
+
+  .tab-glyph {
+    font-size: 0.82rem;
+    line-height: 1;
+  }
+  .tab-label {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .tab-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary, #0AE98A);
+    box-shadow: 0 0 6px var(--primary, #0AE98A);
+    &.is-busy {
+      background: #FFD740;
+      box-shadow: 0 0 6px #FFD740;
+      animation: dot-pulse 1s infinite;
+    }
+  }
+}
+
+.term-tab--teacher .tab-status-dot {
+  background: var(--accent, #00D9FF);
+  box-shadow: 0 0 6px var(--accent, #00D9FF);
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Windows Caption Controls */
+.term-caption-bar {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.term-mode-pill {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  margin-right: 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary, #94A3B8);
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease);
+  &:hover {
+    color: #FFFFFF;
+    border-color: var(--primary, #0AE98A);
+    background: rgba(10, 233, 138, 0.12);
+  }
+}
+
+.term-cap-btn {
+  width: 36px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  transition: all var(--transition-fast, 150ms ease);
+  line-height: 1;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+  }
+  &--close:hover {
+    background: #E81123 !important;
+    color: #FFFFFF !important;
+  }
+}
+
+/* Banner offline */
+.term-alert-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: rgba(245, 158, 11, 0.12);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #FBBF24;
+  p { margin: 0; flex: 1; }
+  button { background: none; border: none; color: inherit; cursor: pointer; }
+}
+
+/* Command Flags Bar */
+.cli-flags-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(16, 20, 30, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+
+  .cli-flags-prefix {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--primary, #0AE98A);
+  }
+  &--teacher .cli-flags-prefix {
+    color: var(--accent, #00D9FF);
+  }
+
+  .cli-flags-scroll {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    &::-webkit-scrollbar { height: 2px; }
+    &::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+  }
+
+  .cli-flag {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: #94A3B8;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    padding: 2px 7px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all var(--transition-fast, 150ms ease);
+
+    &:hover:not(:disabled) {
+      color: var(--primary, #0AE98A);
+      border-color: var(--primary, #0AE98A);
+      background: rgba(10, 233, 138, 0.08);
+    }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+}
+.cli-flags-bar--teacher .cli-flag:hover:not(:disabled) {
+  color: var(--accent, #00D9FF);
+  border-color: var(--accent, #00D9FF);
+  background: rgba(0, 217, 255, 0.08);
+}
+
+/* ================= TERMINAL STDOUT / STDIN STREAM ================= */
+.term-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overscroll-behavior: contain;
+  background: rgba(8, 10, 16, 0.75);
+
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+    &:hover { background: rgba(255, 255, 255, 0.22); }
+  }
+}
+
+/* Terminal MOTD banner */
+.term-motd {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+  user-select: none;
+  .motd-dim { color: #64748B; }
+  .motd-hl { color: var(--primary, #0AE98A); font-weight: 600; }
+}
+.cli-flags-bar--teacher ~ .term-body .term-motd .motd-hl {
+  color: var(--accent, #00D9FF);
+}
+
+/* Terminal Loading */
+.term-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-muted, #64748B);
+  padding: 6px 0;
+}
+.term-spinner {
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(10, 233, 138, 0.2);
+  border-top-color: var(--primary, #0AE98A);
+  border-radius: 50%;
+  animation: term-spin 0.8s linear infinite;
+}
+@keyframes term-spin { to { transform: rotate(360deg); } }
+
+/* Entradas del Stream: User (stdin) y Byte (stdout) */
+.term-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  animation: term-fade-in 0.15s ease-out;
+
+  &--user {
+    padding-bottom: 2px;
+  }
+
+  &--byte {
+    border-left: 2px solid rgba(10, 233, 138, 0.45);
+    background: rgba(16, 20, 31, 0.35);
+    border-radius: 0 4px 4px 0;
+    padding: 8px 10px;
+    margin: 2px 0 4px;
+  }
+
+  &--teacher {
+    border-left-color: rgba(0, 217, 255, 0.45);
+    background: rgba(15, 23, 42, 0.35);
+  }
+}
+@keyframes term-fade-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Bash / PowerShell Prompt (stdin) */
+.term-prompt {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  user-select: none;
+
+  .prompt-user { color: var(--primary, #0AE98A); font-weight: 700; }
+  .prompt-at { color: #64748B; }
+  .prompt-host { color: #818CF8; font-weight: 600; }
+  .prompt-path { color: #38BDF8; font-weight: 600; }
+  .prompt-sym { color: #F1F5F9; font-weight: 700; margin-left: 3px; }
+}
+.cli-flags-bar--teacher ~ .term-body .term-prompt .prompt-user {
+  color: var(--accent, #00D9FF);
+}
+
+.term-user-cmd {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: #F8FAFC;
+  line-height: 1.5;
+  padding-left: 2px;
+  word-break: break-word;
+}
+
+/* Byte Salida (stdout) */
+.term-byte-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  margin-bottom: 4px;
+  user-select: none;
+
+  .byte-prefix {
+    color: var(--primary, #0AE98A);
+    font-weight: 700;
+  }
+  .byte-name {
+    color: #E2E8F0;
+    font-weight: 600;
+  }
+  .byte-tag {
+    font-size: 0.65rem;
+    color: #64748B;
+  }
+  .term-thinking-text {
+    color: #64748B;
+    font-size: 0.68rem;
+    font-style: italic;
+    margin-left: 4px;
+  }
+}
+.term-entry--teacher .term-byte-header .byte-prefix {
+  color: var(--accent, #00D9FF);
+}
+
+.term-byte-content {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: #CBD5E1;
+  word-break: break-word;
+}
+
+.term-err-box {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: #FCA5A5;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  .err-tag {
+    color: #EF4444;
+    font-weight: 700;
+    margin-right: 4px;
+  }
+}
+
+/* Cursors & Pulsos */
+.term-cursor {
+  display: inline-block;
+  color: var(--primary, #0AE98A);
+  font-family: var(--font-mono);
+  animation: term-blink 0.9s step-end infinite;
+  margin-left: 2px;
+}
+.term-entry--teacher .term-cursor {
+  color: var(--accent, #00D9FF);
+}
+@keyframes term-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.term-blinking-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  span {
+    width: 4px;
+    height: 4px;
+    background: var(--primary, #0AE98A);
+    border-radius: 50%;
+    animation: term-pulse 1.2s infinite ease-in-out;
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.4s; }
+  }
+}
+.term-entry--teacher .term-blinking-dots span {
+  background: var(--accent, #00D9FF);
+}
+@keyframes term-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Terminal Quiz */
+.term-quiz-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(16, 20, 31, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid var(--primary, #0AE98A);
+  border-radius: 4px;
+  margin-top: 4px;
+
+  .term-quiz-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .quiz-badge {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 1px 5px;
+      background: rgba(10, 233, 138, 0.15);
+      color: var(--primary, #0AE98A);
+      border-radius: 3px;
+    }
+    strong { font-size: 0.8rem; color: #F1F5F9; flex: 1; }
+    .quiz-score-pill {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 3px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #F59E0B;
+      &.passed { background: rgba(10, 233, 138, 0.15); color: #0AE98A; }
+    }
+  }
+
+  .term-quiz-q {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    background: rgba(8, 9, 13, 0.5);
+    &.is-correct { border-color: rgba(10, 233, 138, 0.5); }
+    &.is-wrong { border-color: rgba(239, 68, 68, 0.5); }
+    .quiz-q-title { font-size: 0.76rem; font-weight: 600; color: #E2E8F0; margin: 0; }
+  }
+
+  .q-options {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .q-option-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    font-size: 0.74rem;
+    color: #94A3B8;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all var(--transition-fast, 150ms ease);
+    input[type="radio"] { accent-color: var(--primary, #0AE98A); }
+    &:hover { border-color: rgba(255, 255, 255, 0.15); color: #F1F5F9; }
+    &.selected {
+      border-color: rgba(10, 233, 138, 0.4);
+      background: rgba(10, 233, 138, 0.08);
+      color: #F1F5F9;
+    }
+  }
+
+  .q-feedback {
+    font-size: 0.72rem;
+    color: #94A3B8;
+    padding-top: 2px;
+    p { margin: 2px 0 0; }
+    .feedback-tag {
+      font-weight: 700;
+      color: #EF4444;
+      &.ok { color: #0AE98A; }
+    }
+  }
+
+  .quiz-footer {
+    padding-top: 4px;
+  }
+  .btn-term-primary {
+    width: 100%;
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 3px;
+    background: var(--primary, #0AE98A);
+    color: #08090D;
+    cursor: pointer;
+    transition: all var(--transition-fast, 150ms ease);
+    &:hover:not(:disabled) { background: var(--primary-hover, #1FFFB0); }
+    &:disabled { opacity: 0.35; cursor: not-allowed; }
+  }
+  .quiz-footer-actions {
+    display: flex;
+    gap: 8px;
+    button {
+      flex: 1;
+      padding: 5px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all var(--transition-fast, 150ms ease);
+    }
+    .btn-term-outline {
+      background: transparent;
+      border: 1px solid var(--border-hover, #2E344E);
+      color: #E2E8F0;
+      &:hover { border-color: var(--primary); color: var(--primary); }
+    }
+    .btn-term-ghost {
+      background: transparent;
+      border: none;
+      color: #64748B;
+      &:hover { color: #F1F5F9; }
+    }
+  }
+}
+
+/* CLI Prompt Input Bar (stdin) */
+.term-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #08090D;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+
+  .term-input-prompt {
+    display: flex;
+    align-items: center;
+    user-select: none;
+  }
+  .term-user-sym {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--primary, #0AE98A);
+  }
+  &--teacher .term-user-sym {
+    color: var(--accent, #00D9FF);
+    font-size: 0.74rem;
+  }
+
+  .term-input-textarea {
+    flex: 1;
+    resize: none;
+    max-height: 80px;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 3px 0;
+    color: #F8FAFC;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    &::placeholder {
+      color: #475569;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+    }
+    &:disabled { opacity: 0.5; }
+  }
+
+  .term-send-btn {
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(10, 233, 138, 0.3);
+    border-radius: 3px;
+    background: rgba(10, 233, 138, 0.1);
+    color: var(--primary, #0AE98A);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast, 150ms ease);
+
+    &:hover:not(:disabled) {
+      background: var(--primary, #0AE98A);
+      color: #08090D;
+    }
+    &:disabled { opacity: 0.3; cursor: not-allowed; }
+  }
+
+  &--teacher .term-send-btn {
+    border-color: rgba(0, 217, 255, 0.3);
+    background: rgba(0, 217, 255, 0.1);
+    color: var(--accent, #00D9FF);
+    &:hover:not(:disabled) {
+      background: var(--accent, #00D9FF);
+      color: #08090D;
+    }
+  }
+}
+
+/* ================= 2. EXPERIENCIA MOBILE: PANEL MINIMALISTA GEMINI ================= */
+.byte-panel--mobile {
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 1210;
   width: 440px;
   max-width: calc(100vw - 32px);
   height: min(80vh, 660px);
@@ -248,7 +1007,6 @@ app-byte-robot-3d {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.85), 0 0 1px rgba(255, 255, 255, 0.15);
-  outline: none;
   animation: byte-panel-reveal 240ms cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: bottom right;
 
