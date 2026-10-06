@@ -147,17 +147,17 @@
       </div>
 
       <div class="topbar-right">
-        <!-- Botón Nueva Conversación (Lápiz / Nuevo chat) -->
+        <!-- Botón Reiniciar Conversación (Icono circular de reinicio) -->
         <button
           type="button"
           class="btn-top-action"
           (click)="resetConversation()"
-          title="Nueva conversación"
-          aria-label="Nueva conversación"
+          title="Reiniciar chat"
+          aria-label="Reiniciar chat"
         >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
           </svg>
         </button>
 
@@ -187,7 +187,7 @@
         </div>
       }
 
-      <!-- CASO A: Estado Inicial / Vacío (Estilo Gemini New) -->
+      <!-- CASO A: Estado Inicial / Vacío (Ultra Minimalista Estilo Gemini) -->
       @if (!hasMessages()) {
         <div class="byte-gemini-hero">
           <!-- Mascota Byte IA 3D (Cabecita Interactiva Basada en Modelo de Referencia) -->
@@ -208,62 +208,6 @@
               <span class="ctx-pill-text">Lección: {{ ctx.title }}</span>
             </div>
           }
-
-          <!-- Sugerencias Minimalistas (Píldoras Limpias) -->
-          <div class="gemini-hero-chips">
-            @if (isTeacherMode()) {
-              <button type="button" class="gemini-chip" (click)="askTeacherAnalytics()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Rendimiento de alumnos</span>
-              </button>
-              <button type="button" class="gemini-chip" (click)="askTeacherQuizGen()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Generar evaluación técnica</span>
-              </button>
-              <button type="button" class="gemini-chip" (click)="askTeacherAtRisk()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Alumnos en riesgo</span>
-              </button>
-              <button type="button" class="gemini-chip" (click)="askTeacherPedagogy()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Ideas de laboratorio</span>
-              </button>
-            } @else if (lessonContext(); as ctx) {
-              <button type="button" class="gemini-chip" (click)="askHint()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Pista socrática</span>
-              </button>
-              <button type="button" class="gemini-chip" (click)="explainLesson()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Explicar concepto clave</span>
-              </button>
-              <button type="button" class="gemini-chip" (click)="practiceLesson()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Quiz interactivo</span>
-              </button>
-              <button type="button" class="gemini-chip" (click)="askRoadmap()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Siguiente paso de la ruta</span>
-              </button>
-            } @else {
-              <button type="button" class="gemini-chip" (click)="askCodeHelp()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>¿Cómo depuro este bug?</span>
-              </button>
-              <button type="button" class="gemini-chip" (click)="askGeneralTips()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Reglas de Clean Code</span>
-              </button>
-              <button type="button" class="gemini-chip" (click)="askDailyChallenge()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Reto de programación del día</span>
-              </button>
-              <button type="button" class="gemini-chip" (click)="askGeneralRoadmap()" [disabled]="busy()">
-                <span class="chip-dot"></span>
-                <span>Rutas recomendadas</span>
-              </button>
-            }
-          </div>
         </div>
       } @else {
         <!-- CASO B: Flujo Conversacional Activo -->
