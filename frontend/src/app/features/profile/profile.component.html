@@ -788,28 +788,28 @@
                       <div class="flame-counter">
                         <span class="counter-num">{{ currentStreak() }}</span>
                         <span class="counter-lbl">
-                          @if (isStreakExtinguished()) { DÍAS (APAGADA) } @else if (isStreakPending()) { DÍAS (EN PAUSA) } @else { DÍAS CONSECUTIVOS }
+                          @if (isStreakExtinguished()) { DÍAS (APAGADA) } @else if (isStreakPending()) { DÍAS (EN PAUSA) } @else { {{ currentStreak() === 1 ? 'DÍA CONSECUTIVO' : 'DÍAS CONSECUTIVOS' }} }
                         </span>
                       </div>
                     </div>
 
                     <div class="streak-stats-row">
                       <div class="streak-stat-item">
-                        <span class="stat-k">Racha Histórica Máxima:</span>
+                        <span class="stat-k">Racha Histórica Máxima</span>
                         <span class="stat-v">{{ maxStreak() }} días</span>
                       </div>
                       <div class="streak-stat-item">
-                        <span class="stat-k">Multiplicador XP:</span>
+                        <span class="stat-k">Multiplicador XP</span>
                         <span class="stat-v" [class.text-success]="!isStreakExtinguished()" [class.text-muted]="isStreakExtinguished()">
                           {{ isStreakExtinguished() ? '1.0x (Pausado)' : streakMultiplier() + 'x Boost' }}
                         </span>
                       </div>
                       <div class="streak-stat-item">
-                        <span class="stat-k">Tiempo Activo Hoy:</span>
+                        <span class="stat-k">Tiempo Activo Hoy</span>
                         <span class="stat-v text-cyan">{{ todayStudyMinutes() }} min de estudio</span>
                       </div>
-                      <div class="streak-stat-item">
-                        <span class="stat-k">Estado de Hoy:</span>
+                      <div class="streak-stat-item streak-stat-item--today">
+                        <span class="stat-k">Estado de Hoy</span>
                         @if (isStreakActive()) {
                           <span class="stat-v text-success">✓ Sesión Activa Registrada (+25 XP)</span>
                         } @else if (isStreakPending()) {
@@ -823,15 +823,18 @@
                     <div class="streak-action-box">
                       @if (isStreakExtinguished()) {
                         <div class="extinguished-action-banner">
-                          <span>⚠️ Tu racha está apagada por inactividad. Resuelve el ejercicio superior o avanza en tus cursos para reactivarla.</span>
+                          <app-icon name="alert-triangle" [size]="15" />
+                          <span>Tu racha está apagada por inactividad. Resuelve el reto superior o avanza en tus cursos para reactivarla.</span>
                         </div>
                       } @else if (isStreakPending()) {
                         <div class="pending-action-banner">
-                          <span>⚡ Racha en espera: Dedica unos minutos a tus lecciones hoy para consolidar tu día consecutivo.</span>
+                          <app-icon name="zap" [size]="15" />
+                          <span>Racha en espera: Dedica unos minutos a tus lecciones hoy para consolidar tu día consecutivo.</span>
                         </div>
                       } @else {
                         <div class="checked-in-banner">
-                          <span>✓ Telemetría en tiempo real: Tu racha se actualiza automáticamente conforme trabajas y estudias en la plataforma.</span>
+                          <app-icon name="check-circle" [size]="15" />
+                          <span>Telemetría en tiempo real: Tu racha se actualiza automáticamente conforme trabajas y estudias en la plataforma.</span>
                         </div>
                       }
                     </div>
