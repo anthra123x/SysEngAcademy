@@ -1055,3 +1055,7 @@
     .paths-section {
       background: linear-gradient(180deg, transparent, rgba(10,233,138,0.02), transparent);
     }
+
+    .courses-section {
+      padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
+    }

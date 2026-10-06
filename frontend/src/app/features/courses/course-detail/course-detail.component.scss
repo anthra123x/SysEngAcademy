@@ -1,6 +1,6 @@
 .course-detail {
       padding-top: var(--sp-6);
-      padding-bottom: var(--sp-20);
+      padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
     }
 
     .course-layout {

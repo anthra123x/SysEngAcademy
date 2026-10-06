@@ -84,6 +84,11 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     .paths-container {
       padding-top: var(--sp-8);
       padding-bottom: var(--sp-20);
+
+      @media (max-width: 640px) {
+        padding-top: var(--sp-4);
+        padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
+      }
     }
 
     .paths-grid {

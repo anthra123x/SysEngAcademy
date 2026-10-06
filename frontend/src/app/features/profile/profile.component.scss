@@ -3613,13 +3613,60 @@
        RESPONSIVE MOBILE ENGINE: DESCONGESTIÓN Y ESPACIADO EN MÓVILES
        ========================================================== */
     @media (max-width: 768px) {
-      .profile-terminal-page {
-        padding: 12px 10px 48px;
+      .profile-page {
+        padding: 8px 0 calc(var(--bottom-nav-height, 60px) + 36px) !important;
+      }
+
+      .container {
+        padding: 0 12px !important;
+      }
+
+      .onboarding-notice-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        padding: 12px 14px !important;
+        margin-bottom: 14px !important;
+
+        .onboarding-notice-left {
+          display: flex !important;
+          align-items: flex-start !important;
+          gap: 10px !important;
+        }
+
+        .notice-text {
+          font-size: 12.5px !important;
+          line-height: 1.45 !important;
+        }
+
+        .btn-primary-glitch {
+          width: 100% !important;
+          text-align: center !important;
+          justify-content: center !important;
+          padding: 10px 14px !important;
+          font-size: 12px !important;
+          display: flex !important;
+          align-items: center !important;
+          white-space: normal !important;
+        }
       }
 
       .terminal-window {
         border-radius: var(--radius-md);
-        margin-bottom: 24px;
+        margin-bottom: 20px;
+      }
+
+      .terminal-titlebar {
+        padding: 8px 12px !important;
+        gap: 8px !important;
+
+        .terminal-title {
+          font-size: 11px !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          max-width: calc(100vw - 110px) !important;
+        }
       }
 
       .terminal-window-header {
@@ -3633,7 +3680,7 @@
       }
 
       .terminal-content {
-        padding: 16px 12px;
+        padding: 14px 12px;
       }
 
       .section-terminal-bar {
@@ -3654,16 +3701,16 @@
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch !important;
         gap: 8px !important;
-        padding-bottom: 12px !important;
-        margin-bottom: 20px !important;
+        padding: 0 2px 12px !important;
+        margin-bottom: 18px !important;
         scrollbar-width: none !important;
         &::-webkit-scrollbar { display: none !important; }
 
         .term-tab {
           flex-shrink: 0 !important;
           white-space: nowrap !important;
-          padding: 9px 15px !important;
-          font-size: 12.5px !important;
+          padding: 9px 14px !important;
+          font-size: 12px !important;
           border-radius: 6px !important;
           min-height: 40px !important;
           display: inline-flex !important;
@@ -3671,47 +3718,191 @@
         }
       }
 
-      /* Neofetch Card amplio, espacioso y respirable en móviles */
+      /* Neofetch Hero espacioso con identidad centrada y Mascot compacto */
       .neofetch-card {
         flex-direction: column !important;
         align-items: center !important;
-        padding: 20px 16px !important;
-        gap: 20px !important;
-        margin-bottom: 20px !important;
+        padding: 16px 12px !important;
+        gap: 14px !important;
+        margin-bottom: 18px !important;
+        background: #090c12 !important;
+        border: 1px solid #182236 !important;
       }
 
       .neofetch-logo {
-        width: 100% !important;
-        max-width: 200px !important;
-        min-height: 110px !important;
-        padding: 14px !important;
+        width: auto !important;
+        max-width: 170px !important;
+        min-height: auto !important;
+        padding: 8px 14px !important;
+        border-radius: 10px !important;
+
+        .ascii-art {
+          font-size: 10px !important;
+          line-height: 1.15 !important;
+        }
+
+        .ascii-motion-indicator {
+          top: 4px !important;
+          right: 6px !important;
+          font-size: 8px !important;
+        }
       }
 
+      .neofetch-info {
+        width: 100% !important;
+
+        .neofetch-user-header {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          text-align: center !important;
+          gap: 6px !important;
+          font-size: 15px !important;
+
+          .prompt-user-headline {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            flex-wrap: wrap !important;
+          }
+
+          .btn-avatar-chip {
+            margin: 2px auto 0 !important;
+            font-size: 10.5px !important;
+            padding: 3px 9px !important;
+          }
+        }
+
+        .neofetch-divider {
+          display: none !important;
+        }
+      }
+
+      /* Bento Grid de Estadísticas de Perfil en Móviles */
       .neofetch-grid {
         width: 100% !important;
-        gap: 10px !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        margin-top: 10px !important;
 
         .meta-row {
           display: flex !important;
           flex-direction: column !important;
           align-items: flex-start !important;
+          justify-content: center !important;
           gap: 3px !important;
           width: 100% !important;
-          padding-bottom: 8px !important;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+          min-width: 0 !important;
+          padding: 8px 10px !important;
+          background: rgba(14, 18, 28, 0.75) !important;
+          border: 1px solid rgba(255, 255, 255, 0.07) !important;
+          border-radius: 8px !important;
 
           .meta-k {
-            width: 100% !important;
-            font-size: 11px !important;
+            width: auto !important;
+            min-width: 0 !important;
+            font-size: 9.5px !important;
             color: #64748b !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.05em !important;
+            letter-spacing: 0.06em !important;
+            font-weight: 700 !important;
           }
 
           .meta-v {
             width: 100% !important;
-            font-size: 13.5px !important;
-            font-weight: 500 !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            color: #e2e8f0 !important;
+            word-break: break-word !important;
+          }
+
+          /* Tarjetas principales a ancho completo */
+          &.meta-row--level,
+          &.meta-row--xp,
+          &.meta-row--os,
+          &.meta-row--teacher-role,
+          &.meta-row--teacher-os {
+            grid-column: span 2 !important;
+          }
+
+          &.meta-row--level {
+            background: linear-gradient(135deg, rgba(192, 132, 252, 0.12) 0%, rgba(14, 18, 28, 0.9) 100%) !important;
+            border-color: rgba(192, 132, 252, 0.3) !important;
+            box-shadow: 0 4px 16px rgba(192, 132, 252, 0.08) !important;
+
+            .rank-tag {
+              font-size: 13.5px !important;
+              font-weight: 700 !important;
+              color: #c084fc !important;
+            }
+          }
+
+          &.meta-row--xp {
+            background: linear-gradient(135deg, rgba(10, 233, 138, 0.08) 0%, rgba(14, 18, 28, 0.9) 100%) !important;
+            border-color: rgba(10, 233, 138, 0.25) !important;
+
+            .xp-inline {
+              width: 100% !important;
+              display: flex !important;
+              align-items: center !important;
+              gap: 8px !important;
+
+              .xp-val-badge {
+                font-size: 12px !important;
+                font-weight: 700 !important;
+                color: #0ae98a !important;
+                min-width: 55px !important;
+              }
+
+              .xp-bar-inline {
+                flex: 1 !important;
+                width: auto !important;
+                height: 6px !important;
+                background: #162030 !important;
+              }
+
+              .xp-next {
+                font-size: 10px !important;
+                color: #7b8ea6 !important;
+                white-space: nowrap !important;
+              }
+            }
+          }
+
+          &.meta-row--streak {
+            border-color: rgba(255, 157, 51, 0.25) !important;
+            background: rgba(255, 157, 51, 0.06) !important;
+          }
+
+          &.meta-row--clan {
+            border-color: rgba(0, 240, 255, 0.22) !important;
+            background: rgba(0, 240, 255, 0.05) !important;
+          }
+
+          &.meta-row--spec {
+            border-color: rgba(0, 217, 255, 0.22) !important;
+            background: rgba(0, 217, 255, 0.05) !important;
+          }
+
+          &.meta-row--affinity {
+            border-color: rgba(168, 85, 247, 0.22) !important;
+            background: rgba(168, 85, 247, 0.05) !important;
+          }
+
+          &.meta-row--balance {
+            border-color: rgba(239, 68, 68, 0.2) !important;
+            background: rgba(239, 68, 68, 0.05) !important;
+          }
+
+          &.meta-row--os {
+            border-color: rgba(100, 116, 139, 0.2) !important;
+            background: rgba(15, 20, 30, 0.6) !important;
+            .meta-v {
+              font-size: 11.5px !important;
+              color: #94a3b8 !important;
+            }
           }
         }
       }
@@ -3719,16 +3910,20 @@
       /* Sensor grid con espacio táctil */
       .sensor-grid {
         grid-template-columns: repeat(2, 1fr) !important;
-        gap: 12px !important;
-        margin-bottom: 24px !important;
+        gap: 10px !important;
+        margin-bottom: 20px !important;
 
         .sensor-card {
-          padding: 14px 14px !important;
-          min-height: 80px !important;
+          padding: 12px 10px !important;
+          min-height: auto !important;
 
-          .sensor-num {
-            font-size: 20px !important;
-            margin: 4px 0 !important;
+          .sensor-label { font-size: 9.5px !important; }
+          .sensor-code { font-size: 9px !important; }
+          .sensor-num { font-size: 18px !important; margin: 3px 0 !important; }
+          .sensor-footer { font-size: 10.5px !important; }
+
+          &:last-child:nth-child(odd) {
+            grid-column: span 2 !important;
           }
         }
       }
@@ -4096,13 +4291,6 @@
             padding: 11px 16px !important;
           }
         }
-      }
-    }
-
-    @media (max-width: 480px) {
-      .sensor-grid {
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
       }
     }
   

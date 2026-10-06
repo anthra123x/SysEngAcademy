@@ -326,7 +326,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
   `,
   styles: [`
     .path-detail {
-      padding-bottom: var(--sp-20);
+      padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
     }
 
     /* ---------- HERO SECTION ---------- */
@@ -520,8 +520,8 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       gap: var(--sp-6);
       position: relative;
 
-      @media (max-width: 640px) {
-        gap: var(--sp-3);
+      @media (max-width: 768px) {
+        gap: 10px;
       }
     }
 
@@ -532,8 +532,8 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       flex-shrink: 0;
       width: 48px;
 
-      @media (max-width: 640px) {
-        width: 36px;
+      @media (max-width: 768px) {
+        width: 24px;
       }
     }
 
@@ -556,11 +556,13 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
         color: var(--primary);
       }
 
-      @media (max-width: 640px) {
-        width: 36px;
-        height: 36px;
+      @media (max-width: 768px) {
+        width: 24px;
+        height: 24px;
+        border-width: 1.5px;
+        box-shadow: 0 0 8px rgba(10, 233, 138, 0.25);
         .station-num {
-          font-size: 0.72rem;
+          font-size: 0.65rem;
         }
       }
     }
@@ -571,12 +573,20 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       background: linear-gradient(180deg, rgba(10, 233, 138, 0.4), var(--border));
       min-height: 60px;
       margin: 4px 0;
+
+      @media (max-width: 768px) {
+        margin: 2px 0;
+      }
     }
 
     .station-content {
       flex: 1;
       min-width: 0;
       padding-bottom: var(--sp-6);
+
+      @media (max-width: 768px) {
+        padding-bottom: var(--sp-4);
+      }
     }
 
     .station-card {
@@ -586,20 +596,24 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       overflow: hidden;
       box-shadow: var(--shadow-md);
 
+      @media (max-width: 768px) {
+        border-radius: var(--radius-lg);
+      }
+
       &__header {
         padding: var(--sp-6);
         border-bottom: 1px solid var(--border);
 
-        @media (max-width: 640px) {
-          padding: var(--sp-4);
+        @media (max-width: 768px) {
+          padding: 12px 14px;
         }
       }
 
       &__body {
         padding: var(--sp-6);
 
-        @media (max-width: 640px) {
-          padding: var(--sp-4);
+        @media (max-width: 768px) {
+          padding: 12px 12px 14px;
         }
       }
     }
@@ -636,12 +650,22 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       font-weight: var(--font-bold);
       color: var(--text-primary);
       margin-bottom: var(--sp-1);
+
+      @media (max-width: 768px) {
+        font-size: 1.15rem;
+        margin-bottom: 3px;
+      }
     }
 
     .station-desc {
       font-size: var(--text-sm);
       color: var(--text-secondary);
       line-height: 1.55;
+
+      @media (max-width: 768px) {
+        font-size: 0.8rem;
+        line-height: 1.45;
+      }
     }
 
     /* Primary Course Block within Milestone */
@@ -693,6 +717,15 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
         box-shadow: var(--shadow-primary);
         transform: translateY(-2px);
       }
+
+      @media (max-width: 768px) {
+        padding: 12px 14px;
+        border-radius: var(--radius-md);
+
+        &:hover {
+          transform: none;
+        }
+      }
     }
 
     .path-course-card--primary {
@@ -718,6 +751,11 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
       .pcc-title {
         font-size: var(--text-lg);
+        @media (max-width: 768px) {
+          font-size: 0.95rem;
+          line-height: 1.35;
+          margin-bottom: 4px;
+        }
       }
     }
 
@@ -726,6 +764,11 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       justify-content: space-between;
       align-items: center;
       margin-bottom: var(--sp-3);
+
+      @media (max-width: 768px) {
+        margin-bottom: 8px;
+        gap: 8px;
+      }
     }
 
     .pcc-icon {
@@ -742,6 +785,12 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
         width: 32px;
         height: 32px;
       }
+
+      @media (max-width: 768px) {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+      }
     }
 
     .pcc-badge-wrap {
@@ -749,6 +798,10 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       gap: var(--sp-2);
       align-items: center;
       flex-wrap: wrap;
+
+      @media (max-width: 768px) {
+        gap: 4px;
+      }
     }
 
     .badge-category {
@@ -756,11 +809,20 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       border: 1px solid;
       font-size: 0.72rem;
       padding: 2px 8px;
+
+      @media (max-width: 768px) {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+      }
     }
 
     .pcc-body {
       flex: 1;
       margin-bottom: var(--sp-4);
+
+      @media (max-width: 768px) {
+        margin-bottom: 10px;
+      }
     }
 
     .pcc-title {
@@ -769,6 +831,11 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       color: var(--text-primary);
       margin-bottom: var(--sp-1);
       line-height: 1.35;
+
+      @media (max-width: 768px) {
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+      }
     }
 
     .pcc-desc {
@@ -779,6 +846,12 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+
+      @media (max-width: 768px) {
+        font-size: 0.78rem;
+        line-height: 1.45;
+        margin-bottom: 4px;
+      }
     }
 
     .pcc-footer {
@@ -790,6 +863,13 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       border-top: 1px solid rgba(42, 42, 62, 0.6);
       font-size: var(--text-xs);
       flex-wrap: wrap;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding-top: 8px;
+      }
     }
 
     .pcc-meta {
@@ -802,6 +882,11 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
       .pcc-divider {
         opacity: 0.5;
+      }
+
+      @media (max-width: 768px) {
+        justify-content: flex-start;
+        font-size: 0.72rem;
       }
     }
 
@@ -836,6 +921,14 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
         border: 1px solid rgba(255, 184, 0, 0.28);
         color: #FFB800 !important;
       }
+
+      @media (max-width: 768px) {
+        width: 100%;
+        justify-content: center;
+        padding: 9px 14px;
+        font-size: 0.75rem;
+        text-align: center;
+      }
     }
 
     /* Milestone Complementary Section */
@@ -845,6 +938,12 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       background: rgba(255, 184, 0, 0.03);
       border: 1px dashed rgba(255, 184, 0, 0.25);
       border-radius: var(--radius-lg);
+
+      @media (max-width: 768px) {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: var(--radius-md);
+      }
     }
 
     .complementary-header {
@@ -852,6 +951,10 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       display: flex;
       flex-direction: column;
       gap: 2px;
+
+      @media (max-width: 768px) {
+        margin-bottom: 8px;
+      }
     }
 
     .comp-title-wrap {
@@ -865,11 +968,19 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       font-weight: var(--font-bold);
       color: #FFB800;
       letter-spacing: 0.02em;
+
+      @media (max-width: 768px) {
+        font-size: 0.8rem;
+      }
     }
 
     .comp-subtitle {
       font-size: var(--text-xs);
       color: var(--text-muted);
+
+      @media (max-width: 768px) {
+        font-size: 0.72rem;
+      }
     }
 
     .complementary-grid {
@@ -877,14 +988,19 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: var(--sp-4);
 
-      @media (max-width: 640px) {
+      @media (max-width: 768px) {
         grid-template-columns: 1fr;
+        gap: 8px;
       }
     }
 
     .path-course-card--complementary {
       background: var(--bg-surface-2);
       border: 1px solid rgba(255, 184, 0, 0.18);
+
+      @media (max-width: 768px) {
+        padding: 10px 12px;
+      }
 
       &:hover {
         border-color: #FFB800;

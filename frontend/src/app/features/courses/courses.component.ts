@@ -245,7 +245,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   styles: [`
     .courses-page {
       padding-top: var(--sp-6);
-      padding-bottom: var(--sp-12);
+      padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
     }
 
     .filters-total-chip {

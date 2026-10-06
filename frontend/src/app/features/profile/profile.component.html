@@ -67,9 +67,11 @@
               <!-- Sysinfo Metadata (Diferenciada según Rol: Docente vs Estudiante) -->
               <div class="neofetch-info">
                 <div class="neofetch-user-header">
-                  <span class="prompt-user">{{ auth.user()?.name }}</span>
-                  <span class="prompt-at">&#64;</span>
-                  <span class="prompt-host">{{ isTeacher() ? 'faculty-council' : 'syseng-academy' }}</span>
+                  <div class="prompt-user-headline">
+                    <span class="prompt-user">{{ auth.user()?.name }}</span>
+                    <span class="prompt-at">&#64;</span>
+                    <span class="prompt-host">{{ isTeacher() ? 'faculty-council' : 'syseng-academy' }}</span>
+                  </div>
                   <button type="button" class="btn-avatar-chip" (click)="openAvatarModal()">
                     <span>avatar: {{ currentAsciiAvatar().name }}</span>
                     <span class="btn-avatar-icon"><app-icon name="edit" [size]="11"/></span>
@@ -79,66 +81,70 @@
 
                 <div class="neofetch-grid">
                   @if (isTeacher()) {
-                    <div class="meta-row">
-                      <span class="meta-k">OS:</span>
-                      <span class="meta-v">SysEng Linux OS (Faculty Authority Pod v6.8-ACADEMIA)</span>
-                    </div>
-                    <div class="meta-row">
+                    <div class="meta-row meta-row--teacher-role">
                       <span class="meta-k">Cargo Docente:</span>
                       <span class="meta-v role-tag-teacher">Profesor Titular &amp; Arquitecto de Cátedra</span>
                     </div>
-                    <div class="meta-row">
+                    <div class="meta-row meta-row--teacher-students">
                       <span class="meta-k">Alumnos a Cargo:</span>
-                      <span class="meta-v"><strong>{{ facultyStudentsCount() }} estudiantes</strong> en supervisión activa</span>
+                      <span class="meta-v"><strong>{{ facultyStudentsCount() }} estudiantes</strong> en supervisión</span>
                     </div>
-                    <div class="meta-row">
+                    <div class="meta-row meta-row--teacher-courses">
                       <span class="meta-k">Cursos en Catálogo:</span>
-                      <span class="meta-v"><strong>43 asignaturas técnicas</strong> estructuradas</span>
+                      <span class="meta-v"><strong>43 asignaturas técnicas</strong></span>
                     </div>
-                    <div class="meta-row">
+                    <div class="meta-row meta-row--teacher-activities">
                       <span class="meta-k">Actividades &amp; Quizzes:</span>
-                      <span class="meta-v"><strong>{{ facultyActivitiesCount() }} retos y evaluaciones</strong> publicados</span>
+                      <span class="meta-v"><strong>{{ facultyActivitiesCount() }} retos</strong> publicados</span>
                     </div>
-                    <div class="meta-row">
+                    <div class="meta-row meta-row--teacher-approval">
                       <span class="meta-k">Aprobación Global:</span>
-                      <span class="meta-v"><strong>{{ facultyAvgScore() }}% de efectividad</strong> en cohortes</span>
+                      <span class="meta-v"><strong>{{ facultyAvgScore() }}% de efectividad</strong></span>
+                    </div>
+                    <div class="meta-row meta-row--teacher-os">
+                      <span class="meta-k">OS Authority:</span>
+                      <span class="meta-v">SysEng Linux OS (Faculty Pod v6.8)</span>
                     </div>
                   } @else {
                     <!-- MÉTRICAS PARA EL ESTUDIANTE -->
-                    <div class="meta-row">
-                      <span class="meta-k">OS:</span>
-                      <span class="meta-v">SysEng Linux OS (x86_64 Cloud Sandbox)</span>
-                    </div>
-                    <div class="meta-row">
+                    <div class="meta-row meta-row--level">
                       <span class="meta-k">Rango &amp; Nivel:</span>
                       <span class="meta-v rank-tag">Nivel {{ userLevel() }} — {{ rankTitle() }}</span>
                     </div>
-                    <div class="meta-row">
-                      <span class="meta-k">Especialidad:</span>
-                      <span class="meta-v spec-tag" style="display:inline-flex; align-items:center; gap:6px;"><app-icon [name]="specialization().icon" [size]="14" /> {{ specialization().title }}</span>
-                    </div>
-                    <div class="meta-row">
-                      <span class="meta-k">Racha Activa:</span>
-                      <span class="meta-v streak-tag">
-                        <strong style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="flame" [size]="14" /> {{ currentStreak() }} {{ currentStreak() === 1 ? 'día consecutivo' : 'días consecutivos' }}</strong>
-                        <span class="streak-boost">({{ streakMultiplier() }}x XP Boost)</span>
-                      </span>
-                    </div>
-                    <div class="meta-row">
+                    <div class="meta-row meta-row--xp">
                       <span class="meta-k">Experiencia (XP):</span>
                       <div class="meta-v xp-inline">
-                        <span>{{ totalXp() }} XP</span>
+                        <span class="xp-val-badge">{{ totalXp() }} XP</span>
                         <div class="xp-bar-inline">
                           <div class="xp-fill-inline" [style.width.%]="xpProgressPercent()"></div>
                         </div>
                         <span class="xp-next">{{ xpToNextLevel() }} XP para Nivel {{ userLevel() + 1 }}</span>
                       </div>
                     </div>
-                    <div class="meta-row">
+                    <div class="meta-row meta-row--streak">
+                      <span class="meta-k">Racha Activa:</span>
+                      <span class="meta-v streak-tag">
+                        <strong style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="flame" [size]="14" /> {{ currentStreak() }} {{ currentStreak() === 1 ? 'día' : 'días' }}</strong>
+                        <span class="streak-boost">({{ streakMultiplier() }}x Boost)</span>
+                      </span>
+                    </div>
+                    <div class="meta-row meta-row--clan">
                       <span class="meta-k">Clan / Grupo:</span>
                       <span class="meta-v text-cyan">{{ myGroupName() }}</span>
                     </div>
-                    <div class="meta-row">
+                    <div class="meta-row meta-row--spec">
+                      <span class="meta-k">Especialidad:</span>
+                      <span class="meta-v spec-tag" style="display:inline-flex; align-items:center; gap:6px;"><app-icon [name]="specialization().icon" [size]="14" /> {{ specialization().title }}</span>
+                    </div>
+                    <div class="meta-row meta-row--affinity">
+                      <span class="meta-k">Afinidad Cognitiva:</span>
+                      <span class="meta-v affinity-tag">
+                        <app-icon name="sparkles" [size]="13" />
+                        <strong>{{ currentRecommendation().matchScore }}%</strong>
+                        <span class="tag-note">(Byte IA)</span>
+                      </span>
+                    </div>
+                    <div class="meta-row meta-row--balance">
                       <span class="meta-k">Balance Gamificado:</span>
                       <span
                         class="meta-v balance-tag"
@@ -147,16 +153,12 @@
                       >
                         <app-icon name="zap" [size]="13" />
                         <strong>{{ (totalBonusXp() - totalPenalizedXp()) >= 0 ? '+' : '' }}{{ totalBonusXp() - totalPenalizedXp() }} XP</strong>
-                        <span class="tag-note">(Netos en Ranking)</span>
+                        <span class="tag-note">(Ranking)</span>
                       </span>
                     </div>
-                    <div class="meta-row">
-                      <span class="meta-k">Afinidad Cognitiva:</span>
-                      <span class="meta-v affinity-tag">
-                        <app-icon name="sparkles" [size]="13" />
-                        <strong>{{ currentRecommendation().matchScore }}%</strong>
-                        <span class="tag-note">(Diagnóstico Byte IA)</span>
-                      </span>
+                    <div class="meta-row meta-row--os">
+                      <span class="meta-k">OS Sandbox:</span>
+                      <span class="meta-v">SysEng Linux (x86_64 Cloud Sandbox)</span>
                     </div>
                   }
                 </div>
