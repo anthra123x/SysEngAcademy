@@ -60,7 +60,7 @@ class AuthService
     {
         $user = User::where('email', $dto->email)->first();
 
-        $isMatch = $user && Hash::check($dto->password, $user->password);
+        $isMatch = $user && $this->verifyUserPassword($dto->password, $user);
 
         if (!$user || !$isMatch) {
             throw ValidationException::withMessages([
@@ -157,5 +157,66 @@ class AuthService
         }
 
         return ['message' => 'Sesión cerrada correctamente.'];
+    }
+
+    /**
+     * Verifica la contraseña del usuario de forma tolerante y segura,
+     * normalizando variantes bcrypt ($2b$, $2a$), soportando rehash automático
+     * y evitando que discrepancias de algoritmo disparen excepciones 500 no capturadas.
+     */
+    protected function verifyUserPassword(string $plainPassword, User $user): bool
+    {
+        $hashed = (string) $user->password;
+        if ($hashed === '') {
+            return false;
+        }
+
+        // 1. Normalizar variantes de bcrypt de Node.js/OpenBSD ($2b$ y $2a$) a estándar PHP ($2y$)
+        $normalizedHash = $hashed;
+        if (str_starts_with($hashed, '$2b$') || str_starts_with($hashed, '$2a$')) {
+            $normalizedHash = '$2y$' . substr($hashed, 4);
+        }
+
+        $isMatch = false;
+
+        // 2. Intentar verificación con password_verify y Hash::check de forma segura
+        try {
+            if (password_verify($plainPassword, $normalizedHash)) {
+                $isMatch = true;
+            } elseif (Hash::check($plainPassword, $normalizedHash)) {
+                $isMatch = true;
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        // 3. Fallback en caso de contraseñas heredadas en texto plano
+        if (!$isMatch && hash_equals($hashed, $plainPassword)) {
+            $isMatch = true;
+        }
+
+        // 4. Si la autenticación fue exitosa pero el hash no era estándar ($2b$, plano, o costo desactualizado),
+        // rehashear y persistir de forma transparente para el usuario
+        if ($isMatch) {
+            $needsRehash = ($normalizedHash !== $hashed);
+            try {
+                if (!$needsRehash && Hash::needsRehash($user->password)) {
+                    $needsRehash = true;
+                }
+            } catch (\Throwable) {
+                // Silencioso ante cualquier discrepancia de Hash::needsRehash
+            }
+
+            if ($needsRehash && $user->exists) {
+                try {
+                    $user->password = Hash::make($plainPassword);
+                    $user->save();
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+        }
+
+        return $isMatch;
     }
 }

@@ -17,16 +17,24 @@ class TeacherAnalyticsService
     public function getOverview(): array
     {
         return Cache::remember('teacher_overview_stats', 30, function () {
-            $totalStudents = User::where('role', 'student')->count();
+            $studentFilter = function ($q) {
+                $q->where('email', 'not like', '%@example.com')
+                  ->where('email', 'not like', '%@sysengacademy.dev');
+            };
+
+            $totalStudents = User::where('role', 'student')
+                ->where('email', 'not like', '%@example.com')
+                ->where('email', 'not like', '%@sysengacademy.dev')
+                ->count();
             $totalCourses = Course::count();
-            $totalCompletions = LessonProgress::whereHas('user')->count();
-            $totalEnrollments = Enrollment::whereHas('user')->count();
+            $totalCompletions = LessonProgress::whereHas('user', $studentFilter)->count();
+            $totalEnrollments = Enrollment::whereHas('user', $studentFilter)->count();
 
             // Promedio global de quizzes
-            $avgScore = (float) (LessonProgress::whereHas('user')->whereNotNull('score')->avg('score') ?? 0.0);
+            $avgScore = (float) (LessonProgress::whereHas('user', $studentFilter)->whereNotNull('score')->avg('score') ?? 0.0);
 
             // Actividad reciente de los alumnos (últimas 10 lecciones/quizzes de usuarios activos)
-            $recentActivity = LessonProgress::whereHas('user')
+            $recentActivity = LessonProgress::whereHas('user', $studentFilter)
                 ->with(['user:id,name,email', 'lesson:id,title,type'])
                 ->orderBy('completed_at', 'desc')
                 ->take(10)

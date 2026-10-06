@@ -14,6 +14,8 @@ class StudentRosterService
     public function getRoster(?string $search = null, int $limit = 50): Collection
     {
         $query = User::where('role', 'student')
+            ->where('email', 'not like', '%@example.com')
+            ->where('email', 'not like', '%@sysengacademy.dev')
             ->withCount(['enrollments', 'lessonProgress'])
             ->with(['enrollments.course:id,title', 'lessonProgress']);
 
