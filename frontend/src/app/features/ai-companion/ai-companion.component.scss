@@ -239,7 +239,7 @@ app-byte-robot-3d {
   outline: none;
 }
 
-/* ================= 1. EXPERIENCIA DESKTOP PC: TERMINAL LINUX / WSL CON ILUMINACIÓN DINÁMICA ================= */
+/* ================= 1. EXPERIENCIA DESKTOP PC: TERMINAL LINUX / WSL CON ILUMINACIÓN DINÁMICA INTERNA ================= */
 .byte-panel--terminal {
   right: 24px;
   bottom: 140px;
@@ -248,94 +248,10 @@ app-byte-robot-3d {
   height: min(72vh, 520px);
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow: hidden;
   background: transparent;
   animation: byte-panel-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: bottom right;
-
-  /* Capa de Iluminación Ambiental Dinámica / Aurora */
-  .byte-ambient-aura {
-    position: absolute;
-    inset: -15px -15px -25px -15px;
-    pointer-events: none;
-    z-index: 0;
-    border-radius: 20px;
-    overflow: hidden;
-    transition: opacity 0.5s ease;
-
-    .aura-glow-core {
-      position: absolute;
-      inset: 8px;
-      border-radius: inherit;
-      filter: blur(35px);
-      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .aura-glow-spread {
-      position: absolute;
-      inset: -12px;
-      border-radius: inherit;
-      filter: blur(55px);
-      transition: all 0.6s ease;
-    }
-  }
-
-  /* Estados Reactivos de Iluminación Dinámica */
-  &.state-idle {
-    .term-window-frame {
-      border-color: rgba(0, 240, 255, 0.22);
-      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.82), 0 0 16px rgba(0, 240, 255, 0.08);
-    }
-    .aura-glow-core {
-      opacity: 0.55;
-      background: radial-gradient(circle, rgba(0, 240, 255, 0.22) 0%, rgba(10, 233, 138, 0.12) 50%, transparent 75%);
-    }
-    .aura-glow-spread {
-      opacity: 0.35;
-      background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, transparent 70%);
-    }
-  }
-
-  &.state-asking {
-    .term-window-frame {
-      border-color: rgba(0, 240, 255, 0.52);
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.85), 0 0 28px rgba(0, 240, 255, 0.22);
-    }
-    .aura-glow-core {
-      opacity: 0.85;
-      transform: scale(1.04) translateY(8px);
-      background: radial-gradient(circle, rgba(0, 240, 255, 0.38) 0%, rgba(99, 102, 241, 0.22) 50%, transparent 75%);
-      filter: blur(32px);
-    }
-    .aura-glow-spread {
-      opacity: 0.6;
-      background: radial-gradient(circle, rgba(0, 240, 255, 0.22) 0%, rgba(99, 102, 241, 0.12) 60%, transparent 80%);
-    }
-    .term-input-bar {
-      border-top-color: rgba(0, 240, 255, 0.45);
-      background: rgba(0, 240, 255, 0.04);
-      box-shadow: inset 0 1px 12px rgba(0, 240, 255, 0.12);
-    }
-  }
-
-  &.state-responding {
-    .term-window-frame {
-      border-color: rgba(10, 233, 138, 0.55);
-      box-shadow: 0 20px 54px rgba(0, 0, 0, 0.88), 0 0 32px rgba(10, 233, 138, 0.25);
-      animation: term-border-pulse 2.2s infinite alternate ease-in-out;
-    }
-    .aura-glow-core {
-      opacity: 0.95;
-      animation: aurora-breathe 2.4s infinite alternate ease-in-out;
-      background: radial-gradient(circle, rgba(0, 240, 255, 0.4) 0%, rgba(10, 233, 138, 0.3) 40%, rgba(99, 102, 241, 0.2) 70%, transparent 85%);
-      filter: blur(42px);
-    }
-    .aura-glow-spread {
-      opacity: 0.75;
-      animation: aurora-wave 3.2s infinite alternate ease-in-out;
-      background: radial-gradient(circle, rgba(10, 233, 138, 0.25) 0%, rgba(0, 240, 255, 0.2) 50%, transparent 75%);
-    }
-  }
 
   /* Marco principal de la ventana de terminal */
   .term-window-frame {
@@ -346,13 +262,95 @@ app-byte-robot-3d {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: rgba(10, 13, 20, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 240, 255, 0.22);
+    background: #080A10;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.2);
-    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.15);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* Capa de Iluminación Ambiental Dinámica INTERNA (situada dentro de la ventana de terminal tras los mensajes) */
+  .byte-ambient-aura {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    transition: opacity 0.6s ease;
+
+    .aura-glow-core {
+      position: absolute;
+      bottom: -10%;
+      left: 0;
+      right: 0;
+      height: 75%;
+      border-radius: 50% 50% 0 0;
+      filter: blur(48px);
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .aura-glow-spread {
+      position: absolute;
+      inset: 0;
+      filter: blur(36px);
+      transition: all 0.6s ease;
+    }
+  }
+
+  /* Estados Reactivos de Iluminación Dinámica INTERNA */
+  &.state-idle {
+    .term-window-frame {
+      border-color: rgba(0, 240, 255, 0.25);
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85);
+    }
+    .aura-glow-core {
+      opacity: 0.75;
+      background: radial-gradient(circle at 50% 90%, rgba(0, 240, 255, 0.24) 0%, rgba(10, 233, 138, 0.14) 45%, transparent 75%);
+    }
+    .aura-glow-spread {
+      opacity: 0.5;
+      background: linear-gradient(to top, rgba(0, 240, 255, 0.10) 0%, rgba(10, 233, 138, 0.05) 35%, transparent 70%);
+    }
+  }
+
+  &.state-asking {
+    .term-window-frame {
+      border-color: rgba(0, 240, 255, 0.45);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.88);
+    }
+    .aura-glow-core {
+      opacity: 0.95;
+      transform: scale(1.1) translateY(-15px);
+      background: radial-gradient(circle at 50% 95%, rgba(0, 240, 255, 0.38) 0%, rgba(99, 102, 241, 0.22) 45%, transparent 75%);
+      filter: blur(42px);
+    }
+    .aura-glow-spread {
+      opacity: 0.8;
+      background: linear-gradient(to top, rgba(0, 240, 255, 0.18) 0%, rgba(99, 102, 241, 0.08) 50%, transparent 80%);
+    }
+    .term-input-bar {
+      border-top-color: rgba(0, 240, 255, 0.35);
+      background: rgba(8, 12, 20, 0.92);
+      box-shadow: inset 0 1px 12px rgba(0, 240, 255, 0.12);
+    }
+  }
+
+  &.state-responding {
+    .term-window-frame {
+      border-color: rgba(10, 233, 138, 0.45);
+      box-shadow: 0 20px 54px rgba(0, 0, 0, 0.9);
+    }
+    .aura-glow-core {
+      opacity: 1;
+      animation: aurora-breathe 2.4s infinite alternate ease-in-out;
+      background: radial-gradient(circle at 50% 80%, rgba(0, 240, 255, 0.38) 0%, rgba(10, 233, 138, 0.28) 40%, rgba(99, 102, 241, 0.20) 70%, transparent 85%);
+      filter: blur(50px);
+    }
+    .aura-glow-spread {
+      opacity: 0.9;
+      animation: aurora-wave 3.2s infinite alternate ease-in-out;
+      background: linear-gradient(to top, rgba(10, 233, 138, 0.22) 0%, rgba(0, 240, 255, 0.16) 40%, rgba(99, 102, 241, 0.08) 75%, transparent 100%);
+    }
   }
 
   &--teacher {
@@ -388,11 +386,15 @@ app-byte-robot-3d {
 
 /* Windows Terminal Titlebar / Tab Strip */
 .term-tab-strip {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 38px;
-  background: rgba(8, 10, 15, 0.95);
+  background: rgba(8, 10, 15, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   user-select: none;
   flex-shrink: 0;
@@ -518,11 +520,15 @@ app-byte-robot-3d {
 
 /* Command Flags Bar */
 .cli-flags-bar {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: rgba(16, 20, 30, 0.6);
+  background: rgba(12, 16, 24, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
 
@@ -573,6 +579,8 @@ app-byte-robot-3d {
 
 /* ================= TERMINAL STDOUT / STDIN STREAM ================= */
 .term-body {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -581,7 +589,7 @@ app-byte-robot-3d {
   flex-direction: column;
   gap: 10px;
   overscroll-behavior: contain;
-  background: rgba(8, 10, 16, 0.75);
+  background: transparent;
 
   &::-webkit-scrollbar { width: 5px; }
   &::-webkit-scrollbar-thumb {
@@ -638,16 +646,18 @@ app-byte-robot-3d {
   }
 
   &--byte {
-    border-left: 2px solid rgba(10, 233, 138, 0.45);
-    background: rgba(16, 20, 31, 0.35);
+    border-left: 2px solid rgba(10, 233, 138, 0.55);
+    background: rgba(14, 18, 28, 0.50);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border-radius: 0 4px 4px 0;
     padding: 8px 10px;
     margin: 2px 0 4px;
   }
 
   &--teacher {
-    border-left-color: rgba(0, 217, 255, 0.45);
-    background: rgba(15, 23, 42, 0.35);
+    border-left-color: rgba(0, 217, 255, 0.55);
+    background: rgba(14, 22, 38, 0.50);
   }
 }
 @keyframes term-fade-in {
@@ -914,11 +924,15 @@ app-byte-robot-3d {
 
 /* CLI Prompt Input Bar (stdin) */
 .term-input-bar {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #08090D;
+  background: rgba(8, 10, 15, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
   transition: all 0.2s ease;

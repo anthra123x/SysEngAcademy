@@ -460,13 +460,13 @@
       (keydown.escape)="closePanel()"
       tabindex="-1"
     >
-      <!-- Capa de Iluminación Dinámica / Aurora Reactiva (Cyber underglow & neon halo) -->
-      <div class="byte-ambient-aura" aria-hidden="true">
-        <div class="aura-glow-core"></div>
-        <div class="aura-glow-spread"></div>
-      </div>
-
       <div class="term-window-frame">
+        <!-- Capa de Iluminación Dinámica INTERNA (Iluminación ambiental reactiva dentro del chat) -->
+        <div class="byte-ambient-aura" aria-hidden="true">
+          <div class="aura-glow-core"></div>
+          <div class="aura-glow-spread"></div>
+        </div>
+
         <!-- Windows/Linux Terminal Titlebar / Tab Strip -->
         <header class="term-tab-strip">
           <div class="term-tab" [class.term-tab--teacher]="isTeacherMode()">
