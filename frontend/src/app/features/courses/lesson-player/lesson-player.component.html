@@ -199,7 +199,7 @@
                 <app-interactive-ide
                   #interactiveIde
                   [initialCode]="l.starter_code || code()"
-                  [language]="l.language || 'python'"
+                  [language]="effectiveLanguage()"
                   [testCases]="l.test_cases || []"
                   [hint]="l.hint"
                   [lessonTitle]="l.title"

@@ -158,9 +158,7 @@ class CourseSeeder extends Seeder
                     'duration_minutes' => $lesson['duration'] ?? 10,
                     'is_preview' => $lesson['preview'] ?? false,
                     'content' => $this->buildDoc($lesson['blocks'] ?? []),
-                    'language' => $isExercise
-                        ? ($payload['language'] ?? $lesson['language'] ?? $course['language'] ?? null)
-                        : ($lesson['language'] ?? null),
+                    'language' => $payload['language'] ?? $lesson['language'] ?? $course['language'] ?? null,
                     'starter_code' => $isExercise
                         ? ($payload['starter'] ?? $lesson['starter'] ?? null)
                         : null,
@@ -200,7 +198,10 @@ class CourseSeeder extends Seeder
                 ]
             );
 
-            foreach ($question['answers'] ?? [] as $answer) {
+            $answers = $question['answers'] ?? [];
+            shuffle($answers); // Mezcla aleatoria para evitar que la primera opción sea siempre la correcta
+
+            foreach ($answers as $answer) {
                 QuizAnswer::updateOrCreate(
                     ['question_id' => $q->id, 'answer_text' => (string) $answer[0]],
                     [

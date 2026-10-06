@@ -407,6 +407,99 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
 
   readonly isCodeChallenge = computed(() => this.lesson()?.type === 'code_challenge');
 
+  /**
+   * Resuelve automáticamente el lenguaje y entorno de ejecución del editor
+   * para que se adapte con precisión al problema, módulo y curso actual.
+   */
+  readonly effectiveLanguage = computed<string>(() => {
+    const l = this.lesson();
+    if (!l) return 'python';
+
+    // 1. Si la lección define explícitamente su lenguaje
+    if (l.language && typeof l.language === 'string' && l.language.trim()) {
+      return this.normalizeLanguageName(l.language);
+    }
+
+    // 2. Si la lección contiene bloques de código, detectar el lenguaje del primer bloque
+    const codeBlock = this.contentBlocks().find(b => b.type === 'code' && b.language && b.language !== 'text');
+    if (codeBlock?.language) {
+      return this.normalizeLanguageName(codeBlock.language);
+    }
+
+    // 3. Inspeccionar el código inicial del ejercicio
+    const sampleCode = (l.starter_code || this.code() || '').trim();
+    if (sampleCode) {
+      const codeLang = this.detectLanguageFromCode(sampleCode);
+      if (codeLang) return codeLang;
+    }
+
+    // 4. Inspeccionar el contexto del módulo o curso (título y slug)
+    const contextText = `${l.title} ${l.slug} ${this.currentModule()?.title ?? ''} ${this.course()?.title ?? ''} ${this.course()?.slug ?? ''}`.toLowerCase();
+
+    if (contextText.includes('pseint') || contextText.includes('pseudocodigo') || contextText.includes('pseudocódigo')) {
+      return 'pseint';
+    }
+    if (contextText.includes('c++') || contextText.includes('cpp')) {
+      return 'cpp';
+    }
+    if (contextText.includes('sql') || contextText.includes('postgres') || contextText.includes('base de datos') || contextText.includes('bases de datos')) {
+      return 'sql';
+    }
+    if (contextText.includes('php') || contextText.includes('laravel') || contextText.includes('backend')) {
+      return 'php';
+    }
+    if (contextText.includes('java') && !contextText.includes('javascript')) {
+      return 'java';
+    }
+    if (contextText.includes('typescript') || contextText.includes('angular')) {
+      return 'typescript';
+    }
+    if (contextText.includes('javascript') || contextText.includes('frontend') || contextText.includes('web') || contextText.includes('react')) {
+      return 'javascript';
+    }
+    if (contextText.includes('python') || contextText.includes('ia') || contextText.includes('algoritmos')) {
+      return 'python';
+    }
+
+    return 'python';
+  });
+
+  private normalizeLanguageName(name: string): string {
+    const raw = (name || '').toLowerCase().trim();
+    if (raw === 'c++' || raw === 'cpp' || raw === 'c') return 'cpp';
+    if (raw === 'js' || raw === 'node' || raw === 'javascript') return 'javascript';
+    if (raw === 'ts' || raw === 'typescript') return 'typescript';
+    if (raw === 'py' || raw === 'python' || raw === 'python3') return 'python';
+    if (raw === 'postgres' || raw === 'postgresql' || raw === 'sql') return 'sql';
+    if (raw === 'psc' || raw === 'pseint') return 'pseint';
+    return raw;
+  }
+
+  private detectLanguageFromCode(code: string): string | null {
+    const trimmed = code.trim();
+    if (/^(Algoritmo|Proceso|SubProceso|SubAlgoritmo|Funcion|Definir)\b/i.test(trimmed) ||
+        /\b(FinAlgoritmo|FinProceso|FinFuncion|Escribir|Leer)\b/i.test(trimmed) ||
+        trimmed.includes('<-')) {
+      return 'pseint';
+    }
+    if (trimmed.includes('#include') || trimmed.includes('std::') || trimmed.includes('cout <<') || trimmed.includes('cin >>')) {
+      return 'cpp';
+    }
+    if (/^\s*<\?php/i.test(trimmed) || trimmed.includes('Route::') || trimmed.includes('$this->')) {
+      return 'php';
+    }
+    if (/^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE TABLE|ALTER TABLE|DROP TABLE)\b/i.test(trimmed)) {
+      return 'sql';
+    }
+    if (trimmed.includes('public class ') || trimmed.includes('System.out.println') || trimmed.includes('public static void main')) {
+      return 'java';
+    }
+    if (trimmed.includes('interface ') || trimmed.includes(': string') || trimmed.includes(': number') || trimmed.includes(': boolean')) {
+      return 'typescript';
+    }
+    return null;
+  }
+
   readonly hasPractice = computed(() => {
     const l = this.lesson();
     if (!l) return false;

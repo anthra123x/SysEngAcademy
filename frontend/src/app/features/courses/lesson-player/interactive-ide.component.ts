@@ -41,14 +41,6 @@ import {
   TestCase,
 } from '../../../core/services/code-execution.service';
 
-export interface TerminalAiMessage {
-  id: string;
-  sender: 'user' | 'assistant';
-  text: string;
-  timestamp: Date;
-  codeSnippet?: string;
-}
-
 export interface LanguageMeta {
   id: string;
   name: string;
@@ -186,7 +178,6 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
   private readonly codeRunner = inject(CodeExecutionService);
 
   @ViewChild('editorContainer') editorContainerRef?: ElementRef<HTMLDivElement>;
-  @ViewChild('copilotScroll') copilotScrollRef?: ElementRef<HTMLDivElement>;
 
   private editorView?: EditorView;
   private readonly langCompartment = new Compartment();
@@ -201,7 +192,7 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
   readonly isChallenge = input<boolean>(false);
   readonly isCompleted = input<boolean>(false);
 
-  // Output event emitted when code is solved via system tests or AI evaluation
+  // Output event emitted when code is solved via system tests
   readonly challengeSolved = output<{
     passed: boolean;
     method: 'tests' | 'ai';
@@ -209,10 +200,10 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
     message?: string;
   }>();
 
-  readonly challengeStatus = signal<'pending' | 'evaluating' | 'passed_tests' | 'passed_ai' | 'needs_work'>('pending');
+  readonly challengeStatus = signal<'pending' | 'evaluating' | 'passed_tests' | 'needs_work'>('pending');
 
   readonly isApproved = computed(() =>
-    this.isCompleted() || this.challengeStatus() === 'passed_tests' || this.challengeStatus() === 'passed_ai'
+    this.isCompleted() || this.challengeStatus() === 'passed_tests'
   );
 
   // Supported languages list
@@ -226,15 +217,9 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
 
   readonly running = signal<boolean>(false);
   readonly testing = signal<boolean>(false);
-  readonly aiLoading = signal<boolean>(false);
 
-  readonly activeTerminalTab = signal<'terminal' | 'tests' | 'ai'>('terminal');
+  readonly activeTerminalTab = signal<'terminal' | 'tests'>('terminal');
   readonly executionResult = signal<CodeExecutionResponse | null>(null);
-
-  // AI Copilot state
-  readonly copilotMessages = signal<TerminalAiMessage[]>([]);
-  readonly hasUnreadAiAdvice = signal<boolean>(false);
-  readonly aiInputText = signal<string>('');
   readonly toastMessage = signal<string | null>(null);
 
   /**
@@ -557,18 +542,12 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
                         100,
                         'Todas las pruebas automatizadas del sistema pasaron exitosamente.'
                       );
-                      this.runBackgroundAiEvaluation(testRes);
-                    } else {
-                      this.runBackgroundAiEvaluation(testRes);
                     }
                   },
                 });
             } else if (this.code().trim().length > 8) {
               this.markApprovedAutomatically('tests', 100, 'Código ejecutado exitosamente sin excepciones.');
-              this.runBackgroundAiEvaluation(res);
             }
-          } else {
-            this.runBackgroundAiEvaluation(res);
           }
         },
         error: err => {
@@ -581,7 +560,6 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
             language: activeLang,
           };
           this.executionResult.set(errRes);
-          this.runBackgroundAiEvaluation(errRes);
         },
       });
   }
@@ -608,7 +586,6 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
               'Todas las pruebas automatizadas pasaron exitosamente.'
             );
           }
-          this.runBackgroundAiEvaluation(res);
         },
         error: err => {
           this.testing.set(false);
@@ -620,7 +597,6 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
             language: activeLang,
           };
           this.executionResult.set(errRes);
-          this.runBackgroundAiEvaluation(errRes);
         },
       });
   }
@@ -629,15 +605,13 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
     this.markApprovedAutomatically('tests', 100, 'Solución validada y reto aprobado.');
   }
 
-  private markApprovedAutomatically(method: 'tests' | 'ai', score: number, message: string): void {
-    if (this.challengeStatus() === 'passed_tests' || this.challengeStatus() === 'passed_ai' || this.isCompleted()) {
+  private markApprovedAutomatically(method: 'tests', score: number, message: string): void {
+    if (this.challengeStatus() === 'passed_tests' || this.isCompleted()) {
       return;
     }
-    this.challengeStatus.set(method === 'tests' ? 'passed_tests' : 'passed_ai');
+    this.challengeStatus.set('passed_tests');
     this.recordChallengeCompleted();
-    const successMsg = method === 'tests'
-      ? '¡Pruebas superadas con éxito! Ejercicio aprobado por el Sistema.'
-      : '¡Excelente! Solución validada y aprobada automáticamente por el Agente.';
+    const successMsg = '¡Pruebas superadas con éxito! Ejercicio aprobado por el Sistema.';
     this.showToast(successMsg);
     this.challengeSolved.emit({
       passed: true,
@@ -660,292 +634,6 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
     } catch {}
   }
 
-  /* ==========================================================================
-     BACKGROUND AI EVALUATION & COPILOT
-     ========================================================================== */
-
-  private getOpenRouterKey(): string {
-    if (typeof window !== 'undefined') {
-      const custom = (window as any).__AI_KEY__ || localStorage.getItem('syseng_ai_key');
-      if (custom) return custom;
-    }
-    try {
-      return atob('c2stb3ItdjEtNTJmZWM1ZjYzZGIxMGVkMGI1ZWQzZGEzMzU4ZjkxMjA2YThkNGMxMjIyZWEyMzliOTRiNWY5YjQ4ZmVmMzY0MA==');
-    } catch {
-      return '';
-    }
-  }
-
-  async runBackgroundAiEvaluation(lastExec: CodeExecutionResponse): Promise<void> {
-    if (this.aiLoading()) return;
-
-    this.aiLoading.set(true);
-    const context = {
-      lesson: this.lessonTitle() || 'Reto de Programación',
-      language: this.language(),
-      code: this.code(),
-      testCases: this.activeTestCases(),
-      lastExecution: lastExec,
-      hint: this.hint(),
-    };
-
-    try {
-      const evaluation = await this.callAiEvaluator(context);
-
-      let aiReplyText = '';
-      if (evaluation.approved) {
-        this.markApprovedAutomatically('ai', evaluation.score ?? 100, evaluation.summary);
-        aiReplyText = `### ¡Solución Validada y Aprobada! (${evaluation.score}/100)\n\n` +
-          `**Resumen:** ${evaluation.summary}\n\n` +
-          (evaluation.recommendations
-            ? `**Recomendaciones de Calidad y Buenas Prácticas:**\n${evaluation.recommendations}\n\n`
-            : '') +
-          `> **Objetivo completado.** El avance ha sido registrado automáticamente y el siguiente módulo está habilitado.`;
-      } else {
-        aiReplyText = `### [BYTE-AI] Revisión en Vivo del Agente (${evaluation.score}/100)\n\n` +
-          `**Resumen:** ${evaluation.summary}\n\n` +
-          (evaluation.what_was_wrong
-            ? `**En qué estuvo mal o qué faltó:**\n${evaluation.what_was_wrong}\n\n`
-            : (evaluation.feedback ? `**Observaciones:**\n${evaluation.feedback}\n\n` : '')) +
-          (evaluation.recommendations
-            ? `**Recomendaciones para mejorar:**\n${evaluation.recommendations}\n\n`
-            : '') +
-          (evaluation.next_step
-            ? `**Siguiente paso sugerido:**\n${evaluation.next_step}\n\n`
-            : '') +
-          `> *Ajusta tu código en el editor y presiona [▶ Run Script] para revalidar automáticamente.*`;
-      }
-
-      const aiMsg: TerminalAiMessage = {
-        id: String(Date.now()),
-        sender: 'assistant',
-        text: aiReplyText,
-        timestamp: new Date(),
-      };
-      this.copilotMessages.update(msgs => [...msgs, aiMsg]);
-
-      if (this.activeTerminalTab() !== 'ai') {
-        this.hasUnreadAiAdvice.set(true);
-        if (!evaluation.approved) {
-          this.showToast('[BYTE-AI] El Agente analizó tu código y dejó recomendaciones.');
-        }
-      }
-    } catch (_err) {
-      const localEval = this.evaluateLocally(context);
-      let aiReplyText = '';
-      if (localEval.approved) {
-        this.markApprovedAutomatically('ai', localEval.score || 100, localEval.summary);
-        aiReplyText = `### ¡Solución Aprobada por el Sistema! (100/100)\n\n` +
-          `**Resumen:** ${localEval.summary}\n\n` +
-          (localEval.recommendations ? `**Recomendaciones:**\n${localEval.recommendations}\n\n` : '') +
-          `> **Excelente trabajo.** Continúa con la siguiente lección.`;
-      } else {
-        aiReplyText = `### [BYTE-AI] Revisión del Agente — Ajustes Requeridos (${localEval.score || 40}/100)\n\n` +
-          `**Resumen:** ${localEval.summary}\n\n` +
-          (localEval.what_was_wrong ? `**En qué estuvo mal:**\n${localEval.what_was_wrong}\n\n` : '') +
-          (localEval.recommendations ? `**Recomendaciones:**\n${localEval.recommendations}\n\n` : '') +
-          (localEval.next_step ? `**Siguiente paso:**\n${localEval.next_step}\n\n` : '') +
-          `> *Ajusta tu código y presiona [▶ Run Script] para revalidar.*`;
-      }
-
-      const aiMsg: TerminalAiMessage = {
-        id: String(Date.now()),
-        sender: 'assistant',
-        text: aiReplyText,
-        timestamp: new Date(),
-      };
-      this.copilotMessages.update(msgs => [...msgs, aiMsg]);
-
-      if (this.activeTerminalTab() !== 'ai') {
-        this.hasUnreadAiAdvice.set(true);
-      }
-    } finally {
-      this.aiLoading.set(false);
-      this.scrollCopilotToBottom();
-    }
-  }
-
-  private async callAiEvaluator(ctx: any): Promise<{
-    approved: boolean;
-    score: number;
-    verdict: string;
-    summary: string;
-    what_was_wrong: string;
-    recommendations: string;
-    next_step: string;
-    feedback: string;
-  }> {
-    const systemPrompt = `Eres Byte AI, evaluador técnico estricto y tutor pedagógico de SysEngAcademy.
-Tu misión es FORMAR al estudiante con explicaciones claras sobre qué estuvo mal, qué faltó, y recomendaciones de buenas prácticas y calidad de código.
-Responde EXCLUSIVAMENTE un JSON válido con estas claves:
-{
-  "approved": boolean,
-  "score": number,
-  "verdict": string,
-  "summary": string,
-  "what_was_wrong": string,
-  "recommendations": string,
-  "next_step": string
-}`;
-
-    let userPrompt = `Reto: ${ctx.lesson}\nLenguaje: ${ctx.language}\nPista / Requerimientos: ${ctx.hint || 'No disponible'}\n`;
-    if (ctx.lastExecution?.exit_code !== undefined) {
-      userPrompt += `Exit Code: ${ctx.lastExecution.exit_code}\n`;
-    }
-    if (ctx.lastExecution?.stderr) {
-      userPrompt += `Error en consola (stderr):\n${ctx.lastExecution.stderr}\n`;
-    }
-    if (ctx.lastExecution?.stdout) {
-      userPrompt += `Salida estándar (stdout):\n${ctx.lastExecution.stdout}\n`;
-    }
-    userPrompt += `Código:\n${ctx.code}\n`;
-
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.getOpenRouterKey()}`,
-        'Content-Type': 'application/json',
-        'X-Title': 'SysEngAcademy Code Editor',
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.2,
-        max_tokens: 650,
-      }),
-    });
-
-    if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}`);
-    const data = await res.json();
-    const rawContent = data.choices?.[0]?.message?.content || '{}';
-    const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON output from evaluator');
-    return JSON.parse(jsonMatch[0]);
-  }
-
-  private evaluateLocally(ctx: any): any {
-    const code = ctx.code || '';
-    if (ctx.lastExecution?.tests?.length > 0) {
-      const allPassed = ctx.lastExecution.tests.every((t: any) => t.passed);
-      if (allPassed) {
-        return {
-          approved: true,
-          score: 100,
-          summary: 'Todas las pruebas unitarias fueron validadas y superadas.',
-          what_was_wrong: '',
-          recommendations: 'Tu algoritmo maneja correctamente todos los casos de prueba provistos.',
-          next_step: 'Avanza a la siguiente lección del curso.',
-          feedback: 'Validación completada.',
-        };
-      } else {
-        const failed = ctx.lastExecution.tests.find((t: any) => !t.passed);
-        return {
-          approved: false,
-          score: 50,
-          summary: 'Uno o más casos de prueba fallaron al validar la salida.',
-          what_was_wrong: failed ? `Con entrada "${failed.input || 'por defecto'}", se esperaba "${failed.expected}" pero se obtuvo "${failed.actual || '(vacío)'}".` : 'Divergencia en salida.',
-          recommendations: 'Compara la salida producida con el formato exacto requerido.',
-          next_step: 'Revisa la pestaña de Pruebas y ajusta tu lógica.',
-          feedback: 'Revisa los casos fallidos.',
-        };
-      }
-    }
-
-    if (ctx.lastExecution && ctx.lastExecution.exit_code === 0 && !ctx.lastExecution.stderr) {
-      return {
-        approved: true,
-        score: 95,
-        summary: 'El código compila y ejecuta limpiamente sin errores de consola.',
-        what_was_wrong: '',
-        recommendations: 'El programa finalizó con código 0.',
-        next_step: 'Continúa con el siguiente módulo.',
-        feedback: 'Ejecución exitosa.',
-      };
-    }
-
-    return {
-      approved: false,
-      score: 40,
-      summary: 'El código requiere revisión para satisfacer el problema.',
-      what_was_wrong: 'La solución actual no produce la salida esperada o generó excepciones.',
-      recommendations: 'Verifica la consola de salida y revisa la pista técnica del ejercicio.',
-      next_step: 'Haz los cambios necesarios en el editor y presiona [▶ Run Script].',
-      feedback: 'Revisa los errores en la terminal.',
-    };
-  }
-
-  openCopilotTab(): void {
-    this.hasUnreadAiAdvice.set(false);
-    this.activeTerminalTab.set('ai');
-    setTimeout(() => this.scrollCopilotToBottom(), 80);
-  }
-
-  sendUserChatMessage(): void {
-    const text = this.aiInputText().trim();
-    if (!text || this.aiLoading()) return;
-
-    this.aiInputText.set('');
-    this.aiLoading.set(true);
-    this.activeTerminalTab.set('ai');
-
-    const userMsg: TerminalAiMessage = {
-      id: String(Date.now()),
-      sender: 'user',
-      text,
-      timestamp: new Date(),
-    };
-    this.copilotMessages.update(msgs => [...msgs, userMsg]);
-    this.scrollCopilotToBottom();
-
-    const context = {
-      lesson: this.lessonTitle() || 'Reto de Programación',
-      language: this.language(),
-      code: this.code(),
-      testCases: this.activeTestCases(),
-      lastExecution: this.executionResult(),
-      hint: this.hint(),
-    };
-
-    fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.getOpenRouterKey()}`,
-        'Content-Type': 'application/json',
-        'X-Title': 'SysEngAcademy Code Editor',
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
-        messages: [
-          { role: 'system', content: `Eres Byte AI, tutor técnico en SysEngAcademy. Responde brevemente y en español sobre el código de ${context.language}.` },
-          { role: 'user', content: `Reto: ${context.lesson}\nCódigo:\n\`\`\`${context.language}\n${context.code}\n\`\`\`\nPregunta: ${text}` },
-        ],
-        temperature: 0.3,
-        max_tokens: 500,
-      }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        const reply = data.choices?.[0]?.message?.content || 'Sin respuesta.';
-        this.copilotMessages.update(msgs => [
-          ...msgs,
-          { id: String(Date.now()), sender: 'assistant', text: reply, timestamp: new Date() },
-        ]);
-      })
-      .catch(() => {
-        this.copilotMessages.update(msgs => [
-          ...msgs,
-          { id: String(Date.now()), sender: 'assistant', text: 'No se pudo conectar con el asistente AI.', timestamp: new Date() },
-        ]);
-      })
-      .finally(() => {
-        this.aiLoading.set(false);
-        this.scrollCopilotToBottom();
-      });
-  }
-
   showToast(msg: string): void {
     this.toastMessage.set(msg);
     setTimeout(() => {
@@ -953,26 +641,5 @@ Responde EXCLUSIVAMENTE un JSON válido con estas claves:
         this.toastMessage.set(null);
       }
     }, 2500);
-  }
-
-  private scrollCopilotToBottom(): void {
-    setTimeout(() => {
-      if (this.copilotScrollRef) {
-        this.copilotScrollRef.nativeElement.scrollTop = this.copilotScrollRef.nativeElement.scrollHeight;
-      }
-    }, 50);
-  }
-
-  renderMarkdown(text: string): string {
-    const esc = text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    return esc
-      .replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>');
   }
 }

@@ -10,6 +10,7 @@
       </div>
       <div class="mac-filename font-mono">
         <span class="filename-text">{{ langMeta().filename }}</span>
+        <span class="badge-runtime" [title]="'Entorno activo: ' + langMeta().badge">{{ langMeta().badge }}</span>
         @if (isModified()) {
           <span class="dirty-indicator" title="Cambios sin guardar">●</span>
         }
@@ -121,20 +122,6 @@
               }
             </button>
           </div>
-        }
-
-        @if (copilotMessages().length > 0) {
-          <button
-            type="button"
-            class="term-tab tab-ai"
-            [class.is-active]="activeTerminalTab() === 'ai'"
-            (click)="openCopilotTab()"
-          >
-            <span>Byte AI</span>
-            @if (hasUnreadAiAdvice()) {
-              <span class="badge-ai-unread">nuevo</span>
-            }
-          </button>
         }
       </div>
 
@@ -252,41 +239,6 @@
               </button>
             </div>
           }
-        </div>
-      }
-
-      <!-- VIEW 3: BYTE AI COPILOT -->
-      @if (activeTerminalTab() === 'ai') {
-        <div class="terminal-ai-view" #copilotScroll>
-          <div class="ai-messages-list">
-            @for (msg of copilotMessages(); track msg.id) {
-              <div class="ai-msg" [class.is-user]="msg.sender === 'user'" [class.is-agent]="msg.sender === 'assistant'">
-                <div class="ai-msg-header">
-                  <span class="ai-author">{{ msg.sender === 'user' ? 'Tú' : 'Byte AI' }}</span>
-                </div>
-                <div class="ai-msg-content" [innerHTML]="renderMarkdown(msg.text)"></div>
-                @if (msg.codeSnippet) {
-                  <button type="button" class="btn-apply-snippet" (click)="code.set(msg.codeSnippet); resetCode()">
-                    Copiar sugerencia al editor
-                  </button>
-                }
-              </div>
-            }
-          </div>
-
-          <form class="ai-input-form" (ngSubmit)="sendUserChatMessage()">
-            <input
-              type="text"
-              class="ai-input-field font-mono"
-              placeholder="Hazle una pregunta técnica a Byte AI sobre este ejercicio..."
-              [ngModel]="aiInputText()"
-              (ngModelChange)="aiInputText.set($event)"
-              name="aiPrompt"
-            />
-            <button type="submit" class="ai-submit-btn" [disabled]="aiLoading() || !aiInputText().trim()">
-              {{ aiLoading() ? '...' : 'Enviar' }}
-            </button>
-          </form>
         </div>
       }
     </div>

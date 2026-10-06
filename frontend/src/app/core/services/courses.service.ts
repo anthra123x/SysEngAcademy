@@ -246,10 +246,30 @@ export class CoursesService {
       this.saveCompletedLesson(numId, lesson.slug);
     }
     const isComp = !!lesson.completed || this.isLessonCompleted(numId, lesson.slug);
+
+    // Mezcla aleatoria de opciones de respuesta del quiz para evitar que la opción correcta siempre sea la primera
+    const quiz = lesson.quiz
+      ? {
+          ...lesson.quiz,
+          questions: (lesson.quiz.questions ?? []).map(q => {
+            const answers = [...(q.answers ?? [])];
+            for (let i = answers.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [answers[i], answers[j]] = [answers[j], answers[i]];
+            }
+            return {
+              ...q,
+              answers,
+            };
+          }),
+        }
+      : lesson.quiz;
+
     return {
       ...lesson,
       id: numId,
       completed: isComp,
+      quiz,
     };
   }
 

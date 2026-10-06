@@ -18,18 +18,23 @@ class LessonController extends Controller
         // El contenido base (y el quiz sin respuestas correctas) es común a
         // todos los usuarios: se cachea. Los datos por usuario (completed,
         // prev/next) se calculan fuera del caché.
-        $lesson = Cache::remember("api.lesson.v4.{$slug}", now()->addMinutes(10), function () use ($slug) {
+        $lesson = Cache::remember("api.lesson.v6.{$slug}", now()->addMinutes(10), function () use ($slug) {
             $lesson = Lesson::with(['module.course', 'quiz.questions.answers'])
                 ->where('slug', $slug)
                 ->firstOrFail()
                 ->toArray();
 
+            // Inferir el lenguaje de ejecución del editor según el módulo, problema o código si no está asignado
+            if (empty($lesson['language'])) {
+                $lesson['language'] = $this->inferLessonLanguage($lesson);
+            }
+
             // Nunca exponer la respuesta correcta: la evaluación es server-side.
-            // (foreach por referencia sobre `?? []` opera sobre una copia:
-            //  usamos variables planas y reescribimos los arrays.)
+            // Mezclamos las respuestas (shuffle) para evitar que la opción correcta siempre sea la primera.
             $questions = $lesson['quiz']['questions'] ?? [];
             foreach ($questions as &$question) {
                 $answers = $question['answers'] ?? [];
+                shuffle($answers);
                 foreach ($answers as &$answer) {
                     unset($answer['is_correct'], $answer['explanation']);
                 }
@@ -240,5 +245,70 @@ class LessonController extends Controller
         $next = $idx < count($slugs) - 1 ? ['slug' => $slugs[$idx + 1], 'title' => $map[$slugs[$idx + 1]]] : null;
 
         return [$prev, $next];
+    }
+
+    /**
+     * Infiere el lenguaje de programación adecuado para el editor interactivo
+     * a partir del código inicial, bloques de código, módulo y curso.
+     */
+    protected function inferLessonLanguage(array $lesson): string
+    {
+        if (! empty($lesson['language'])) {
+            return $lesson['language'];
+        }
+
+        // 1. Revisar bloques de código dentro del contenido
+        $blocks = $lesson['content']['blocks'] ?? [];
+        foreach ($blocks as $block) {
+            $lang = strtolower(trim($block['language'] ?? ''));
+            if (($block['type'] ?? '') === 'code' && ! empty($lang) && $lang !== 'text') {
+                return $lang === 'c++' ? 'cpp' : $lang;
+            }
+        }
+
+        // 2. Revisar código inicial o fragmento
+        $starter = $lesson['starter_code'] ?? '';
+        if (str_contains($starter, 'Algoritmo') || str_contains($starter, 'FinAlgoritmo') || str_contains($starter, '<-')) {
+            return 'pseint';
+        }
+        if (str_contains($starter, '#include') || str_contains($starter, 'std::') || str_contains($starter, 'cout <<')) {
+            return 'cpp';
+        }
+        if (preg_match('/^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE TABLE)\b/i', $starter)) {
+            return 'sql';
+        }
+        if (str_contains($starter, '<?php') || str_contains($starter, 'Route::')) {
+            return 'php';
+        }
+
+        // 3. Revisar título/slug del curso y del módulo
+        $courseSlug  = strtolower($lesson['module']['course']['slug'] ?? '');
+        $courseTitle = strtolower($lesson['module']['course']['title'] ?? '');
+        $moduleTitle = strtolower($lesson['module']['title'] ?? '');
+        $combined    = "{$courseSlug} {$courseTitle} {$moduleTitle}";
+
+        if (str_contains($combined, 'pseint') || str_contains($combined, 'pseudocodigo') || str_contains($combined, 'pseudocódigo')) {
+            return 'pseint';
+        }
+        if (str_contains($combined, 'c++') || str_contains($combined, 'cpp')) {
+            return 'cpp';
+        }
+        if (str_contains($combined, 'sql') || str_contains($combined, 'postgres') || str_contains($combined, 'base-de-datos') || str_contains($combined, 'bases de datos')) {
+            return 'sql';
+        }
+        if (str_contains($combined, 'php') || str_contains($combined, 'laravel') || str_contains($combined, 'backend')) {
+            return 'php';
+        }
+        if (str_contains($combined, 'java') && ! str_contains($combined, 'javascript')) {
+            return 'java';
+        }
+        if (str_contains($combined, 'typescript') || str_contains($combined, 'angular')) {
+            return 'typescript';
+        }
+        if (str_contains($combined, 'javascript') || str_contains($combined, 'frontend') || str_contains($combined, 'web')) {
+            return 'javascript';
+        }
+
+        return 'python';
     }
 }
