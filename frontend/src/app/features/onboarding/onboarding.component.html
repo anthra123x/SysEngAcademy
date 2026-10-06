@@ -249,67 +249,88 @@
                 </div>
               </div>
 
-              <!-- SPLIT TOUR VIEW: DETAILS (LEFT) + SIMULATED INTERFACE (RIGHT) -->
+              <!-- SPLIT TOUR VIEW: DETAILS (LEFT) + INTERACTIVE LIVE SIMULATOR (RIGHT) -->
               <div class="tour-split-grid">
-                <!-- COLUMNA IZQUIERDA: EXPLICACIÓN Y GUÍA PRÁCTICA -->
+                <!-- COLUMNA IZQUIERDA: GUÍA CONCISA Y PUNTOS CLAVE -->
                 <div class="tour-guide-column">
                   <div class="guide-header">
+                    <div class="guide-step-pill font-mono" [ngClass]="'txt-' + currentTour().tagColor">
+                      <span class="live-pulse-dot"></span> {{ currentTour().tag }}
+                    </div>
                     <h2 class="guide-title">{{ currentTour().title }}</h2>
-                    <p class="guide-subtitle font-mono">{{ currentTour().subtitle }}</p>
+                    <p class="guide-headline font-mono">{{ currentTour().headline }}</p>
                   </div>
 
-                  <p class="guide-description">
-                    {{ currentTour().description }}
-                  </p>
-
-                  <!-- 3 CLAVES DEL PASO -->
-                  <div class="guide-features-list">
-                    <div class="guide-features-heading font-mono txt-muted">
-                      // ELEMENTOS CLAVE DE ESTA SECCIÓN
-                    </div>
-                    @for (feat of currentTour().highlights; track feat.title) {
-                      <div class="guide-feature-item">
-                        <div class="feat-icon-box">
-                          <app-icon [name]="feat.icon" [size]="16"/>
+                  <!-- 3 CLAVES EN CHIPS COMPACTOS E INTERACTIVOS -->
+                  <div class="guide-highlights-compact">
+                    @for (feat of currentTour().highlights; track feat.title; let idx = $index) {
+                      <div
+                        class="guide-highlight-chip"
+                        [class.is-spotlight]="activeHotspot() === idx"
+                        (mouseenter)="activeHotspot.set(idx)"
+                        (mouseleave)="activeHotspot.set(null)"
+                      >
+                        <div class="chip-icon-box">
+                          <app-icon [name]="feat.icon" [size]="14"/>
                         </div>
-                        <div class="feat-text-group">
-                          <h4 class="feat-title">{{ feat.title }}</h4>
-                          <p class="feat-desc">{{ feat.description }}</p>
+                        <div class="chip-text-group">
+                          <strong class="chip-title">{{ feat.title }}</strong>
+                          <span class="chip-hint">{{ feat.hint }}</span>
                         </div>
                       </div>
                     }
                   </div>
 
-                  <!-- PRO TIP BOX -->
-                  <div class="guide-protip-box font-mono">
-                    <div class="protip-header">
-                      <app-icon name="lightbulb" [size]="14"/>
-                      <span class="txt-amber">CONSEJO PRO DEL INGENIERO:</span>
+                  <!-- MINI PRO TIP -->
+                  <div class="guide-protip-inline font-mono">
+                    <app-icon name="lightbulb" [size]="14" class="txt-amber"/>
+                    <div class="protip-text-wrap">
+                      <strong class="txt-amber">TIP PRO:</strong> {{ currentTour().proTip }}
                     </div>
-                    <p class="protip-text">{{ currentTour().proTip }}</p>
                   </div>
 
-                  <!-- ACCESO DIRECTO -->
+                  <!-- ACCESO DIRECTO RÁPIDO -->
                   <div class="guide-access-bar font-mono">
-                    <span class="txt-muted">ACCESO DIRECTO:</span>
+                    <span class="txt-muted">ACCESO REAL:</span>
                     <a [routerLink]="currentTour().routeLink" target="_blank" class="guide-link txt-cyan">
-                      Visitar {{ currentTour().routeLocation }} <app-icon name="external-link" [size]="12"/>
+                      {{ currentTour().routeLocation }} <app-icon name="external-link" [size]="11"/>
                     </a>
+                  </div>
+
+                  <!-- NAVEGACIÓN DIRECTA EN COLUMNA (SIN SCROLL FORZADO) -->
+                  <div class="guide-nav-buttons font-mono">
+                    <button type="button" class="btn-step-prev" (click)="prevTourStep()">
+                      @if (tourStep() === 1) {
+                        <span>← Inducción</span>
+                      } @else {
+                        <span>← Anterior</span>
+                      }
+                    </button>
+                    <button type="button" class="btn-step-next" (click)="nextTourStep()">
+                      @if (tourStep() < totalTourSteps) {
+                        <span>{{ currentTour().ctaText }}</span>
+                      } @else {
+                        <span>Finalizar Tour →</span>
+                      }
+                    </button>
                   </div>
                 </div>
 
-                <!-- COLUMNA DERECHA: SIMULADOR VISUAL DE LA PANTALLA -->
+                <!-- COLUMNA DERECHA: MODELOS PREVIEWS INTERACTIVOS Y ANIMADOS -->
                 <div class="tour-mockup-column">
-                  <!-- PASO 1: MOCKUP CENTRO DE MANDO & BYTE IA -->
+                  <!-- PASO 1: MODELO INTERACTIVO COCKPIT & BYTE IA -->
                   @if (tourStep() === 1) {
-                    <div class="sim-frame mockup-home">
+                    <div class="sim-frame mockup-home animate-step-in">
                       <div class="sim-frame-header font-mono">
                         <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
-                        <span class="sim-url">syseng://platform/home</span>
-                        <span class="sim-tag txt-cyan">COCKPIT_V1</span>
+                        <span class="sim-url">syseng://platform/cockpit</span>
+                        <span class="sim-live-badge txt-cyan">
+                          <span class="radar-dot"></span> SIMULADOR_EN_VIVO
+                        </span>
                       </div>
+
                       <div class="sim-frame-body">
-                        <!-- Navbar Simulator -->
+                        <!-- Navbar simulada -->
                         <div class="sim-navbar-bar">
                           <div class="sim-logo font-mono">&lt;/&gt; SysEng<strong>Academy</strong></div>
                           <div class="sim-nav-pills font-mono">
@@ -318,104 +339,256 @@
                             <span class="sim-pill">Cursos</span>
                           </div>
                           <div class="sim-user-status font-mono">
-                            <span class="sim-streak-flame">🔥 1d</span>
+                            <span class="sim-streak-flame animate-flame">🔥 1d</span>
                             <span class="sim-avatar">[{{ studentFirstName().slice(0, 1) }}]</span>
                           </div>
                         </div>
 
-                        <!-- Active challenge card -->
+                        <!-- Card de reto activo con barra animada -->
                         <div class="sim-active-card">
-                          <div class="sim-ac-tag font-mono txt-green">● RETO RECOMENDADO PARA HOY</div>
+                          <div class="sim-ac-tag font-mono txt-green">
+                            <span class="live-dot-mini">●</span> LECCIÓN RECOMENDADA PARA HOY
+                          </div>
                           <h4 class="sim-ac-title">Fundamentos de Programación: Módulo 1</h4>
-                          <div class="sim-ac-bar"><div class="sim-ac-fill" style="width: 35%;"></div></div>
+                          <div class="sim-ac-bar">
+                            <div class="sim-ac-fill laser-shimmer" style="width: 35%;"></div>
+                          </div>
                           <div class="sim-ac-footer font-mono">
                             <span class="sim-ac-btn">[▶ Continuar Lección 1.2]</span>
-                            <span class="sim-ac-meta txt-muted">⏱️ 15 min restantes</span>
+                            <span class="sim-ac-meta txt-muted">⏱️ 15 min de práctica</span>
                           </div>
                         </div>
 
-                        <!-- Byte IA bubble -->
-                        <div class="sim-byte-dock">
+                        <!-- Widget interactivo de Byte IA -->
+                        <div class="sim-byte-dock" [class.is-active-reply]="byteDemoStatus() === 'replied'">
                           <div class="sim-bd-top font-mono">
-                            <span class="sim-bd-icon"><app-icon name="sparkles" [size]="13"/></span>
-                            <strong class="txt-cyan">Byte IA Tutor</strong>
-                            <span class="txt-green">● EN LÍNEA</span>
+                            <span class="sim-bd-icon pulse-glow"><app-icon name="sparkles" [size]="13"/></span>
+                            <strong class="txt-cyan">Byte IA Tutor Socrático</strong>
+                            <span class="txt-green font-mono">● ONLINE</span>
                           </div>
-                          <p class="sim-bd-msg font-mono">
-                            "¡Hola cadete! Pulsa mi botón flotante en la esquina inferior cuando necesites orientación técnica o pistas para tus ejercicios."
-                          </p>
+
+                          @if (byteDemoStatus() === 'idle') {
+                            <div class="sim-bd-idle">
+                              <p class="sim-bd-msg font-mono">
+                                "Tutor inteligente conectado al compilador. Prueba hacerme una consulta técnica en vivo."
+                              </p>
+                              <button type="button" class="sim-action-btn font-mono" (click)="triggerByteDemo()">
+                                <app-icon name="message-square" [size]="12"/> [💬 Probar Consulta a Byte IA]
+                              </button>
+                            </div>
+                          } @else if (byteDemoStatus() === 'typing') {
+                            <div class="sim-bd-typing font-mono">
+                              <span class="txt-cyan">Byte IA analizando código</span>
+                              <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+                            </div>
+                          } @else {
+                            <div class="sim-bd-replied animate-fade-in font-mono">
+                              <p class="sim-bd-msg reply-bubble">
+                                🤖 <strong>[Byte IA]:</strong> "¡Hola {{ studentFirstName() }}! Noto que estás en el Módulo 1. Recuerda que un bucle For necesita una condición de parada clara para no caer en ciclo infinito. ¿Quieres una pista del reto?"
+                              </p>
+                              <button type="button" class="sim-mini-reset font-mono" (click)="resetByteDemo()">
+                                [↻ Reiniciar simulación]
+                              </button>
+                            </div>
+                          }
                         </div>
                       </div>
                     </div>
                   }
 
-                  <!-- PASO 2: MOCKUP RUTAS DE APRENDIZAJE -->
+                  <!-- PASO 2: MODELO INTERACTIVO RUTAS DE APRENDIZAJE -->
                   @if (tourStep() === 2) {
-                    <div class="sim-frame mockup-routes">
+                    <div class="sim-frame mockup-routes animate-step-in">
                       <div class="sim-frame-header font-mono">
                         <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
                         <span class="sim-url">syseng://platform/rutas</span>
-                        <span class="sim-tag txt-green">ÁRBOL_PEDAGÓGICO</span>
+                        <span class="sim-live-badge txt-green">
+                          <span class="radar-dot"></span> ÁRBOL_INTERACTIVO
+                        </span>
                       </div>
+
                       <div class="sim-frame-body">
-                        <div class="sim-rm-header font-mono">
-                          <span class="txt-muted">RUTA RECOMENDADA:</span>
-                          <strong class="txt-white">Fundamentos &amp; Algoritmos</strong>
+                        <!-- Switcher de Rutas -->
+                        <div class="sim-track-switcher font-mono">
+                          <button
+                            type="button"
+                            class="sim-track-tab"
+                            [class.is-active]="roadmapTrack() === 'fundamentos'"
+                            (click)="setRoadmapTrack('fundamentos')"
+                          >
+                            Fundamentos
+                          </button>
+                          <button
+                            type="button"
+                            class="sim-track-tab"
+                            [class.is-active]="roadmapTrack() === 'backend'"
+                            (click)="setRoadmapTrack('backend')"
+                          >
+                            Backend &amp; C++
+                          </button>
+                          <button
+                            type="button"
+                            class="sim-track-tab"
+                            [class.is-active]="roadmapTrack() === 'devops'"
+                            (click)="setRoadmapTrack('devops')"
+                          >
+                            DevOps &amp; Linux
+                          </button>
                         </div>
 
+                        <!-- Árbol de nodos con conectores animados -->
                         <div class="sim-rm-nodes">
-                          <div class="sim-rm-node is-active">
+                          <div
+                            class="sim-rm-node is-completed"
+                            [class.is-selected]="roadmapNodeSelected() === 1"
+                            (click)="selectRoadmapNode(1)"
+                          >
                             <div class="sim-rn-badge font-mono">01</div>
                             <div class="sim-rn-content">
-                              <div class="sim-rn-title">Lógica &amp; Variables de Estado</div>
-                              <div class="sim-rn-meta font-mono txt-green">✓ DESBLOQUEADO · EN CURSO</div>
+                              <div class="sim-rn-title">
+                                @if (roadmapTrack() === 'fundamentos') { Lógica &amp; Sintaxis Base }
+                                @else if (roadmapTrack() === 'backend') { Tipos de Datos &amp; Memoria }
+                                @else { Terminal Bash &amp; POSIX }
+                              </div>
+                              <div class="sim-rn-meta font-mono txt-green">✓ COMPLETADO · MÉRITO APROBADO</div>
                             </div>
                           </div>
-                          <div class="sim-rm-connector is-active"></div>
-                          <div class="sim-rm-node is-next">
-                            <div class="sim-rn-badge font-mono">02</div>
+
+                          <div class="sim-rm-connector-glow is-active"></div>
+
+                          <div
+                            class="sim-rm-node is-current"
+                            [class.is-selected]="roadmapNodeSelected() === 2"
+                            (click)="selectRoadmapNode(2)"
+                          >
+                            <div class="sim-rn-badge font-mono pulse-cyan">02</div>
                             <div class="sim-rn-content">
-                              <div class="sim-rn-title">Control de Flujo &amp; Ciclos For/While</div>
-                              <div class="sim-rn-meta font-mono txt-cyan">● SIGUIENTE OBJETIVO</div>
+                              <div class="sim-rn-title">
+                                @if (roadmapTrack() === 'fundamentos') { Estructuras de Control (For/While) }
+                                @else if (roadmapTrack() === 'backend') { Punteros y Gestión Dinámica }
+                                @else { Pipelines, Grep &amp; Sed }
+                              </div>
+                              <div class="sim-rn-meta font-mono txt-cyan">● EN PROGRESO · RETO 3 ACTIVO</div>
                             </div>
                           </div>
-                          <div class="sim-rm-connector"></div>
-                          <div class="sim-rm-node is-locked">
+
+                          <div class="sim-rm-connector-glow"></div>
+
+                          <div
+                            class="sim-rm-node is-locked"
+                            [class.is-selected]="roadmapNodeSelected() === 3"
+                            (click)="selectRoadmapNode(3)"
+                          >
                             <div class="sim-rn-badge font-mono"><app-icon name="lock" [size]="12"/></div>
                             <div class="sim-rn-content">
-                              <div class="sim-rn-title">Pensamiento Asintótico &amp; Big-O</div>
-                              <div class="sim-rn-meta font-mono txt-muted">🔒 Candado por mérito</div>
+                              <div class="sim-rn-title">
+                                @if (roadmapTrack() === 'fundamentos') { Programación Modular &amp; Funciones }
+                                @else if (roadmapTrack() === 'backend') { Concurrencia &amp; Sockets POSIX }
+                                @else { Dockerfiles &amp; Contenedores }
+                              </div>
+                              <div class="sim-rn-meta font-mono txt-muted">🔒 Candado por mérito (Supera nodo 02)</div>
                             </div>
                           </div>
+                        </div>
+
+                        <!-- Detalle interactivo del nodo seleccionado -->
+                        <div class="sim-node-detail-pill font-mono">
+                          <span class="txt-muted">NODO 0{{ roadmapNodeSelected() }}:</span>
+                          <span class="txt-white">
+                            @if (roadmapNodeSelected() === 1) { 100% Superado · 4 Proyectos acreditados }
+                            @else if (roadmapNodeSelected() === 2) { 3 de 5 lecciones aprobadas · En curso }
+                            @else { Requiere aprobar la batería de tests del Nodo 02 }
+                          </span>
                         </div>
                       </div>
                     </div>
                   }
 
-                  <!-- PASO 3: MOCKUP CATÁLOGO DE CURSOS -->
+                  <!-- PASO 3: MODELO INTERACTIVO CATÁLOGO DE CURSOS -->
                   @if (tourStep() === 3) {
-                    <div class="sim-frame mockup-courses">
+                    <div class="sim-frame mockup-courses animate-step-in">
                       <div class="sim-frame-header font-mono">
                         <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
                         <span class="sim-url">syseng://platform/cursos</span>
-                        <span class="sim-tag txt-amber">CATÁLOGO_OFICIAL</span>
+                        <span class="sim-live-badge txt-amber">
+                          <span class="radar-dot"></span> FILTROS_DINÁMICOS
+                        </span>
                       </div>
+
                       <div class="sim-frame-body">
+                        <!-- Barra de filtros interactiva -->
                         <div class="sim-filter-bar font-mono">
-                          <span class="sim-fb-item is-selected">Todos</span>
-                          <span class="sim-fb-item">C++</span>
-                          <span class="sim-fb-item">Python</span>
-                          <span class="sim-fb-item">PSeInt</span>
-                          <span class="sim-fb-item">SQL</span>
+                          <button
+                            type="button"
+                            class="sim-fb-btn"
+                            [class.is-selected]="catalogLang() === 'todos'"
+                            (click)="setCatalogLang('todos')"
+                          >
+                            Todos
+                          </button>
+                          <button
+                            type="button"
+                            class="sim-fb-btn"
+                            [class.is-selected]="catalogLang() === 'cpp'"
+                            (click)="setCatalogLang('cpp')"
+                          >
+                            C++
+                          </button>
+                          <button
+                            type="button"
+                            class="sim-fb-btn"
+                            [class.is-selected]="catalogLang() === 'python'"
+                            (click)="setCatalogLang('python')"
+                          >
+                            Python
+                          </button>
+                          <button
+                            type="button"
+                            class="sim-fb-btn"
+                            [class.is-selected]="catalogLang() === 'pseint'"
+                            (click)="setCatalogLang('pseint')"
+                          >
+                            PSeInt
+                          </button>
                         </div>
 
-                        <div class="sim-course-card">
+                        <!-- Tarjeta de curso viva según filtro -->
+                        <div class="sim-course-card animate-fade-in">
                           <div class="sim-cc-top font-mono">
-                            <span class="sim-cc-badge txt-purple">C++ / PYTHON</span>
+                            <span class="sim-cc-badge" [ngClass]="catalogLang() === 'python' ? 'txt-amber' : (catalogLang() === 'pseint' ? 'txt-cyan' : 'txt-purple')">
+                              @if (catalogLang() === 'python') { PYTHON 3.12 }
+                              @else if (catalogLang() === 'pseint') { PSEINT ESTRUCTURADO }
+                              @else { C++20 / NATIVO }
+                            </span>
                             <span class="sim-cc-level txt-green">NIVEL 1 · PRINCIPIANTE</span>
                           </div>
-                          <h4 class="sim-cc-title">Introducción a la Programación Estructurada</h4>
-                          <p class="sim-cc-desc">Aprende secuencias lógicas, estructuras de control, funciones y arreglos con compilación directa.</p>
+
+                          <h4 class="sim-cc-title">
+                            @if (catalogLang() === 'python') { Python para Ingeniería de Sistemas }
+                            @else if (catalogLang() === 'pseint') { Lógica Algorítmica con Pseudocódigo PSeInt }
+                            @else { Introducción a la Programación Estructurada C++ }
+                          </h4>
+
+                          <p class="sim-cc-desc">
+                            Aprende secuencias lógicas, estructuras de control, modularización y compilación directa con sandbox.
+                          </p>
+
+                          <!-- Toggle para ver temario rápido interactivo -->
+                          <div class="sim-cc-middle font-mono">
+                            <button type="button" class="sim-syllabus-toggle" (click)="toggleSyllabusQuick()">
+                              <app-icon [name]="showSyllabusQuick() ? 'check' : 'book-open'" [size]="12"/>
+                              <span>{{ showSyllabusQuick() ? 'Ocultar Temario' : 'Explorar Temario Rápido (3 lecciones)' }}</span>
+                            </button>
+                          </div>
+
+                          @if (showSyllabusQuick()) {
+                            <div class="sim-syllabus-list font-mono animate-fade-in">
+                              <div class="sim-syl-item txt-green">✓ 1.1 Variables y Tipos de Datos (10 min)</div>
+                              <div class="sim-syl-item txt-cyan">● 1.2 Control de Flujo con If/Else (15 min)</div>
+                              <div class="sim-syl-item txt-muted">🔒 1.3 Proyecto Final: Validador Algorítmico</div>
+                            </div>
+                          }
+
                           <div class="sim-cc-footer font-mono">
                             <span class="txt-muted">📚 14 Lecciones · 8 Retos</span>
                             <span class="sim-cc-btn">[Comenzar Curso →]</span>
@@ -425,123 +598,206 @@
                     </div>
                   }
 
-                  <!-- PASO 4: MOCKUP EDITOR INTERACTIVO & SANDBOX -->
+                  <!-- PASO 4: MODELO INTERACTIVO EDITOR & SANDBOX -->
                   @if (tourStep() === 4) {
-                    <div class="sim-frame mockup-ide">
+                    <div class="sim-frame mockup-ide animate-step-in">
                       <div class="sim-frame-header font-mono">
                         <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
-                        <span class="sim-url">syseng://editor/par_o_impar.cpp</span>
-                        <span class="sim-tag txt-purple">CODEMIRROR_6</span>
+                        <span class="sim-url">syseng://sandbox/ejercicio_01.cpp</span>
+                        <span class="sim-live-badge txt-purple">
+                          <span class="radar-dot"></span> COMPILADOR_NATIVO
+                        </span>
                       </div>
+
                       <div class="sim-frame-body">
+                        <!-- IDE Top Bar con botones de acción reales -->
                         <div class="sim-ide-bar font-mono">
-                          <span class="sim-ib-file">📄 solution.cpp <span class="badge-rt">C++20</span></span>
-                          <div class="sim-ib-btns">
-                            <span class="sim-btn-run"><app-icon name="play" [size]="10"/> [▶ Run Script]</span>
-                            <span class="sim-btn-test"><app-icon name="check" [size]="10"/> [✓ Validar Tests]</span>
+                          <div class="sim-ib-files">
+                            <button
+                              type="button"
+                              class="sim-file-tab"
+                              [class.is-active]="ideSelectedLang() === 'cpp'"
+                              (click)="setIdeLang('cpp')"
+                            >
+                              📄 solution.cpp <span class="badge-mini">C++20</span>
+                            </button>
+                            <button
+                              type="button"
+                              class="sim-file-tab"
+                              [class.is-active]="ideSelectedLang() === 'python'"
+                              (click)="setIdeLang('python')"
+                            >
+                              🐍 solution.py <span class="badge-mini">Py</span>
+                            </button>
+                          </div>
+
+                          <div class="sim-ib-actions">
+                            @if (ideExecutionState() === 'running') {
+                              <button type="button" class="sim-btn-run is-running" disabled>
+                                <span class="loader-spinner"></span> [Compilando...]
+                              </button>
+                            } @else {
+                              <button type="button" class="sim-btn-run pulse-btn" (click)="runIdeSimulation()">
+                                <app-icon name="play" [size]="11"/> [▶ Run Script]
+                              </button>
+                            }
                           </div>
                         </div>
 
+                        <!-- Editor de código estilizado con syntax highlight -->
                         <div class="sim-ide-code font-mono">
-                          <div class="sim-ln"><span class="ln-n">1</span> <span class="txt-purple">#include</span> <span class="txt-green">&lt;iostream&gt;</span></div>
-                          <div class="sim-ln"><span class="ln-n">2</span> <span class="txt-cyan">int</span> <span class="txt-amber">main</span>() &#123;</div>
-                          <div class="sim-ln"><span class="ln-n">3</span> &nbsp;&nbsp;<span class="txt-cyan">int</span> n; std::cin &gt;&gt; n;</div>
-                          <div class="sim-ln"><span class="ln-n">4</span> &nbsp;&nbsp;std::cout &lt;&lt; (n % <span class="txt-purple">2</span> == <span class="txt-purple">0</span> ? <span class="txt-green">"PAR"</span> : <span class="txt-green">"IMPAR"</span>);</div>
-                          <div class="sim-ln"><span class="ln-n">5</span> &nbsp;&nbsp;<span class="txt-purple">return</span> <span class="txt-purple">0</span>;</div>
-                          <div class="sim-ln"><span class="ln-n">6</span> &#125;</div>
+                          @if (ideSelectedLang() === 'cpp') {
+                            <div class="sim-ln"><span class="ln-n">1</span> <span class="txt-purple">#include</span> <span class="txt-green">&lt;iostream&gt;</span></div>
+                            <div class="sim-ln"><span class="ln-n">2</span> <span class="txt-cyan">int</span> <span class="txt-amber">main</span>() &#123;</div>
+                            <div class="sim-ln"><span class="ln-n">3</span> &nbsp;&nbsp;<span class="txt-cyan">int</span> n; std::cin &gt;&gt; n;</div>
+                            <div class="sim-ln"><span class="ln-n">4</span> &nbsp;&nbsp;std::cout &lt;&lt; (n % <span class="txt-purple">2</span> == <span class="txt-purple">0</span> ? <span class="txt-green">"PAR"</span> : <span class="txt-green">"IMPAR"</span>);</div>
+                            <div class="sim-ln"><span class="ln-n">5</span> &nbsp;&nbsp;<span class="txt-purple">return</span> <span class="txt-purple">0</span>;</div>
+                            <div class="sim-ln"><span class="ln-n">6</span> &#125;<span class="cursor-blink">|</span></div>
+                          } @else {
+                            <div class="sim-ln"><span class="ln-n">1</span> <span class="txt-purple">def</span> <span class="txt-amber">determinar_paridad</span>(n: <span class="txt-cyan">int</span>) -&gt; <span class="txt-cyan">str</span>:</div>
+                            <div class="sim-ln"><span class="ln-n">2</span> &nbsp;&nbsp;<span class="txt-purple">return</span> <span class="txt-green">"PAR"</span> <span class="txt-purple">if</span> n % <span class="txt-purple">2</span> == <span class="txt-purple">0</span> <span class="txt-purple">else</span> <span class="txt-green">"IMPAR"</span></div>
+                            <div class="sim-ln"><span class="ln-n">3</span> </div>
+                            <div class="sim-ln"><span class="ln-n">4</span> n = <span class="txt-cyan">int</span>(input())</div>
+                            <div class="sim-ln"><span class="ln-n">5</span> print(determinar_paridad(n))<span class="cursor-blink">|</span></div>
+                          }
                         </div>
 
+                        <!-- Terminal Linux interactiva -->
                         <div class="sim-ide-term font-mono">
-                          <div class="sim-it-top">
-                            <span class="txt-muted">$ /dev/sandbox/verify_tests</span>
-                            <span class="txt-green">● ALL PASSED (4/4)</span>
-                          </div>
-                          <div class="sim-it-line txt-green">✓ Test 1: n=6 → Salida: "PAR" [PASS 2ms]</div>
-                          <div class="sim-it-line txt-green">✓ Test 2: n=11 → Salida: "IMPAR" [PASS 1ms]</div>
-                          <div class="sim-it-line txt-cyan">[MÉRITO SUPERADO] Siguiente lección desbloqueada exitosamente</div>
+                          @if (ideExecutionState() === 'idle') {
+                            <div class="sim-term-idle">
+                              <span class="txt-muted">$ /sandbox/posix ready.</span>
+                              <span class="txt-amber">💡 Presiona [▶ Run Script] arriba para ejecutar y verificar tests.</span>
+                            </div>
+                          } @else if (ideExecutionState() === 'running') {
+                            <div class="sim-term-running">
+                              <span class="loader-spinner"></span>
+                              <span class="txt-cyan">g++ -O3 solution.cpp -o runner &amp;&amp; ./runner &lt;&lt;&lt; "test_cases"</span>
+                            </div>
+                          } @else {
+                            <div class="sim-term-success animate-fade-in">
+                              <div class="sim-it-top">
+                                <span class="txt-muted">$ /dev/sandbox/verify_tests</span>
+                                <span class="txt-green">● ALL TESTS PASSED (4/4)</span>
+                              </div>
+                              <div class="sim-it-line txt-green">✓ Test 1: n=6  → Salida: "PAR" [PASS 1.2ms]</div>
+                              <div class="sim-it-line txt-green">✓ Test 2: n=11 → Salida: "IMPAR" [PASS 0.9ms]</div>
+                              <div class="sim-it-line txt-cyan">[MÉRITO APROBADO] Siguiente ejercicio desbloqueado exitosamente</div>
+                              <div class="sim-it-actions">
+                                <button type="button" class="sim-mini-reset font-mono" (click)="resetIdeSimulation()">
+                                  [↻ Probar de nuevo]
+                                </button>
+                              </div>
+                            </div>
+                          }
                         </div>
                       </div>
                     </div>
                   }
 
-                  <!-- PASO 5: MOCKUP CLANES, RACHA & PERFIL -->
+                  <!-- PASO 5: MODELO INTERACTIVO CLANES, RACHA & PERFIL -->
                   @if (tourStep() === 5) {
-                    <div class="sim-frame mockup-community">
+                    <div class="sim-frame mockup-community animate-step-in">
                       <div class="sim-frame-header font-mono">
                         <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
                         <span class="sim-url">syseng://platform/clan_and_profile</span>
-                        <span class="sim-tag txt-cyan">RED_SOCIAL_XP</span>
+                        <span class="sim-live-badge txt-cyan">
+                          <span class="radar-dot"></span> GAMIFICACIÓN_XP
+                        </span>
                       </div>
+
                       <div class="sim-frame-body">
-                        <div class="sim-social-row font-mono">
-                          <div class="sim-sr-streak">
-                            <span class="sim-flame-icon">🔥</span>
-                            <div>
-                              <div class="sim-streak-title">3 Días de Racha</div>
-                              <div class="sim-streak-sub txt-green">● Protegida hoy · 1.2x XP</div>
-                            </div>
-                          </div>
-
-                          <div class="sim-sr-clan">
-                            <span class="sim-clan-badge txt-cyan">[KRNL]</span>
-                            <div>
-                              <div class="sim-clan-name">Kernel Hackers</div>
-                              <div class="sim-clan-sub txt-amber">#02 en Liga Global</div>
-                            </div>
-                          </div>
+                        <!-- Tabs de comunidad -->
+                        <div class="sim-comm-tabs font-mono">
+                          <button
+                            type="button"
+                            class="sim-comm-tab"
+                            [class.is-active]="communityTab() === 'streak'"
+                            (click)="setCommunityTab('streak')"
+                          >
+                            🔥 Racha &amp; Experiencia
+                          </button>
+                          <button
+                            type="button"
+                            class="sim-comm-tab"
+                            [class.is-active]="communityTab() === 'clan'"
+                            (click)="setCommunityTab('clan')"
+                          >
+                            🛡️ Mi Clan de Estudio
+                          </button>
                         </div>
 
-                        <div class="sim-profile-box font-mono">
-                          <div class="sim-pb-header">
-                            <span>CADETE: {{ studentFirstName() | uppercase }}</span>
-                            <span class="txt-purple">NIVEL 01 · 650/1000 XP</span>
+                        @if (communityTab() === 'streak') {
+                          <div class="sim-social-row font-mono animate-fade-in">
+                            <div class="sim-sr-streak">
+                              <span class="sim-flame-icon animate-flame">🔥</span>
+                              <div>
+                                <div class="sim-streak-title">3 Días de Racha Activa</div>
+                                <div class="sim-streak-sub txt-green">● Protegida hoy · Multiplicador 1.2x XP</div>
+                              </div>
+                            </div>
+                            <button type="button" class="sim-xp-boost-btn" (click)="boostXp()">
+                              <app-icon name="zap" [size]="12"/> [⚡ Simular Práctica (+50 XP)]
+                            </button>
                           </div>
-                          <div class="sim-pb-bar"><div class="sim-pb-fill" style="width: 65%;"></div></div>
-                          <div class="sim-pb-chips">
-                            <span class="sim-chip">🏅 Primer Script</span>
-                            <span class="sim-chip">⚡ 4 Tests Superados</span>
-                            <span class="sim-chip">🛡️ Cadete Verificado</span>
+
+                          <!-- Particle animado de XP -->
+                          @if (xpGainedNotice()) {
+                            <div class="sim-xp-floating-particle font-mono animate-float-up">
+                              +50 XP GANADOS! 🔥
+                            </div>
+                          }
+
+                          <div class="sim-profile-box font-mono animate-fade-in">
+                            <div class="sim-pb-header">
+                              <span>CADETE: {{ studentFirstName() | uppercase }}</span>
+                              <span class="txt-purple">NIVEL 01 · {{ demoXp() }}/1000 XP</span>
+                            </div>
+                            <div class="sim-pb-bar">
+                              <div class="sim-pb-fill laser-shimmer" [style.width.%]="(demoXp() / 1000) * 100"></div>
+                            </div>
+                            <div class="sim-pb-chips">
+                              <span class="sim-chip">🏅 Primer Script</span>
+                              <span class="sim-chip">⚡ 4 Tests Superados</span>
+                              <span class="sim-chip">🛡️ Cadete Verificado</span>
+                            </div>
                           </div>
-                        </div>
+                        } @else {
+                          <div class="sim-clan-roster font-mono animate-fade-in">
+                            <div class="sim-clan-header">
+                              <span class="clan-tag txt-cyan">[KRNL]</span>
+                              <div>
+                                <div class="clan-name">Kernel Hackers</div>
+                                <div class="clan-sub txt-amber">#02 en Liga Global · 4,820 XP Semanal</div>
+                              </div>
+                            </div>
+                            <div class="sim-clan-members">
+                              <div class="clan-m-item">
+                                <span class="txt-green">● [CMD] Alex_Dev</span>
+                                <span class="txt-muted">1,240 XP</span>
+                              </div>
+                              <div class="clan-m-item">
+                                <span class="txt-cyan">● [CAD] {{ studentFirstName() }} (Tú)</span>
+                                <span class="txt-purple">{{ demoXp() }} XP</span>
+                              </div>
+                              <div class="clan-m-item">
+                                <span class="txt-muted">● [CAD] Carlos_Sys</span>
+                                <span class="txt-muted">610 XP</span>
+                              </div>
+                            </div>
+                          </div>
+                        }
                       </div>
                     </div>
                   }
                 </div>
               </div>
 
-              <!-- TOUR FOOTER ACTIONS -->
-              <div class="tour-footer-actions between">
-                <button type="button" class="term-btn term-btn-outline" (click)="prevTourStep()">
-                  @if (tourStep() === 1) {
-                    <span>← Volver a Inducción</span>
-                  } @else {
-                    <span>← Paso Anterior</span>
-                  }
-                </button>
-
-                <div class="tour-center-controls">
-                  <div class="tour-dots-indicator">
-                    @for (stepDef of tourSteps; track stepDef.step) {
-                      <button
-                        type="button"
-                        class="tour-dot-btn"
-                        [class.is-active]="tourStep() === stepDef.step"
-                        (click)="setTourStep(stepDef.step)"
-                        [title]="'Ir al ' + stepDef.tag"
-                      ></button>
-                    }
-                  </div>
-                  <button type="button" class="btn-skip-link font-mono" (click)="skipTourToMission()">
-                    Saltar tour e ir a misiones
-                  </button>
-                </div>
-
-                <button type="button" class="term-btn term-btn-primary" (click)="nextTourStep()">
-                  @if (tourStep() < totalTourSteps) {
-                    <span>{{ currentTour().ctaText }}</span>
-                  } @else {
-                    <span>Finalizar Tour y Elegir mi Misión →</span>
-                  }
+              <!-- TOUR BOTTOM BREADCRUMB & SKIP -->
+              <div class="tour-footer-meta font-mono">
+                <span class="txt-muted">¿Ya conoces la interfaz?</span>
+                <button type="button" class="btn-skip-link txt-cyan" (click)="skipTourToMission()">
+                  Saltar tour e ir directo a misiones de inicio →
                 </button>
               </div>
             </section>

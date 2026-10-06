@@ -47,20 +47,22 @@ export interface DiagnosticAnalysisResult {
   completedAt: string;
 }
 
+export interface TourHighlightItem {
+  icon: string;
+  title: string;
+  hint: string;
+}
+
 export interface TourStepDefinition {
   step: number;
   tag: string;
   tagColor: 'cyan' | 'green' | 'amber' | 'purple';
   title: string;
   subtitle: string;
+  headline: string;
   routeLocation: string;
   routeLink: string;
-  description: string;
-  highlights: {
-    icon: string;
-    title: string;
-    description: string;
-  }[];
+  highlights: TourHighlightItem[];
   proTip: string;
   ctaText: string;
 }
@@ -84,150 +86,162 @@ export class OnboardingComponent implements OnInit {
   readonly tourStep = signal<number>(1);
   readonly totalTourSteps = 5;
 
+  // --- SIMULADORES INTERACTIVOS DEL TOUR ---
+  readonly activeHotspot = signal<number | null>(null);
+
+  // Paso 1: Byte IA
+  readonly byteDemoStatus = signal<'idle' | 'typing' | 'replied'>('idle');
+  triggerByteDemo(): void {
+    if (this.byteDemoStatus() === 'typing') return;
+    this.byteDemoStatus.set('typing');
+    setTimeout(() => {
+      this.byteDemoStatus.set('replied');
+    }, 700);
+  }
+  resetByteDemo(): void {
+    this.byteDemoStatus.set('idle');
+  }
+
+  // Paso 2: Roadmap
+  readonly roadmapTrack = signal<'fundamentos' | 'backend' | 'devops'>('fundamentos');
+  readonly roadmapNodeSelected = signal<number>(2);
+  setRoadmapTrack(track: 'fundamentos' | 'backend' | 'devops'): void {
+    this.roadmapTrack.set(track);
+    this.roadmapNodeSelected.set(1);
+  }
+  selectRoadmapNode(node: number): void {
+    this.roadmapNodeSelected.set(node);
+  }
+
+  // Paso 3: Cursos
+  readonly catalogLang = signal<'todos' | 'cpp' | 'python' | 'pseint'>('todos');
+  readonly showSyllabusQuick = signal<boolean>(false);
+  setCatalogLang(lang: 'todos' | 'cpp' | 'python' | 'pseint'): void {
+    this.catalogLang.set(lang);
+  }
+  toggleSyllabusQuick(): void {
+    this.showSyllabusQuick.update(v => !v);
+  }
+
+  // Paso 4: Editor IDE
+  readonly ideExecutionState = signal<'idle' | 'running' | 'success'>('idle');
+  readonly ideSelectedLang = signal<'cpp' | 'python'>('cpp');
+  setIdeLang(lang: 'cpp' | 'python'): void {
+    this.ideSelectedLang.set(lang);
+    this.ideExecutionState.set('idle');
+  }
+  runIdeSimulation(): void {
+    if (this.ideExecutionState() === 'running') return;
+    this.ideExecutionState.set('running');
+    setTimeout(() => {
+      this.ideExecutionState.set('success');
+    }, 850);
+  }
+  resetIdeSimulation(): void {
+    this.ideExecutionState.set('idle');
+  }
+
+  // Paso 5: Comunidad / Racha
+  readonly communityTab = signal<'streak' | 'clan'>('streak');
+  readonly demoXp = signal<number>(650);
+  readonly xpGainedNotice = signal<boolean>(false);
+  boostXp(): void {
+    if (this.demoXp() >= 1000) {
+      this.demoXp.set(650);
+    } else {
+      this.demoXp.update(x => Math.min(1000, x + 50));
+    }
+    this.xpGainedNotice.set(true);
+    setTimeout(() => this.xpGainedNotice.set(false), 1200);
+  }
+  setCommunityTab(tab: 'streak' | 'clan'): void {
+    this.communityTab.set(tab);
+  }
+
   readonly tourSteps: TourStepDefinition[] = [
     {
       step: 1,
       tag: 'PASO 01 // COCKPIT',
       tagColor: 'cyan',
-      title: 'Centro de Mando & Asistente Byte IA',
-      subtitle: 'Tu base de operaciones diaria, asignaturas en curso y tutor inteligente.',
+      title: 'Centro de Mando & Byte IA',
+      subtitle: 'Tu base de operaciones diaria y tutor inteligente siempre activo.',
+      headline: 'Retoma tus materias con 1 clic y consulta dudas técnicas en vivo con Byte IA.',
       routeLocation: 'Barra Superior → Inicio ( / )',
       routeLink: '/',
-      description: 'El Centro de Mando es la vista principal donde arrancas cada jornada. Aquí monitoreas tus horas de código, el estado de tu racha diaria y puedes retomar de inmediato tu última lección con un solo clic. Además, cuentas con Byte IA integrado como botón flotante para responder cualquier consulta técnica en tiempo real.',
       highlights: [
-        {
-          icon: 'layout',
-          title: 'Panel de Acceso Rápido',
-          description: 'Muestra directamente tus cursos en progreso para saltar a programar sin fricción.'
-        },
-        {
-          icon: 'sparkles',
-          title: 'Byte IA Siempre Contigo',
-          description: 'Abre el chat en vivo para comprender conceptos complejos, algoritmos o dudas de sintaxis.'
-        },
-        {
-          icon: 'flame',
-          title: 'Monitor de Racha Activa',
-          description: 'Visualiza tus días consecutivos de estudio y desbloquea multiplicadores de experiencia (XP).'
-        }
+        { icon: 'layout', title: 'Acceso Rápido', hint: 'Salta a programar tu lección activa sin rodeos.' },
+        { icon: 'sparkles', title: 'Byte IA Integrado', hint: 'Tutor socrático para dudas de código y sintaxis.' },
+        { icon: 'flame', title: 'Racha & Métricas', hint: 'Monitorea tus horas de práctica y días consecutivos.' }
       ],
-      proTip: 'Cada día que entres, revisa el Centro de Mando para ver tu siguiente objetivo prioritario.',
+      proTip: 'Haz clic en "Probar Byte IA" en el simulador para ver cómo interactúa en vivo.',
       ctaText: 'Siguiente: Rutas de Especialización →'
     },
     {
       step: 2,
       tag: 'PASO 02 // ROADMAPS',
       tagColor: 'green',
-      title: 'Rutas de Especialización Profesional',
-      subtitle: 'Mallas curriculares organizadas en orden pedagógico desde cero hasta nivel experto.',
+      title: 'Rutas de Especialización',
+      subtitle: 'Mallas curriculares organizadas en orden pedagógico secuencial.',
+      headline: 'Estructura tu carrera técnica paso a paso sin vacíos ni materias aisladas.',
       routeLocation: 'Barra Superior → Rutas ( /rutas )',
       routeLink: '/rutas',
-      description: 'Las Rutas estructuran tu carrera profesional paso a paso. En lugar de cursos dispersos, cada ruta (Backend, Frontend, DevOps, IA, Algoritmos, POO) conecta asignaturas secuenciales con nodos dependientes, asegurando que adquieras las bases antes de avanzar a conceptos avanzados.',
       highlights: [
-        {
-          icon: 'compass',
-          title: 'Árbol Pedagógico Conectado',
-          description: 'Cada módulo se desbloquea tras dominar el anterior, evitando vacíos de conocimiento.'
-        },
-        {
-          icon: 'target',
-          title: 'Enfoques de Carrera',
-          description: 'Elige tu rol objetivo: Backend Engineer, Frontend Specialist, DevOps/Cloud o Systems Hacker.'
-        },
-        {
-          icon: 'award',
-          title: 'Acreditación Oficial',
-          description: 'Al completar el 100% de una ruta obtienes tu credencial de especialidad verificada en tu perfil.'
-        }
+        { icon: 'compass', title: 'Árbol Conectado', hint: 'Cada nodo se desbloquea tras dominar el anterior.' },
+        { icon: 'target', title: 'Enfoques de Rol', hint: 'Especialízate en Backend, Frontend, Algoritmos o DevOps.' },
+        { icon: 'award', title: 'Acreditación Final', hint: 'Certificación oficial verificada al completar el 100% de la ruta.' }
       ],
-      proTip: 'Si es tu primera vez programando, tu camino ideal es la ruta "Fundamentos de Programación".',
+      proTip: 'Prueba cambiar de ruta en el simulador para ver los árboles de carrera.',
       ctaText: 'Siguiente: Catálogo de Cursos →'
     },
     {
       step: 3,
-      tag: 'PASO 03 // CURRICULUM',
+      tag: 'PASO 03 // CATÁLOGO',
       tagColor: 'amber',
       title: 'Catálogo de Cursos & Temarios',
-      subtitle: 'Biblioteca completa de asignaturas prácticas con desglose de lecciones.',
+      subtitle: 'Biblioteca completa de asignaturas prácticas con desglose temático.',
+      headline: 'Explora materias individuales por tecnología y salta directo a la acción.',
       routeLocation: 'Barra Superior → Cursos ( /cursos )',
       routeLink: '/cursos',
-      description: 'En el Catálogo encuentras todas las asignaturas individuales de la academia. Puedes filtrar por lenguaje (C++, Python, PSeInt, SQL, JS/TS, PHP), nivel de dificultad y duración. Cada curso detalla su temario completo con módulos teóricos, quizzes y retos de código.',
       highlights: [
-        {
-          icon: 'book-open',
-          title: 'Temarios Transparentes',
-          description: 'Revisa de antemano cada lección y los conceptos exactos que vas a dominar.'
-        },
-        {
-          icon: 'blocks',
-          title: 'Filtro por Lenguajes',
-          description: 'Alterna con un clic entre C++, Python, PSeInt o SQL según tu interés de práctica.'
-        },
-        {
-          icon: 'play',
-          title: 'Comenzar al Instante',
-          description: 'Presiona [Comenzar Curso] en cualquier tarjeta para abrir directamente el reproductor interactivo.'
-        }
+        { icon: 'book-open', title: 'Temarios Claros', hint: 'Conoce los conceptos y retos exactos de cada lección.' },
+        { icon: 'blocks', title: 'Filtros Dinámicos', hint: 'Alterna entre C++, Python, PSeInt, SQL y nivel de reto.' },
+        { icon: 'play', title: 'Inicio Directo', hint: 'Abre el reproductor interactivo en cualquier materia con 1 clic.' }
       ],
-      proTip: 'Puedes cursar varias materias a la vez o enfocarte en una sola para avanzar más rápido.',
+      proTip: 'Filtra por lenguaje en el simulador o pulsa "Ver Temario" para explorar los módulos.',
       ctaText: 'Siguiente: Editor de Código & Sandboxes →'
     },
     {
       step: 4,
       tag: 'PASO 04 // SANDBOX_IDE',
       tagColor: 'purple',
-      title: 'El Editor Interactivo & Sandboxes Linux',
-      subtitle: 'El corazón de la academia: escribe, compila y valida soluciones en vivo.',
-      routeLocation: 'Dentro de cada Lección Práctica ( /cursos/:slug/leccion/:slug )',
+      title: 'El Editor Interactivo & Sandboxes',
+      subtitle: 'Escribe, compila y valida código real sobre entornos Linux.',
+      headline: 'CodeMirror 6 adaptado al lenguaje del reto con ejecución nativa y tests automáticos.',
+      routeLocation: 'En cada Lección Práctica ( /cursos/:slug/leccion/:slug )',
       routeLink: '/cursos',
-      description: 'El Editor Interactivo es donde te conviertes en ingeniero de software. Incorpora CodeMirror 6 adaptado al lenguaje del ejercicio, compiladores nativos en el navegador y una terminal Linux para validar tu solución contra casos de prueba automatizados.',
       highlights: [
-        {
-          icon: 'terminal',
-          title: 'Botón [▶ Ejecutar Script]',
-          description: 'Corre tu solución en tiempo real y muestra la salida estándar (stdout) y errores en la terminal.'
-        },
-        {
-          icon: 'check',
-          title: 'Botón [✓ Validar Pruebas]',
-          description: 'Ejecuta casos de prueba automáticos con entradas secretas para verificar que tu algoritmo sea robusto.'
-        },
-        {
-          icon: 'lock',
-          title: 'Desbloqueo por Mérito',
-          description: 'Las lecciones avanzadas se desbloquean únicamente cuando superas la batería de tests.'
-        }
+        { icon: 'terminal', title: 'Botón [▶ Run]', hint: 'Compila en tiempo real y muestra la salida estándar en terminal.' },
+        { icon: 'check', title: 'Botón [✓ Tests]', hint: 'Batería de pruebas automáticas con entradas de verificación.' },
+        { icon: 'lock', title: 'Mérito Estricto', hint: 'El siguiente reto se desbloquea solo si superas todos los tests.' }
       ],
-      proTip: 'Si un caso de prueba falla, la terminal te indicará la entrada probada y la salida que se esperaba.',
+      proTip: '¡Haz clic en [▶ Run Script] en el simulador para ver la compilación en vivo!',
       ctaText: 'Siguiente: Clanes, Racha & Perfil →'
     },
     {
       step: 5,
-      tag: 'PASO 05 // COMMUNITY',
+      tag: 'PASO 05 // COMUNIDAD',
       tagColor: 'cyan',
-      title: 'Clanes de Estudio, Racha Diaria & Perfil',
-      subtitle: 'Comunidad, constancia con fuego diario y acreditación de logros.',
-      routeLocation: 'Barra Superior → Racha (🔥) / Mi Clan ( /clan ) / Perfil ( /perfil )',
+      title: 'Clanes, Racha Diaria & Perfil',
+      subtitle: 'Comunidad, fuego diario y acreditación de logros en tu hoja de vida.',
+      headline: 'Gana experiencia (XP), protege tu racha diaria y colabora con otros cadetes.',
+      routeLocation: 'Barra Superior → 🔥 / Mi Clan ( /clan ) / Perfil ( /perfil )',
       routeLink: '/perfil',
-      description: 'Aprender a programar requiere constancia. En SysEng Academy ganas experiencia (XP) por cada reto resuelto, proteges tu racha diaria de fuego y puedes colaborar o competir con otros cadetes dentro de un Clan de Estudio para resolver desafíos semanales.',
       highlights: [
-        {
-          icon: 'flame',
-          title: 'Racha de Fuego Diaria (🔥)',
-          description: 'Resuelve al menos un ejercicio al día para mantener tu racha y ganar multiplicadores de XP.'
-        },
-        {
-          icon: 'boxes',
-          title: 'Clanes de Cadetes',
-          description: 'Únete a un clan técnico o crea el tuyo para compartir un tablero Kanban de retos y sumar puntaje.'
-        },
-        {
-          icon: 'user',
-          title: 'Perfil y Firma ASCII',
-          description: 'Accede a tu historial de retos aprobados, insignias técnicas y tu credencial digital de cadete.'
-        }
+        { icon: 'flame', title: 'Racha de Fuego (🔥)', hint: '1 reto al día mantiene tu racha y bonifica tu XP.' },
+        { icon: 'boxes', title: 'Clanes de Cadetes', hint: 'Únete a un escuadrón técnico para competir en la liga semanal.' },
+        { icon: 'user', title: 'Hoja de Vida Técnica', hint: 'Historial de retos, insignias ganadas y credencial digital.' }
       ],
-      proTip: '15 minutos diarios de programación superan por mucho a estudiar 4 horas solo un día a la semana.',
+      proTip: 'Pulsa [⚡ Práctica Diaria (+50 XP)] en el simulador para ver subir tu barra.',
       ctaText: 'Finalizar Tour y Elegir mi Misión →'
     }
   ];

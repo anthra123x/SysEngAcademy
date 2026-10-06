@@ -462,61 +462,82 @@
 
       /* COLUMNA IZQUIERDA */
       .tour-guide-column {
-        background: #0b0f19;
-        border: 1px solid #1a2438;
+        background: #090e18;
+        border: 1px solid #1a253a;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1.35rem;
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
+        gap: 0.95rem;
 
         .guide-header {
-          .guide-title {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #f8fafc;
-            margin: 0 0 0.35rem;
+          .guide-step-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            width: fit-content;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(0, 240, 255, 0.08);
+            border: 1px solid currentColor;
+            margin-bottom: 0.4rem;
+
+            .live-pulse-dot {
+              width: 6px;
+              height: 6px;
+              border-radius: 50%;
+              background: currentColor;
+              animation: radarBlink 1.4s infinite ease-in-out;
+            }
           }
 
-          .guide-subtitle {
-            font-size: 0.82rem;
+          .guide-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #f8fafc;
+            margin: 0 0 0.25rem;
+            line-height: 1.25;
+          }
+
+          .guide-headline {
+            font-size: 0.85rem;
             color: #38bdf8;
+            line-height: 1.45;
             margin: 0;
           }
         }
 
-        .guide-description {
-          font-size: 0.92rem;
-          color: #94a3b8;
-          line-height: 1.6;
-          margin: 0;
-        }
-
-        .guide-features-list {
+        /* 3 CLAVES EN CHIPS COMPACTOS */
+        .guide-highlights-compact {
           display: flex;
           flex-direction: column;
-          gap: 0.75rem;
+          gap: 0.5rem;
 
-          .guide-features-heading {
-            font-size: 0.72rem;
-            margin-bottom: 2px;
-          }
-
-          .guide-feature-item {
+          .guide-highlight-chip {
             display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            background: #070a12;
-            border: 1px solid #141d2e;
-            padding: 0.8rem;
+            align-items: center;
+            gap: 10px;
+            background: #060911;
+            border: 1px solid #141d2f;
             border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: default;
 
-            .feat-icon-box {
-              width: 32px;
-              height: 32px;
-              border-radius: 6px;
-              background: #111827;
-              border: 1px solid #1f293d;
+            &:hover, &.is-spotlight {
+              border-color: #00f0ff;
+              background: rgba(0, 240, 255, 0.05);
+              transform: translateX(4px);
+            }
+
+            .chip-icon-box {
+              width: 28px;
+              height: 28px;
+              border-radius: 5px;
+              background: #0f172a;
+              border: 1px solid #1e293b;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -524,61 +545,58 @@
               flex-shrink: 0;
             }
 
-            .feat-text-group {
-              .feat-title {
-                font-size: 0.88rem;
-                font-weight: 700;
+            .chip-text-group {
+              display: flex;
+              flex-direction: column;
+              gap: 1px;
+              min-width: 0;
+
+              .chip-title {
+                font-size: 0.82rem;
                 color: #f1f5f9;
-                margin: 0 0 2px;
+                font-weight: 700;
               }
 
-              .feat-desc {
-                font-size: 0.8rem;
+              .chip-hint {
+                font-size: 0.75rem;
                 color: #94a3b8;
-                margin: 0;
-                line-height: 1.45;
+                line-height: 1.35;
               }
             }
           }
         }
 
-        .guide-protip-box {
-          background: rgba(245, 158, 11, 0.08);
+        /* MINI PRO TIP */
+        .guide-protip-inline {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(245, 158, 11, 0.06);
           border: 1px solid rgba(245, 158, 11, 0.25);
           border-radius: 6px;
-          padding: 0.85rem 1rem;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
+          padding: 0.45rem 0.75rem;
+          font-size: 0.76rem;
+          color: #e2e8f0;
+          line-height: 1.4;
 
-          .protip-header {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.74rem;
-            font-weight: 700;
-          }
-
-          .protip-text {
-            font-size: 0.82rem;
-            color: #e2e8f0;
-            margin: 0;
-            line-height: 1.45;
+          .protip-text-wrap {
+            flex: 1;
           }
         }
 
+        /* ACCESO DIRECTO RÁPIDO */
         .guide-access-bar {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          font-size: 0.76rem;
-          padding-top: 0.5rem;
-          border-top: 1px solid #151d2f;
+          font-size: 0.74rem;
+          padding-top: 0.4rem;
+          border-top: 1px solid #141c2c;
 
           .guide-link {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             text-decoration: none;
 
             &:hover {
@@ -586,9 +604,58 @@
             }
           }
         }
+
+        /* BOTONES DE NAVEGACIÓN DIRECTA EN COLUMNA */
+        .guide-nav-buttons {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          margin-top: auto;
+          padding-top: 0.5rem;
+
+          .btn-step-prev {
+            background: #0f1624;
+            border: 1px solid #1e2a3e;
+            color: #94a3b8;
+            border-radius: 5px;
+            padding: 7px 14px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+
+            &:hover {
+              border-color: #38bdf8;
+              color: #f1f5f9;
+            }
+          }
+
+          .btn-step-next {
+            flex: 1;
+            background: #00f0ff;
+            color: #05070e;
+            border: none;
+            border-radius: 5px;
+            padding: 7px 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+
+            &:hover {
+              transform: translateY(-1px);
+              box-shadow: 0 0 20px rgba(0, 240, 255, 0.45);
+            }
+          }
+        }
       }
 
-      /* COLUMNA DERECHA: SIMULADORES */
+      /* COLUMNA DERECHA: MODELOS PREVIEWS VIVOS Y ANIMADOS */
       .tour-mockup-column {
         display: flex;
         flex-direction: column;
@@ -631,25 +698,45 @@
             .sim-url {
               color: #64748b;
             }
+
+            .sim-live-badge {
+              display: inline-flex;
+              align-items: center;
+              gap: 5px;
+              font-size: 0.68rem;
+              font-weight: 700;
+              padding: 1px 7px;
+              border-radius: 3px;
+              background: rgba(0, 240, 255, 0.08);
+              border: 1px solid currentColor;
+
+              .radar-dot {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: currentColor;
+                animation: radarBlink 1.2s infinite;
+              }
+            }
           }
 
           .sim-frame-body {
-            padding: 1.25rem;
+            padding: 1.15rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.85rem;
             flex: 1;
             justify-content: center;
           }
         }
 
-        /* Mockup 1: Cockpit */
+        /* Mockup 1: Cockpit & Byte IA */
         .mockup-home {
           .sim-navbar-bar {
             background: #0a0e18;
             border: 1px solid #1b263b;
             border-radius: 6px;
-            padding: 0.6rem 0.85rem;
+            padding: 0.55rem 0.85rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -686,21 +773,36 @@
             background: #0b111e;
             border: 1px solid #1c2840;
             border-radius: 6px;
-            padding: 1rem;
+            padding: 0.85rem 1rem;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
 
-            .sim-ac-tag { font-size: 0.68rem; }
-            .sim-ac-title { font-size: 0.95rem; font-weight: 700; color: #f8fafc; margin: 0; }
+            .sim-ac-tag {
+              font-size: 0.68rem;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+            }
+
+            .sim-ac-title {
+              font-size: 0.92rem;
+              font-weight: 700;
+              color: #f8fafc;
+              margin: 0;
+            }
+
             .sim-ac-bar {
               height: 4px;
               background: #141c2c;
               border-radius: 2px;
               overflow: hidden;
-              margin: 4px 0;
+              margin: 3px 0;
 
-              .sim-ac-fill { height: 100%; background: #10b981; }
+              .sim-ac-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #10b981, #00f0ff);
+              }
             }
 
             .sim-ac-footer {
@@ -713,7 +815,7 @@
                 background: #111d2e;
                 border: 1px solid #00f0ff;
                 color: #00f0ff;
-                padding: 3px 8px;
+                padding: 2px 7px;
                 border-radius: 4px;
                 font-weight: 600;
               }
@@ -728,29 +830,127 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            transition: all 0.25s;
+
+            &.is-active-reply {
+              border-color: #00f0ff;
+              background: rgba(0, 240, 255, 0.06);
+            }
 
             .sim-bd-top {
               display: flex;
               align-items: center;
               gap: 6px;
-              font-size: 0.75rem;
+              font-size: 0.74rem;
+
+              .pulse-glow {
+                animation: pulseCyan 2s infinite;
+              }
             }
 
-            .sim-bd-msg {
-              font-size: 0.78rem;
-              color: #e2e8f0;
-              margin: 0;
-              line-height: 1.45;
+            .sim-bd-idle {
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+
+              .sim-bd-msg {
+                font-size: 0.76rem;
+                color: #cbd5e1;
+                margin: 0;
+                line-height: 1.4;
+              }
+
+              .sim-action-btn {
+                background: #111b2b;
+                border: 1px solid #00f0ff;
+                color: #00f0ff;
+                padding: 4px 9px;
+                border-radius: 4px;
+                font-size: 0.72rem;
+                font-weight: 700;
+                cursor: pointer;
+                width: fit-content;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                transition: all 0.15s;
+
+                &:hover {
+                  background: #00f0ff;
+                  color: #05070e;
+                }
+              }
+            }
+
+            .sim-bd-typing {
+              font-size: 0.74rem;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              padding: 4px 0;
+            }
+
+            .sim-bd-replied {
+              display: flex;
+              flex-direction: column;
+              gap: 5px;
+
+              .reply-bubble {
+                font-size: 0.75rem;
+                color: #f1f5f9;
+                margin: 0;
+                line-height: 1.45;
+                background: #050912;
+                padding: 6px 9px;
+                border-radius: 4px;
+                border-left: 2px solid #00f0ff;
+              }
+
+              .sim-mini-reset {
+                background: none;
+                border: none;
+                color: #64748b;
+                font-size: 0.68rem;
+                cursor: pointer;
+                padding: 0;
+                text-align: left;
+
+                &:hover {
+                  color: #94a3b8;
+                  text-decoration: underline;
+                }
+              }
             }
           }
         }
 
         /* Mockup 2: Routes */
         .mockup-routes {
-          .sim-rm-header {
-            font-size: 0.8rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #162034;
+          .sim-track-switcher {
+            display: flex;
+            gap: 6px;
+
+            .sim-track-tab {
+              background: #0d1422;
+              border: 1px solid #1a253a;
+              color: #64748b;
+              border-radius: 4px;
+              padding: 3px 8px;
+              font-size: 0.72rem;
+              cursor: pointer;
+              transition: all 0.15s;
+
+              &:hover {
+                color: #f1f5f9;
+              }
+
+              &.is-active {
+                background: rgba(16, 185, 129, 0.15);
+                border-color: #10b981;
+                color: #10b981;
+                font-weight: 700;
+              }
+            }
           }
 
           .sim-rm-nodes {
@@ -759,21 +959,26 @@
 
             .sim-rm-node {
               display: flex;
-              gap: 12px;
+              gap: 10px;
               align-items: center;
-              padding: 0.75rem;
+              padding: 0.65rem 0.85rem;
               border: 1px solid #1a2538;
               border-radius: 6px;
               background: #090e18;
+              cursor: pointer;
+              transition: all 0.2s;
 
-              &.is-active {
-                border-color: #10b981;
-                background: rgba(16, 185, 129, 0.06);
+              &:hover, &.is-selected {
+                border-color: #00f0ff;
+                background: rgba(0, 240, 255, 0.05);
               }
 
-              &.is-next {
+              &.is-completed {
+                border-color: rgba(16, 185, 129, 0.4);
+              }
+
+              &.is-current {
                 border-color: #00f0ff;
-                background: rgba(0, 240, 255, 0.06);
               }
 
               &.is-locked {
@@ -781,36 +986,57 @@
               }
 
               .sim-rn-badge {
-                width: 26px;
-                height: 26px;
+                width: 24px;
+                height: 24px;
                 border-radius: 4px;
                 background: #111726;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 0.74rem;
+                font-size: 0.72rem;
                 font-weight: 700;
+
+                &.pulse-cyan {
+                  border: 1px solid #00f0ff;
+                  color: #00f0ff;
+                  animation: pulseCyan 1.8s infinite;
+                }
               }
 
               .sim-rn-title {
-                font-size: 0.85rem;
+                font-size: 0.82rem;
                 font-weight: 700;
                 color: #f1f5f9;
               }
 
               .sim-rn-meta {
-                font-size: 0.72rem;
+                font-size: 0.68rem;
               }
             }
 
-            .sim-rm-connector {
+            .sim-rm-connector-glow {
               width: 2px;
-              height: 14px;
-              background: #1f2a3e;
-              margin: 0 0 0 20px;
+              height: 10px;
+              background: #1a253a;
+              margin: 0 0 0 19px;
+              transition: background 0.3s;
 
-              &.is-active { background: #10b981; }
+              &.is-active {
+                background: linear-gradient(180deg, #10b981, #00f0ff);
+                box-shadow: 0 0 6px #10b981;
+              }
             }
+          }
+
+          .sim-node-detail-pill {
+            background: #070a13;
+            border: 1px dashed #1c273c;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            display: flex;
+            gap: 6px;
+            align-items: center;
           }
         }
 
@@ -820,15 +1046,23 @@
             display: flex;
             gap: 6px;
 
-            .sim-fb-item {
-              padding: 2px 8px;
+            .sim-fb-btn {
+              padding: 2px 7px;
               border-radius: 4px;
               font-size: 0.72rem;
               background: #101624;
+              border: 1px solid #1a2538;
               color: #64748b;
+              cursor: pointer;
+              transition: all 0.15s;
+
+              &:hover {
+                color: #f1f5f9;
+              }
 
               &.is-selected {
                 background: #f59e0b;
+                border-color: #f59e0b;
                 color: #000;
                 font-weight: 700;
               }
@@ -839,43 +1073,73 @@
             background: #0b111e;
             border: 1px solid #1c2840;
             border-radius: 6px;
-            padding: 1.1rem;
+            padding: 0.95rem;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
 
             .sim-cc-top {
               display: flex;
               justify-content: space-between;
-              font-size: 0.7rem;
+              font-size: 0.68rem;
             }
 
             .sim-cc-title {
-              font-size: 0.98rem;
+              font-size: 0.92rem;
               font-weight: 700;
               color: #f8fafc;
               margin: 0;
             }
 
             .sim-cc-desc {
-              font-size: 0.8rem;
+              font-size: 0.78rem;
               color: #94a3b8;
               margin: 0;
-              line-height: 1.45;
+              line-height: 1.4;
+            }
+
+            .sim-cc-middle {
+              .sim-syllabus-toggle {
+                background: #0e1422;
+                border: 1px dashed #24334f;
+                color: #38bdf8;
+                border-radius: 4px;
+                padding: 3px 8px;
+                font-size: 0.7rem;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+
+                &:hover {
+                  border-color: #38bdf8;
+                }
+              }
+            }
+
+            .sim-syllabus-list {
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+              font-size: 0.68rem;
+              background: #050811;
+              border: 1px solid #121a2a;
+              border-radius: 4px;
+              padding: 5px 8px;
             }
 
             .sim-cc-footer {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              font-size: 0.74rem;
-              margin-top: 4px;
+              font-size: 0.72rem;
+              margin-top: 3px;
 
               .sim-cc-btn {
                 background: #152033;
                 border: 1px solid #f59e0b;
                 color: #f59e0b;
-                padding: 3px 8px;
+                padding: 2px 7px;
                 border-radius: 4px;
                 font-weight: 700;
               }
@@ -890,118 +1154,229 @@
             justify-content: space-between;
             align-items: center;
             font-size: 0.72rem;
-            padding: 5px 8px;
+            padding: 4px 8px;
             background: #0b0f1a;
             border-bottom: 1px solid #182236;
 
-            .badge-rt {
-              font-size: 10px;
-              padding: 1px 5px;
-              border-radius: 3px;
-              background: rgba(192, 132, 252, 0.15);
-              color: #c084fc;
+            .sim-ib-files {
+              display: flex;
+              gap: 4px;
+
+              .sim-file-tab {
+                background: #0d1320;
+                border: 1px solid #182338;
+                color: #64748b;
+                border-radius: 3px;
+                padding: 2px 6px;
+                font-size: 0.7rem;
+                cursor: pointer;
+
+                .badge-mini {
+                  font-size: 9px;
+                  opacity: 0.8;
+                }
+
+                &.is-active {
+                  background: #151f33;
+                  border-color: #38bdf8;
+                  color: #f1f5f9;
+                }
+              }
             }
 
-            .sim-ib-btns {
-              display: flex;
-              gap: 6px;
-
+            .sim-ib-actions {
               .sim-btn-run {
-                background: #11221b;
+                background: #0d2218;
                 border: 1px solid #10b981;
                 color: #10b981;
-                padding: 2px 6px;
+                padding: 2px 7px;
                 border-radius: 3px;
-                font-size: 10px;
-                font-weight: 600;
+                font-size: 0.7rem;
+                font-weight: 700;
+                cursor: pointer;
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
-              }
+                transition: all 0.2s;
 
-              .sim-btn-test {
-                background: #1a162b;
-                border: 1px solid #a855f7;
-                color: #c084fc;
-                padding: 2px 6px;
-                border-radius: 3px;
-                font-size: 10px;
-                font-weight: 600;
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
+                &:hover:not(:disabled) {
+                  background: #10b981;
+                  color: #040d07;
+                  box-shadow: 0 0 10px #10b981;
+                }
+
+                &.is-running {
+                  opacity: 0.75;
+                  cursor: wait;
+                }
               }
             }
           }
 
           .sim-ide-code {
             background: #05070d;
-            padding: 0.75rem 0.85rem;
-            font-size: 0.75rem;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.74rem;
             line-height: 1.5;
             border-bottom: 1px solid #141c2c;
 
             .sim-ln {
               .ln-n { color: #475569; margin-right: 8px; display: inline-block; width: 12px; }
             }
+
+            .cursor-blink {
+              display: inline-block;
+              animation: cursorBlink 1s infinite;
+              color: #00f0ff;
+              font-weight: 700;
+            }
           }
 
           .sim-ide-term {
             background: #030509;
-            padding: 0.7rem 0.85rem;
-            font-size: 0.72rem;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.7rem;
             display: flex;
             flex-direction: column;
             gap: 2px;
 
-            .sim-it-top {
+            .sim-term-idle {
               display: flex;
-              justify-content: space-between;
-              padding-bottom: 4px;
-              border-bottom: 1px solid #111827;
-              margin-bottom: 3px;
+              flex-direction: column;
+              gap: 2px;
+            }
+
+            .sim-term-running {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            }
+
+            .sim-term-success {
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+
+              .sim-it-top {
+                display: flex;
+                justify-content: space-between;
+                padding-bottom: 3px;
+                border-bottom: 1px solid #111827;
+                margin-bottom: 2px;
+              }
+
+              .sim-mini-reset {
+                background: none;
+                border: none;
+                color: #64748b;
+                font-size: 0.68rem;
+                cursor: pointer;
+                padding: 0;
+                margin-top: 2px;
+                text-align: left;
+
+                &:hover {
+                  color: #94a3b8;
+                  text-decoration: underline;
+                }
+              }
             }
           }
         }
 
         /* Mockup 5: Community & Profile */
         .mockup-community {
-          .sim-social-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+          .sim-comm-tabs {
+            display: flex;
+            gap: 6px;
 
-            .sim-sr-streak, .sim-sr-clan {
-              background: #111726;
-              border: 1px solid #23304a;
-              border-radius: 6px;
-              padding: 0.75rem;
-              font-size: 0.74rem;
+            .sim-comm-tab {
+              background: #0f1626;
+              border: 1px solid #1a253a;
+              color: #64748b;
+              border-radius: 4px;
+              padding: 3px 8px;
+              font-size: 0.72rem;
+              cursor: pointer;
+
+              &.is-active {
+                background: rgba(0, 240, 255, 0.12);
+                border-color: #00f0ff;
+                color: #00f0ff;
+                font-weight: 700;
+              }
             }
+          }
+
+          .sim-social-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: #0d1322;
+            border: 1px solid #1c273c;
+            border-radius: 6px;
+            padding: 0.65rem 0.85rem;
 
             .sim-sr-streak {
               display: flex;
               gap: 8px;
               align-items: center;
-              .sim-flame-icon { font-size: 1.25rem; }
-              .sim-streak-title { font-weight: 700; color: #f8fafc; }
+
+              .sim-flame-icon {
+                font-size: 1.25rem;
+              }
+
+              .sim-streak-title {
+                font-size: 0.78rem;
+                font-weight: 700;
+                color: #f8fafc;
+              }
+
+              .sim-streak-sub {
+                font-size: 0.68rem;
+              }
             }
 
-            .sim-sr-clan {
-              .sim-clan-badge { font-weight: 700; }
-              .sim-clan-name { font-weight: 700; color: #f8fafc; }
+            .sim-xp-boost-btn {
+              background: #19142b;
+              border: 1px solid #a855f7;
+              color: #c084fc;
+              border-radius: 4px;
+              padding: 4px 8px;
+              font-size: 0.7rem;
+              font-weight: 700;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+              transition: all 0.15s;
+
+              &:hover {
+                background: #a855f7;
+                color: #fff;
+                box-shadow: 0 0 10px #a855f7;
+              }
             }
+          }
+
+          .sim-xp-floating-particle {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #f59e0b;
+            text-align: center;
+            text-shadow: 0 0 8px #f59e0b;
           }
 
           .sim-profile-box {
             background: #090e18;
             border: 1px solid #1a2538;
             border-radius: 6px;
-            padding: 0.85rem;
+            padding: 0.75rem;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            font-size: 0.74rem;
+            gap: 5px;
+            font-size: 0.72rem;
 
             .sim-pb-header {
               display: flex;
@@ -1015,24 +1390,84 @@
               border-radius: 2px;
               overflow: hidden;
 
-              .sim-pb-fill { height: 100%; background: #c084fc; }
+              .sim-pb-fill {
+                height: 100%;
+                background: #c084fc;
+                transition: width 0.3s ease;
+              }
             }
 
             .sim-pb-chips {
               display: flex;
-              gap: 6px;
+              gap: 5px;
               flex-wrap: wrap;
-              margin-top: 4px;
 
               .sim-chip {
                 background: #101624;
                 border: 1px solid #1e293b;
-                padding: 2px 6px;
+                padding: 1px 5px;
                 border-radius: 3px;
-                font-size: 10px;
+                font-size: 9px;
                 color: #94a3b8;
               }
             }
+          }
+
+          .sim-clan-roster {
+            background: #070c18;
+            border: 1px solid #162238;
+            border-radius: 6px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.72rem;
+
+            .sim-clan-header {
+              display: flex;
+              gap: 8px;
+              align-items: center;
+
+              .clan-tag { font-weight: 800; }
+              .clan-name { font-weight: 700; color: #f8fafc; }
+              .clan-sub { font-size: 0.68rem; }
+            }
+
+            .sim-clan-members {
+              display: flex;
+              flex-direction: column;
+              gap: 3px;
+
+              .clan-m-item {
+                display: flex;
+                justify-content: space-between;
+                font-size: 0.7rem;
+                background: #0b111e;
+                padding: 3px 6px;
+                border-radius: 3px;
+              }
+            }
+          }
+        }
+      }
+
+      /* TOUR FOOTER META (SKIP TOUR) */
+      .tour-footer-meta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 0.74rem;
+        padding-top: 0.5rem;
+
+        .btn-skip-link {
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-weight: 600;
+
+          &:hover {
+            text-decoration: underline;
           }
         }
       }
@@ -1879,5 +2314,123 @@
           flex-direction: column;
           align-items: flex-start;
           gap: 12px;
+        }
+      }
+
+      /* ========================================================
+         KEYFRAME ANIMATIONS FOR TOUR INTERACTION & PREVIEWS
+         ======================================================== */
+      .animate-step-in {
+        animation: stepInFade 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .animate-flame {
+        display: inline-block;
+        animation: flamePulse 1.8s ease-in-out infinite;
+      }
+
+      .laser-shimmer {
+        background: linear-gradient(90deg, #10b981 0%, #00f0ff 50%, #10b981 100%);
+        background-size: 200% 100%;
+        animation: laserShimmer 2.5s infinite linear;
+      }
+
+      .animate-float-up {
+        animation: floatUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .loader-spinner {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border: 2px solid rgba(0, 240, 255, 0.3);
+        border-top-color: #00f0ff;
+        border-radius: 50%;
+        animation: spinLoader 0.6s linear infinite;
+      }
+
+      .typing-dots {
+        display: inline-flex;
+        gap: 2px;
+        span {
+          animation: typingBounce 1.2s infinite ease-in-out;
+          &:nth-child(2) { animation-delay: 0.2s; }
+          &:nth-child(3) { animation-delay: 0.4s; }
+        }
+      }
+
+      @keyframes stepInFade {
+        0% {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes flamePulse {
+        0%, 100% {
+          transform: scale(1);
+          filter: drop-shadow(0 0 2px #f59e0b);
+        }
+        50% {
+          transform: scale(1.18);
+          filter: drop-shadow(0 0 10px #f59e0b);
+        }
+      }
+
+      @keyframes radarBlink {
+        0%, 100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.25;
+          transform: scale(0.8);
+        }
+      }
+
+      @keyframes laserShimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+
+      @keyframes floatUp {
+        0% {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        30% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-16px);
+        }
+      }
+
+      @keyframes cursorBlink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+
+      @keyframes spinLoader {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes typingBounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-3px); }
+      }
+
+      @keyframes pulseCyan {
+        0%, 100% {
+          box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 0 4px rgba(0, 240, 255, 0);
         }
       }
