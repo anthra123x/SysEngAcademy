@@ -45,11 +45,26 @@
               type="button"
               class="pipe-step"
               [class.is-active]="stage() === 'tour'"
-              [class.is-passed]="stage() === 'assessment' || stage() === 'analyzing' || stage() === 'results'"
-              (click)="stage.set('tour')"
+              [class.is-passed]="stage() === 'mission' || stage() === 'assessment' || stage() === 'analyzing' || stage() === 'results'"
+              (click)="startTour()"
             >
               <span class="pipe-num">02</span>
-              <span class="pipe-label">ARQUITECTURA</span>
+              <span class="pipe-label">TOUR GUIADO</span>
+              @if (stage() === 'tour') {
+                <span class="pipe-counter">[{{ tourStep() }}/{{ totalTourSteps }}]</span>
+              }
+            </button>
+            <span class="pipe-sep">/</span>
+
+            <button
+              type="button"
+              class="pipe-step"
+              [class.is-active]="stage() === 'mission'"
+              [class.is-passed]="stage() === 'assessment' || stage() === 'analyzing' || stage() === 'results'"
+              (click)="stage.set('mission')"
+            >
+              <span class="pipe-num">03</span>
+              <span class="pipe-label">MISIÓN INICIAL</span>
             </button>
             <span class="pipe-sep">/</span>
 
@@ -58,10 +73,10 @@
               class="pipe-step"
               [class.is-active]="stage() === 'assessment' || stage() === 'analyzing'"
               [class.is-passed]="stage() === 'results'"
-              (click)="stage() === 'results' ? stage.set('assessment') : null"
+              (click)="goToAssessment()"
             >
-              <span class="pipe-num">03</span>
-              <span class="pipe-label">EVALUACIÓN DIAGNÓSTICA</span>
+              <span class="pipe-num">04</span>
+              <span class="pipe-label">CALIBRACIÓN (OPCIONAL)</span>
               @if (stage() === 'assessment') {
                 <span class="pipe-counter">[{{ currentQuestionIndex() + 1 }}/{{ questions.length }}]</span>
               }
@@ -75,8 +90,8 @@
               [disabled]="!analysisResult()"
               (click)="analysisResult() ? stage.set('results') : null"
             >
-              <span class="pipe-num">04</span>
-              <span class="pipe-label">DICTAMEN & TEMARIO</span>
+              <span class="pipe-num">05</span>
+              <span class="pipe-label">DICTAMEN</span>
             </button>
           </div>
 
@@ -132,7 +147,7 @@
                   </div>
                   <h3 class="cli-card-title">Sandboxes Linux Interactivos</h3>
                   <p class="cli-card-body">
-                    Escribe código en C++, Python, PSeInt y JS con compiladores integrados en el navegador. Ejecuta con <code>[run]</code> y valida casos de prueba con <code>[test]</code> sin configuraciones locales.
+                    Escribe código en C++, Python, PSeInt, SQL y JS con compiladores integrados en el navegador. Ejecuta con <code>[run]</code> y valida casos de prueba con <code>[test]</code> sin configuraciones locales.
                   </p>
                   <div class="cli-card-meta font-mono">
                     <span class="meta-item">&gt;_ Runtime nativo</span>
@@ -162,7 +177,7 @@
                   </div>
                   <h3 class="cli-card-title">Desbloqueo por Mérito Estricto</h3>
                   <p class="cli-card-body">
-                    Los módulos avanzados están bloqueados por diseño. Para desbloquear el siguiente nivel, tus ejercicios de código deben ser aprobados por la batería de tests o el dictamen oficial del sistema.
+                    Los módulos avanzados están bloqueados por diseño. Para desbloquear el siguiente nivel, tus ejercicios de código deben ser aprobados por la batería de tests del sistema.
                   </p>
                   <div class="cli-card-meta font-mono">
                     <span class="meta-item">&gt;_ Candados estrictos</span>
@@ -175,114 +190,469 @@
               <div class="terminal-log-preview font-mono">
                 <div class="log-line"><span class="txt-muted">[0.001s]</span> <span class="txt-cyan">init:</span> Entorno de ejecución montado en /dev/sandbox/student_{{ user()?.id || 101 }}</div>
                 <div class="log-line"><span class="txt-muted">[0.015s]</span> <span class="txt-green">auth:</span> Credenciales validadas para {{ user()?.email || 'estudiante' }}</div>
-                <div class="log-line"><span class="txt-muted">[0.042s]</span> <span class="txt-purple">agent:</span> Byte Copilot listo para calibrar tu nivel de partida.</div>
-                <div class="log-line"><span class="txt-muted">[0.060s]</span> <span class="txt-amber">ready:</span> Presiona iniciar calibración para generar tu temario a medida.</div>
+                <div class="log-line"><span class="txt-muted">[0.042s]</span> <span class="txt-purple">agent:</span> Tour de navegación paso a paso calibrado para orientar tu aprendizaje.</div>
+                <div class="log-line"><span class="txt-muted">[0.060s]</span> <span class="txt-amber">ready:</span> Inicia el tour para conocer exactamente a dónde ir y qué herramientas utilizar.</div>
               </div>
 
               <!-- ACTIONS BAR -->
-              <div class="terminal-action-row">
-                <button type="button" class="term-btn term-btn-outline" (click)="goToTour()">
-                  <span class="btn-prefix">$</span> ./view-platform-guide.sh
+              <div class="terminal-action-row between">
+                <button type="button" class="term-btn term-btn-outline" (click)="skipTourToMission()">
+                  <span class="btn-prefix">$</span> ./saltar-a-misiones.sh
                 </button>
-                <button type="button" class="term-btn term-btn-primary" (click)="goToAssessment()">
-                  <span class="btn-prefix">$</span> ./start-calibration.sh --now <app-icon name="zap" [size]="14"/>
+                <button type="button" class="term-btn term-btn-primary" (click)="startTour()">
+                  <span class="btn-prefix">$</span> ./iniciar-tour-guiado.sh --step-by-step <app-icon name="compass" [size]="14"/>
                 </button>
               </div>
             </section>
           }
 
           <!-- ==========================================
-               FASE 1: ARQUITECTURA DEL ECOSISTEMA (TOUR)
+               FASE 1: TOUR DE NAVEGACIÓN PASO A PASO
                ========================================== -->
           @if (stage() === 'tour') {
-            <section class="stage-section animate-fade-in">
+            <section class="stage-section tour-stage-section animate-fade-in">
+              <!-- TOUR TOPBAR TRACKER -->
+              <div class="tour-header-panel">
+                <div class="tour-top-row">
+                  <div class="tour-breadcrumb font-mono">
+                    <span class="txt-green">syseng</span>::<span class="txt-cyan">tour_guiado</span>::<span class="txt-white">paso_0{{ tourStep() }}_de_0{{ totalTourSteps }}.spec</span>
+                  </div>
+                  <div class="tour-step-badges">
+                    <span class="badge-tour-tag font-mono" [ngClass]="'txt-' + currentTour().tagColor">
+                      {{ currentTour().tag }}
+                    </span>
+                    <span class="badge-tour-location font-mono">
+                      <app-icon name="compass" [size]="12"/> {{ currentTour().routeLocation }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- PROGRESS BAR -->
+                <div class="tour-progress-track">
+                  <div class="tour-progress-fill" [style.width.%]="(tourStep() / totalTourSteps) * 100"></div>
+                </div>
+
+                <!-- DIRECT STEP SELECTOR CHIPS -->
+                <div class="tour-step-nav-chips font-mono">
+                  @for (stepDef of tourSteps; track stepDef.step) {
+                    <button
+                      type="button"
+                      class="step-nav-chip"
+                      [class.is-active]="tourStep() === stepDef.step"
+                      [class.is-completed]="tourStep() > stepDef.step"
+                      (click)="setTourStep(stepDef.step)"
+                    >
+                      <span class="chip-num">0{{ stepDef.step }}</span>
+                      <span class="chip-label">{{ stepDef.title.split(' ')[0] }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- SPLIT TOUR VIEW: DETAILS (LEFT) + SIMULATED INTERFACE (RIGHT) -->
+              <div class="tour-split-grid">
+                <!-- COLUMNA IZQUIERDA: EXPLICACIÓN Y GUÍA PRÁCTICA -->
+                <div class="tour-guide-column">
+                  <div class="guide-header">
+                    <h2 class="guide-title">{{ currentTour().title }}</h2>
+                    <p class="guide-subtitle font-mono">{{ currentTour().subtitle }}</p>
+                  </div>
+
+                  <p class="guide-description">
+                    {{ currentTour().description }}
+                  </p>
+
+                  <!-- 3 CLAVES DEL PASO -->
+                  <div class="guide-features-list">
+                    <div class="guide-features-heading font-mono txt-muted">
+                      // ELEMENTOS CLAVE DE ESTA SECCIÓN
+                    </div>
+                    @for (feat of currentTour().highlights; track feat.title) {
+                      <div class="guide-feature-item">
+                        <div class="feat-icon-box">
+                          <app-icon [name]="feat.icon" [size]="16"/>
+                        </div>
+                        <div class="feat-text-group">
+                          <h4 class="feat-title">{{ feat.title }}</h4>
+                          <p class="feat-desc">{{ feat.description }}</p>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- PRO TIP BOX -->
+                  <div class="guide-protip-box font-mono">
+                    <div class="protip-header">
+                      <app-icon name="lightbulb" [size]="14"/>
+                      <span class="txt-amber">CONSEJO PRO DEL INGENIERO:</span>
+                    </div>
+                    <p class="protip-text">{{ currentTour().proTip }}</p>
+                  </div>
+
+                  <!-- ACCESO DIRECTO -->
+                  <div class="guide-access-bar font-mono">
+                    <span class="txt-muted">ACCESO DIRECTO:</span>
+                    <a [routerLink]="currentTour().routeLink" target="_blank" class="guide-link txt-cyan">
+                      Visitar {{ currentTour().routeLocation }} <app-icon name="external-link" [size]="12"/>
+                    </a>
+                  </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: SIMULADOR VISUAL DE LA PANTALLA -->
+                <div class="tour-mockup-column">
+                  <!-- PASO 1: MOCKUP CENTRO DE MANDO & BYTE IA -->
+                  @if (tourStep() === 1) {
+                    <div class="sim-frame mockup-home">
+                      <div class="sim-frame-header font-mono">
+                        <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
+                        <span class="sim-url">syseng://platform/home</span>
+                        <span class="sim-tag txt-cyan">COCKPIT_V1</span>
+                      </div>
+                      <div class="sim-frame-body">
+                        <!-- Navbar Simulator -->
+                        <div class="sim-navbar-bar">
+                          <div class="sim-logo font-mono">&lt;/&gt; SysEng<strong>Academy</strong></div>
+                          <div class="sim-nav-pills font-mono">
+                            <span class="sim-pill is-active">Inicio</span>
+                            <span class="sim-pill">Rutas</span>
+                            <span class="sim-pill">Cursos</span>
+                          </div>
+                          <div class="sim-user-status font-mono">
+                            <span class="sim-streak-flame">🔥 1d</span>
+                            <span class="sim-avatar">[{{ studentFirstName().slice(0, 1) }}]</span>
+                          </div>
+                        </div>
+
+                        <!-- Active challenge card -->
+                        <div class="sim-active-card">
+                          <div class="sim-ac-tag font-mono txt-green">● RETO RECOMENDADO PARA HOY</div>
+                          <h4 class="sim-ac-title">Fundamentos de Programación: Módulo 1</h4>
+                          <div class="sim-ac-bar"><div class="sim-ac-fill" style="width: 35%;"></div></div>
+                          <div class="sim-ac-footer font-mono">
+                            <span class="sim-ac-btn">[▶ Continuar Lección 1.2]</span>
+                            <span class="sim-ac-meta txt-muted">⏱️ 15 min restantes</span>
+                          </div>
+                        </div>
+
+                        <!-- Byte IA bubble -->
+                        <div class="sim-byte-dock">
+                          <div class="sim-bd-top font-mono">
+                            <span class="sim-bd-icon"><app-icon name="sparkles" [size]="13"/></span>
+                            <strong class="txt-cyan">Byte IA Tutor</strong>
+                            <span class="txt-green">● EN LÍNEA</span>
+                          </div>
+                          <p class="sim-bd-msg font-mono">
+                            "¡Hola cadete! Pulsa mi botón flotante en la esquina inferior cuando necesites orientación técnica o pistas para tus ejercicios."
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- PASO 2: MOCKUP RUTAS DE APRENDIZAJE -->
+                  @if (tourStep() === 2) {
+                    <div class="sim-frame mockup-routes">
+                      <div class="sim-frame-header font-mono">
+                        <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
+                        <span class="sim-url">syseng://platform/rutas</span>
+                        <span class="sim-tag txt-green">ÁRBOL_PEDAGÓGICO</span>
+                      </div>
+                      <div class="sim-frame-body">
+                        <div class="sim-rm-header font-mono">
+                          <span class="txt-muted">RUTA RECOMENDADA:</span>
+                          <strong class="txt-white">Fundamentos &amp; Algoritmos</strong>
+                        </div>
+
+                        <div class="sim-rm-nodes">
+                          <div class="sim-rm-node is-active">
+                            <div class="sim-rn-badge font-mono">01</div>
+                            <div class="sim-rn-content">
+                              <div class="sim-rn-title">Lógica &amp; Variables de Estado</div>
+                              <div class="sim-rn-meta font-mono txt-green">✓ DESBLOQUEADO · EN CURSO</div>
+                            </div>
+                          </div>
+                          <div class="sim-rm-connector is-active"></div>
+                          <div class="sim-rm-node is-next">
+                            <div class="sim-rn-badge font-mono">02</div>
+                            <div class="sim-rn-content">
+                              <div class="sim-rn-title">Control de Flujo &amp; Ciclos For/While</div>
+                              <div class="sim-rn-meta font-mono txt-cyan">● SIGUIENTE OBJETIVO</div>
+                            </div>
+                          </div>
+                          <div class="sim-rm-connector"></div>
+                          <div class="sim-rm-node is-locked">
+                            <div class="sim-rn-badge font-mono"><app-icon name="lock" [size]="12"/></div>
+                            <div class="sim-rn-content">
+                              <div class="sim-rn-title">Pensamiento Asintótico &amp; Big-O</div>
+                              <div class="sim-rn-meta font-mono txt-muted">🔒 Candado por mérito</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- PASO 3: MOCKUP CATÁLOGO DE CURSOS -->
+                  @if (tourStep() === 3) {
+                    <div class="sim-frame mockup-courses">
+                      <div class="sim-frame-header font-mono">
+                        <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
+                        <span class="sim-url">syseng://platform/cursos</span>
+                        <span class="sim-tag txt-amber">CATÁLOGO_OFICIAL</span>
+                      </div>
+                      <div class="sim-frame-body">
+                        <div class="sim-filter-bar font-mono">
+                          <span class="sim-fb-item is-selected">Todos</span>
+                          <span class="sim-fb-item">C++</span>
+                          <span class="sim-fb-item">Python</span>
+                          <span class="sim-fb-item">PSeInt</span>
+                          <span class="sim-fb-item">SQL</span>
+                        </div>
+
+                        <div class="sim-course-card">
+                          <div class="sim-cc-top font-mono">
+                            <span class="sim-cc-badge txt-purple">C++ / PYTHON</span>
+                            <span class="sim-cc-level txt-green">NIVEL 1 · PRINCIPIANTE</span>
+                          </div>
+                          <h4 class="sim-cc-title">Introducción a la Programación Estructurada</h4>
+                          <p class="sim-cc-desc">Aprende secuencias lógicas, estructuras de control, funciones y arreglos con compilación directa.</p>
+                          <div class="sim-cc-footer font-mono">
+                            <span class="txt-muted">📚 14 Lecciones · 8 Retos</span>
+                            <span class="sim-cc-btn">[Comenzar Curso →]</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- PASO 4: MOCKUP EDITOR INTERACTIVO & SANDBOX -->
+                  @if (tourStep() === 4) {
+                    <div class="sim-frame mockup-ide">
+                      <div class="sim-frame-header font-mono">
+                        <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
+                        <span class="sim-url">syseng://editor/par_o_impar.cpp</span>
+                        <span class="sim-tag txt-purple">CODEMIRROR_6</span>
+                      </div>
+                      <div class="sim-frame-body">
+                        <div class="sim-ide-bar font-mono">
+                          <span class="sim-ib-file">📄 solution.cpp <span class="badge-rt">C++20</span></span>
+                          <div class="sim-ib-btns">
+                            <span class="sim-btn-run"><app-icon name="play" [size]="10"/> [▶ Run Script]</span>
+                            <span class="sim-btn-test"><app-icon name="check" [size]="10"/> [✓ Validar Tests]</span>
+                          </div>
+                        </div>
+
+                        <div class="sim-ide-code font-mono">
+                          <div class="sim-ln"><span class="ln-n">1</span> <span class="txt-purple">#include</span> <span class="txt-green">&lt;iostream&gt;</span></div>
+                          <div class="sim-ln"><span class="ln-n">2</span> <span class="txt-cyan">int</span> <span class="txt-amber">main</span>() &#123;</div>
+                          <div class="sim-ln"><span class="ln-n">3</span> &nbsp;&nbsp;<span class="txt-cyan">int</span> n; std::cin &gt;&gt; n;</div>
+                          <div class="sim-ln"><span class="ln-n">4</span> &nbsp;&nbsp;std::cout &lt;&lt; (n % <span class="txt-purple">2</span> == <span class="txt-purple">0</span> ? <span class="txt-green">"PAR"</span> : <span class="txt-green">"IMPAR"</span>);</div>
+                          <div class="sim-ln"><span class="ln-n">5</span> &nbsp;&nbsp;<span class="txt-purple">return</span> <span class="txt-purple">0</span>;</div>
+                          <div class="sim-ln"><span class="ln-n">6</span> &#125;</div>
+                        </div>
+
+                        <div class="sim-ide-term font-mono">
+                          <div class="sim-it-top">
+                            <span class="txt-muted">$ /dev/sandbox/verify_tests</span>
+                            <span class="txt-green">● ALL PASSED (4/4)</span>
+                          </div>
+                          <div class="sim-it-line txt-green">✓ Test 1: n=6 → Salida: "PAR" [PASS 2ms]</div>
+                          <div class="sim-it-line txt-green">✓ Test 2: n=11 → Salida: "IMPAR" [PASS 1ms]</div>
+                          <div class="sim-it-line txt-cyan">[MÉRITO SUPERADO] Siguiente lección desbloqueada exitosamente</div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- PASO 5: MOCKUP CLANES, RACHA & PERFIL -->
+                  @if (tourStep() === 5) {
+                    <div class="sim-frame mockup-community">
+                      <div class="sim-frame-header font-mono">
+                        <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
+                        <span class="sim-url">syseng://platform/clan_and_profile</span>
+                        <span class="sim-tag txt-cyan">RED_SOCIAL_XP</span>
+                      </div>
+                      <div class="sim-frame-body">
+                        <div class="sim-social-row font-mono">
+                          <div class="sim-sr-streak">
+                            <span class="sim-flame-icon">🔥</span>
+                            <div>
+                              <div class="sim-streak-title">3 Días de Racha</div>
+                              <div class="sim-streak-sub txt-green">● Protegida hoy · 1.2x XP</div>
+                            </div>
+                          </div>
+
+                          <div class="sim-sr-clan">
+                            <span class="sim-clan-badge txt-cyan">[KRNL]</span>
+                            <div>
+                              <div class="sim-clan-name">Kernel Hackers</div>
+                              <div class="sim-clan-sub txt-amber">#02 en Liga Global</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="sim-profile-box font-mono">
+                          <div class="sim-pb-header">
+                            <span>CADETE: {{ studentFirstName() | uppercase }}</span>
+                            <span class="txt-purple">NIVEL 01 · 650/1000 XP</span>
+                          </div>
+                          <div class="sim-pb-bar"><div class="sim-pb-fill" style="width: 65%;"></div></div>
+                          <div class="sim-pb-chips">
+                            <span class="sim-chip">🏅 Primer Script</span>
+                            <span class="sim-chip">⚡ 4 Tests Superados</span>
+                            <span class="sim-chip">🛡️ Cadete Verificado</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- TOUR FOOTER ACTIONS -->
+              <div class="tour-footer-actions between">
+                <button type="button" class="term-btn term-btn-outline" (click)="prevTourStep()">
+                  @if (tourStep() === 1) {
+                    <span>← Volver a Inducción</span>
+                  } @else {
+                    <span>← Paso Anterior</span>
+                  }
+                </button>
+
+                <div class="tour-center-controls">
+                  <div class="tour-dots-indicator">
+                    @for (stepDef of tourSteps; track stepDef.step) {
+                      <button
+                        type="button"
+                        class="tour-dot-btn"
+                        [class.is-active]="tourStep() === stepDef.step"
+                        (click)="setTourStep(stepDef.step)"
+                        [title]="'Ir al ' + stepDef.tag"
+                      ></button>
+                    }
+                  </div>
+                  <button type="button" class="btn-skip-link font-mono" (click)="skipTourToMission()">
+                    Saltar tour e ir a misiones
+                  </button>
+                </div>
+
+                <button type="button" class="term-btn term-btn-primary" (click)="nextTourStep()">
+                  @if (tourStep() < totalTourSteps) {
+                    <span>{{ currentTour().ctaText }}</span>
+                  } @else {
+                    <span>Finalizar Tour y Elegir mi Misión →</span>
+                  }
+                </button>
+              </div>
+            </section>
+          }
+
+          <!-- ==========================================
+               FASE 2: ELECCIÓN DE MISIÓN INICIAL
+               ========================================== -->
+          @if (stage() === 'mission') {
+            <section class="stage-section mission-stage-section animate-fade-in">
               <div class="section-cli-header">
                 <div class="cli-breadcrumb font-mono">
-                  <span class="txt-green">syseng</span>::<span class="txt-cyan">docs</span>::<span class="txt-white">platform-stack.spec</span>
+                  <span class="txt-green">syseng</span>::<span class="txt-cyan">mission_control</span>::<span class="txt-white">select_starting_objective.spec</span>
                 </div>
-                <h2 class="section-heading">Arquitectura Tecnológica del Ecosistema</h2>
+                <h2 class="section-heading">
+                  Elige tu primera misión en SysEng Academy, cadete {{ studentFirstName() }}.
+                </h2>
                 <p class="section-subtext">
-                  Conoce cómo interactúan los 4 subsistemas de SysEng Academy para estructurar tu crecimiento técnico:
+                  Ahora conoces cada rincón del sistema. Para que nunca te sientas desorientado, selecciona tu primer objetivo inmediato:
                 </p>
               </div>
 
-              <div class="spec-grid">
-                <!-- SPEC 01 -->
-                <article class="spec-card">
-                  <div class="spec-header font-mono">
-                    <span class="spec-id">SUBSYS_01</span>
-                    <span class="spec-label">TERMINAL_RUNTIME</span>
+              <!-- 3 MISSION CARDS -->
+              <div class="mission-grid">
+                <!-- MISIÓN 1: DIAGNÓSTICO -->
+                <div class="mission-card is-recommended">
+                  <div class="mission-card-top font-mono">
+                    <span class="mission-tag txt-cyan">MISIÓN 01 // RECOMENDADA</span>
+                    <span class="mission-badge-pill txt-green">BYTE IA ADAPTATIVO</span>
                   </div>
-                  <h3 class="spec-title">Terminal Linux & Sandboxes POSIX</h3>
-                  <p class="spec-desc">
-                    Cada lección práctica monta una consola Linux virtual con entrada estándar, salida y control de procesos. Escribe tu algoritmo en el editor y compílalo al instante sin depender de dependencias locales.
+                  <div class="mission-icon-wrap bg-cyan-subtle">
+                    <app-icon name="brain-circuit" [size]="28"/>
+                  </div>
+                  <h3 class="mission-title">Calibrar mi Nivel de Partida</h3>
+                  <p class="mission-desc">
+                    Responde 5 breves preguntas de deducción lógica y control de flujo. Byte IA evaluará tu razonamiento en tiempo real para asignarte un nivel inicial (1 a 4) y recomendarte un temario a medida.
                   </p>
-                  <div class="spec-code-box font-mono">
-                    <span class="txt-muted">// Ejecución directa de solución</span>
-                    <div><span class="txt-green">&gt;</span> python3 solution.py &lt; test_input.txt</div>
-                    <div><span class="txt-cyan">[TEST PASS]</span> 4/4 casos de prueba verificados en 12ms</div>
+                  <div class="mission-meta font-mono txt-muted">
+                    <span>⏱️ ~5 minutos</span>
+                    <span>• 5 preguntas</span>
+                    <span>• Cero penalizaciones</span>
                   </div>
-                </article>
+                  <button type="button" class="term-btn term-btn-primary full-width" (click)="selectMission('diagnostic')">
+                    <span class="btn-prefix">$</span> Iniciar Calibración Diagnóstica →
+                  </button>
+                </div>
 
-                <!-- SPEC 02 -->
-                <article class="spec-card">
-                  <div class="spec-header font-mono">
-                    <span class="spec-id">SUBSYS_02</span>
-                    <span class="spec-label">BYTE_COPILOT</span>
+                <!-- MISIÓN 2: PRIMER CURSO -->
+                <div class="mission-card">
+                  <div class="mission-card-top font-mono">
+                    <span class="mission-tag txt-purple">MISIÓN 02 // ACCIÓN RÁPIDA</span>
+                    <span class="mission-badge-pill txt-purple">CERO EXÁMENES</span>
                   </div>
-                  <h3 class="spec-title">Evaluación Silenciosa con Byte IA</h3>
-                  <p class="spec-desc">
-                    El agente inteligente no es un chat genérico: inspecciona tu código fuente, identifica errores de punteros, mutabilidad, complejidad temporal y te sugiere puntos de inspección directamente en el editor.
+                  <div class="mission-icon-wrap bg-purple-subtle">
+                    <app-icon name="code" [size]="28"/>
+                  </div>
+                  <h3 class="mission-title">Comenzar mi Primer Curso</h3>
+                  <p class="mission-desc">
+                    Salta directamente al editor sin realizar ningún test. Entra a "Introducción a la Programación" y escribe tu primera línea de código en un sandbox Linux interactivo.
                   </p>
-                  <div class="spec-code-box font-mono">
-                    <span class="txt-muted">// Análisis pedagógico activo</span>
-                    <div><span class="txt-purple">byte-ai:</span> Nota que estás reasignando la lista en cada ciclo.</div>
-                    <div><span class="txt-purple">byte-ai:</span> ¿Cómo afectaría esto la complejidad temporal Big-O?</div>
+                  <div class="mission-meta font-mono txt-muted">
+                    <span>⚡ Arranque directo</span>
+                    <span>• C++ o Python</span>
+                    <span>• Práctica guiada</span>
                   </div>
-                </article>
+                  <button type="button" class="term-btn term-btn-outline full-width" (click)="selectMission('first_course')">
+                    <span class="btn-prefix">$</span> Entrar a Introducción a Programación →
+                  </button>
+                </div>
 
-                <!-- SPEC 03 -->
-                <article class="spec-card">
-                  <div class="spec-header font-mono">
-                    <span class="spec-id">SUBSYS_03</span>
-                    <span class="spec-label">MERIT_GATING</span>
+                <!-- MISIÓN 3: EXPLORAR RUTAS -->
+                <div class="mission-card">
+                  <div class="mission-card-top font-mono">
+                    <span class="mission-tag txt-amber">MISIÓN 03 // PLAN DE CARRERA</span>
+                    <span class="mission-badge-pill txt-amber">EXPLORACIÓN</span>
                   </div>
-                  <h3 class="spec-title">Candados de Módulos por Mérito</h3>
-                  <p class="spec-desc">
-                    La academia previene el avance superficial. Si no resuelves correctamente los ejercicios del módulo o el examen práctico, los módulos subsiguientes permanecen inaccesibles para asegurar maestría real.
+                  <div class="mission-icon-wrap bg-amber-subtle">
+                    <app-icon name="compass" [size]="28"/>
+                  </div>
+                  <h3 class="mission-title">Explorar Rutas Profesionales</h3>
+                  <p class="mission-desc">
+                    Descubre las mallas curriculares completas de Backend con SQL, Frontend Reactivo, DevOps/Linux, Inteligencia Artificial y Algoritmos para elegir tu plan a tu propio ritmo.
                   </p>
-                  <div class="spec-code-box font-mono">
-                    <span class="txt-muted">// Puerta de validación técnica</span>
-                    <div><span class="txt-amber">[GATE]</span> Módulo 2 bloqueado: Requiere aprobación del ejercicio 1.4</div>
-                    <div><span class="txt-green">[PASS]</span> Ejercicio aprobado → Módulo 2 desbloqueado</div>
+                  <div class="mission-meta font-mono txt-muted">
+                    <span>🗺️ 6 Mallas oficiales</span>
+                    <span>• Árboles secuenciales</span>
                   </div>
-                </article>
-
-                <!-- SPEC 04 -->
-                <article class="spec-card">
-                  <div class="spec-header font-mono">
-                    <span class="spec-id">SUBSYS_04</span>
-                    <span class="spec-label">CAREER_GRAPH</span>
-                  </div>
-                  <h3 class="spec-title">Rutas de Especialidad & Clanes</h3>
-                  <p class="spec-desc">
-                    Desde Fundamentos de Algoritmos hasta Arquitectura Distribuida y Ciberseguridad. Además, puedes unirte o fundar un Clan de Estudio en tu perfil para compartir retos semanales con otros cadetes.
-                  </p>
-                  <div class="spec-code-box font-mono">
-                    <span class="txt-muted">// Red de ingeniería y clanes</span>
-                    <div><span class="txt-cyan">[GUILD]</span> [KRNL] Kernel & C++ Systems Hackers</div>
-                    <div><span class="txt-green">[XP]</span> +350 XP por reto de concurrencia completado</div>
-                  </div>
-                </article>
+                  <button type="button" class="term-btn term-btn-outline full-width" (click)="selectMission('explore_paths')">
+                    <span class="btn-prefix">$</span> Explorar Catálogo de Rutas →
+                  </button>
+                </div>
               </div>
 
-              <!-- ACTION BAR -->
-              <div class="terminal-action-row">
-                <button type="button" class="term-btn term-btn-outline" (click)="stage.set('welcome')">
-                  ← Volver a Inducción
-                </button>
-                <button type="button" class="term-btn term-btn-primary" (click)="goToAssessment()">
-                  <span class="btn-prefix">$</span> ./run-diagnostic-matrix.sh <app-icon name="zap" [size]="14"/>
+              <!-- SI YA TIENE DIAGNÓSTICO PREVIO -->
+              @if (analysisResult()) {
+                <div class="mission-existing-result font-mono">
+                  <div class="mer-left">
+                    <span class="txt-green">✓ DICTAMEN OFICIAL REGISTRADO:</span>
+                    <strong class="txt-white">{{ analysisResult()!.levelTitle }}</strong>
+                    <span class="txt-muted">({{ analysisResult()!.recommendedSpecialty }})</span>
+                  </div>
+                  <button type="button" class="term-btn term-btn-sm term-btn-outline" (click)="stage.set('results')">
+                    Ver Dictamen y Temario Asignado →
+                  </button>
+                </div>
+              }
+
+              <!-- REPASAR TOUR ENLACE -->
+              <div class="mission-bottom-row">
+                <button type="button" class="term-link font-mono" (click)="startTour()">
+                  ← Volver a repasar el tour de navegación
                 </button>
               </div>
             </section>
@@ -296,6 +666,9 @@
               <!-- TELEMETRY ASSESSMENT TOPBAR -->
               <div class="assessment-header-bar font-mono">
                 <div class="ah-left">
+                  <button type="button" class="ah-back-btn" (click)="stage.set('mission')">
+                    ← Misiones
+                  </button>
                   <span class="ah-pill txt-cyan">[PREGUNTA 0{{ currentQuestionIndex() + 1 }} / 0{{ questions.length }}]</span>
                   <span class="ah-pill txt-muted">[TÓPICO: {{ currentQuestion().topic | uppercase }}]</span>
                 </div>
