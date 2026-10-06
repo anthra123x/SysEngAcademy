@@ -83,6 +83,17 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   streaming     = signal(false);
   assistantStream = signal('');
 
+  isInputFocused = signal(false);
+  showQuickMenu  = signal(false);
+
+  readonly hasMessages = computed(() => this.messages().length > 0);
+
+  readonly uiState = computed<'idle' | 'asking' | 'responding'>(() => {
+    if (this.busy() || this.streaming()) return 'responding';
+    if (this.inputText.trim().length > 0 || this.isInputFocused()) return 'asking';
+    return 'idle';
+  });
+
   isHovered          = signal(false);
   currentBubbleIndex = signal(0);
   private bubbleTimer?: any;
@@ -238,7 +249,7 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
     localStorage.removeItem(this.getStorageKey());
     this.conversationId.set(null);
     this.messages.set([]);
-    this.maybeGreet();
+    this.showQuickMenu.set(false);
   }
 
   private ensureConversationLoaded() {
@@ -251,68 +262,47 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
           this.conversationId.set(conv.id);
           this.messages.set((conv.messages ?? []).map(m => this.toPanelMsg(m)));
           this.loading.set(false);
-          this.ensureContextBubble();
-          this.maybeGreet();
         },
         error: () => {
           this.loading.set(false);
           localStorage.removeItem(key);
           this.conversationId.set(null);
-          this.maybeGreet();
         },
       });
     } else {
       this.loading.set(false);
-      this.maybeGreet();
     }
   }
 
   private maybeGreet() {
-    if (this.messages().length === 0) {
-      if (this.isTeacherMode()) {
-        this.pushMessage(
-          'assistant',
-          '¡Hola! Soy **ByteDocente**, tu copiloto de ingeniería y analítica para **SysEng Academy**.\n\nPuedes consultarme sobre el progreso de tus alumnos, diseñar evaluaciones y laboratorios prácticos, o auditar métricas de retención.'
-        );
-      } else {
-        this.pushMessage(
-          'assistant',
-          '¡Hola! Soy **Byte**, tu tutor interactivo de programación e ingeniería de software.\n\nPuedo ayudarte a comprender conceptos complejos, depurar errores de código, optimizar algoritmos o resolver desafíos paso a paso. ¿En qué estás trabajando hoy?'
-        );
-      }
-    }
+    // Al mantener messages vacío, el chatbot muestra la vista minimalista tipo Gemini
   }
 
   private onCompanionOpen(detail: { lesson_id?: number; lesson_title?: string }) {
     if (detail.lesson_id) {
       this.lessonContext.set({ id: detail.lesson_id, title: detail.lesson_title?.trim() || 'esta lección' });
       this.quickActions.set(true);
-      this.ensureContextBubble();
     }
     this.openPanel();
     this.focusInput();
   }
 
   private ensureContextBubble() {
-    const ctx = this.lessonContext();
-    if (!ctx) return;
-    const text = `Contexto activo: «${ctx.title}». ¿En qué te ayudo?`;
-    this.messages.update(msgs => {
-      const cleaned = msgs.filter(m => m.id !== CONTEXT_MSG_ID);
-      return [...cleaned, { id: CONTEXT_MSG_ID, role: 'assistant' as const, content: text, html: this.renderMarkdown(text) }];
-    });
+    // Contexto activo mostrado de forma minimalista en la cabecera
   }
 
   async sendText() {
     const content = this.inputText.trim();
     if (!content || this.busy()) return;
     this.inputText = '';
+    this.showQuickMenu.set(false);
     await this.dispatchMessage(content, content);
   }
 
   async executeUserAction(displayCommand: string, promptInstruction: string) {
     if (this.busy()) return;
     this.inputText = '';
+    this.showQuickMenu.set(false);
     await this.dispatchMessage(displayCommand, promptInstruction);
   }
 
