@@ -356,19 +356,6 @@
     font-weight: 600;
   }
 
-  &.tab-ai {
-    color: #a855f7;
-    &.is-active { background: rgba(168, 85, 247, 0.12); }
-  }
-}
-
-.badge-ai-unread {
-  background: #a855f7;
-  color: #ffffff;
-  font-size: 9px;
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-weight: 700;
 }
 
 .term-tab-badge {
@@ -602,96 +589,6 @@
     font-family: inherit;
     font-size: 12px;
     &:hover { border-color: #38bdf8; color: #38bdf8; }
-  }
-}
-
-/* AI VIEW */
-.terminal-ai-view {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.ai-messages-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 180px;
-  overflow-y: auto;
-}
-
-.ai-msg {
-  background: #11121d;
-  border: 1px solid #1f2130;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 12px;
-
-  &.is-agent {
-    border-left: 3px solid #a855f7;
-  }
-
-  .ai-author {
-    color: #a855f7;
-    font-weight: 600;
-    font-size: 11px;
-    margin-bottom: 4px;
-    display: block;
-  }
-
-  .ai-msg-content {
-    color: #e2e8f0;
-    line-height: 1.5;
-
-    pre {
-      background: #090a12;
-      padding: 6px 8px;
-      border-radius: 4px;
-      margin: 4px 0;
-      overflow-x: auto;
-    }
-  }
-
-  .btn-apply-snippet {
-    margin-top: 6px;
-    background: rgba(168, 85, 247, 0.12);
-    border: 1px solid rgba(168, 85, 247, 0.35);
-    color: #c084fc;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    cursor: pointer;
-    font-family: inherit;
-    &:hover { background: rgba(168, 85, 247, 0.22); }
-  }
-}
-
-.ai-input-form {
-  display: flex;
-  gap: 6px;
-
-  .ai-input-field {
-    flex: 1;
-    background: #11121d;
-    border: 1px solid #1f2130;
-    border-radius: 4px;
-    padding: 6px 10px;
-    color: #f1f5f9;
-    font-size: 12px;
-    outline: none;
-    &:focus { border-color: #a855f7; }
-  }
-
-  .ai-submit-btn {
-    background: #a855f7;
-    border: none;
-    color: #ffffff;
-    padding: 0 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 }
 
