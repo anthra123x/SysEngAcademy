@@ -391,29 +391,30 @@ app-byte-robot-3d {
   text-align: center;
   animation: hero-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 
-  .gemini-star-container {
+  .byte-mascot-head-container {
     position: relative;
-    width: 60px;
-    height: 60px;
+    width: 110px;
+    height: 110px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 18px;
+    margin-bottom: 12px;
 
-    .gemini-star-aura {
+    .byte-mascot-aura {
       position: absolute;
-      inset: -8px;
+      inset: -14px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(0, 217, 255, 0.35) 0%, rgba(129, 140, 248, 0.2) 50%, transparent 75%);
-      filter: blur(12px);
-      animation: star-glow-pulse 2.2s infinite alternate ease-in-out;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.45) 0%, rgba(129, 140, 248, 0.25) 50%, transparent 75%);
+      filter: blur(16px);
+      animation: mascot-aura-pulse 2.4s infinite alternate ease-in-out;
+      pointer-events: none;
     }
 
-    .gemini-star-svg {
+    app-byte-head-3d {
+      width: 100%;
+      height: 100%;
       position: relative;
       z-index: 1;
-      filter: drop-shadow(0 0 14px rgba(0, 217, 255, 0.6));
-      animation: star-float 3s infinite ease-in-out;
     }
   }
 
@@ -518,6 +519,17 @@ app-byte-robot-3d {
 @keyframes star-glow-pulse {
   0% { transform: scale(0.9); opacity: 0.5; }
   100% { transform: scale(1.15); opacity: 0.9; }
+}
+
+@keyframes mascot-aura-pulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(1.08);
+    opacity: 0.95;
+  }
 }
 
 @keyframes star-float {

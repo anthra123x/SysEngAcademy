@@ -17,6 +17,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { AiChatService } from '../../core/services/ai-chat.service';
 import { AiPracticeQuiz } from '../../core/models';
 import { ByteRobot3dComponent } from './byte-robot-3d.component';
+import { ByteHead3dComponent } from './byte-head-3d.component';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
 
 /** Mensaje local del panel */
@@ -62,7 +63,7 @@ REGLAS ESTRICTAS:
 @Component({
   selector: 'app-ai-companion',
   standalone: true,
-  imports: [FormsModule, ByteRobot3dComponent, AppIconComponent],
+  imports: [FormsModule, ByteRobot3dComponent, ByteHead3dComponent, AppIconComponent],
   templateUrl: './ai-companion.component.html',
   styleUrl: './ai-companion.component.scss',
 })
