@@ -1040,4 +1040,629 @@ PY,
             ],
         ],
     ],
+    // =====================================================================
+    // 5. Programación Orientada a Objetos con Java
+    // =====================================================================
+    [
+        'slug'                => 'programacion-orientada-a-objetos-java',
+        'title'               => 'Programación Orientada a Objetos con Java',
+        'description'         => 'Domina la Programación Orientada a Objetos con Java, el estándar de la industria empresarial. Modela entidades robustas aplicando encapsulamiento estricto, jerarquías de herencia, polimorfismo dinámico, clases abstractas, contratos mediante interfaces y manejo profesional de excepciones.',
+        'category'            => 'poo',
+        'language'            => 'java',
+        'difficulty'          => 'intermediate',
+        'duration_hours'      => 18,
+        'is_free'             => true,
+        'learning_path'       => 'desarrollo-orientado-objetos',
+        'learning_path_level' => 1,
+        'order'               => 5,
+        'modules'             => [
+            [
+                'title'       => 'Anatomía de Clases y Encapsulamiento en Java',
+                'description' => 'Fundamentos de modelado, ciclo de vida del objeto, constructores y protección del estado con modificadores de acceso.',
+                'lessons'     => [
+                    [
+                        'slug'     => 'poo-java-clases-y-constructores',
+                        'title'    => 'Clases, Objetos y Constructores en Java',
+                        'type'     => 'article',
+                        'duration' => 15,
+                        'preview'  => true,
+                        'blocks'   => [
+                            ['h', 'La clase como molde y el objeto en memoria'],
+                            ['p', 'En Java, todo programa estructurado reside dentro de clases. Una clase define los atributos que representan el estado interno de la entidad y los métodos que operan sobre dicho estado. Cuando invocamos el operador new, la Máquina Virtual de Java (JVM) reserva espacio en el Heap (montículo de memoria) para almacenar los valores de los atributos y nos devuelve una referencia a esa instancia concreta.'],
+                            ['p', 'El constructor es el bloque especial encargado de inicializar el objeto en un estado consistente desde su nacimiento. En Java, el constructor lleva exactamente el mismo nombre de la clase y no declara tipo de retorno. Podemos sobrecargar constructores para permitir diferentes formas de instanciación según los parámetros suministrados.'],
+                            ['code', 'java', <<<'JAVA'
+public class CuentaBancaria {
+    private String titular;
+    private double saldo;
+
+    // Constructor principal
+    public CuentaBancaria(String titular, double saldoInicial) {
+        this.titular = titular;
+        this.saldo = Math.max(0.0, saldoInicial);
+    }
+
+    // Constructor sobrecargado con saldo en cero
+    public CuentaBancaria(String titular) {
+        this(titular, 0.0);
+    }
+
+    public void depositar(double monto) {
+        if (monto > 0) {
+            this.saldo += monto;
+        }
+    }
+
+    public double getSaldo() {
+        return this.saldo;
+    }
+}
+JAVA],
+                            ['h', 'La palabra reservada this y el Heap'],
+                            ['p', 'La referencia this apunta a la instancia actual que está ejecutando el código. Se emplea para desambiguar entre parámetros del constructor y atributos de la clase que comparten el mismo nombre, así como para invocar constructores hermanos mediante this(...) en la primera línea de ejecución.'],
+                            ['list', [
+                                'class define el tipo y new crea la instancia física en el Heap de la JVM',
+                                'Los constructores inicializan invariantes de datos y no declaran tipo de retorno',
+                                'this desambigua atributos de parámetros y enlaza constructores sobrecargados',
+                                'El Garbage Collector destruye automáticamente objetos sin referencias activas',
+                            ]],
+                        ],
+                        'quiz' => [
+                            'title' => 'Comprueba lo aprendido',
+                            'questions' => [
+                                ['q' => '¿Dónde almacena la JVM los objetos creados con el operador new?', 'type' => 'single', 'answers' => [
+                                    ['En el Heap (montículo de memoria)', true, 'En Java, todas las instancias de objetos residen en el Heap, mientras que variables locales y referencias viven en el Stack.'],
+                                    ['En la pila de llamadas (Stack)', false, 'En el Stack solo se almacenan variables locales primitivas y referencias a objetos.'],
+                                    ['Directamente en el disco rígido', false, 'La memoria de ejecución del proceso reside enteramente en RAM.'],
+                                    ['En el área de metadatos de clases únicamente', false, 'Allí se almacena el bytecode compilado, no las instancias concretas.'],
+                                ]],
+                                ['q' => '¿Para qué se utiliza la sentencia this(...) en la primera línea de un constructor?', 'type' => 'single', 'answers' => [
+                                    ['Para invocar otro constructor sobrecargado de la misma clase', true, 'Permite reutilizar lógica de inicialización entre constructores hermanos sin duplicar código.'],
+                                    ['Para invocar al constructor de la clase padre', false, 'Para la clase base padre se utiliza super(...).'],
+                                    ['Para reiniciar los atributos a cero', false, 'No tiene esa función de reseteo.'],
+                                    ['Para destruir la instancia anterior', false, 'La destrucción la gestiona automáticamente el Garbage Collector.'],
+                                ]],
+                                ['q' => '¿Qué ocurre si no defines ningún constructor explícito en una clase Java?', 'type' => 'single', 'answers' => [
+                                    ['El compilador genera un constructor público por defecto sin parámetros', true, 'Java provee un constructor vacío por defecto si y solo si no declaras ningún constructor explícito.'],
+                                    ['El programa arroja un error de compilación', false, 'Java compila sin problemas proveyendo el constructor por defecto.'],
+                                    ['La clase se convierte automáticamente en abstracta', false, 'Las clases abstractas requieren la palabra clave abstract.'],
+                                    ['No es posible instanciar la clase nunca', false, 'Se puede instanciar usando el constructor por defecto generado.'],
+                                ]],
+                            ],
+                        ],
+                    ],
+                    [
+                        'slug'     => 'poo-java-encapsulamiento-y-modificadores',
+                        'title'    => 'Encapsulamiento y Modificadores de Acceso',
+                        'type'     => 'article',
+                        'duration' => 14,
+                        'blocks'   => [
+                            ['h', 'Ocultamiento de información y defensa del estado'],
+                            ['p', 'El encapsulamiento es el principio fundamental que consiste en ocultar los detalles internos de implementación de un objeto, exponiendo únicamente una interfaz pública controlada. En Java, esto se logra combinando atributos privados (private) con métodos públicos (getters y setters) que validan cualquier mutación del estado.'],
+                            ['p', 'Permitir el acceso directo a campos públicos rompe la encapsulación: cualquier parte externa del sistema podría asignar valores inconsistentes (como saldos negativos o identificadores nulos). Los métodos de acceso nos permiten interceptar lecturas y escrituras, mantener la coherencia y facilitar cambios internos sin romper a los consumidores.'],
+                            ['code', 'java', <<<'JAVA'
+public class Producto {
+    private final String codigo;
+    private String nombre;
+    private double precio;
+
+    public Producto(String codigo, String nombre, double precio) {
+        if (codigo == null || codigo.isBlank()) {
+            throw new IllegalArgumentException("El código no puede estar vacío");
+        }
+        this.codigo = codigo;
+        setNombre(nombre);
+        setPrecio(precio);
+    }
+
+    public void setPrecio(double precio) {
+        if (precio < 0.0) {
+            throw new IllegalArgumentException("El precio no puede ser negativo: " + precio);
+        }
+        this.precio = precio;
+    }
+
+    public void setNombre(String nombre) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre es obligatorio");
+        }
+        this.nombre = nombre;
+    }
+
+    public String getCodigo() { return codigo; }
+    public String getNombre() { return nombre; }
+    public double getPrecio() { return precio; }
+}
+JAVA],
+                            ['h', 'Los cuatro niveles de acceso en Java'],
+                            ['p', 'Java dispone de cuatro niveles de visibilidad: private (solo accesible dentro de la misma clase), package-private o default (sin modificador, accesible por clases del mismo paquete), protected (accesible en el mismo paquete y por subclases en otros paquetes) y public (accesible desde cualquier parte del proyecto).'],
+                            ['list', [
+                                'private: máxima restricción, accesible solo en la clase declarante',
+                                'default (sin palabra clave): accesible solo dentro del mismo paquete',
+                                'protected: accesible dentro del paquete y por subclases derivadas',
+                                'public: visibilidad universal sin restricciones',
+                                'final en atributos: asignación única e inmutabilidad garantizada',
+                            ]],
+                        ],
+                        'quiz' => [
+                            'title' => 'Comprueba lo aprendido',
+                            'questions' => [
+                                ['q' => '¿Cuál es el modificador de acceso más restrictivo en Java?', 'type' => 'single', 'answers' => [
+                                    ['private', true, 'private restringe la visibilidad exclusivamente a la clase en la que fue declarado el miembro.'],
+                                    ['default', false, 'default permite acceso a todas las clases dentro del mismo paquete.'],
+                                    ['protected', false, 'protected es más permisivo que default al incluir subclases externas.'],
+                                    ['public', false, 'public es el modificador con menor restricción de todos.'],
+                                ]],
+                                ['q' => '¿Por qué es una mala práctica dejar atributos de una clase como públicos?', 'type' => 'single', 'answers' => [
+                                    ['Porque cualquier código externo puede alterar el estado sin validaciones ni control', true, 'Vulnera el principio de encapsulamiento y permite corromper invariantes del modelo de negocio.'],
+                                    ['Porque Java no permite compilar atributos con modificador public', false, 'Java compila atributos públicos sin ningún error de sintaxis.'],
+                                    ['Porque los atributos públicos duplican el consumo de memoria en la JVM', false, 'El modificador de acceso no influye en la memoria ocupada.'],
+                                    ['Porque obliga a que todos los métodos sean estáticos', false, 'No existe relación entre visibilidad y métodos estáticos.'],
+                                ]],
+                                ['q' => '¿Qué efecto tiene la palabra clave final cuando se aplica a un atributo de instancia?', 'type' => 'single', 'answers' => [
+                                    ['Impide que el valor o referencia sea reasignado una vez inicializado', true, 'El atributo se convierte en inmutable en cuanto a su enlace de asignación inicial.'],
+                                    ['Hace que el atributo sea accesible solo desde clases hijas', false, 'Esa es la función del modificador protected.'],
+                                    ['Permite que el Garbage Collector lo elimine inmediatamente', false, 'No tiene impacto en el recolector de basura.'],
+                                    ['Convierte el atributo en una variable global compartida', false, 'Para compartir entre instancias se utiliza static.'],
+                                ]],
+                            ],
+                        ],
+                    ],
+                    [
+                        'slug'     => 'poo-java-ejercicio-cuenta-bancaria',
+                        'title'    => 'Ejercicio: Modela una Cuenta Bancaria en Java',
+                        'type'     => 'code_challenge',
+                        'duration' => 16,
+                        'language' => 'java',
+                        'blocks'   => [
+                            ['h', 'Instrucciones del ejercicio'],
+                            ['p', 'Diseña una clase llamada Cuenta con atributos privados para el numeroCuenta (String) y el saldo (double). Implementa un constructor que reciba ambos valores asegurando que el saldo inicial no sea menor a cero. Incluye métodos getNumeroCuenta(), getSaldo(), depositar(double monto) que aumente el saldo solo si el monto es mayor a cero, y retirar(double monto) que reste del saldo solo si hay fondos suficientes.'],
+                        ],
+                        'starter'  => <<<'JAVA'
+public class Cuenta {
+    // Declara los atributos privados: numeroCuenta (String) y saldo (double)
+    
+    // Implementa el constructor: Cuenta(String numeroCuenta, double saldoInicial)
+
+    // Implementa getNumeroCuenta(), getSaldo(), depositar(double) y retirar(double)
+}
+JAVA,
+                        'solution' => <<<'JAVA'
+public class Cuenta {
+    private String numeroCuenta;
+    private double saldo;
+
+    public Cuenta(String numeroCuenta, double saldoInicial) {
+        this.numeroCuenta = numeroCuenta;
+        this.saldo = Math.max(0.0, saldoInicial);
+    }
+
+    public String getNumeroCuenta() {
+        return this.numeroCuenta;
+    }
+
+    public double getSaldo() {
+        return this.saldo;
+    }
+
+    public void depositar(double monto) {
+        if (monto > 0) {
+            this.saldo += monto;
+        }
+    }
+
+    public boolean retirar(double monto) {
+        if (monto > 0 && this.saldo >= monto) {
+            this.saldo -= monto;
+            return true;
+        }
+        return false;
+    }
+}
+JAVA,
+                        'hint'     => 'Asegúrate de que los atributos sean private y utiliza this para diferenciar los atributos de los parámetros en el constructor.',
+                        'tests'    => [
+                            ['Cuenta c = new Cuenta("123", 100); c.depositar(50); c.getSaldo()', '150.0'],
+                            ['Cuenta c = new Cuenta("123", 100); c.retirar(30); c.getSaldo()', '70.0'],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'title'       => 'Herencia y Polimorfismo en Java',
+                'description' => 'Jerarquía de clases con extends, super, sobreescritura de métodos y enlace dinámico.',
+                'lessons'     => [
+                    [
+                        'slug'     => 'poo-java-herencia-y-super',
+                        'title'    => 'Herencia con extends y la Palabra Clave super',
+                        'type'     => 'article',
+                        'duration' => 16,
+                        'blocks'   => [
+                            ['h', 'Especialización de clases y herencia simple'],
+                            ['p', 'La herencia permite construir nuevas clases a partir de clases existentes, heredando sus atributos y comportamientos no privados. En Java, la herencia entre clases se declara con la palabra clave extends. Java adopta estrictamente el modelo de herencia simple: una clase solo puede extender directamente a una única superclase, evitando así el clásico problema del diamante que surge con la herencia múltiple.'],
+                            ['p', 'Todas las clases en Java descienden en última instancia de java.lang.Object. Cuando una subclase define un constructor, debe invocar al constructor de la superclase mediante super(...) antes de ejecutar su propia inicialización. Si no se llama explícitamente, el compilador inserta una llamada implícita a super() sin argumentos.'],
+                            ['code', 'java', <<<'JAVA'
+// Superclase base
+public class Empleado {
+    private String nombre;
+    private double salarioBase;
+
+    public Empleado(String nombre, double salarioBase) {
+        this.nombre = nombre;
+        this.salarioBase = salarioBase;
+    }
+
+    public double calcularSalario() {
+        return this.salarioBase;
+    }
+
+    public String getNombre() { return nombre; }
+}
+
+// Subclase especializada
+public class Gerente extends Empleado {
+    private double bono;
+
+    public Gerente(String nombre, double salarioBase, double bono) {
+        super(nombre, salarioBase); // Delega inicialización a la superclase
+        this.bono = bono;
+    }
+
+    @Override
+    public double calcularSalario() {
+        return super.calcularSalario() + this.bono;
+    }
+}
+JAVA],
+                            ['h', 'La anotación @Override y el acceso protegido'],
+                            ['p', 'La anotación @Override informa al compilador que nuestra intención es sobreescribir un método heredado. Si cometemos un error tipográfico en el nombre del método o en la lista de tipos de parámetros, el compilador detectará el fallo de inmediato. El modificador protected permite que los miembros sean visibles por las subclases sin exponerlos públicamente.'],
+                            ['list', [
+                                'extends establece la relación es-un (is-a) entre subclase y superclase',
+                                'Java impone herencia simple de clases para garantizar predictibilidad',
+                                'super(...) delega al constructor de la clase base en la primera línea',
+                                '@Override previene errores silenciosos de sobreescritura incorrecta',
+                            ]],
+                        ],
+                        'quiz' => [
+                            'title' => 'Comprueba lo aprendido',
+                            'questions' => [
+                                ['q' => '¿Cuántas clases directas puede heredar una clase en Java mediante extends?', 'type' => 'single', 'answers' => [
+                                    ['Exactamente una sola clase (herencia simple)', true, 'Java no permite herencia múltiple entre clases para evitar ambigüedades estructurales.'],
+                                    ['Múltiples clases separadas por comas', false, 'La herencia múltiple de implementación no está soportada para clases en Java.'],
+                                    ['Hasta un máximo de tres clases', false, 'No existe tal límite numérico; la regla es exactamente una.'],
+                                    ['Cualquier número si son abstractas', false, 'Las clases abstractas también están sujetas a una sola herencia simple.'],
+                                ]],
+                                ['q' => '¿Qué función cumple la instrucción super(...) dentro del constructor de una subclase?', 'type' => 'single', 'answers' => [
+                                    ['Invoca al constructor de la clase padre para inicializar su estado', true, 'Garantiza que la jerarquía base sea inicializada antes de la subclase.'],
+                                    ['Crea una nueva instancia independiente de la clase padre', false, 'No crea un objeto aparte, inicializa la parte padre de la misma instancia.'],
+                                    ['Sobreescribe todos los atributos de la subclase', false, 'No sobreescribe atributos.'],
+                                    ['Cancela la ejecución de los métodos de la subclase', false, 'No detiene métodos de la subclase.'],
+                                ]],
+                                ['q' => '¿Por qué es una buena práctica utilizar siempre la anotación @Override?', 'type' => 'single', 'answers' => [
+                                    ['Permite al compilador verificar que el método realmente existe en la superclase', true, 'Si la firma no coincide exactamente, el compilador genera un error y previene bugs difíciles de rastrear.'],
+                                    ['Obliga a que el método se ejecute de forma asíncrona', false, 'No tiene relación con concurrencia.'],
+                                    ['Aumenta la velocidad de ejecución en la JVM', false, 'Es una directiva de tiempo de compilación con retención informativa.'],
+                                    ['Hace que el método sea visible para paquetes externos', false, 'La visibilidad depende del modificador de acceso, no de @Override.'],
+                                ]],
+                            ],
+                        ],
+                    ],
+                    [
+                        'slug'     => 'poo-java-polimorfismo-enlace-dinamico',
+                        'title'    => 'Polimorfismo y Enlace Dinámico en Java',
+                        'type'     => 'article',
+                        'duration' => 15,
+                        'blocks'   => [
+                            ['h', 'Un único tipo estático, múltiples comportamientos dinámicos'],
+                            ['p', 'El polimorfismo es la capacidad que tiene un objeto de responder a un mismo mensaje de diferentes maneras según su tipo real en tiempo de ejecución. En Java, podemos declarar una variable con el tipo de la superclase (tipo estático o aparente) y asignarle cualquier instancia de sus subclases (tipo dinámico o real). Esto se conoce como Upcasting y ocurre de manera automática y segura.'],
+                            ['p', 'Cuando se invoca un método sobre la referencia polimórfica, la JVM consulta la tabla virtual de métodos (vtable) para ejecutar la implementación del tipo real del objeto. Este mecanismo se denomina despacho dinámico de métodos o enlace tardío (late binding).'],
+                            ['code', 'java', <<<'JAVA'
+// Referencia polimórfica en acción
+Empleado emp1 = new Empleado("Laura", 3000.0);
+Empleado emp2 = new Gerente("Carlos", 4000.0, 1500.0);
+
+// Ambos se tratan como 'Empleado', pero su cálculo de salario difiere
+System.out.println(emp1.calcularSalario()); // Imprime: 3000.0
+System.out.println(emp2.calcularSalario()); // Imprime: 5500.0 (enlace dinámico)
+
+// Colección polimórfica
+List<Empleado> plantilla = List.of(emp1, emp2);
+double total = 0;
+for (Empleado e : plantilla) {
+    total += e.calcularSalario(); // Llama a la versión adecuada automáticamente
+}
+JAVA],
+                            ['h', 'Verificación segura con instanceof y Pattern Matching'],
+                            ['p', 'Cuando es necesario comprobar si una referencia polimórfica corresponde a una subclase concreta para acceder a miembros específicos, utilizamos el operador instanceof. Desde Java 16, el Pattern Matching for instanceof permite realizar la comprobación y el casting en una única expresión limpia y segura.'],
+                            ['code', 'java', <<<'JAVA'
+if (emp2 instanceof Gerente g) {
+    // 'g' ya está tipado como Gerente dentro de este bloque
+    System.out.println("Es un gerente con bono: " + g.calcularSalario());
+}
+JAVA],
+                            ['list', [
+                                'Tipo estático: tipo con el que se declara la variable en el código fuente',
+                                'Tipo dinámico: clase real de la instancia creada en memoria mediante new',
+                                'Enlace tardío: la JVM resuelve en tiempo de ejecución qué método ejecutar',
+                                'El polimorfismo permite escribir código extensible que no requiere modificar clientes existentes',
+                            ]],
+                        ],
+                        'quiz' => [
+                            'title' => 'Comprueba lo aprendido',
+                            'questions' => [
+                                ['q' => '¿Qué ocurre cuando ejecutamos un método sobre una variable de tipo Empleado que contiene un objeto de tipo Gerente?', 'type' => 'single', 'answers' => [
+                                    ['Se ejecuta la versión sobreescrita del método definida en Gerente', true, 'Gracias al enlace dinámico (late binding) de la JVM, se ejecuta el método del tipo real del objeto.'],
+                                    ['Se ejecuta siempre la versión definida en Empleado', false, 'El polimorfismo delega la invocación al tipo real en el Heap.'],
+                                    ['Se genera una excepción de tipo ClassCastException', false, 'El upcasting es transparente y no produce excepciones.'],
+                                    ['La JVM solicita confirmación al compilador y detiene el hilo', false, 'La resolución ocurre automáticamente mediante la vtable interna de la JVM.'],
+                                ]],
+                                ['q' => '¿Qué ventaja ofrece el polimorfismo a la arquitectura de una aplicación?', 'type' => 'single', 'answers' => [
+                                    ['Permite añadir nuevas clases derivadas sin modificar los algoritmos que consumen la clase base', true, 'Cumple directamente con el principio de Abierto/Cerrado (OCP).'],
+                                    ['Elimina la necesidad de utilizar constructores en las clases', false, 'Toda clase necesita constructores para inicializarse.'],
+                                    ['Reduce a cero el uso de memoria en el Heap', false, 'Las instancias consumen la memoria normal de sus campos.'],
+                                    ['Evita tener que escribir pruebas unitarias', false, 'El código polimórfico requiere pruebas rigurosas.'],
+                                ]],
+                                ['q' => '¿Qué realiza la sintaxis if (obj instanceof Gerente g) en Java moderno?', 'type' => 'single', 'answers' => [
+                                    ['Verifica el tipo y crea la variable casteada g automáticamente en el ámbito del bloque', true, 'Es la característica de Pattern Matching for instanceof introducida en las versiones modernas de Java.'],
+                                    ['Convierte la clase Gerente en una interfaz estática', false, 'No altera la estructura de la clase.'],
+                                    ['Obliga a que obj sea clonado en memoria', false, 'No realiza copias de memoria del objeto.'],
+                                    ['Destruye la referencia anterior de obj', false, 'La referencia original permanece inalterada.'],
+                                ]],
+                            ],
+                        ],
+                    ],
+                    [
+                        'slug'     => 'poo-java-ejercicio-figuras-polimorficas',
+                        'title'    => 'Ejercicio: Jerarquía Polimórfica de Figuras',
+                        'type'     => 'code_challenge',
+                        'duration' => 16,
+                        'language' => 'java',
+                        'blocks'   => [
+                            ['h', 'Instrucciones del ejercicio'],
+                            ['p', 'Crea una clase base Figura con un método public double calcularArea() que retorne 0.0. Luego, crea dos subclases: Rectangulo (con atributos base y altura y su constructor) y Circulo (con atributo radio y su constructor). Ambas subclases deben sobreescribir calcularArea() aplicando la fórmula correspondiente (base * altura para el rectángulo y Math.PI * radio * radio para el círculo).'],
+                        ],
+                        'starter'  => <<<'JAVA'
+public class Figura {
+    public double calcularArea() {
+        return 0.0;
+    }
+}
+
+// Implementa la clase Rectangulo que herede de Figura
+
+// Implementa la clase Circulo que herede de Figura
+JAVA,
+                        'solution' => <<<'JAVA'
+public class Figura {
+    public double calcularArea() {
+        return 0.0;
+    }
+}
+
+class Rectangulo extends Figura {
+    private double base;
+    private double altura;
+
+    public Rectangulo(double base, double altura) {
+        this.base = base;
+        this.altura = altura;
+    }
+
+    @Override
+    public double calcularArea() {
+        return this.base * this.altura;
+    }
+}
+
+class Circulo extends Figura {
+    private double radio;
+
+    public Circulo(double radio) {
+        this.radio = radio;
+    }
+
+    @Override
+    public double calcularArea() {
+        return Math.PI * this.radio * this.radio;
+    }
+}
+JAVA,
+                        'hint'     => 'Recuerda utilizar extends Figura y sobreescribir el método calcularArea() con la anotación @Override.',
+                        'tests'    => [
+                            ['new Rectangulo(4, 5).calcularArea()', '20.0'],
+                            ['Math.round(new Circulo(3).calcularArea() * 100.0) / 100.0', '28.27'],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'title'       => 'Clases Abstractas e Interfaces en Java',
+                'description' => 'Diseño basado en contratos, métodos abstractos, métodos default e implementación múltiple.',
+                'lessons'     => [
+                    [
+                        'slug'     => 'poo-java-clases-abstractas',
+                        'title'    => 'Clases Abstractas y Métodos Plantilla',
+                        'type'     => 'article',
+                        'duration' => 15,
+                        'blocks'   => [
+                            ['h', 'Conceptos incompletos que no deben ser instanciados'],
+                            ['p', 'Existen entidades en nuestro dominio conceptual que representan ideas generales pero no entidades concretas listas para existir por sí solas. Por ejemplo, en un sistema de nómina existe la noción general de Empleado o en un sistema gráfico la noción de Figura, pero nunca quisiéramos instanciar una figura genérica sin forma definida. Para estos casos, Java provee la palabra clave abstract.'],
+                            ['p', 'Una clase abstracta no puede ser instanciada directamente con new. Puede contener tanto métodos concretos con lógica compartida como métodos abstractos (sin llaves ni cuerpo), los cuales actúan como obligaciones contractuales que cualquier subclase concreta debe implementar obligatoriamente.'],
+                            ['code', 'java', <<<'JAVA'
+// Clase abstracta con patrón Template Method
+public abstract class ProcesadorReporte {
+
+    // Método plantilla (define el esqueleto invariable del algoritmo)
+    public final void generarReporte() {
+        abrirConexion();
+        String datos = extraerDatos();
+        String formateado = formatear(datos);
+        guardar(formateado);
+        cerrarConexion();
+    }
+
+    private void abrirConexion() {
+        System.out.println("Abriendo conexión a la base de datos...");
+    }
+
+    private void cerrarConexion() {
+        System.out.println("Cerrando conexión...");
+    }
+
+    // Métodos abstractos que cada formato concreto debe definir
+    protected abstract String extraerDatos();
+    protected abstract String formatear(String datos);
+    protected abstract void guardar(String contenido);
+}
+JAVA],
+                            ['h', 'El valor arquitectónico de la abstracción'],
+                            ['p', 'Las clases abstractas permiten aplicar patrones clásicos como Template Method: la clase abstracta define el algoritmo de alto nivel y delega los pasos específicos a las clases hijas. De este modo, evitamos la duplicación de código en la estructura general y garantizamos que cada variante cumpla el protocolo establecido.'],
+                            ['list', [
+                                'abstract impide crear instancias directas con new',
+                                'Los métodos abstractos terminan con punto y coma (;) y carecen de cuerpo',
+                                'Las subclases concretas deben implementar todos los métodos abstractos heredados',
+                                'Pueden contener estado (atributos), constructores y métodos concretos compartidos',
+                            ]],
+                        ],
+                        'quiz' => [
+                            'title' => 'Comprueba lo aprendido',
+                            'questions' => [
+                                ['q' => '¿Qué ocurre si intentas ejecutar new Vehiculo() siendo Vehiculo una clase declarada como abstract?', 'type' => 'single', 'answers' => [
+                                    ['El código no compila porque las clases abstractas no se pueden instanciar directamente', true, 'Java prohíbe la instanciación de clases abstractas para evitar objetos con métodos incompletos.'],
+                                    ['La JVM crea un objeto anónimo vacío', false, 'No crea ningún objeto, el compilador detiene el proceso con error.'],
+                                    ['Lanza una excepción NullPointerException en tiempo de ejecución', false, 'Es un error de compilación estático, no de tiempo de ejecución.'],
+                                    ['Convierte la clase en una interfaz', false, 'Las clases abstractas e interfaces son construcciones diferentes.'],
+                                ]],
+                                ['q' => '¿Qué es obligatorio para que una subclase no abstracta pueda compilar si hereda de una clase abstracta?', 'type' => 'single', 'answers' => [
+                                    ['Implementar todos los métodos abstractos declarados en la jerarquía', true, 'La subclase debe proporcionar un cuerpo concreto a cada método abstracto pendiente.'],
+                                    ['Declarar todos sus atributos con modificador public', false, 'Los modificadores de atributos no dependen de la abstracción de métodos.'],
+                                    ['Tener el mismo número de métodos que la clase padre', false, 'Puede añadir todos los métodos adicionales que necesite.'],
+                                    ['Sobreescribir obligatoriamente todos los métodos concretos de la clase padre', false, 'Los métodos concretos se heredan opcionalmente.'],
+                                ]],
+                                ['q' => '¿Puede una clase abstracta en Java tener constructores y atributos con estado?', 'type' => 'single', 'answers' => [
+                                    ['Sí, puede tener constructores y atributos que son invocados por las subclases vía super(...)', true, 'Aunque no se instancie directamente, su constructor prepara el estado base heredado.'],
+                                    ['No, las clases abstractas solo pueden tener métodos estáticos', false, 'Pueden tener cualquier tipo de método y atributo.'],
+                                    ['Solo si los atributos son finales y estáticos', false, 'Pueden tener atributos de instancia normales mutables o inmutables.'],
+                                    ['No, los constructores están prohibidos en clases abstractas', false, 'Los constructores son plenamente válidos y comunes en clases abstractas.'],
+                                ]],
+                            ],
+                        ],
+                    ],
+                    [
+                        'slug'     => 'poo-java-interfaces-y-contratos',
+                        'title'    => 'Interfaces: Contratos de Comportamiento e Implementación Múltiple',
+                        'type'     => 'article',
+                        'duration' => 16,
+                        'blocks'   => [
+                            ['h', 'Programar hacia una interfaz, no hacia una implementación'],
+                            ['p', 'Una interfaz en Java define un contrato puro de comportamiento que una o más clases se comprometen a respetar. A diferencia de las clases, donde Java restringe a la herencia simple, una clase puede implementar múltiples interfaces (implements A, B, C). Esta capacidad desacopla el qué hace un componente del cómo lo hace, permitiendo intercambiar implementaciones sin alterar al consumidor.'],
+                            ['p', 'Desde Java 8, las interfaces también admiten métodos con implementación por defecto mediante la palabra clave default, lo que permite evolucionar interfaces existentes sin romper las clases que ya las implementaban, así como métodos utilitarios estáticos.'],
+                            ['code', 'java', <<<'JAVA'
+// Contrato de notificación
+public interface Notificador {
+    void enviar(String destinatario, String mensaje);
+
+    // Método default con comportamiento predeterminado
+    default void enviarAlertaUrgente(String destinatario, String mensaje) {
+        enviar(destinatario, "[URGENTE] " + mensaje);
+    }
+}
+
+// Implementación 1: Correo electrónico
+public class EmailNotificador implements Notificador {
+    @Override
+    public void enviar(String destinatario, String mensaje) {
+        System.out.println("Enviando Email a " + destinatario + ": " + mensaje);
+    }
+}
+
+// Implementación 2: Mensajería SMS
+public class SmsNotificador implements Notificador {
+    @Override
+    public void enviar(String destinatario, String mensaje) {
+        System.out.println("Enviando SMS al número " + destinatario + ": " + mensaje);
+    }
+}
+JAVA],
+                            ['h', 'Cuándo usar Interface y cuándo Clase Abstracta'],
+                            ['p', 'La regla general de diseño en Java es: utiliza una interfaz cuando quieras definir una capacidad o rol transversal (como Serializable, Comparable, Notificador, Repositorio) que clases de jerarquías totalmente distintas pueden compartir. Utiliza una clase abstracta cuando exista una relación de parentesco conceptual estrecha ("es-un") y desees compartir código base y estado de instancia común.'],
+                            ['list', [
+                                'interface define capacidades y contratos desacoplados',
+                                'implements permite implementar múltiples interfaces en una misma clase',
+                                'default permite añadir lógica opcional sin romper implementaciones previas',
+                                'Promueve el principio de Inversión de Dependencias (DIP) de SOLID',
+                            ]],
+                        ],
+                        'quiz' => [
+                            'title' => 'Comprueba lo aprendido',
+                            'questions' => [
+                                ['q' => '¿Cuántas interfaces puede implementar una sola clase en Java?', 'type' => 'single', 'answers' => [
+                                    ['Múltiples interfaces separadas por comas', true, 'Java permite implementación múltiple de interfaces, resolviendo la necesidad de combinar contratos de comportamiento.'],
+                                    ['Solamente una sola interfaz', false, 'La restricción de una sola pertenece a la herencia de clases (extends), no a interfaces.'],
+                                    ['Máximo dos interfaces', false, 'No existe límite superior.'],
+                                    ['Ninguna si la clase ya tiene superclase', false, 'Puede extender una clase e implementar múltiples interfaces a la vez.'],
+                                ]],
+                                ['q' => '¿Qué propósito tienen los métodos default en las interfaces de Java?', 'type' => 'single', 'answers' => [
+                                    ['Permitir agregar nuevos métodos con implementación a interfaces existentes sin romper clases que ya las implementaban', true, 'Fueron introducidos en Java 8 para habilitar la evolución compatible de la API de Streams y Collections.'],
+                                    ['Hacer que los métodos no puedan ser sobreescritos por las clases', false, 'Las clases hijas pueden sobreescribir métodos default libremente.'],
+                                    ['Convertir la interfaz en una clase final', false, 'No afecta la naturaleza de la interfaz.'],
+                                    ['Ejecutar el método en un hilo en segundo plano', false, 'No tiene relación con concurrencia o hilos.'],
+                                ]],
+                                ['q' => '¿Cuál es la recomendación fundamental de la POO respecto al acoplamiento de dependencias?', 'type' => 'single', 'answers' => [
+                                    ['Programar orientado a interfaces (abstracciones) y no a implementaciones concretas', true, 'Facilita la sustitución de componentes, pruebas unitarias con mocks y mantenibilidad del sistema.'],
+                                    ['Usar siempre clases concretas para evitar la creación de interfaces', false, 'El acoplamiento a clases concretas vuelve al sistema rígido y frágil.'],
+                                    ['Hacer que todas las clases sean estáticas', false, 'Destruye los principios del paradigma orientado a objetos.'],
+                                    ['Evitar el uso de polimorfismo para ahorrar líneas de código', false, 'El polimorfismo es una de las mayores ventajas de la POO.'],
+                                ]],
+                            ],
+                        ],
+                    ],
+                    [
+                        'slug'     => 'poo-java-ejercicio-notificador-interface',
+                        'title'    => 'Ejercicio: Contrato de Notificación con Interfaces',
+                        'type'     => 'code_challenge',
+                        'duration' => 16,
+                        'language' => 'java',
+                        'blocks'   => [
+                            ['h', 'Instrucciones del ejercicio'],
+                            ['p', 'Crea una interfaz llamada Notificador con el método String notificar(String mensaje). Luego, implementa dos clases que la adopten: NotificadorEmail que devuelva "Email: " concatenado con el mensaje, y NotificadorSlack que devuelva "Slack: " concatenado con el mensaje. Diseña ambas clases respetando el contrato de la interfaz.'],
+                        ],
+                        'starter'  => <<<'JAVA'
+public interface Notificador {
+    String notificar(String mensaje);
+}
+
+// Implementa NotificadorEmail que implemente Notificador
+
+// Implementa NotificadorSlack que implemente Notificador
+JAVA,
+                        'solution' => <<<'JAVA'
+public interface Notificador {
+    String notificar(String mensaje);
+}
+
+class NotificadorEmail implements Notificador {
+    @Override
+    public String notificar(String mensaje) {
+        return "Email: " + mensaje;
+    }
+}
+
+class NotificadorSlack implements Notificador {
+    @Override
+    public String notificar(String mensaje) {
+        return "Slack: " + mensaje;
+    }
+}
+JAVA,
+                        'hint'     => 'Utiliza la palabra clave implements Notificador en la declaración de las clases y sobreescribe notificar.',
+                        'tests'    => [
+                            ['new NotificadorEmail().notificar("Hola")', 'Email: Hola'],
+                            ['new NotificadorSlack().notificar("Alerta")', 'Slack: Alerta'],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
 ];
+

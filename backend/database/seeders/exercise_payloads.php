@@ -491,4 +491,154 @@ SQL,
             ['consulta', 'GROUP BY categoria_id HAVING COUNT(*) > 10'],
         ],
     ],
+
+    // =============================================================
+    // Java — POO con Java
+    // =============================================================
+    'poo-java-ejercicio-cuenta-bancaria' => [
+        'language'  => 'java',
+        'read_only' => true,
+        'starter'   => <<<'JAVA'
+public class Cuenta {
+    // Declara los atributos privados: numeroCuenta (String) y saldo (double)
+    
+    // Implementa el constructor: Cuenta(String numeroCuenta, double saldoInicial)
+
+    // Implementa getNumeroCuenta(), getSaldo(), depositar(double) y retirar(double)
+}
+JAVA,
+        'solution'  => <<<'JAVA'
+public class Cuenta {
+    private String numeroCuenta;
+    private double saldo;
+
+    public Cuenta(String numeroCuenta, double saldoInicial) {
+        this.numeroCuenta = numeroCuenta;
+        this.saldo = Math.max(0.0, saldoInicial);
+    }
+
+    public String getNumeroCuenta() {
+        return this.numeroCuenta;
+    }
+
+    public double getSaldo() {
+        return this.saldo;
+    }
+
+    public void depositar(double monto) {
+        if (monto > 0) {
+            this.saldo += monto;
+        }
+    }
+
+    public boolean retirar(double monto) {
+        if (monto > 0 && this.saldo >= monto) {
+            this.saldo -= monto;
+            return true;
+        }
+        return false;
+    }
+}
+JAVA,
+        'hint'      => 'Asegúrate de que los atributos sean private y utiliza this para diferenciar los atributos de los parámetros en el constructor.',
+        'tests'     => [
+            ['Cuenta c = new Cuenta("123", 100); c.depositar(50); c.getSaldo()', '150.0'],
+            ['Cuenta c = new Cuenta("123", 100); c.retirar(30); c.getSaldo()', '70.0'],
+        ],
+    ],
+
+    'poo-java-ejercicio-figuras-polimorficas' => [
+        'language'  => 'java',
+        'read_only' => true,
+        'starter'   => <<<'JAVA'
+public class Figura {
+    public double calcularArea() {
+        return 0.0;
+    }
+}
+
+// Implementa la clase Rectangulo que herede de Figura
+
+// Implementa la clase Circulo que herede de Figura
+JAVA,
+        'solution'  => <<<'JAVA'
+public class Figura {
+    public double calcularArea() {
+        return 0.0;
+    }
+}
+
+class Rectangulo extends Figura {
+    private double base;
+    private double altura;
+
+    public Rectangulo(double base, double altura) {
+        this.base = base;
+        this.altura = altura;
+    }
+
+    @Override
+    public double calcularArea() {
+        return this.base * this.altura;
+    }
+}
+
+class Circulo extends Figura {
+    private double radio;
+
+    public Circulo(double radio) {
+        this.radio = radio;
+    }
+
+    @Override
+    public double calcularArea() {
+        return Math.PI * this.radio * this.radio;
+    }
+}
+JAVA,
+        'hint'      => 'Recuerda utilizar extends Figura y sobreescribir el método calcularArea() con la anotación @Override.',
+        'tests'     => [
+            ['new Rectangulo(4, 5).calcularArea()', '20.0'],
+            ['Math.round(new Circulo(3).calcularArea() * 100.0) / 100.0', '28.27'],
+        ],
+    ],
+
+    'poo-java-ejercicio-notificador-interface' => [
+        'language'  => 'java',
+        'read_only' => true,
+        'starter'   => <<<'JAVA'
+public interface Notificador {
+    String notificar(String mensaje);
+}
+
+// Implementa NotificadorEmail que implemente Notificador
+
+// Implementa NotificadorSlack que implemente Notificador
+JAVA,
+        'solution'  => <<<'JAVA'
+public interface Notificador {
+    String notificar(String mensaje);
+}
+
+class NotificadorEmail implements Notificador {
+    @Override
+    public String notificar(String mensaje) {
+        return "Email: " + mensaje;
+    }
+}
+
+class NotificadorSlack implements Notificador {
+    @Override
+    public String notificar(String mensaje) {
+        return "Slack: " + mensaje;
+    }
+}
+JAVA,
+        'hint'      => 'Utiliza la palabra clave implements Notificador en la declaración de las clases y sobreescribe notificar.',
+        'tests'     => [
+            ['new NotificadorEmail().notificar("Hola")', 'Email: Hola'],
+            ['new NotificadorSlack().notificar("Alerta")', 'Slack: Alerta'],
+        ],
+    ],
 ];
+
