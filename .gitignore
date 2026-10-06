@@ -25,3 +25,5 @@ backend/database/validate_data.php
 backend/database/verify_seed.php
 backend/database/seeders/populate_learning_path_courses.php
 frontend/package-lock.json
+.vercel
+.env*

@@ -136,9 +136,16 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
     { icon: 'lightbulb', text: 'El IDE interactivo permite evaluar código y test cases en vivo de los estudiantes.' },
   ];
 
+  isBubbleVisible = signal(false);
+  activeBubble = signal<{ icon: string; text: string; tag: string } | null>(null);
+
+  private bubbleTimeout?: any;
+  private bubbleIntervalTimer?: any;
+  private hoverSpeakTimeout?: any;
+  private routeSpeakTimeout?: any;
+
   currentBubbleMessage = computed(() => {
-    const list = this.isTeacherMode() ? this.teacherTips : this.studentTips;
-    return list[this.currentBubbleIndex() % list.length];
+    return this.activeBubble();
   });
 
   messages       = signal<PanelMsg[]>([]);
@@ -169,16 +176,23 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   ngOnInit() {
     this.routerSub = this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe(() => this.syncRoute());
+      .subscribe(() => {
+        this.syncRoute();
+        this.triggerRouteTip();
+      });
     window.addEventListener('ai-companion:open', this.companionOpenHandler);
     window.addEventListener('ai-companion:toggle', this.companionToggleHandler);
     window.addEventListener('ai-companion:close', this.companionCloseHandler);
     window.addEventListener('resize', this.resizeHandler);
     this.syncRoute();
+    this.triggerRouteTip();
 
-    this.bubbleTimer = setInterval(() => {
-      this.currentBubbleIndex.update(idx => idx + 1);
-    }, 7500);
+    // Ritmo natural orgánico: Si Byte tiene algo que decir, aparece cada ~42s sin invadir
+    this.bubbleIntervalTimer = setInterval(() => {
+      if (!this.open() && !this.isBubbleVisible() && !this.hidden()) {
+        this.speakTip(undefined, 8500);
+      }
+    }, 42000);
   }
 
   ngOnDestroy() {
@@ -188,10 +202,89 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
     window.removeEventListener('ai-companion:close', this.companionCloseHandler);
     window.removeEventListener('resize', this.resizeHandler);
     if (this.bubbleTimer) clearInterval(this.bubbleTimer);
+    if (this.bubbleIntervalTimer) clearInterval(this.bubbleIntervalTimer);
+    if (this.bubbleTimeout) clearTimeout(this.bubbleTimeout);
+    if (this.hoverSpeakTimeout) clearTimeout(this.hoverSpeakTimeout);
+    if (this.routeSpeakTimeout) clearTimeout(this.routeSpeakTimeout);
+  }
+
+  speakTip(tip?: { icon: string; text: string; tag?: string }, durationMs = 8500) {
+    if (this.open() || this.hidden()) return;
+
+    if (this.bubbleTimeout) {
+      clearTimeout(this.bubbleTimeout);
+      this.bubbleTimeout = undefined;
+    }
+
+    if (!tip) {
+      const list = this.isTeacherMode() ? this.teacherTips : this.studentTips;
+      const item = list[this.currentBubbleIndex() % list.length];
+      this.currentBubbleIndex.update(idx => idx + 1);
+      tip = {
+        icon: item.icon,
+        text: item.text,
+        tag: this.isTeacherMode() ? 'Docente & Admin' : 'Tip de Ingeniería',
+      };
+    }
+
+    this.activeBubble.set({
+      icon: tip.icon,
+      text: tip.text,
+      tag: tip.tag || (this.isTeacherMode() ? 'Docente & Admin' : 'Tip de Ingeniería'),
+    });
+    this.isBubbleVisible.set(true);
+
+    this.bubbleTimeout = setTimeout(() => {
+      this.dismissBubble();
+    }, durationMs);
+  }
+
+  dismissBubble(event?: Event) {
+    if (event) event.stopPropagation();
+    this.isBubbleVisible.set(false);
+    if (this.bubbleTimeout) {
+      clearTimeout(this.bubbleTimeout);
+      this.bubbleTimeout = undefined;
+    }
+  }
+
+  onBubbleClick() {
+    this.dismissBubble();
+    this.openPanel();
   }
 
   onRobotHover(hovered: boolean) {
     this.isHovered.set(hovered);
+    if (hovered && !this.isBubbleVisible() && !this.open() && !this.hidden()) {
+      if (this.hoverSpeakTimeout) clearTimeout(this.hoverSpeakTimeout);
+      this.hoverSpeakTimeout = setTimeout(() => {
+        if (this.isHovered() && !this.isBubbleVisible() && !this.open() && !this.hidden()) {
+          this.speakTip(undefined, 8500);
+        }
+      }, 550);
+    } else if (!hovered) {
+      if (this.hoverSpeakTimeout) clearTimeout(this.hoverSpeakTimeout);
+    }
+  }
+
+  private triggerRouteTip() {
+    if (this.routeSpeakTimeout) clearTimeout(this.routeSpeakTimeout);
+    this.routeSpeakTimeout = setTimeout(() => {
+      if (!this.open() && !this.isBubbleVisible() && !this.hidden()) {
+        const url = this.router.url;
+        let contextualTip: { icon: string; text: string; tag: string } | undefined;
+        if (url.includes('/cursos')) {
+          contextualTip = { icon: 'sparkles', text: '¡Explora las rutas interactivas! Hay desafíos listos para ti.', tag: 'Ruta de Aprendizaje' };
+        } else if (url.includes('/leccion')) {
+          contextualTip = { icon: 'code', text: 'Si te bloqueas en este ejercicio, haz clic en mí para darte pistas.', tag: 'Tutor en Vivo' };
+        } else if (url.includes('/perfil')) {
+          contextualTip = { icon: 'award', text: '¡Revisa tu racha y nivel! La constancia hace al ingeniero.', tag: 'Progreso SysEng' };
+        } else if (url.includes('/clan') || url.includes('/comunidad')) {
+          contextualTip = { icon: 'users', text: 'Aprender y colaborar en clanes multiplica tu retención técnica.', tag: 'Comunidad' };
+        }
+        this.speakTip(contextualTip, 9000);
+      }
+    }, 3800);
   }
 
   ngAfterViewChecked() {
@@ -226,6 +319,7 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   openPanel() {
+    this.dismissBubble();
     this.open.set(true);
     this.authRequired.set(false);
     this.ensureConversationLoaded();
@@ -236,6 +330,7 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   closePanel() {
+    this.dismissBubble();
     this.open.set(false);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('ai-companion:state', { detail: { open: false } }));

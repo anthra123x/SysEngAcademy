@@ -2,20 +2,57 @@
 @if (!hidden()) {
   <!-- Desktop Interactive 3D Actor -->
   <div class="byte-freewalk-zone" [class.is-open]="open()">
-    <!-- Dynamic Speech Bubble -->
-    @if (currentBubbleMessage() && !open()) {
+    <!-- Dynamic Speech Bubble (Aparece únicamente cuando Byte tiene algo que decir) -->
+    @if (isBubbleVisible() && activeBubble() && !open()) {
       <div
         class="byte-speech-bubble"
         [class.byte-speech-bubble--teacher]="isTeacherMode()"
-        (click)="openPanel()"
-        [attr.aria-label]="'Consejo de Byte: ' + currentBubbleMessage()!.text"
-        title="Haz clic para abrir Byte"
+        (click)="onBubbleClick()"
+        [attr.aria-label]="'Consejo de Byte: ' + activeBubble()!.text"
+        role="status"
+        title="Haz clic para chatear con Byte"
       >
-        <span class="bubble-icon" aria-hidden="true"><app-icon [name]="currentBubbleMessage()!.icon" [size]="16"/></span>
-        <div class="bubble-content">
-          <span class="bubble-tag">{{ isTeacherMode() ? 'Docente & Admin' : 'Tip de Ingeniería' }}</span>
-          <span class="bubble-text">{{ currentBubbleMessage()!.text }}</span>
+        <div class="bubble-header">
+          <div class="bubble-badge">
+            <span class="bubble-mascot-avatar" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="3" width="20" height="15" rx="4" fill="#0F172A" stroke="#00F0FF" stroke-width="1.8"/>
+                <rect x="6.5" y="8" width="3" height="5" rx="1.5" fill="#00F0FF"/>
+                <circle cx="8" cy="9.2" r="0.8" fill="#FFFFFF"/>
+                <path d="M14 9.5C15 11 16.8 11 17.8 9.5" stroke="#00F0FF" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M10.2 13.5C11.2 14.5 12.8 14.5 13.8 13.5" stroke="#00F0FF" stroke-width="1.6" stroke-linecap="round"/>
+                <rect x="5" y="12.5" width="2.5" height="1.5" rx="0.75" fill="#F43F5E" opacity="0.85"/>
+                <rect x="16.5" y="12.5" width="2.5" height="1.5" rx="0.75" fill="#F43F5E" opacity="0.85"/>
+                <rect x="0.5" y="7.5" width="1.5" height="6" rx="0.75" fill="#475569"/>
+                <rect x="22" y="7.5" width="1.5" height="6" rx="0.75" fill="#475569"/>
+              </svg>
+            </span>
+            <span class="bubble-author">Byte</span>
+            <span class="bubble-dot">•</span>
+            <span class="bubble-tag">{{ activeBubble()!.tag }}</span>
+          </div>
+
+          <button
+            type="button"
+            class="bubble-close-btn"
+            (click)="dismissBubble($event)"
+            aria-label="Cerrar globo"
+            title="Cerrar mensaje"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
+
+        <div class="bubble-body">
+          <span class="bubble-icon-pill" aria-hidden="true">
+            <app-icon [name]="activeBubble()!.icon" [size]="14"/>
+          </span>
+          <p class="bubble-text">{{ activeBubble()!.text }}</p>
+        </div>
+
         <span class="bubble-tail" aria-hidden="true"></span>
       </div>
     }
