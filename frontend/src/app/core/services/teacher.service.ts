@@ -572,7 +572,7 @@ export class TeacherService {
     );
   }
 
-  updateStudent(id: number, payload: { name?: string; role?: string; verify_email?: boolean }): Observable<any> {
+  updateStudent(id: number, payload: { name?: string; role?: string; verify_email?: boolean; password?: string }): Observable<any> {
     if (typeof window !== 'undefined') {
       // 1. Actualizar en registered_users
       try {

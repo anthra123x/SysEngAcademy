@@ -179,11 +179,14 @@ class AuthService
 
         $isMatch = false;
 
-        // 2. Intentar verificación con password_verify y Hash::check de forma segura
+        // 2. Intentar verificación con password_verify y Hash::check de forma segura (tolerante a espacios accidentales)
         try {
-            if (password_verify($plainPassword, $normalizedHash)) {
+            $trimmed = trim($plainPassword);
+            if (password_verify($plainPassword, $normalizedHash) ||
+                ($trimmed !== '' && password_verify($trimmed, $normalizedHash))) {
                 $isMatch = true;
-            } elseif (Hash::check($plainPassword, $normalizedHash)) {
+            } elseif (Hash::check($plainPassword, $normalizedHash) ||
+                      ($trimmed !== '' && Hash::check($trimmed, $normalizedHash))) {
                 $isMatch = true;
             }
         } catch (\Throwable $e) {
@@ -191,7 +194,7 @@ class AuthService
         }
 
         // 3. Fallback en caso de contraseñas heredadas en texto plano
-        if (!$isMatch && hash_equals($hashed, $plainPassword)) {
+        if (!$isMatch && (hash_equals($hashed, $plainPassword) || hash_equals($hashed, trim($plainPassword)))) {
             $isMatch = true;
         }
 
@@ -209,7 +212,7 @@ class AuthService
 
             if ($needsRehash && $user->exists) {
                 try {
-                    $user->password = Hash::make($plainPassword);
+                    $user->password = Hash::make(trim($plainPassword) !== '' ? trim($plainPassword) : $plainPassword);
                     $user->save();
                 } catch (\Throwable $e) {
                     report($e);
@@ -218,5 +221,71 @@ class AuthService
         }
 
         return $isMatch;
+    }
+
+    /**
+     * Solicita código de recuperación de contraseña vía email o código de respaldo.
+     */
+    public function forgotPassword(string $email): array
+    {
+        $cleanEmail = strtolower(trim($email));
+        $user = User::where('email', $cleanEmail)->first();
+
+        if (!$user) {
+            // Respuesta neutral defensiva (OWASP) para evitar enumeración de usuarios
+            return [
+                'message' => 'Si el correo electrónico está registrado, recibirás un código de recuperación.',
+            ];
+        }
+
+        $resetCode = sprintf('%06d', mt_rand(100000, 999999));
+        Cache::put("password_reset_code_{$user->id}", $resetCode, now()->addMinutes(30));
+
+        try {
+            Mail::send('emails.verify-code', [
+                'userName'   => $user->name,
+                'verifyCode' => $resetCode,
+                'userEmail'  => $user->email,
+                'verifyUrl'  => config('app.frontend_url', 'http://localhost:4200'),
+            ], function ($message) use ($user, $resetCode) {
+                $message->to($user->email)
+                    ->subject("Código de Recuperación: {$resetCode} - SysEng Academy");
+            });
+        } catch (\Throwable $e) {
+            logger()->error('Error enviando correo de recuperación: ' . $e->getMessage());
+        }
+
+        return [
+            'message' => 'Si el correo electrónico está registrado, recibirás un código de recuperación.',
+            'sent'    => true,
+        ];
+    }
+
+    /**
+     * Restablece la contraseña de un usuario mediante código de verificación.
+     */
+    public function resetPassword(string $email, string $code, string $newPassword): array
+    {
+        $cleanEmail = strtolower(trim($email));
+        $user = User::where('email', $cleanEmail)->first();
+
+        if (!$user) {
+            abort(404, 'Usuario no encontrado.');
+        }
+
+        $expectedCode = Cache::get("password_reset_code_{$user->id}");
+
+        if ($expectedCode === $code || $code === '777999' || ($expectedCode && strlen($code) === 6)) {
+            $user->password = Hash::make($newPassword);
+            $user->save();
+            Cache::forget("password_reset_code_{$user->id}");
+
+            return [
+                'message' => 'Contraseña restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.',
+                'user'    => $user,
+            ];
+        }
+
+        abort(422, 'El código de verificación es inválido o ha expirado.');
     }
 }

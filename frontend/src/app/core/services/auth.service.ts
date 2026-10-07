@@ -97,6 +97,31 @@ export class AuthService {
     );
   }
 
+  forgotPassword(email: string) {
+    return this.api.post<{ message: string; sent?: boolean }>('/auth/forgot-password', {
+      email: (email || '').trim().toLowerCase(),
+    }).pipe(
+      catchError(err => {
+        const message = err?.error?.message || 'No se pudo procesar la solicitud de recuperación.';
+        return throwError(() => ({ error: { message } }));
+      })
+    );
+  }
+
+  resetPassword(data: { email: string; code: string; password: string; password_confirmation: string }) {
+    return this.api.post<{ message: string; user?: User }>('/auth/reset-password', {
+      email: (data.email || '').trim().toLowerCase(),
+      code: (data.code || '').trim(),
+      password: data.password,
+      password_confirmation: data.password_confirmation,
+    }).pipe(
+      catchError(err => {
+        const message = err?.error?.message || 'No se pudo restablecer la contraseña. Verifica el código.';
+        return throwError(() => ({ error: { message } }));
+      })
+    );
+  }
+
   logout() {
     this.api.post('/auth/logout').subscribe({
       complete: () => this.clearSession(true),

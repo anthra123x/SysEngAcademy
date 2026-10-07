@@ -291,6 +291,14 @@
                             }
                             <button
                               type="button"
+                              class="action-btn action-btn--secondary"
+                              (click)="resetStudentPassword(st)"
+                              title="Asignar o restablecer contraseña del estudiante"
+                            >
+                              Clave
+                            </button>
+                            <button
+                              type="button"
                               class="action-btn action-btn--danger"
                               (click)="deleteStudentAccount(st)"
                               title="Eliminar cuenta"

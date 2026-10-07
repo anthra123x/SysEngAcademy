@@ -341,6 +341,24 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  resetStudentPassword(st: TeacherStudent) {
+    const newPass = prompt(`Ingresa la nueva contraseña temporal para "${st.name}" (${st.email}):`, 'SysEng2026!');
+    if (!newPass || newPass.trim().length < 6) {
+      if (newPass !== null) alert('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    this.teacherSvc.updateStudent(st.id, { password: newPass.trim() }).subscribe({
+      next: () => {
+        this.actionNotification.set(`Contraseña de ${st.name} actualizada correctamente a: ${newPass.trim()}`);
+        setTimeout(() => this.actionNotification.set(''), 6000);
+      },
+      error: () => {
+        alert('Error al actualizar la contraseña del estudiante.');
+      }
+    });
+  }
+
   deleteStudentAccount(st: TeacherStudent) {
     if (!confirm(`¿Estás seguro de que deseas eliminar al estudiante "${st.name}" (${st.email}) y todo su progreso? Esta acción no se puede deshacer.`)) return;
 

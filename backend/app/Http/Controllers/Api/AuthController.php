@@ -110,4 +110,40 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => 'required|string|email',
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email'    => 'Por favor ingresa un correo electrónico válido.',
+        ]);
+
+        $result = $this->authService->forgotPassword($validated['email']);
+        return response()->json($result);
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email'              => 'required|string|email',
+            'code'               => 'required|string',
+            'password'          => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'email.required'     => 'El correo electrónico es obligatorio.',
+            'code.required'      => 'El código de recuperación es obligatorio.',
+            'password.required'  => 'La nueva contraseña es obligatoria.',
+            'password.min'       => 'La contraseña debe contener al menos 6 caracteres.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+        ]);
+
+        $result = $this->authService->resetPassword(
+            email: $validated['email'],
+            code: $validated['code'],
+            newPassword: $validated['password']
+        );
+
+        return response()->json($result);
+    }
 }

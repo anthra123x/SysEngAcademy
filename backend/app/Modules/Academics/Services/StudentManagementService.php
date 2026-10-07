@@ -4,6 +4,7 @@ namespace App\Modules\Academics\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class StudentManagementService
 {
@@ -81,6 +82,10 @@ class StudentManagementService
 
         if (isset($data['verify_email'])) {
             $student->email_verified_at = $data['verify_email'] ? now() : null;
+        }
+
+        if (!empty($data['password'])) {
+            $student->password = Hash::make(trim($data['password']));
         }
 
         $student->save();

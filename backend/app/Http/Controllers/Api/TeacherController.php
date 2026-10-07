@@ -79,6 +79,7 @@ class TeacherController extends Controller
             'name'         => 'sometimes|string|max:255',
             'role'         => 'sometimes|string|in:student,instructor,admin',
             'verify_email' => 'sometimes|boolean',
+            'password'     => 'sometimes|string|min:6|max:255',
         ]);
 
         $student = $this->managementService->updateStudent($id, $validated);

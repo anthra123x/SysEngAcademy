@@ -76,4 +76,25 @@ class AuthServicePasswordTest extends TestCase
         $result = $method->invoke($this->authService, $plain, $user);
         $this->assertTrue($result, 'Contraseña legacy en texto plano debe ser aceptada como fallback.');
     }
+
+    public function test_can_authenticate_with_trailing_whitespace_tolerance(): void
+    {
+        $plain = 'MyPassword123';
+        $standardHash = password_hash($plain, PASSWORD_BCRYPT);
+
+        $user = new User();
+        $user->setRawAttributes(['password' => $standardHash], true);
+
+        $ref = new \ReflectionClass(AuthService::class);
+        $method = $ref->getMethod('verifyUserPassword');
+        $method->setAccessible(true);
+
+        // Entrada con espacio accidental al final (típico en teclados móviles)
+        $result = $method->invoke($this->authService, $plain . ' ', $user);
+        $this->assertTrue($result, 'Contraseña con espacio trailing accidental debe ser aceptada.');
+
+        // Entrada con espacio accidental al inicio
+        $resultLeading = $method->invoke($this->authService, ' ' . $plain, $user);
+        $this->assertTrue($resultLeading, 'Contraseña con espacio leading accidental debe ser aceptada.');
+    }
 }
