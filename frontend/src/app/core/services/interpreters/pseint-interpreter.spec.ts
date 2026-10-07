@@ -288,3 +288,86 @@ describe('PSeInt · soluciones reales de los ejercicios', () => {
     });
   }
 });
+
+describe('PSeInt · tolerancia de sintaxis y casos de alumnos', () => {
+  it('ejecuta el código reportado por el alumno con definir ... como caracter y concatenación adyacente', () => {
+    const code = `Algoritmo hola_mundo
+definir n como caracter
+
+escribir "escriba su nombre"
+leer n
+
+escribir "hola, ", n "!"
+FinAlgoritmo`;
+    const res = run(code, 'Carlos');
+    expect(res.stderr).toBe('');
+    expect(res.exit_code).toBe(0);
+    expect(res.out).toBe('escriba su nombre\nhola, Carlos!');
+  });
+
+  it('soporta puntos y coma opcionales al final de sentencias', () => {
+    const code = `Algoritmo con_puntoycoma;
+      Definir x Como Entero;
+      Definir nombre Como Cadena;
+      x <- 10;
+      Leer nombre;
+      Escribir "Hola ", nombre, " valor=", x;
+    FinAlgoritmo;`;
+    const res = run(code, 'Mundo');
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('Hola Mundo valor=10');
+  });
+
+  it('soporta palabras clave compuestas con espacio (Fin Algoritmo, Fin Si, etc.)', () => {
+    const code = `Algoritmo espacio
+      Definir a Entero
+      a <- 5
+      Si a > 0 Entonces
+        Escribir "positivo"
+      Si No
+        Escribir "no positivo"
+      Fin Si
+    Fin Algoritmo`;
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('positivo');
+  });
+
+  it('soporta sinónimos de tipos: Entero, Texto, Booleano, Reales', () => {
+    const code = `Algoritmo tipos
+      Definir a Como Entero
+      Definir b Como Real
+      Definir c Como Texto
+      Definir d Como Booleano
+      a <- 42
+      b <- 3.14
+      c <- "SysEng"
+      d <- Verdadero
+      Escribir a, " ", b, " ", c, " ", d
+    FinAlgoritmo`;
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('42 3.14 SysEng 1');
+  });
+
+  it('soporta alias Mostrar e Imprimir para Escribir', () => {
+    const code = `Algoritmo salidas
+      Mostrar "salida con mostrar"
+      Imprimir "salida con imprimir"
+    FinAlgoritmo`;
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('salida con mostrar\nsalida con imprimir');
+  });
+
+  it('soporta asignación con := y operador módulo con %', () => {
+    const code = `Algoritmo pascal_style
+      Definir x Entero
+      x := 17 % 5
+      Escribir x
+    FinAlgoritmo`;
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('2');
+  });
+});

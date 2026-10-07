@@ -32,6 +32,7 @@ interface Token {
   type: 'num' | 'str' | 'id' | 'op';
   value: string;
   pos: number;
+  line: number;
 }
 
 class PseintError extends Error {
@@ -42,9 +43,106 @@ class PseintError extends Error {
 
 // ─────────────────────────────── Tokenizador ───────────────────────────────
 
+function normalizeTokens(raw: Token[]): Token[] {
+  const tokens: Token[] = [];
+  let i = 0;
+
+  while (i < raw.length) {
+    const curr = raw[i];
+    const next = raw[i + 1];
+    const third = raw[i + 2];
+
+    // 'fin' + <palabra clave> -> 'fin<palabra clave>'
+    if (
+      curr.type === 'id' &&
+      curr.value.toLowerCase() === 'fin' &&
+      next &&
+      next.type === 'id'
+    ) {
+      const nextWord = next.value.toLowerCase();
+      if ([
+        'algoritmo', 'proceso', 'si', 'mientras', 'para', 'segun',
+        'funcion', 'subproceso', 'procedimiento',
+      ].includes(nextWord)) {
+        tokens.push({
+          type: 'id',
+          value: 'fin' + nextWord,
+          pos: curr.pos,
+          line: curr.line,
+        });
+        i += 2;
+        continue;
+      }
+    }
+
+    // 'hasta' + 'que' -> 'hastaque'
+    if (
+      curr.type === 'id' &&
+      curr.value.toLowerCase() === 'hasta' &&
+      next &&
+      next.type === 'id' &&
+      next.value.toLowerCase() === 'que'
+    ) {
+      tokens.push({
+        type: 'id',
+        value: 'hastaque',
+        pos: curr.pos,
+        line: curr.line,
+      });
+      i += 2;
+      continue;
+    }
+
+    // 'si' + 'no' -> 'sino'
+    if (
+      curr.type === 'id' &&
+      curr.value.toLowerCase() === 'si' &&
+      next &&
+      next.type === 'id' &&
+      next.value.toLowerCase() === 'no'
+    ) {
+      tokens.push({
+        type: 'id',
+        value: 'sino',
+        pos: curr.pos,
+        line: curr.line,
+      });
+      i += 2;
+      continue;
+    }
+
+    // 'de' + 'otro' + 'modo' -> 'otro'
+    if (
+      curr.type === 'id' &&
+      curr.value.toLowerCase() === 'de' &&
+      next &&
+      next.type === 'id' &&
+      next.value.toLowerCase() === 'otro' &&
+      third &&
+      third.type === 'id' &&
+      third.value.toLowerCase() === 'modo'
+    ) {
+      tokens.push({
+        type: 'id',
+        value: 'otro',
+        pos: curr.pos,
+        line: curr.line,
+      });
+      i += 3;
+      continue;
+    }
+
+    tokens.push(curr);
+    i++;
+  }
+
+  return tokens;
+}
+
 export function tokenize(src: string): Token[] {
   const tokens: Token[] = [];
   let i = 0;
+  let line = 1;
 
   const isDigit = (c: string) => c >= '0' && c <= '9';
   const isIdStart = (c: string) => /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ_]/.test(c);
@@ -53,7 +151,13 @@ export function tokenize(src: string): Token[] {
   while (i < src.length) {
     const c = src[i];
 
-    if (c === ' ' || c === '\t' || c === '\r' || c === '\n') {
+    if (c === '\n') {
+      line++;
+      i++;
+      continue;
+    }
+
+    if (c === ' ' || c === '\t' || c === '\r') {
       i++;
       continue;
     }
@@ -67,7 +171,10 @@ export function tokenize(src: string): Token[] {
     // Comentario de bloque
     if (c === '/' && src[i + 1] === '*') {
       i += 2;
-      while (i < src.length && !(src[i] === '*' && src[i + 1] === '/')) i++;
+      while (i < src.length && !(src[i] === '*' && src[i + 1] === '/')) {
+        if (src[i] === '\n') line++;
+        i++;
+      }
       i += 2;
       continue;
     }
@@ -76,16 +183,19 @@ export function tokenize(src: string): Token[] {
     if (isDigit(c) || (c === '.' && isDigit(src[i + 1] ?? ''))) {
       let j = i;
       while (j < src.length && (isDigit(src[j]) || src[j] === '.')) j++;
-      tokens.push({ type: 'num', value: src.slice(i, j).replace(/\.$/, ''), pos: i });
+      tokens.push({ type: 'num', value: src.slice(i, j).replace(/\.$/, ''), pos: i, line });
       i = j;
       continue;
     }
 
     // Cadena entre comillas dobles (PSeInt no escapa; se cierra en la 2ª comilla)
     if (c === '"') {
+      const startLine = line;
       const end = src.indexOf('"', i + 1);
-      if (end === -1) throw new PseintError('Cadena sin cerrar', lineOf(src, i));
-      tokens.push({ type: 'str', value: src.slice(i + 1, end), pos: i });
+      if (end === -1) throw new PseintError('Cadena sin cerrar', startLine);
+      const val = src.slice(i + 1, end);
+      tokens.push({ type: 'str', value: val, pos: i, line: startLine });
+      line += (val.match(/\n/g) || []).length;
       i = end + 1;
       continue;
     }
@@ -94,31 +204,31 @@ export function tokenize(src: string): Token[] {
     if (isIdStart(c)) {
       let j = i;
       while (j < src.length && isIdPart(src[j])) j++;
-      tokens.push({ type: 'id', value: src.slice(i, j), pos: i });
+      tokens.push({ type: 'id', value: src.slice(i, j), pos: i, line });
       i = j;
       continue;
     }
 
     // Operadores de dos caracteres
     const two = src.slice(i, i + 2);
-    if (['<=', '>=', '<>', '<-'].includes(two)) {
-      tokens.push({ type: 'op', value: two, pos: i });
+    if (['<=', '>=', '<>', '<-', ':=', '&&', '||'].includes(two)) {
+      tokens.push({ type: 'op', value: two, pos: i, line });
       i += 2;
       continue;
     }
 
-    if ('+-*/^()[]<>=,'.includes(c)) {
-      tokens.push({ type: 'op', value: c, pos: i });
+    if ('+-*/^()[]<>=,;%&|!~:'.includes(c)) {
+      tokens.push({ type: 'op', value: c, pos: i, line });
       i++;
       continue;
     }
 
     // Acento de operador (mod, y, o, no) o símbolo suelto
-    tokens.push({ type: 'op', value: c, pos: i });
+    tokens.push({ type: 'op', value: c, pos: i, line });
     i++;
   }
 
-  return tokens;
+  return normalizeTokens(tokens);
 }
 
 function lineOf(src: string, pos: number): number {
@@ -152,15 +262,46 @@ type Expr =
   | { kind: 'bin'; op: string; left: Expr; right: Expr }
   | { kind: 'un'; op: string; operand: Expr };
 
-const TYPES = new Set(['enter', 'real', 'cadena', 'caracter', 'logico']);
-const TIPO_NUMERICO: Record<string, NumType> = { enter: 'ent', real: 'real' };
+const TYPE_ALIASES: Record<string, NumType> = {
+  enter: 'ent',
+  entero: 'ent',
+  enteros: 'ent',
+  int: 'ent',
+  integer: 'ent',
+  numero: 'ent',
+  numerico: 'ent',
+  real: 'real',
+  reales: 'real',
+  decimal: 'real',
+  decimales: 'real',
+  float: 'real',
+  flotante: 'real',
+  cadena: 'otro',
+  cadenas: 'otro',
+  texto: 'otro',
+  text: 'otro',
+  string: 'otro',
+  caracter: 'otro',
+  caracteres: 'otro',
+  char: 'otro',
+  letra: 'otro',
+  logico: 'otro',
+  logicos: 'otro',
+  booleano: 'otro',
+  booleana: 'otro',
+  bool: 'otro',
+  boolean: 'otro',
+};
+
+const TYPES = new Set(Object.keys(TYPE_ALIASES));
 
 const KEYWORDS = new Set([
-  'algoritmo', 'proceso', 'finalgoritmo', 'finproceso', 'escribir', 'leer', 'definir',
-  'dimension', 'si', 'entonces', 'sino', 'si_no', 'finsi', 'mientras', 'hacer', 'finmientras',
-  'repetir', 'hasta', 'hastaque', 'que', 'para', 'finpara', 'segun', 'caso', 'otro', 'finsegun',
-  'procedimiento', 'subproceso', 'finprocedimiento', 'finsubproceso', 'devolver', 'y', 'o', 'no',
-  'mod', 'paso',
+  'algoritmo', 'proceso', 'finalgoritmo', 'finproceso', 'escribir', 'mostrar', 'imprimir',
+  'leer', 'ingresar', 'definir', 'dimension', 'si', 'entonces', 'sino', 'si_no', 'finsi',
+  'mientras', 'hacer', 'finmientras', 'repetir', 'hasta', 'hastaque', 'que', 'para', 'finpara',
+  'segun', 'caso', 'otro', 'de_otro_modo', 'finsegun', 'procedimiento', 'subproceso', 'funcion',
+  'finprocedimiento', 'finsubproceso', 'finfuncion', 'devolver', 'retornar', 'y', 'o', 'no',
+  'mod', 'paso', 'como',
 ]);
 
 class Parser {
@@ -189,6 +330,7 @@ class Parser {
   private at(value: string): boolean {
     const t = this.peek();
     if (!t) return false;
+    if (t.type === 'str' || t.type === 'num') return false;
     if (t.value.toLowerCase() !== value.toLowerCase()) return false;
     // Las palabras (solo letras) deben llegar como identificadores, nunca como
     // cadenas literales ni como operadores.
@@ -208,14 +350,14 @@ class Parser {
       const t = this.peek();
       throw new PseintError(
         `Se esperaba "${value}"${t ? ` pero se encontró "${t.value}"` : ' (fin de la entrada)'}`,
-        t ? lineOf('', 0) : 0,
+        t ? t.line : 0,
       );
     }
   }
 
   private expectId(): string {
     const t = this.next();
-    if (!t || t.type !== 'id') throw new PseintError('Se esperaba un identificador', 0);
+    if (!t || t.type !== 'id') throw new PseintError('Se esperaba un identificador', t ? t.line : 0);
     return t.value;
   }
 
@@ -232,11 +374,15 @@ class Parser {
     if (this.at('algoritmo') || this.at('proceso')) {
       this.p++;
       this.expectId();
+      while (this.eat(';')) {}
     }
 
     body.push(...this.parseStatements(() => this.at('finalgoritmo') || this.at('finproceso')));
 
-    if (this.at('finalgoritmo') || this.at('finproceso')) this.p++;
+    if (this.at('finalgoritmo') || this.at('finproceso')) {
+      this.p++;
+      while (this.eat(';')) {}
+    }
 
     while (this.at('procedimiento') || this.at('subproceso') || this.at('funcion')) {
       body.push(this.parseProcedure());
@@ -255,11 +401,13 @@ class Parser {
       }
       this.expect(')');
     }
+    while (this.eat(';')) {}
     const body = this.parseStatements(() =>
       this.at('finprocedimiento') || this.at('finsubproceso') || this.at('finfuncion'));
     if (!this.eat('finprocedimiento')) {
       if (!this.eat('finsubproceso')) this.expect('finfuncion');
     }
+    while (this.eat(';')) {}
     return { kind: 'procedimiento', name, params, body };
   }
 
@@ -267,6 +415,8 @@ class Parser {
   private parseStatements(done: () => boolean): Node[] {
     const out: Node[] = [];
     while (this.p < this.tokens.length && !done()) {
+      while (this.eat(';')) {}
+      if (this.p >= this.tokens.length || done()) break;
       const t = this.peek();
       if (!t) break;
       const word = t.value.toLowerCase();
@@ -303,25 +453,83 @@ class Parser {
         default:
           out.push(this.parseSimple());
       }
+      while (this.eat(';')) {}
     }
     return out;
+  }
+
+  private isStatementEndOrNextStatement(): boolean {
+    const t = this.peek();
+    if (!t) return true;
+    if (t.value === ';') return true;
+    if (t.type !== 'id') return false;
+
+    const w = t.value.toLowerCase();
+    // Terminadores de bloque
+    if ([
+      'finalgoritmo', 'finproceso', 'finsi', 'finmientras', 'finpara', 'finsegun',
+      'finprocedimiento', 'finsubproceso', 'finfuncion', 'sino', 'si_no',
+      'hasta', 'hastaque', 'caso', 'otro', 'de_otro_modo',
+    ].includes(w)) {
+      return true;
+    }
+
+    // Inicios de sentencia
+    if ([
+      'escribir', 'mostrar', 'imprimir', 'leer', 'ingresar', 'definir', 'dimension',
+      'si', 'mientras', 'repetir', 'para', 'segun', 'procedimiento', 'subproceso',
+      'funcion', 'devolver', 'retornar',
+    ].includes(w)) {
+      return true;
+    }
+
+    // Tipos canónicos como inicio de declaración ("Enter i", "Real x")
+    if (TYPES.has(w)) {
+      return true;
+    }
+
+    // Asignación: variable <- ... o variable = ... o variable := ...
+    if (t.type === 'id') {
+      let offset = 1;
+      const nextTok = this.peek(offset);
+      if (nextTok?.value === '[') {
+        while (this.peek(offset) && this.peek(offset)?.value !== ']') offset++;
+        if (this.peek(offset)?.value === ']') offset++;
+      }
+      const afterTarget = this.peek(offset);
+      if (afterTarget && (afterTarget.value === '<-' || afterTarget.value === ':=' || afterTarget.value === '=')) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private parseSimple(): Node {
     const t = this.peek()!;
     const word = t.value.toLowerCase();
 
-    if (word === 'escribir') {
+    if (word === 'escribir' || word === 'mostrar' || word === 'imprimir') {
       this.p++;
-      const args: Expr[] = [this.parseExpr()];
-      while (this.eat(',')) args.push(this.parseExpr());
+      const args: Expr[] = [];
+      while (this.p < this.tokens.length) {
+        if (this.at(';') || this.isStatementEndOrNextStatement()) break;
+        args.push(this.parseExpr());
+        this.eat(','); // coma opcional
+        if (this.at(';') || this.isStatementEndOrNextStatement()) break;
+      }
+      if (args.length === 0) {
+        args.push({ kind: 'str', value: '' });
+      }
+      while (this.eat(';')) {}
       return { kind: 'escribir', args };
     }
 
-    if (word === 'leer') {
+    if (word === 'leer' || word === 'ingresar') {
       this.p++;
       const targets: Expr[] = [this.parseExpr()];
       while (this.eat(',')) targets.push(this.parseExpr());
+      while (this.eat(';')) {}
       return { kind: 'leer', targets };
     }
 
@@ -340,7 +548,7 @@ class Parser {
       this.p++;
       // "Dimension 3" (literal) o "Dimension n" (variable)
       const first = this.next();
-      if (!first) throw new PseintError('Dimension sin valor', 0);
+      if (!first) throw new PseintError('Dimension sin valor', t.line);
       let name = '';
       let size: Expr = { kind: 'num', value: Number(first.value) };
       if (first.type === 'id') {
@@ -349,43 +557,48 @@ class Parser {
         size = this.parseExpr();
         this.expect(']');
       } else if (first.type !== 'num') {
-        throw new PseintError('Dimension inválido', 0);
+        throw new PseintError('Dimension inválido', t.line);
       }
       if (name) this.pendingArrays.push({ name, size });
+      while (this.eat(';')) {}
       return { kind: 'dimension', name, size };
     }
 
-    if (word === 'devolver') {
+    if (word === 'devolver' || word === 'retornar') {
       this.p++;
-      return { kind: 'devolver', value: this.parseExpr() };
+      const value = this.parseExpr();
+      while (this.eat(';')) {}
+      return { kind: 'devolver', value };
     }
 
-    // Asignación: a <- expr   |   a = expr  (dentro de subprograma)
+    // Asignación: a <- expr   |   a := expr   |   a = expr
     const target = this.parseExpr();
-    if (this.eat('<-') || this.eat('=')) {
+    if (this.eat('<-') || this.eat(':=') || this.eat('=')) {
       const value = this.parseExpr();
+      while (this.eat(';')) {}
       if (target.kind !== 'var' && target.kind !== 'index') {
-        throw new PseintError('El destino de la asignación debe ser una variable', 0);
+        throw new PseintError('El destino de la asignación debe ser una variable', t.line);
       }
       return { kind: 'asign', target, value };
     }
 
     if (target.kind === 'call') {
+      while (this.eat(';')) {}
       return { kind: 'llamada', name: target.name, args: target.args };
     }
 
     if (target.kind === 'var') {
+      while (this.eat(';')) {}
       return { kind: 'llamada', name: target.name, args: [] };
     }
 
-    throw new PseintError(`Sentencia no reconocida: "${t.value}"`, 0);
+    throw new PseintError(`Sentencia no reconocida: "${t.value}"`, t.line);
   }
 
-
-  /** Declara variables y arreglos: `Definir a, b Enter` o `Real a[5], b`. */
+  /** Declara variables y arreglos: `Definir a, b Como Entero` o `Real a[5], b`. */
   private parseDeclaracion(tipoPrimero: boolean, tipo?: string): Node {
     const names: string[] = [];
-    let type: NumType | undefined = tipoPrimero ? TIPO_NUMERICO[(tipo ?? '').toLowerCase()] ?? 'ent' : undefined;
+    let type: NumType | undefined = tipoPrimero ? TYPE_ALIASES[(tipo ?? '').toLowerCase()] ?? 'ent' : undefined;
     do {
       if (this.at('[')) { // dimensión reutilizada: "Real [5]" no se usa; se ignora
         this.p++;
@@ -400,10 +613,8 @@ class Parser {
         this.expect(']');
         this.pendingArrays.push({ name, size });
       }
-      // Toleramos el tipo por variable ("Definir a Enter, b Enter"), aunque en
-      // PSeInt lo habitual es ponerlo una sola vez al final. Solo se consume si
-      // detrás viene una coma: de lo contrario ese tipo pertenece a la
-      // declaración siguiente ("Real a[5], aux" seguido de "Enter i, j").
+
+      this.eat('como');
       const after = this.peek();
       const afterNext = this.peek(1);
       if (
@@ -413,17 +624,20 @@ class Parser {
         afterNext?.value === ','
       ) {
         this.p++;
-        type = TIPO_NUMERICO[after.value.toLowerCase()] ?? type;
+        type = TYPE_ALIASES[after.value.toLowerCase()] ?? type;
       }
     } while (this.eat(','));
 
     if (!tipoPrimero) {
+      this.eat('como');
       const t = this.peek();
-      if (t && TYPES.has(t.value.toLowerCase())) {
+      if (t && t.type === 'id' && TYPES.has(t.value.toLowerCase())) {
         this.p++;
-        type = TIPO_NUMERICO[t.value.toLowerCase()] ?? 'ent';
+        type = TYPE_ALIASES[t.value.toLowerCase()] ?? 'ent';
       }
     }
+
+    while (this.eat(';')) {}
 
     // materializa los arreglos declarados con tamaño explícito
     for (const arr of this.pendingArrays.splice(0)) {
@@ -457,6 +671,7 @@ class Parser {
       otherwise = this.parseStatements(() => this.at('finsi'));
     }
     this.expect('finsi');
+    while (this.eat(';')) {}
     return { kind: 'si', cond, then, otherwise };
   }
 
@@ -466,6 +681,7 @@ class Parser {
     this.eat('hacer'); // opcional: muchos autores lo omiten
     const body = this.parseStatements(() => this.at('finmientras'));
     this.expect('finmientras');
+    while (this.eat(';')) {}
     return { kind: 'mientras', cond, body };
   }
 
@@ -473,15 +689,14 @@ class Parser {
     this.p++; // Repetir
     const body = this.parseStatements(() => this.at('hasta') || this.at('hastaque'));
     // Sintaxis PSeInt: "Hasta Que <cond>"; también se admite "HastaQue <cond>".
-    // Hay que consumir AMBAS palabras: si solo seughtera "Hasta", el token
-    // "Que" se interpretaría como el inicio de la condición.
     if (this.at('hastaque')) {
-      this.p++; // "HastaQue" pegado
+      this.p++;
     } else if (this.at('hasta')) {
-      this.p++; // "Hasta"
-      this.eat('que'); // "Que"
+      this.p++;
+      this.eat('que');
     }
     const cond = this.parseExpr();
+    while (this.eat(';')) {}
     return { kind: 'repetir', body, cond };
   }
 
@@ -492,17 +707,15 @@ class Parser {
     const from = this.parseExpr();
     // To | Hasta
     if (!this.eat('to') && !this.eat('hasta')) {
-      throw new PseintError('Se esperaba "Para … Hasta/To"', 0);
+      throw new PseintError('Se esperaba "Para … Hasta/To"', this.peek()?.line ?? 0);
     }
     const to = this.parseExpr();
-    // `Paso` es opcional: si el autor no lo escribe, el sentido del recorrido
-    // se decide en tiempo de ejecución comparando los valores reales (aquí solo
-    // hay tokens, y un límite como "der - 1" todavía no se puede evaluar).
     let step: Expr | null = null;
     if (this.eat('paso')) step = this.parseExpr();
     this.eat('hacer'); // opcional
     const body = this.parseStatements(() => this.at('finpara'));
     this.expect('finpara');
+    while (this.eat(';')) {}
     return { kind: 'para', varName, from, to, step, body };
   }
 
@@ -510,7 +723,6 @@ class Parser {
     this.p++; // Segun
     const subject = this.parseExpr();
     this.eat('hacer'); // "Segun x Hacer" (opcional en la práctica)
-    // No se exige un "Caso" inicial: el bucle de abajo procesa todos.
     const cases: { value: number; body: Node[] }[] = [];
     let fallback: Node[] | null = null;
 
@@ -518,19 +730,20 @@ class Parser {
       if (this.eat('finsegun')) break;
       if (this.eat('caso')) {
         const numTok = this.next();
-        if (!numTok || numTok.type !== 'num') throw new PseintError('Valor de Caso inválido', 0);
+        if (!numTok || numTok.type !== 'num') throw new PseintError('Valor de Caso inválido', numTok ? numTok.line : 0);
         this.expect(':');
         const body = this.parseStatements(() => this.at('caso') || this.at('otro') || this.at('finsegun'));
         cases.push({ value: Number(numTok.value), body });
         continue;
       }
       if (this.eat('otro')) {
-        this.expect(':');
+        this.eat(':');
         fallback = this.parseStatements(() => this.at('finsegun'));
         continue;
       }
-      throw new PseintError('Se esperaba "Caso", "Otro" o "FinSegun"', 0);
+      throw new PseintError('Se esperaba "Caso", "Otro" o "FinSegun"', this.peek()?.line ?? 0);
     }
+    while (this.eat(';')) {}
     return { kind: 'segun', subject, cases, fallback };
   }
 
@@ -541,8 +754,7 @@ class Parser {
 
   private parseLogicalOr(): Expr {
     let left = this.parseLogicalAnd();
-    while (this.at('o')) {
-      this.p++;
+    while (this.eat('o') || this.eat('||') || this.eat('|')) {
       left = { kind: 'bin', op: 'o', left, right: this.parseLogicalAnd() };
     }
     return left;
@@ -550,8 +762,7 @@ class Parser {
 
   private parseLogicalAnd(): Expr {
     let left = this.parseComparison();
-    while (this.at('y')) {
-      this.p++;
+    while (this.eat('y') || this.eat('&&') || this.eat('&')) {
       left = { kind: 'bin', op: 'y', left, right: this.parseComparison() };
     }
     return left;
@@ -591,7 +802,7 @@ class Parser {
         left = { kind: 'bin', op: t.value, left, right: this.parsePower() };
         continue;
       }
-      if (t.value.toLowerCase() === 'mod') {
+      if (t.value.toLowerCase() === 'mod' || t.value === '%') {
         this.p++;
         left = { kind: 'bin', op: 'mod', left, right: this.parsePower() };
         continue;
@@ -616,8 +827,7 @@ class Parser {
       this.p++;
       return { kind: 'un', op: '-', operand: this.parseUnary() };
     }
-    if (this.at('no')) {
-      this.p++;
+    if (this.at('no') || this.eat('!') || this.eat('~')) {
       return { kind: 'un', op: 'no', operand: this.parseUnary() };
     }
     if (this.at('+')) {
@@ -667,7 +877,7 @@ class Parser {
       return { kind: 'num', value: t.value.toLowerCase() === 'verdadero' ? 1 : 0 };
     }
 
-    throw new PseintError(`Token inesperado: "${t.value}"`, 0);
+    throw new PseintError(`Token inesperado: "${t.value}"`, t.line);
   }
 
   get position(): number {
@@ -1021,6 +1231,7 @@ function binary(op: string, a: Value, b: Value): Value {
       if (d === 0) throw new PseintError('División entre cero', 0);
       return toNum(a) / d;
     }
+    case '%':
     case 'mod': {
       const d = toNum(b);
       if (d === 0) throw new PseintError('Módulo por cero', 0);

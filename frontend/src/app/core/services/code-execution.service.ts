@@ -160,6 +160,55 @@ SELECT * FROM demo;
   },
 ];
 
+export function matchesOutput(actual: string, expected: string): boolean {
+  const normActual = (actual || '')
+    .replace(/\r/g, '')
+    .split('\n')
+    .map(line => line.replace(/[ \t]+$/, ''))
+    .join('\n')
+    .replace(/\n+$/, '')
+    .trim();
+
+  const normExpected = (expected || '')
+    .replace(/\r/g, '')
+    .split('\n')
+    .map(line => line.replace(/[ \t]+$/, ''))
+    .join('\n')
+    .replace(/\n+$/, '')
+    .trim();
+
+  // 1. Coincidencia exacta
+  if (normActual === normExpected) return true;
+
+  // 2. Coincidencia sin distinción de mayúsculas/minúsculas
+  if (normActual.toLowerCase() === normExpected.toLowerCase()) return true;
+
+  // 3. Tolerancia a prompts de entrada interactivos (ej: "escriba su nombre\nHola, Ana!")
+  const actLines = normActual.split('\n').map(l => l.trim()).filter(Boolean);
+  const expLines = normExpected.split('\n').map(l => l.trim()).filter(Boolean);
+
+  if (expLines.length > 0 && actLines.length >= expLines.length) {
+    const trailingLines = actLines.slice(-expLines.length);
+    const trailingJoined = trailingLines.join('\n');
+    if (
+      trailingJoined === normExpected ||
+      trailingJoined.toLowerCase() === normExpected.toLowerCase()
+    ) {
+      return true;
+    }
+  }
+
+  // 4. Si la salida esperada es de una sola línea y aparece al final de la última línea
+  if (actLines.length > 0 && expLines.length === 1) {
+    const lastLine = actLines[actLines.length - 1];
+    if (lastLine.toLowerCase().endsWith(expLines[0].toLowerCase())) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CodeExecutionService {
   private api = inject(ApiService);
@@ -182,13 +231,13 @@ export class CodeExecutionService {
 
       const testResults: TestResult[] = tests.map(t => {
         const testRes = runPseint(code, t.input || '');
-        const actual = testRes.stdout.trim();
-        const expected = (t.expected || '').trim();
+        const actual = testRes.stdout;
+        const expected = t.expected || '';
         return {
           input: t.input,
           expected: t.expected,
           actual: testRes.stdout,
-          passed: actual === expected,
+          passed: matchesOutput(actual, expected),
         };
       });
 
@@ -252,7 +301,7 @@ export class CodeExecutionService {
             input: t.input,
             expected: t.expected,
             actual: actual,
-            passed: actual.trim() === expected || JSON.stringify(actual) === JSON.stringify(expected),
+            passed: matchesOutput(actual, expected) || actual.trim() === expected || JSON.stringify(actual) === JSON.stringify(expected),
           };
         } catch (err: any) {
           return {
