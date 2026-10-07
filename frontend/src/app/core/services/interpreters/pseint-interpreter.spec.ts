@@ -371,3 +371,276 @@ FinAlgoritmo`;
     expect(res.out).toBe('2');
   });
 });
+
+describe('PSeInt · estrés y casos reales extremos', () => {
+  it('resuelve el problema de funciones_y_parametros en todas sus variantes habituales', () => {
+    // 1. Variante estándar con Procedimiento antes de Algoritmo
+    const code1 = `Procedimiento Saludar(nombre)
+      Escribir "Hola, ", nombre, "!"
+    FinProcedimiento
+
+    Algoritmo funciones_y_parametros
+      Definir nombre Como Cadena
+      Leer nombre
+      Saludar(nombre)
+    FinAlgoritmo`;
+    expect(run(code1, 'Ana').out).toBe('Hola, Ana!');
+
+    // 2. Variante con SubProceso dentro del Algoritmo
+    const code2 = `Algoritmo funciones_y_parametros
+      SubProceso Saludar(nombre)
+        Escribir "Hola, ", nombre, "!"
+      FinSubProceso
+
+      Definir nombre Como Cadena
+      Leer nombre
+      Saludar(nombre)
+    FinAlgoritmo`;
+    expect(run(code2, 'Carlos').out).toBe('Hola, Carlos!');
+
+    // 3. Variante con Funcion al final de Algoritmo
+    const code3 = `Algoritmo funciones_y_parametros
+      Definir nombre Como Cadena
+      Leer nombre
+      Saludar(nombre)
+    FinAlgoritmo
+
+    Funcion Saludar(nombre)
+      Escribir "Hola, ", nombre, "!"
+    FinFuncion`;
+    expect(run(code3, 'Elena').out).toBe('Hola, Elena!');
+
+    // 4. Variante invocando sin paréntesis (Saludar nombre)
+    const code4 = `SubProceso Saludar(nombre)
+      Escribir "Hola, ", nombre, "!"
+    FinSubProceso
+
+    Algoritmo funciones_y_parametros
+      Definir nombre Como Cadena
+      Leer nombre
+      Saludar nombre
+    FinAlgoritmo`;
+    expect(run(code4, 'Mateo').out).toBe('Hola, Mateo!');
+  });
+
+  it('soporta funciones con variable de retorno oficial de PSeInt (ret <- Funcion(x))', () => {
+    const code = `Algoritmo retorno_test
+      Definir x, y, z Entero
+      x <- Doble(5)
+      y <- Triple(4)
+      z <- Cuadrado(3)
+      Escribir x, " ", y, " ", z
+    FinAlgoritmo
+
+    Funcion res <- Doble(n)
+      res <- n * 2
+    FinFuncion
+
+    SubProceso res = Triple(n)
+      res = n * 3
+    FinSubProceso
+
+    Funcion res := Cuadrado(n)
+      res := n * n
+    FinFuncion`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('10 12 9');
+  });
+
+  it('soporta paso de parámetros Por Referencia, Por Valor y con tipo', () => {
+    const code = `SubProceso Incrementar(num Por Referencia, cant Por Valor, etiqueta Como Cadena)
+      num <- num + cant
+      Escribir etiqueta, ": ", num
+    FinSubProceso
+
+    Algoritmo test_refs
+      Definir val Entero
+      val <- 10
+      Incrementar(val, 5, "Valor incrementado")
+      Escribir "Final: ", val
+    FinAlgoritmo`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('Valor incrementado: 15\nFinal: 15');
+  });
+
+  it('soporta funciones matemáticas y de cadena nativas de PSeInt', () => {
+    const code = `Algoritmo builtins
+      Definir r1, r2, a, tr, rd Entero
+      Definir cad Como Cadena
+      r1 <- Raiz(16)
+      r2 <- Rc(25)
+      a <- Abs(-42)
+      tr <- Trunc(9.8)
+      rd <- Redon(9.8)
+      cad <- "Hola Mundo"
+
+      Escribir r1, " ", r2, " ", a, " ", tr, " ", rd
+      Escribir Longitud(cad)
+      Escribir Mayusculas("pseint")
+      Escribir Minusculas("SYSENG")
+      Escribir Subcadena(cad, 1, 4)
+    FinAlgoritmo`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('4 5 42 9 10\n10\nPSEINT\nsyseng\nHola');
+  });
+
+  it('soporta arreglos con indexación 1-based tradicional de PSeInt (1..N)', () => {
+    const code = `Algoritmo arreglos_1_based
+      Dimension lista[5]
+      Para i <- 1 Hasta 5
+        lista[i] <- i * 10
+      FinPara
+
+      Para i <- 1 Hasta 5
+        Escribir lista[i], " "
+      FinPara
+    FinAlgoritmo`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('10\n20\n30\n40\n50');
+  });
+
+  it('soporta bucle Para con sintaxis libre (Para i = 1 Hasta 5 Con Paso 2 Hacer)', () => {
+    const code = `Algoritmo para_flexible
+      Para i = 1 Hasta 5 Con Paso 2 Hacer
+        Escribir i
+      FinPara
+    FinAlgoritmo`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('1\n3\n5');
+  });
+
+  it('soporta Segun con múltiples valores por caso y números negativos', () => {
+    const code = `Algoritmo segun_multiple
+      Definir x Entero
+      Leer x
+      Segun x Hacer
+        Caso -1:
+          Escribir "menos uno"
+        Caso 1, 2, 3:
+          Escribir "bajo"
+        Caso 4, 5:
+          Escribir "medio"
+        De Otro Modo:
+          Escribir "otro"
+      FinSegun
+    FinAlgoritmo`;
+
+    expect(run(code, '-1').out).toBe('menos uno');
+    expect(run(code, '2').out).toBe('bajo');
+    expect(run(code, '5').out).toBe('medio');
+    expect(run(code, '99').out).toBe('otro');
+  });
+
+  it('soporta Limpiar Pantalla, Esperar Tecla y Escribir Sin Saltar', () => {
+    const code = `Algoritmo comandos_interactivos
+      Limpiar Pantalla
+      Borrar Pantalla
+      Esperar 1 Segundos
+      Esperar Tecla
+      Escribir "Cargando... " Sin Saltar
+      Escribir "100%"
+    FinAlgoritmo`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('Cargando... 100%');
+  });
+
+  it('es totalmente insensible a mayúsculas y minúsculas en nombres de variables', () => {
+    const code = `Algoritmo case_insens
+      Definir MiVariable Como Entero
+      mivariable <- 100
+      MIVARIABLE <- mivariable + 50
+      Escribir MiVariable
+    FinAlgoritmo`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('150');
+  });
+
+  it('soporta operadores lógicos modernos (==, !=, AND, OR, NOT, True, False)', () => {
+    const code = `Algoritmo logica_moderna
+      Definir a, b Entero
+      a <- 10
+      b <- 20
+      Si (a != b) AND (a < b OR NOT True) Entonces
+        Escribir "condicion cumplida"
+      FinSi
+    FinAlgoritmo`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('condicion cumplida');
+  });
+
+  it('soporta funciones recursivas (Factorial y Fibonacci con variable de retorno)', () => {
+    const code = `Algoritmo recursion
+      Escribir Factorial(5)
+      Escribir Fibonacci(7)
+    FinAlgoritmo
+
+    Funcion res <- Factorial(n)
+      Si n <= 1 Entonces
+        res <- 1
+      Sino
+        res <- n * Factorial(n - 1)
+      FinSi
+    FinFuncion
+
+    Funcion f <- Fibonacci(n)
+      Si n <= 0 Entonces
+        f <- 0
+      Sino
+        Si n = 1 Entonces
+          f <- 1
+        Sino
+          f <- Fibonacci(n - 1) + Fibonacci(n - 2)
+        FinSi
+      FinSi
+    FinFuncion`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('120\n13');
+  });
+
+  it('soporta variables con nombres que contienen prefijos de palabras clave (operacion, siguiente, finalizado)', () => {
+    const code = `Algoritmo prefijos
+      Definir operacion, siguiente, finalizado Entero
+      operacion <- 10
+      siguiente <- operacion + 1
+      finalizado <- siguiente * 2
+      Escribir operacion, " ", siguiente, " ", finalizado
+    FinAlgoritmo`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('10 11 22');
+  });
+
+  it('soporta expresiones negativas complejas y anidamiento de paréntesis', () => {
+    const code = `Algoritmo expresion_compleja
+      Definir a, b, c, res Entero
+      a <- 5
+      b <- 15
+      c <- 2
+      res <- -(a + b) * c + (-10 / -2)
+      Escribir res
+    FinAlgoritmo`;
+
+    const res = run(code);
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('-35');
+  });
+});
