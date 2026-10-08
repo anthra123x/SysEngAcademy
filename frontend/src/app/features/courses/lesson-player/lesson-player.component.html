@@ -204,6 +204,8 @@
                   [hint]="l.hint"
                   [lessonTitle]="l.title"
                   [lessonId]="l.id"
+                  [moduleTitle]="currentModule()?.title"
+                  [courseTitle]="course()?.title"
                   [isChallenge]="isCodeChallenge()"
                   [isCompleted]="completed()"
                   (challengeSolved)="onChallengeSolved($event)"

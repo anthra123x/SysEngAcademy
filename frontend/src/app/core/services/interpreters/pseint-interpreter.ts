@@ -713,6 +713,15 @@ class Parser {
       }
     }
 
+    if (word === 'como') {
+      this.p++;
+      if (this.peek() && this.peek()!.type === 'id') {
+        this.p++;
+      }
+      while (this.eat(';')) {}
+      return { kind: 'block', body: [] };
+    }
+
     const target = this.parseExpr();
 
     if (target.kind === 'call') {
@@ -721,6 +730,16 @@ class Parser {
     }
 
     if (target.kind === 'var') {
+      const varNameLow = target.name.toLowerCase();
+      // Un keyword o tipo de datos nunca es un subprocedimiento invocable
+      if (KEYWORDS.has(varNameLow) || TYPES.has(varNameLow)) {
+        while (this.p < this.tokens.length && !this.at(';') && !this.isStatementEndOrNextStatement()) {
+          this.next();
+        }
+        while (this.eat(';')) {}
+        return { kind: 'block', body: [] };
+      }
+
       // Invocación de procedimiento sin paréntesis: Saludar nombre, "texto"
       const args: Expr[] = [];
       while (this.p < this.tokens.length && !this.at(';') && !this.isStatementEndOrNextStatement()) {
@@ -753,26 +772,41 @@ class Parser {
         this.pendingArrays.push({ name, size });
       }
 
-      this.eat('como');
-      const after = this.peek();
-      const afterNext = this.peek(1);
-      if (
-        after &&
-        after.type === 'id' &&
-        TYPES.has(after.value.toLowerCase()) &&
-        afterNext?.value === ','
-      ) {
-        this.p++;
-        type = TYPE_ALIASES[after.value.toLowerCase()] ?? type;
+      // Soporte flexible para: Definir x Como Entero, y Como Real
+      if (this.eat('como')) {
+        const after = this.peek();
+        if (after && after.type === 'id') {
+          this.p++;
+          type = TYPE_ALIASES[after.value.toLowerCase()] ?? 'otro';
+        }
+      } else {
+        const after = this.peek();
+        const afterNext = this.peek(1);
+        if (
+          after &&
+          after.type === 'id' &&
+          TYPES.has(after.value.toLowerCase()) &&
+          (afterNext?.value === ',' || !afterNext)
+        ) {
+          this.p++;
+          type = TYPE_ALIASES[after.value.toLowerCase()] ?? type;
+        }
       }
     } while (this.eat(','));
 
     if (!tipoPrimero) {
-      this.eat('como');
-      const t = this.peek();
-      if (t && t.type === 'id' && TYPES.has(t.value.toLowerCase())) {
-        this.p++;
-        type = TYPE_ALIASES[t.value.toLowerCase()] ?? 'ent';
+      if (this.eat('como')) {
+        const t = this.peek();
+        if (t && t.type === 'id') {
+          this.p++;
+          type = TYPE_ALIASES[t.value.toLowerCase()] ?? 'otro';
+        }
+      } else {
+        const t = this.peek();
+        if (t && t.type === 'id' && TYPES.has(t.value.toLowerCase())) {
+          this.p++;
+          type = TYPE_ALIASES[t.value.toLowerCase()] ?? 'ent';
+        }
       }
     }
 

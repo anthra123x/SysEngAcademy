@@ -643,4 +643,23 @@ describe('PSeInt · estrés y casos reales extremos', () => {
     expect(res.stderr).toBe('');
     expect(res.out).toBe('-35');
   });
+
+  it('soporta exactamente el ejercicio de hola mundo con Definir nombre Como Cadena', () => {
+    const code = `Algoritmo hola_mundo
+    // 1) Declara la variable que guardará el nombre (Cadena)
+    Definir nombre Como Cadena
+
+    // 2) Lee el nombre con Leer
+    Leer nombre
+
+    // 3) Imprime "Hola, " seguido del nombre y un "!"
+    // Ojo: Escribir concatena sin espacios, ponlos en las cadenas.
+    Escribir "Hola, ", nombre, "!"
+
+FinAlgoritmo`;
+
+    const res = run(code, 'Carlos');
+    expect(res.stderr).toBe('');
+    expect(res.out).toBe('Hola, Carlos!');
+  });
 });

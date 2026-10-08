@@ -29,7 +29,7 @@ class CodeExecutionTest extends TestCase
             ]);
 
         $languages = $response->json();
-        $this->assertCount(10, $languages);
+        $this->assertCount(13, $languages);
 
         $ids = array_column($languages, 'id');
         $this->assertContains('pseint', $ids);
@@ -42,6 +42,9 @@ class CodeExecutionTest extends TestCase
         $this->assertContains('java', $ids);
         $this->assertContains('sql', $ids);
         $this->assertContains('bash', $ids);
+        $this->assertContains('csharp', $ids);
+        $this->assertContains('go', $ids);
+        $this->assertContains('rust', $ids);
 
         $pseint = array_values(array_filter($languages, fn ($l) => $l['id'] === 'pseint'))[0];
         $this->assertEquals('local', $pseint['engine']);
@@ -315,8 +318,7 @@ class CodeExecutionTest extends TestCase
     public function test_language_registry_returns_correct_structure(): void
     {
         $languages = LanguageRegistry::all();
-
-        $this->assertCount(10, $languages);
+        $this->assertCount(13, $languages);
 
         foreach ($languages as $lang) {
             $this->assertArrayHasKey('id', $lang);

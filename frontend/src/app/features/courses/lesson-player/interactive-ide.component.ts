@@ -40,6 +40,14 @@ import {
   SupportedLanguage,
   TestCase,
 } from '../../../core/services/code-execution.service';
+import { AppIconComponent } from '../../../shared/components/app-icon.component';
+import {
+  EDITOR_LANGUAGES,
+  EditorLanguageDefinition,
+  getAllSupportedLanguages,
+  resolveEditorLanguage,
+  detectLanguageFromContext,
+} from '../../../core/config/editor-languages.config';
 
 export interface LanguageMeta {
   id: string;
@@ -140,9 +148,13 @@ const pseintKeywords = new Set([
   'para', 'hasta', 'con', 'paso', 'hacer', 'finpara',
   'mientras', 'finmientras', 'repetir', 'que',
   'segun', 'de', 'otro', 'modo', 'finsegun',
-  'retornar', 'borrar', 'pantalla', 'esperar'
+  'retornar', 'borrar', 'pantalla', 'esperar', 'sinsaltar',
 ]);
-const pseintTypes = new Set(['entero', 'real', 'caracter', 'texto', 'logico', 'numero', 'numerico']);
+const pseintTypes = new Set([
+  'entero', 'enteros', 'real', 'reales', 'caracter', 'caracteres',
+  'cadena', 'cadenas', 'texto', 'logico', 'logicos', 'booleano',
+  'numero', 'numerico', 'char', 'string', 'float', 'double',
+]);
 
 const pseintLanguage = StreamLanguage.define({
   token(stream) {
@@ -166,10 +178,91 @@ const pseintLanguage = StreamLanguage.define({
   },
 });
 
+// Lexer para Go (Golang)
+const goKeywords = new Set([
+  'package', 'import', 'func', 'var', 'const', 'type', 'struct', 'interface',
+  'return', 'if', 'else', 'for', 'range', 'switch', 'case', 'default',
+  'go', 'select', 'chan', 'defer', 'make', 'new', 'len', 'cap', 'append',
+  'true', 'false', 'nil',
+]);
+const goTypes = new Set(['string', 'int', 'int64', 'int32', 'float64', 'float32', 'bool', 'byte', 'error', 'rune']);
+const goLanguage = StreamLanguage.define({
+  token(stream) {
+    if (stream.eatSpace()) return null;
+    if (stream.match('//')) { stream.skipToEnd(); return 'comment'; }
+    if (stream.match(/^\/\*[\s\S]*?\*\//)) return 'comment';
+    if (stream.match(/^"([^"\\]|\\.)*"/)) return 'string';
+    if (stream.match(/^`[^`]*`/)) return 'string';
+    if (stream.match(/^'([^'\\]|\\.)*'/)) return 'string';
+    if (stream.match(/^[0-9]+(\.[0-9]+)?/)) return 'number';
+    if (stream.match(/^[+\-*\/%=<>!&|~^]+/)) return 'operator';
+    if (stream.match(/^[a-zA-Z_][a-zA-Z0-9_]*/)) {
+      const w = stream.current();
+      if (goKeywords.has(w)) return 'keyword';
+      if (goTypes.has(w)) return 'typeName';
+      return 'variableName';
+    }
+    stream.next();
+    return null;
+  },
+});
+
+// Lexer para Rust
+const rustKeywords = new Set([
+  'as', 'async', 'await', 'break', 'const', 'continue', 'crate', 'dyn', 'else',
+  'enum', 'extern', 'false', 'fn', 'for', 'if', 'impl', 'in', 'let', 'loop',
+  'match', 'mod', 'move', 'mut', 'pub', 'ref', 'return', 'self', 'Self', 'static',
+  'struct', 'super', 'trait', 'true', 'type', 'unsafe', 'use', 'where', 'while',
+]);
+const rustTypes = new Set(['i8', 'i16', 'i32', 'i64', 'u8', 'u16', 'u32', 'u64', 'f32', 'f64', 'bool', 'char', 'str', 'String', 'Vec', 'Option', 'Result', 'Some', 'None', 'Ok', 'Err']);
+const rustLanguage = StreamLanguage.define({
+  token(stream) {
+    if (stream.eatSpace()) return null;
+    if (stream.match('//')) { stream.skipToEnd(); return 'comment'; }
+    if (stream.match(/^\/\*[\s\S]*?\*\//)) return 'comment';
+    if (stream.match(/^"([^"\\]|\\.)*"/)) return 'string';
+    if (stream.match(/^'([^'\\]|\\.)*'/)) return 'string';
+    if (stream.match(/^[0-9]+(\.[0-9]+)?/)) return 'number';
+    if (stream.match(/^[+\-*\/%=<>!&|~^]+/)) return 'operator';
+    if (stream.match(/^[a-zA-Z_][a-zA-Z0-9_]*/)) {
+      const w = stream.current();
+      if (rustKeywords.has(w)) return 'keyword';
+      if (rustTypes.has(w)) return 'typeName';
+      return 'variableName';
+    }
+    stream.next();
+    return null;
+  },
+});
+
+// Lexer para Bash / Shell
+const bashKeywords = new Set([
+  'if', 'then', 'else', 'elif', 'fi', 'case', 'esac', 'for', 'while', 'until',
+  'do', 'done', 'in', 'function', 'select', 'time', 'echo', 'exit', 'export', 'local',
+]);
+const bashLanguage = StreamLanguage.define({
+  token(stream) {
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^#.*/)) { stream.skipToEnd(); return 'comment'; }
+    if (stream.match(/^"([^"\\]|\\.)*"/)) return 'string';
+    if (stream.match(/^'[^']*'/)) return 'string';
+    if (stream.match(/^\$[a-zA-Z_0-9]+/)) return 'variableName';
+    if (stream.match(/^[0-9]+/)) return 'number';
+    if (stream.match(/^[|&;<>()`]+/)) return 'operator';
+    if (stream.match(/^[a-zA-Z_][a-zA-Z0-9_-]*/)) {
+      const w = stream.current();
+      if (bashKeywords.has(w)) return 'keyword';
+      return 'variableName';
+    }
+    stream.next();
+    return null;
+  },
+});
+
 @Component({
   selector: 'app-interactive-ide',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppIconComponent],
   templateUrl: './interactive-ide.component.html',
   styleUrl: './interactive-ide.component.scss',
 })
@@ -189,6 +282,8 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
   readonly hint = input<string | null | undefined>(null);
   readonly lessonTitle = input<string>('');
   readonly lessonId = input<number | undefined>(undefined);
+  readonly moduleTitle = input<string | undefined>(undefined);
+  readonly courseTitle = input<string | undefined>(undefined);
   readonly isChallenge = input<boolean>(false);
   readonly isCompleted = input<boolean>(false);
 
@@ -206,8 +301,39 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
     this.isCompleted() || this.challengeStatus() === 'passed_tests'
   );
 
-  // Supported languages list
+  // Catálogo completo de lenguajes configurados globalmente
+  readonly allLanguages: EditorLanguageDefinition[] = getAllSupportedLanguages();
   readonly languages: SupportedLanguage[] = SUPPORTED_LANGUAGES;
+
+  // Estado del selector y anulación de lenguaje por el usuario
+  readonly langDropdownOpen = signal<boolean>(false);
+  readonly userSelectedLangId = signal<string | null>(null);
+
+  /**
+   * Resuelve automáticamente el lenguaje y entorno recomendado para este
+   * ejercicio, módulo y curso específico.
+   */
+  readonly recommendedLangDef = computed<EditorLanguageDefinition>(() => {
+    return detectLanguageFromContext({
+      language: this.language(),
+      starter_code: this.initialCode(),
+      title: this.lessonTitle(),
+      moduleTitle: this.moduleTitle(),
+      courseTitle: this.courseTitle(),
+    });
+  });
+
+  /**
+   * Lenguaje activo actual del IDE (el recomendado por defecto o el
+   * anulado manualmente por el usuario en el selector).
+   */
+  readonly activeLangDef = computed<EditorLanguageDefinition>(() => {
+    const manual = this.userSelectedLangId();
+    if (manual) {
+      return resolveEditorLanguage(manual);
+    }
+    return this.recommendedLangDef();
+  });
 
   // State signals
   readonly code = signal<string>('');
@@ -223,122 +349,19 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
   readonly toastMessage = signal<string | null>(null);
 
   /**
-   * Adapta automáticamente el editor al lenguaje del ejercicio:
-   * nombre de archivo (ej. main.py), comando de ejecución y badge.
+   * Adapta automáticamente el editor al lenguaje activo:
+   * nombre de archivo (ej. main.py, algoritmo.psc), comando y badge.
    */
   readonly langMeta = computed<LanguageMeta>(() => {
-    const raw = (this.language() || 'python').toLowerCase().trim();
-    switch (raw) {
-      case 'python':
-      case 'py':
-        return {
-          id: 'python',
-          name: 'Python',
-          filename: 'main.py',
-          runCommand: 'python main.py',
-          extension: '.py',
-          badge: 'Python 3.12',
-        };
-      case 'javascript':
-      case 'js':
-      case 'node':
-        return {
-          id: 'javascript',
-          name: 'JavaScript',
-          filename: 'index.js',
-          runCommand: 'node index.js',
-          extension: '.js',
-          badge: 'Node.js',
-        };
-      case 'typescript':
-      case 'ts':
-        return {
-          id: 'typescript',
-          name: 'TypeScript',
-          filename: 'index.ts',
-          runCommand: 'ts-node index.ts',
-          extension: '.ts',
-          badge: 'TypeScript 5',
-        };
-      case 'cpp':
-      case 'c++':
-      case 'c':
-        return {
-          id: 'cpp',
-          name: 'C++',
-          filename: 'main.cpp',
-          runCommand: 'g++ -O2 main.cpp && ./a.out',
-          extension: '.cpp',
-          badge: 'GCC 13',
-        };
-      case 'java':
-        return {
-          id: 'java',
-          name: 'Java',
-          filename: 'Main.java',
-          runCommand: 'javac Main.java && java Main',
-          extension: '.java',
-          badge: 'Java 21',
-        };
-      case 'sql':
-      case 'postgresql':
-      case 'postgres':
-        return {
-          id: 'sql',
-          name: 'PostgreSQL',
-          filename: 'query.sql',
-          runCommand: 'psql -f query.sql',
-          extension: '.sql',
-          badge: 'PostgreSQL 16',
-        };
-      case 'php':
-        return {
-          id: 'php',
-          name: 'PHP',
-          filename: 'script.php',
-          runCommand: 'php script.php',
-          extension: '.php',
-          badge: 'PHP 8.3',
-        };
-      case 'pseint':
-        return {
-          id: 'pseint',
-          name: 'PSeInt',
-          filename: 'algoritmo.psc',
-          runCommand: 'pseint algoritmo.psc',
-          extension: '.psc',
-          badge: 'Pseudocódigo',
-        };
-      case 'go':
-      case 'golang':
-        return {
-          id: 'go',
-          name: 'Go',
-          filename: 'main.go',
-          runCommand: 'go run main.go',
-          extension: '.go',
-          badge: 'Go 1.22',
-        };
-      case 'rust':
-      case 'rs':
-        return {
-          id: 'rust',
-          name: 'Rust',
-          filename: 'main.rs',
-          runCommand: 'rustc main.rs && ./main',
-          extension: '.rs',
-          badge: 'Rust 1.78',
-        };
-      default:
-        return {
-          id: raw,
-          name: raw.toUpperCase(),
-          filename: `solution.${raw}`,
-          runCommand: `./run.sh`,
-          extension: `.${raw}`,
-          badge: raw.toUpperCase(),
-        };
-    }
+    const def = this.activeLangDef();
+    return {
+      id: def.id,
+      name: def.name,
+      filename: def.defaultFilename,
+      runCommand: def.runCommand,
+      extension: def.extension,
+      badge: def.badge,
+    };
   });
 
   readonly activeTestCases = computed<TestCase[]>(() => {
@@ -360,18 +383,54 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
   });
 
   constructor() {
-    // Sincroniza el código inicial cuando cambian los inputs
+    // Sincroniza el código inicial y el lenguaje cuando cambian los inputs de la lección
     effect(() => {
-      const initLang = this.language() || 'python';
-      const initCode = this.initialCode() || this.getDefaultTemplate(initLang);
+      // Al cambiar de lección o ejercicio, reiniciar la anulación manual y adaptarse al recomendado
+      this.userSelectedLangId.set(null);
+      this.langDropdownOpen.set(false);
+
+      const activeDef = this.recommendedLangDef();
+      const initCode = this.initialCode() || activeDef.defaultTemplate;
       this.code.set(initCode);
       this.isModified.set(false);
 
       if (this.editorView) {
         this.syncEditorDocument(initCode);
-        this.reconfigureEditorLanguage(initLang);
+        this.reconfigureEditorLanguage(activeDef.id);
       }
     });
+  }
+
+  toggleLangDropdown(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.langDropdownOpen.update(v => !v);
+  }
+
+  selectLanguage(langId: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.userSelectedLangId.set(langId);
+    this.langDropdownOpen.set(false);
+
+    const langDef = resolveEditorLanguage(langId);
+    this.reconfigureEditorLanguage(langDef.id);
+
+    // Si el buffer de código está vacío o es un template por defecto, cambiar al template del nuevo lenguaje
+    const currentCode = this.code().trim();
+    const isTemplate = !currentCode || Object.values(EDITOR_LANGUAGES).some(l => l.defaultTemplate.trim() === currentCode);
+    if (isTemplate) {
+      this.code.set(langDef.defaultTemplate);
+      this.syncEditorDocument(langDef.defaultTemplate);
+      this.isModified.set(false);
+    }
+
+    this.showToast(`Entorno adaptado a ${langDef.name}`);
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    if (this.langDropdownOpen()) {
+      this.langDropdownOpen.set(false);
+    }
   }
 
   ngAfterViewInit(): void {
@@ -395,10 +454,11 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
     const container = this.editorContainerRef?.nativeElement;
     if (!container) return;
 
-    const currentLang = this.language() || 'python';
-    const startCode = this.code() || this.initialCode() || this.getDefaultTemplate(currentLang);
+    const activeDef = this.activeLangDef();
+    const currentLang = activeDef.id;
+    const startCode = this.code() || this.initialCode() || activeDef.defaultTemplate;
 
-    const isIndented4 = ['python', 'py', 'cpp', 'c', 'java', 'php'].includes(currentLang);
+    const isIndented4 = ['python', 'py', 'cpp', 'c', 'java', 'php', 'csharp', 'go', 'rust', 'pseint'].includes(currentLang);
 
     const extensions: Extension[] = [
       macEditorTheme,
@@ -448,10 +508,12 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
     switch (norm) {
       case 'python':
       case 'py':
+      case 'python3':
         return python();
       case 'javascript':
       case 'js':
       case 'node':
+      case 'nodejs':
         return javascript();
       case 'typescript':
       case 'ts':
@@ -459,16 +521,39 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
       case 'cpp':
       case 'c++':
       case 'c':
+      case 'cxx':
         return cpp();
       case 'java':
+      case 'openjdk':
         return java();
+      case 'csharp':
+      case 'cs':
+      case 'c#':
+      case 'dotnet':
+        return java();
+      case 'go':
+      case 'golang':
+        return goLanguage;
+      case 'rust':
+      case 'rs':
+        return rustLanguage;
+      case 'bash':
+      case 'sh':
+      case 'shell':
+      case 'zsh':
+        return bashLanguage;
       case 'sql':
       case 'postgresql':
       case 'postgres':
         return sql();
       case 'php':
+      case 'php8':
+      case 'laravel':
         return php();
       case 'pseint':
+      case 'psc':
+      case 'pseudocodigo':
+      case 'pseudocódigo':
         return pseintLanguage;
       default:
         return python();
@@ -493,12 +578,12 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
   }
 
   getDefaultTemplate(langId: string): string {
-    const found = this.languages.find(l => l.id === langId);
-    return found?.defaultTemplate || '# Código inicial\n';
+    return resolveEditorLanguage(langId).defaultTemplate;
   }
 
   resetCode(): void {
-    const resetTo = this.initialCode() || this.getDefaultTemplate(this.language());
+    const activeDef = this.activeLangDef();
+    const resetTo = this.initialCode() || activeDef.defaultTemplate;
     this.code.set(resetTo);
     this.isModified.set(false);
     this.syncEditorDocument(resetTo);
@@ -519,7 +604,7 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
     this.running.set(true);
     this.activeTerminalTab.set('terminal');
 
-    const activeLang = this.language() || 'python';
+    const activeLang = this.activeLangDef().id;
 
     this.codeRunner
       .execute(activeLang, this.code(), this.stdin(), [])
@@ -570,7 +655,7 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
     this.testing.set(true);
     this.activeTerminalTab.set('tests');
 
-    const activeLang = this.language() || 'python';
+    const activeLang = this.activeLangDef().id;
 
     this.codeRunner
       .execute(activeLang, this.code(), '', this.activeTestCases())

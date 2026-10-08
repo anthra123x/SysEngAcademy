@@ -19,6 +19,7 @@ import {
 } from '../../../core/models';
 import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from '../../../core/constants/ascii-avatars';
 import { AppIconComponent } from '../../../shared/components/app-icon.component';
+import { detectLanguageFromContext } from '../../../core/config/editor-languages.config';
 
 @Component({
   selector: 'app-lesson-player',
@@ -415,53 +416,17 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     const l = this.lesson();
     if (!l) return 'python';
 
-    // 1. Si la lección define explícitamente su lenguaje
-    if (l.language && typeof l.language === 'string' && l.language.trim()) {
-      return this.normalizeLanguageName(l.language);
-    }
-
-    // 2. Si la lección contiene bloques de código, detectar el lenguaje del primer bloque
     const codeBlock = this.contentBlocks().find(b => b.type === 'code' && b.language && b.language !== 'text');
-    if (codeBlock?.language) {
-      return this.normalizeLanguageName(codeBlock.language);
-    }
 
-    // 3. Inspeccionar el código inicial del ejercicio
-    const sampleCode = (l.starter_code || this.code() || '').trim();
-    if (sampleCode) {
-      const codeLang = this.detectLanguageFromCode(sampleCode);
-      if (codeLang) return codeLang;
-    }
-
-    // 4. Inspeccionar el contexto del módulo o curso (título y slug)
-    const contextText = `${l.title} ${l.slug} ${this.currentModule()?.title ?? ''} ${this.course()?.title ?? ''} ${this.course()?.slug ?? ''}`.toLowerCase();
-
-    if (contextText.includes('pseint') || contextText.includes('pseudocodigo') || contextText.includes('pseudocódigo')) {
-      return 'pseint';
-    }
-    if (contextText.includes('c++') || contextText.includes('cpp')) {
-      return 'cpp';
-    }
-    if (contextText.includes('sql') || contextText.includes('postgres') || contextText.includes('base de datos') || contextText.includes('bases de datos')) {
-      return 'sql';
-    }
-    if (contextText.includes('php') || contextText.includes('laravel') || contextText.includes('backend')) {
-      return 'php';
-    }
-    if (contextText.includes('java') && !contextText.includes('javascript')) {
-      return 'java';
-    }
-    if (contextText.includes('typescript') || contextText.includes('angular')) {
-      return 'typescript';
-    }
-    if (contextText.includes('javascript') || contextText.includes('frontend') || contextText.includes('web') || contextText.includes('react')) {
-      return 'javascript';
-    }
-    if (contextText.includes('python') || contextText.includes('ia') || contextText.includes('algoritmos')) {
-      return 'python';
-    }
-
-    return 'python';
+    return detectLanguageFromContext({
+      language: l.language || codeBlock?.language,
+      starter_code: l.starter_code || this.code(),
+      title: l.title,
+      slug: l.slug,
+      moduleTitle: this.currentModule()?.title,
+      courseTitle: this.course()?.title,
+      courseSlug: this.course()?.slug,
+    }).id;
   });
 
   private normalizeLanguageName(name: string): string {

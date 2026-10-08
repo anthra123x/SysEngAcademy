@@ -3,6 +3,12 @@ import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { runPseint } from './interpreters/pseint-interpreter';
+import {
+  EDITOR_LANGUAGES,
+  EditorLanguageDefinition,
+  getAllSupportedLanguages,
+  resolveEditorLanguage,
+} from '../config/editor-languages.config';
 
 export interface TestCase {
   input?: string;
@@ -36,129 +42,14 @@ export interface SupportedLanguage {
   defaultTemplate: string;
 }
 
-export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
-  {
-    id: 'python',
-    name: 'Python',
-    version: '3.12',
-    icon: 'code',
-    extension: '.py',
-    defaultTemplate: `# SysEngAcademy - Sandbox Python
-def saludar(nombre: str) -> str:
-    return f"¡Hola {nombre}, bienvenido al mundo de la programación!"
-
-print(saludar("Estudiante"))
-
-# Prueba tus algoritmos aquí:
-numeros = [1, 2, 3, 4, 5]
-print("Suma:", sum(numeros))
-`,
-  },
-  {
-    id: 'javascript',
-    name: 'JavaScript',
-    version: 'Node.js LTS',
-    icon: 'code',
-    extension: '.js',
-    defaultTemplate: `// SysEngAcademy - Sandbox JavaScript
-function calcularFibonacci(n) {
-  if (n <= 1) return n;
-  return calcularFibonacci(n - 1) + calcularFibonacci(n - 2);
-}
-
-console.log("Fibonacci(7):", calcularFibonacci(7));
-`,
-  },
-  {
-    id: 'typescript',
-    name: 'TypeScript',
-    version: '5.x',
-    icon: 'code',
-    extension: '.ts',
-    defaultTemplate: `// SysEngAcademy - Sandbox TypeScript
-interface Usuario {
-  id: number;
-  nombre: string;
-  activo: boolean;
-}
-
-const u: Usuario = { id: 1, nombre: "Dev", activo: true };
-console.log("Usuario:", u.nombre);
-`,
-  },
-  {
-    id: 'pseint',
-    name: 'PSeInt (Pseudocódigo)',
-    version: '2023',
-    icon: 'terminal',
-    extension: '.psc',
-    defaultTemplate: `Algoritmo Saludo
-    Definir nombre Como Caracter
-    nombre <- "Ingeniero"
-    Escribir "Bienvenido a SysEng Academy, ", nombre
-FinAlgoritmo
-`,
-  },
-  {
-    id: 'cpp',
-    name: 'C++',
-    version: 'GCC 13',
-    icon: 'zap',
-    extension: '.cpp',
-    defaultTemplate: `#include <iostream>
-using namespace std;
-
-int main() {
-    cout << "Hola desde C++ en SysEng Academy!" << endl;
-    return 0;
-}
-`,
-  },
-  {
-    id: 'java',
-    name: 'Java',
-    version: 'OpenJDK 21',
-    icon: 'coffee',
-    extension: '.java',
-    defaultTemplate: `public class Main {
-    public static void main(String[] args) {
-        System.out.println("SysEng Academy - Java 21");
-    }
-}
-`,
-  },
-  {
-    id: 'php',
-    name: 'PHP',
-    version: '8.3',
-    icon: 'server',
-    extension: '.php',
-    defaultTemplate: `<?php
-echo "SysEng Academy - PHP 8.3\n";
-$items = ['Clean Code', 'DDD', 'SOLID'];
-foreach ($items as $item) {
-    echo "- " . $item . "\n";
-}
-`,
-  },
-  {
-    id: 'sql',
-    name: 'PostgreSQL / SQL',
-    version: '16',
-    icon: 'database',
-    extension: '.sql',
-    defaultTemplate: `-- SysEngAcademy - Sandbox SQL
-CREATE TABLE IF NOT EXISTS demo (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100),
-    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO demo (nombre) VALUES ('Lección 1'), ('Lección 2');
-SELECT * FROM demo;
-`,
-  },
-];
+export const SUPPORTED_LANGUAGES: SupportedLanguage[] = getAllSupportedLanguages().map(l => ({
+  id: l.id,
+  name: l.name,
+  version: l.badge,
+  icon: l.icon,
+  extension: l.extension,
+  defaultTemplate: l.defaultTemplate,
+}));
 
 export function matchesOutput(actual: string, expected: string): boolean {
   const normActual = (actual || '')
@@ -223,8 +114,11 @@ export class CodeExecutionService {
     stdin = '',
     tests: TestCase[] = []
   ): Observable<CodeExecutionResponse> {
+    const langDef = resolveEditorLanguage(language);
+    const normLang = langDef.id;
+
     // 1. PSeInt ejecuta nativamente en el navegador vía intérprete integrado
-    if (language === 'pseint') {
+    if (normLang === 'pseint') {
       const startTime = performance.now();
       const res = runPseint(code, stdin);
       const executionTime = Math.round(performance.now() - startTime);
@@ -253,18 +147,18 @@ export class CodeExecutionService {
 
     // 2. Si el backend está disponible (local o nube configurada), usar el sandbox seguro de backend
     return this.api.post<CodeExecutionResponse>('/code/execute', {
-      language,
+      language: normLang,
       code,
       stdin,
       tests,
     }).pipe(
       catchError(() => {
         // Fallback en navegador para producción / offline
-        if (language === 'javascript' || language === 'typescript') {
+        if (normLang === 'javascript' || normLang === 'typescript') {
           return of(this.runBrowserJs(code, stdin, tests));
         }
 
-        return of(this.runOfflineSimulation(language, code, tests));
+        return of(this.runOfflineSimulation(normLang, code, tests));
       })
     );
   }
@@ -334,18 +228,41 @@ export class CodeExecutionService {
   }
 
   private runOfflineSimulation(language: string, code: string, tests: TestCase[] = []): CodeExecutionResponse {
-    const cleanCode = code.replace(/#.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
+    const cleanCode = code.replace(/#.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '').trim();
     const hasContent = cleanCode.length > 5;
 
-    // Extraer llamadas a print(...) simples para mostrar en consola
-    const printMatches = Array.from(code.matchAll(/print\s*\(\s*(['"]?)(.*?)\1\s*\)/g));
-    const extractedPrints = printMatches.map(m => m[2]).filter(Boolean);
+    // Extraer llamadas de salida comunes según el lenguaje
+    const outputMatches: string[] = [];
+
+    // Python print(...)
+    const pyPrints = Array.from(code.matchAll(/print\s*\(\s*(['"]?)(.*?)\1\s*\)/g));
+    pyPrints.forEach(m => { if (m[2]) outputMatches.push(m[2]); });
+
+    // Go fmt.Println(...)
+    const goPrints = Array.from(code.matchAll(/fmt\.Print(?:ln|f)?\s*\(\s*(['"]?)(.*?)\1\s*\)/g));
+    goPrints.forEach(m => { if (m[2]) outputMatches.push(m[2]); });
+
+    // Rust println!(...)
+    const rsPrints = Array.from(code.matchAll(/println!\s*\(\s*(['"]?)(.*?)\1\s*\)/g));
+    rsPrints.forEach(m => { if (m[2]) outputMatches.push(m[2]); });
+
+    // C++ cout << "..."
+    const cppPrints = Array.from(code.matchAll(/cout\s*<<\s*["']([^"']+)["']/g));
+    cppPrints.forEach(m => { if (m[1]) outputMatches.push(m[1]); });
+
+    // Java / C# System.out.println / Console.WriteLine
+    const javaPrints = Array.from(code.matchAll(/(?:System\.out\.println|Console\.WriteLine)\s*\(\s*["']([^"']+)["']\s*\)/g));
+    javaPrints.forEach(m => { if (m[1]) outputMatches.push(m[1]); });
+
+    // Bash / PHP echo "..."
+    const echoPrints = Array.from(code.matchAll(/echo\s+["']([^"']+)["']/g));
+    echoPrints.forEach(m => { if (m[1]) outputMatches.push(m[1]); });
 
     const likelyValid = hasContent && (!code.includes('pass') || cleanCode.length > 25);
 
     const testResults: TestResult[] = tests.map(t => {
       const exp = (t.expected || '').trim();
-      const actual = likelyValid ? (exp || (extractedPrints[0] ?? 'Resultado correcto')) : '';
+      const actual = likelyValid ? (exp || (outputMatches[0] ?? 'Resultado correcto')) : '';
       return {
         input: t.input,
         expected: t.expected,
@@ -354,8 +271,8 @@ export class CodeExecutionService {
       };
     });
 
-    const outputText = extractedPrints.length > 0
-      ? extractedPrints.join('\n')
+    const outputText = outputMatches.length > 0
+      ? outputMatches.join('\n')
       : (likelyValid
           ? `[Salida del Programa (${language})]\nPrograma ejecutado exitosamente sin excepciones.`
           : `[SysEng IDE] Código recibido. Completa la solución e interactúa con el reto.`);

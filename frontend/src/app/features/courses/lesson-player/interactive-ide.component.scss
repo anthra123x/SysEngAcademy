@@ -110,6 +110,184 @@
     letter-spacing: 0.01em;
   }
 
+  .lang-selector-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .badge-runtime-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: #c084fc;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: inherit;
+
+    &:hover {
+      background: rgba(168, 85, 247, 0.22);
+      border-color: rgba(168, 85, 247, 0.5);
+      color: #e9d5ff;
+      transform: translateY(-0.5px);
+    }
+
+    .chevron-icon {
+      opacity: 0.7;
+      transition: transform 0.2s ease;
+    }
+  }
+
+  .lang-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 290px;
+    max-height: 400px;
+    background: #171827;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    animation: dropdownFadeIn 0.15s ease-out;
+
+    .lang-dropdown-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.02);
+
+      .dropdown-title {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #94a3b8;
+      }
+
+      .dropdown-subtitle {
+        display: block;
+        font-size: 10.5px;
+        color: #64748b;
+        margin-top: 1px;
+      }
+    }
+
+    .lang-dropdown-list {
+      padding: 6px;
+      overflow-y: auto;
+      max-height: 310px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      &::-webkit-scrollbar {
+        width: 5px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 4px;
+      }
+    }
+
+    .lang-dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: #cbd5e1;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+      font-family: inherit;
+
+      &:hover {
+        background: rgba(168, 85, 247, 0.14);
+        color: #f1f5f9;
+        border-color: rgba(168, 85, 247, 0.2);
+      }
+
+      &.is-active {
+        background: rgba(168, 85, 247, 0.25);
+        color: #ffffff;
+        border-color: rgba(168, 85, 247, 0.45);
+        font-weight: 600;
+      }
+
+      .lang-item-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .lang-item-info {
+        display: flex;
+        flex-direction: column;
+
+        .lang-item-name {
+          font-size: 12px;
+          line-height: 1.3;
+        }
+
+        .lang-item-ext {
+          font-size: 10.5px;
+          color: #94a3b8;
+        }
+      }
+
+      .lang-item-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .recommended-tag {
+          font-size: 9.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          background: rgba(56, 189, 248, 0.15);
+          color: #38bdf8;
+          border: 1px solid rgba(56, 189, 248, 0.35);
+          padding: 1px 5px;
+          border-radius: 4px;
+        }
+
+        .active-check {
+          color: #c084fc;
+          font-weight: 700;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  @keyframes dropdownFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
   .dirty-indicator {
     color: #f59e0b;
     font-size: 8px;

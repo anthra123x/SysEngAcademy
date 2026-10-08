@@ -135,6 +135,9 @@ class CodeExecutionController extends Controller
                 'php' => 'php ' . escapeshellarg($fileName),
                 'c' => 'gcc -O2 ' . escapeshellarg($fileName) . ' -o app && ./app',
                 'cpp' => 'g++ -O2 ' . escapeshellarg($fileName) . ' -o app && ./app',
+                'go' => 'go run ' . escapeshellarg($fileName),
+                'bash' => 'bash ' . escapeshellarg($fileName),
+                'sql' => 'sqlite3 < ' . escapeshellarg($fileName),
                 default => 'cat ' . escapeshellarg($fileName),
             };
 
@@ -286,6 +289,9 @@ class CodeExecutionController extends Controller
             'typescript' => 'main.ts',
             'c' => 'main.c',
             'cpp' => 'main.cpp',
+            'csharp' => 'Program.cs',
+            'go' => 'main.go',
+            'rust' => 'main.rs',
             'java' => 'Main.java',
             'sql' => 'main.sql',
             'bash' => 'main.sh',
@@ -323,6 +329,14 @@ class CodeExecutionController extends Controller
             'c', 'cpp' => [
                 '/\b(system|fork|execve|popen)\s*\(/i' => 'Llamadas de sistema en C/C++ bloqueadas',
                 '/\b#include\s*<sys\/socket\.h>/i' => 'Acceso a sockets bloqueado',
+            ],
+            'bash' => [
+                '/\b(rm\s+-rf|mkfs|dd|chmod|chown|killall|shutdown|reboot)\b/i' => 'Comandos destructivos del sistema bloqueados',
+                '/\b(curl|wget|nc|netcat|ssh|scp)\b/i' => 'Conexiones de red no permitidas',
+            ],
+            'go' => [
+                '/\bos\/exec\b/i' => 'Ejecución de procesos externos no permitida',
+                '/\bnet\b/i' => 'Conexiones de red en Go bloqueadas',
             ],
             default => [],
         };

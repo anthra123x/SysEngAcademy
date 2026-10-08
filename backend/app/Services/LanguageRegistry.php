@@ -90,6 +90,33 @@ final class LanguageRegistry
                 'piston_version' => '3.39.0',
             ],
             [
+                'id' => 'csharp',
+                'label' => 'C#',
+                'mode' => 'csharp',
+                'sample' => self::csharpSample(),
+                'engine' => 'piston',
+                'piston_runtime' => 'csharp',
+                'piston_version' => '6.12.0',
+            ],
+            [
+                'id' => 'go',
+                'label' => 'Go',
+                'mode' => 'go',
+                'sample' => self::goSample(),
+                'engine' => 'piston',
+                'piston_runtime' => 'go',
+                'piston_version' => '1.16.2',
+            ],
+            [
+                'id' => 'rust',
+                'label' => 'Rust',
+                'mode' => 'rust',
+                'sample' => self::rustSample(),
+                'engine' => 'piston',
+                'piston_runtime' => 'rust',
+                'piston_version' => '1.68.2',
+            ],
+            [
                 'id' => 'bash',
                 'label' => 'Bash',
                 'mode' => 'shell',
@@ -210,6 +237,41 @@ CODE;
     {
         return <<<'CODE'
 SELECT '¡Hola, mundo!' AS mensaje;
+CODE;
+    }
+
+    private static function csharpSample(): string
+    {
+        return <<<'CODE'
+using System;
+
+class Program {
+    static void Main() {
+        Console.WriteLine("¡Hola, mundo!");
+    }
+}
+CODE;
+    }
+
+    private static function goSample(): string
+    {
+        return <<<'CODE'
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("¡Hola, mundo!")
+}
+CODE;
+    }
+
+    private static function rustSample(): string
+    {
+        return <<<'CODE'
+fn main() {
+    println!("¡Hola, mundo!");
+}
 CODE;
     }
 

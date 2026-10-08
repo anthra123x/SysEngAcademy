@@ -10,7 +10,62 @@
       </div>
       <div class="mac-filename font-mono">
         <span class="filename-text">{{ langMeta().filename }}</span>
-        <span class="badge-runtime" [title]="'Entorno activo: ' + langMeta().badge">{{ langMeta().badge }}</span>
+
+        <!-- Botón Selector Global de Entorno / Lenguaje -->
+        <div class="lang-selector-container">
+          <button
+            type="button"
+            class="badge-runtime-btn"
+            (click)="toggleLangDropdown($event)"
+            [title]="'Entorno activo: ' + langMeta().name + '. Clic para cambiar de lenguaje.'"
+            aria-haspopup="listbox"
+            [attr.aria-expanded]="langDropdownOpen()"
+          >
+            <app-icon [name]="activeLangDef().icon" [size]="12" />
+            <span class="badge-label">{{ langMeta().badge }}</span>
+            <app-icon name="chevron-down" [size]="11" class="chevron-icon" />
+          </button>
+
+          <!-- Menú desplegable flotante con todos los lenguajes -->
+          @if (langDropdownOpen()) {
+            <div class="lang-dropdown-menu" (click)="$event.stopPropagation()">
+              <div class="lang-dropdown-header">
+                <span class="dropdown-title">Entorno de compilación</span>
+                <span class="dropdown-subtitle">Adaptable por módulo y ejercicio</span>
+              </div>
+              <div class="lang-dropdown-list" role="listbox">
+                @for (item of allLanguages; track item.id) {
+                  <button
+                    type="button"
+                    class="lang-dropdown-item"
+                    [class.is-active]="item.id === activeLangDef().id"
+                    [class.is-recommended]="item.id === recommendedLangDef().id"
+                    (click)="selectLanguage(item.id, $event)"
+                    role="option"
+                    [attr.aria-selected]="item.id === activeLangDef().id"
+                  >
+                    <div class="lang-item-left">
+                      <app-icon [name]="item.icon" [size]="14" />
+                      <div class="lang-item-info">
+                        <span class="lang-item-name">{{ item.name }}</span>
+                        <span class="lang-item-ext font-mono">{{ item.defaultFilename }}</span>
+                      </div>
+                    </div>
+                    <div class="lang-item-right">
+                      @if (item.id === recommendedLangDef().id) {
+                        <span class="recommended-tag">Recomendado</span>
+                      }
+                      @if (item.id === activeLangDef().id) {
+                        <span class="active-check">✓</span>
+                      }
+                    </div>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
         @if (isModified()) {
           <span class="dirty-indicator" title="Cambios sin guardar">●</span>
         }
