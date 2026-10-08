@@ -700,93 +700,47 @@
                     <div class="sim-frame mockup-community animate-step-in">
                       <div class="sim-frame-header font-mono">
                         <div class="sim-dots"><span class="d-red"></span><span class="d-yel"></span><span class="d-grn"></span></div>
-                        <span class="sim-url">syseng://platform/clan_and_profile</span>
+                        <span class="sim-url">syseng://platform/streak_and_profile</span>
                         <span class="sim-live-badge txt-cyan">
                           <span class="radar-dot"></span> GAMIFICACIÓN_XP
                         </span>
                       </div>
 
                       <div class="sim-frame-body">
-                        <!-- Tabs de comunidad -->
-                        <div class="sim-comm-tabs font-mono">
-                          <button
-                            type="button"
-                            class="sim-comm-tab"
-                            [class.is-active]="communityTab() === 'streak'"
-                            (click)="setCommunityTab('streak')"
-                          >
-                            🔥 Racha &amp; Experiencia
-                          </button>
-                          <button
-                            type="button"
-                            class="sim-comm-tab"
-                            [class.is-active]="communityTab() === 'clan'"
-                            (click)="setCommunityTab('clan')"
-                          >
-                            🛡️ Mi Clan de Estudio
+                        <div class="sim-social-row font-mono animate-fade-in">
+                          <div class="sim-sr-streak">
+                            <span class="sim-flame-icon animate-flame">🔥</span>
+                            <div>
+                              <div class="sim-streak-title">3 Días de Racha Activa</div>
+                              <div class="sim-streak-sub txt-green">● Protegida hoy · Multiplicador 1.2x XP</div>
+                            </div>
+                          </div>
+                          <button type="button" class="sim-xp-boost-btn" (click)="boostXp()">
+                            <app-icon name="zap" [size]="12"/> [⚡ Simular Práctica (+50 XP)]
                           </button>
                         </div>
 
-                        @if (communityTab() === 'streak') {
-                          <div class="sim-social-row font-mono animate-fade-in">
-                            <div class="sim-sr-streak">
-                              <span class="sim-flame-icon animate-flame">🔥</span>
-                              <div>
-                                <div class="sim-streak-title">3 Días de Racha Activa</div>
-                                <div class="sim-streak-sub txt-green">● Protegida hoy · Multiplicador 1.2x XP</div>
-                              </div>
-                            </div>
-                            <button type="button" class="sim-xp-boost-btn" (click)="boostXp()">
-                              <app-icon name="zap" [size]="12"/> [⚡ Simular Práctica (+50 XP)]
-                            </button>
-                          </div>
-
-                          <!-- Particle animado de XP -->
-                          @if (xpGainedNotice()) {
-                            <div class="sim-xp-floating-particle font-mono animate-float-up">
-                              +50 XP GANADOS! 🔥
-                            </div>
-                          }
-
-                          <div class="sim-profile-box font-mono animate-fade-in">
-                            <div class="sim-pb-header">
-                              <span>CADETE: {{ studentFirstName() | uppercase }}</span>
-                              <span class="txt-purple">NIVEL 01 · {{ demoXp() }}/1000 XP</span>
-                            </div>
-                            <div class="sim-pb-bar">
-                              <div class="sim-pb-fill laser-shimmer" [style.width.%]="(demoXp() / 1000) * 100"></div>
-                            </div>
-                            <div class="sim-pb-chips">
-                              <span class="sim-chip">🏅 Primer Script</span>
-                              <span class="sim-chip">⚡ 4 Tests Superados</span>
-                              <span class="sim-chip">🛡️ Cadete Verificado</span>
-                            </div>
-                          </div>
-                        } @else {
-                          <div class="sim-clan-roster font-mono animate-fade-in">
-                            <div class="sim-clan-header">
-                              <span class="clan-tag txt-cyan">[KRNL]</span>
-                              <div>
-                                <div class="clan-name">Kernel Hackers</div>
-                                <div class="clan-sub txt-amber">#02 en Liga Global · 4,820 XP Semanal</div>
-                              </div>
-                            </div>
-                            <div class="sim-clan-members">
-                              <div class="clan-m-item">
-                                <span class="txt-green">● [CMD] Alex_Dev</span>
-                                <span class="txt-muted">1,240 XP</span>
-                              </div>
-                              <div class="clan-m-item">
-                                <span class="txt-cyan">● [CAD] {{ studentFirstName() }} (Tú)</span>
-                                <span class="txt-purple">{{ demoXp() }} XP</span>
-                              </div>
-                              <div class="clan-m-item">
-                                <span class="txt-muted">● [CAD] Carlos_Sys</span>
-                                <span class="txt-muted">610 XP</span>
-                              </div>
-                            </div>
+                        <!-- Particle animado de XP -->
+                        @if (xpGainedNotice()) {
+                          <div class="sim-xp-floating-particle font-mono animate-float-up">
+                            +50 XP GANADOS! 🔥
                           </div>
                         }
+
+                        <div class="sim-profile-box font-mono animate-fade-in">
+                          <div class="sim-pb-header">
+                            <span>CADETE: {{ studentFirstName() | uppercase }}</span>
+                            <span class="txt-purple">NIVEL 01 · {{ demoXp() }}/1000 XP</span>
+                          </div>
+                          <div class="sim-pb-bar">
+                            <div class="sim-pb-fill laser-shimmer" [style.width.%]="(demoXp() / 1000) * 100"></div>
+                          </div>
+                          <div class="sim-pb-chips">
+                            <span class="sim-chip">🏅 Primer Script</span>
+                            <span class="sim-chip">⚡ 4 Tests Superados</span>
+                            <span class="sim-chip">🛡️ Cadete Verificado</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   }

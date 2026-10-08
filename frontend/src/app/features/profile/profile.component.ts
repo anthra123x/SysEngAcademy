@@ -6,7 +6,6 @@ import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { CoursesService } from '../../core/services/courses.service';
 import { StreakService } from '../../core/services/streak.service';
-import { ClansService } from '../../core/services/clans.service';
 import { TeacherService, TeacherStudent, TeacherActivity, TeacherOverviewResponse, StudentFeedbackItem } from '../../core/services/teacher.service';
 import { Enrollment } from '../../core/models';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
@@ -61,92 +60,6 @@ export interface PathRecommendation {
   matchScore: number;
 }
 
-export interface ResearchProject {
-  id: string;
-  title: string;
-  description: string;
-  leadResearcher: string;
-  status: 'en_progreso' | 'revision' | 'concluido';
-  repoUrl?: string;
-  techStack: string[];
-  membersJoined: string[];
-  createdAt: string;
-}
-
-export interface ResearchComment {
-  id: string;
-  author: string;
-  text: string;
-  timeAgo: string;
-}
-
-export interface ResearchLogEntry {
-  id: string;
-  author: string;
-  authorRole: string;
-  type: 'hallazgo' | 'pregunta' | 'paper' | 'benchmark';
-  title: string;
-  content: string;
-  codeSnippet?: string;
-  codeLanguage?: string;
-  upvotes: number;
-  hasUpvoted?: boolean;
-  comments: ResearchComment[];
-  timeAgo: string;
-}
-
-export interface ResearchPaper {
-  id: string;
-  title: string;
-  authors: string;
-  doiOrUrl: string;
-  summary: string;
-  addedBy: string;
-  tags: string[];
-}
-
-export interface ResearchSession {
-  id: string;
-  title: string;
-  dateStr: string;
-  topic: string;
-  speaker: string;
-  attendeesCount: number;
-  userAttending: boolean;
-}
-
-export interface ResearchMember {
-  id: string;
-  name: string;
-  role: string;
-  level: number;
-  contributionsCount: number;
-  isCurrentUser?: boolean;
-}
-
-export interface StudyGroup {
-  id: string;
-  name: string;
-  tag: string;
-  category: string;
-  description: string;
-  linesOfResearch: string[];
-  membersCount: number;
-  streakDays: number;
-  weeklyChallenge: {
-    title: string;
-    xpReward: number;
-    completed: boolean;
-  };
-  recentLogs: { author: string; message: string; timeAgo: string }[];
-  projects: ResearchProject[];
-  researchFeed: ResearchLogEntry[];
-  libraryPapers: ResearchPaper[];
-  upcomingSessions: ResearchSession[];
-  researchers: ResearchMember[];
-  isMember: boolean;
-}
-
 export interface StreakDay {
   dayName: string;
   shortDate: string;
@@ -168,7 +81,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   readonly streakService = inject(StreakService);
-  readonly clansService = inject(ClansService);
 
   enrollments = signal<Enrollment[]>([]);
   loading = signal(true);
@@ -178,7 +90,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private onDiagnosticUpdated = () => this.initLocalData();
 
   // Tab state: student vs teacher
-  activeTab = signal<'overview' | 'streak' | 'guilds' | 'achievements' | 'leaderboard' | 'advisor'>('overview');
+  activeTab = signal<'overview' | 'streak' | 'achievements' | 'leaderboard' | 'advisor'>('overview');
   activeTeacherTab = signal<'overview' | 'students' | 'activities' | 'advisor'>('overview');
   selectedBadgeFilter = signal<'all' | 'unlocked' | 'challenges' | 'courses'>('all');
 
@@ -186,7 +98,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     effect(() => {
       const tab = this.activeTab();
       if (tab === 'leaderboard') this.loadLeaderboard();
-      if (tab === 'guilds') this.loadClans();
       if (tab === 'streak') this.streakService.loadStatus();
     });
   }
@@ -643,276 +554,7 @@ for (let paso = 1; paso <= 3; paso++) {
     agentFeedback: 'Presenta tu examen diagnóstico para calibrar tu nivel y definir tu ruta de aprendizaje recomendada.',
   });
 
-  getDefaultStudyGroups(): StudyGroup[] {
-    return [
-      {
-        id: 'krnl',
-        name: 'Kernel & C++ Systems Hackers',
-        tag: '[KRNL]',
-        category: 'systems',
-        description: 'Estudio intensivo de llamadas POSIX, memoria virtual, concurrencia de bajo nivel y arquitectura de micro-kernels.',
-        linesOfResearch: ['Gestión de Memoria y Paginación x86_64', 'Concurrencia Lock-Free & Atomics', 'Llamadas POSIX & Observabilidad eBPF'],
-        membersCount: 1,
-        streakDays: 4,
-        weeklyChallenge: { title: 'Implementar un Thread Pool en C++20 con mutex POSIX', xpReward: 350, completed: false },
-        recentLogs: [{ author: 'Director Cátedra Sistemas (Lvl 16)', message: 'Abrió la convocatoria de investigación del clan.', timeAgo: 'hace 1d' }],
-        projects: [
-          {
-            id: 'krnl_p1',
-            title: 'Micro-Kernel Modular y Planificador Round-Robin',
-            description: 'Desarrollo de un núcleo básico modular en C++20 con soporte para interrupciones de temporizador y conmutación de contexto.',
-            techStack: ['C++20', 'Assembly x86', 'QEMU', 'CMake'],
-            status: 'en_progreso',
-            leadResearcher: 'Director Cátedra Sistemas',
-            membersJoined: ['Director Cátedra Sistemas'],
-            repoUrl: 'https://github.com/syseng-krnl/microkernel-prototype',
-            createdAt: 'hace 3d',
-          },
-        ],
-        researchFeed: [
-          {
-            id: 'krnl_rf1',
-            author: 'Director Cátedra Sistemas',
-            authorRole: 'Director de Semillero',
-            type: 'benchmark',
-            title: 'Medición de latencia: Mutex vs Spinlock en secciones críticas < 50ns',
-            content: 'Realizamos 10M de operaciones concurrentes. En secciones críticas breves sin I/O, el spinlock con CPU pause disminuye la latencia en 34% al evitar el context switch al kernel de Linux.',
-            codeSnippet: `// Loop de spinlock con mitigación de bus de memoria\nwhile (lock.test_and_set(std::memory_order_acquire)) {\n    #if defined(__x86_64__)\n    __builtin_ia32_pause();\n    #endif\n}`,
-            codeLanguage: 'cpp',
-            upvotes: 3,
-            hasUpvoted: false,
-            comments: [
-              { id: 'c1', author: 'Mentor Técnico', text: 'Cuidado con la inversión de prioridad si el hilo poseedor es desalojado.', timeAgo: 'hace 5h' },
-            ],
-            timeAgo: 'hace 1d',
-          },
-        ],
-        libraryPapers: [
-          {
-            id: 'krnl_lp1',
-            title: 'The Design and Implementation of the FreeBSD Operating System',
-            authors: 'McKusick, Neville-Neil, Watson',
-            doiOrUrl: 'https://www.freebsd.org/doc/',
-            summary: 'Texto fundamental sobre arquitectura de kernels monolíticos modernos, subsistema de memoria virtual y SMP.',
-            addedBy: 'Director Cátedra',
-            tags: ['Kernel', 'Virtual Memory', 'SMP'],
-          },
-        ],
-        upcomingSessions: [
-          {
-            id: 'krnl_us1',
-            title: 'Coloquio Semanal: Análisis de Concurrencia y Detección de Deadlocks',
-            dateStr: 'Jueves 18:00 UTC',
-            topic: 'Revisión práctica con ThreadSanitizer y análisis de grafos de espera (Wait-For Graph).',
-            speaker: 'Director Cátedra Sistemas',
-            attendeesCount: 3,
-            userAttending: false,
-          },
-        ],
-        researchers: [
-          { id: 'm1', name: 'Director Cátedra Sistemas', role: 'Director de Semillero', level: 16, contributionsCount: 6 },
-        ],
-        isMember: false,
-      },
-      {
-        id: 'algo',
-        name: 'Clan de Algoritmos & Grafos',
-        tag: '[ALGO]',
-        category: 'algorithms',
-        description: 'Resolución de problemas de alta complejidad algorítmica, árboles balanceados y optimización combinatoria.',
-        linesOfResearch: ['Algoritmos de Enrutamiento en Grafos Masivos', 'Estructuras de Datos Auto-Balanceadas', 'Programación Dinámica Avanzada'],
-        membersCount: 1,
-        streakDays: 3,
-        weeklyChallenge: { title: 'Calcular Camino Más Corto con Dijkstra sobre Grafos', xpReward: 280, completed: false },
-        recentLogs: [{ author: 'Director Cátedra Algoritmia (Lvl 15)', message: 'Publicó el reto de optimización de grafos.', timeAgo: 'hace 2d' }],
-        projects: [
-          {
-            id: 'algo_p1',
-            title: 'Motor de Búsqueda de Caminos Multimodal con A* y Contraction Hierarchies',
-            description: 'Optimización de consultas de distancias mínimas en redes topológicas a gran escala.',
-            techStack: ['Python', 'C++', 'Graph Theory'],
-            status: 'en_progreso',
-            leadResearcher: 'Director Cátedra Algoritmia',
-            membersJoined: ['Director Cátedra Algoritmia'],
-            createdAt: 'hace 5d',
-          },
-        ],
-        researchFeed: [
-          {
-            id: 'algo_rf1',
-            author: 'Director Cátedra Algoritmia',
-            authorRole: 'Director de Semillero',
-            type: 'hallazgo',
-            title: 'Balanceo AVL en O(log n) con rotaciones dobles compactas',
-            content: 'Implementamos una versión compacta de rotaciones LR y RL que evita llamadas intermedias redundantes. El factor de balance se recalcula en O(1) tiempo constante.',
-            upvotes: 4,
-            hasUpvoted: false,
-            comments: [],
-            timeAgo: 'hace 2d',
-          },
-        ],
-        libraryPapers: [
-          {
-            id: 'algo_lp1',
-            title: 'Contraction Hierarchies: Faster and Simpler Hierarchical Routing in Road Networks',
-            authors: 'Geisberger et al.',
-            doiOrUrl: 'https://doi.org/10.1007/978-3-540-68552-4_24',
-            summary: 'Preprocesamiento de grafos para acelerar consultas de Dijkstra en órdenes de magnitud.',
-            addedBy: 'Director Cátedra Algoritmia',
-            tags: ['Grafos', 'A*', 'Dijkstra'],
-          },
-        ],
-        upcomingSessions: [
-          {
-            id: 'algo_us1',
-            title: 'Seminario: Complejidad Amortizada y Conjuntos Disjuntos (Union-Find)',
-            dateStr: 'Miércoles 19:00 UTC',
-            topic: 'Demostración de la función inversa de Ackermann en tiempo casi lineal.',
-            speaker: 'Director Cátedra Algoritmia',
-            attendeesCount: 4,
-            userAttending: false,
-          },
-        ],
-        researchers: [
-          { id: 'al1', name: 'Director Cátedra Algoritmia', role: 'Director de Semillero', level: 15, contributionsCount: 5 },
-        ],
-        isMember: false,
-      },
-      {
-        id: 'arch',
-        name: 'Arquitectura Backend & APIs',
-        tag: '[ARCH]',
-        category: 'backend',
-        description: 'Diseño de microservicios resilientes, bases de datos distribuidas, mensajería asíncrona y alta disponibilidad.',
-        linesOfResearch: ['Sistemas de Mensajería y Event-Driven Architecture', 'Bases de Datos Distribuidas y Consistencia Eventual', 'Patrones de Resiliencia y Rate Limiting'],
-        membersCount: 1,
-        streakDays: 5,
-        weeklyChallenge: { title: 'Diseñar un Rate Limiter distribuido con Redis y Token Bucket', xpReward: 320, completed: false },
-        recentLogs: [{ author: 'Director Cátedra Backend (Lvl 16)', message: 'Inició el banco de pruebas de arquitectura distribuida.', timeAgo: 'hace 1d' }],
-        projects: [
-          {
-            id: 'arch_p1',
-            title: 'Rate Limiter Distribuido con Redis Cluster y Algoritmo Leaky Bucket',
-            description: 'Middleware escalable capaz de proteger microservicios ante ráfagas de 50k req/s sin degradar la latencia P99.',
-            techStack: ['Go', 'Redis', 'Docker', 'k6'],
-            status: 'en_progreso',
-            leadResearcher: 'Director Cátedra Backend',
-            membersJoined: ['Director Cátedra Backend'],
-            createdAt: 'hace 4d',
-          },
-        ],
-        researchFeed: [
-          {
-            id: 'arch_rf1',
-            author: 'Director Cátedra Backend',
-            authorRole: 'Director de Semillero',
-            type: 'benchmark',
-            title: 'Prueba de carga: Resiliencia de Circuit Breaker bajo latencia inducida',
-            content: 'Configuramos un Circuit Breaker con umbral de fallos del 50% en ventana de 10s. En la prueba con inyección de latencia (500ms), el circuito abrió en 1.2s aislando el servicio degradado.',
-            upvotes: 5,
-            hasUpvoted: false,
-            comments: [],
-            timeAgo: 'hace 1d',
-          },
-        ],
-        libraryPapers: [
-          {
-            id: 'arch_lp1',
-            title: 'Designing Data-Intensive Applications',
-            authors: 'Martin Kleppmann',
-            doiOrUrl: 'https://dataintensive.net/',
-            summary: 'El libro canónico sobre confiabilidad, escalabilidad y consistencia en sistemas distribuidos.',
-            addedBy: 'Director Cátedra Backend',
-            tags: ['Distribuidos', 'Bases de Datos', 'Consistencia'],
-          },
-        ],
-        upcomingSessions: [
-          {
-            id: 'arch_us1',
-            title: 'Coloquio: Event Sourcing y CQRS con Kafka y PostgreSQL',
-            dateStr: 'Viernes 17:00 UTC',
-            topic: 'Manejo de eventos desordenados, idempotencia y proyecciones de lectura.',
-            speaker: 'Director Cátedra Backend',
-            attendeesCount: 5,
-            userAttending: false,
-          },
-        ],
-        researchers: [
-          { id: 'ar1', name: 'Director Cátedra Backend', role: 'Director de Semillero', level: 16, contributionsCount: 7 },
-        ],
-        isMember: false,
-      },
-      {
-        id: 'sec',
-        name: 'CyberSecurity & Exploit Analysis',
-        tag: '[SEC]',
-        category: 'security',
-        description: 'Auditoría de seguridad en código fuente, sanitización estricta, criptografía aplicada y DevSecOps.',
-        linesOfResearch: ['Análisis Estático de Vulnerabilidades (SAST)', 'Criptografía Aplicada y Gestión de Secretos', 'Mitigación de OWASP Top 10 y Ataques a APIs'],
-        membersCount: 1,
-        streakDays: 2,
-        weeklyChallenge: { title: 'Mitigar vulnerabilidades OWASP Top 10 en endpoint de auth', xpReward: 400, completed: false },
-        recentLogs: [{ author: 'Director Cátedra Seguridad (Lvl 15)', message: 'Estableció las pautas de mitigación de vulnerabilidades.', timeAgo: 'hace 3d' }],
-        projects: [
-          {
-            id: 'sec_p1',
-            title: 'Herramienta de Análisis AST para Prevención de Inyección SQL y ReDoS',
-            description: 'Linter estático que recorre árboles sintácticos para identificar concatenaciones de consultas dinámicas y regex catastróficas.',
-            techStack: ['Rust', 'Tree-sitter', 'OWASP Rules'],
-            status: 'en_progreso',
-            leadResearcher: 'Director Cátedra Seguridad',
-            membersJoined: ['Director Cátedra Seguridad'],
-            createdAt: 'hace 6d',
-          },
-        ],
-        researchFeed: [
-          {
-            id: 'sec_rf1',
-            author: 'Director Cátedra Seguridad',
-            authorRole: 'Director de Semillero',
-            type: 'hallazgo',
-            title: 'Auditoría de Tokens JWT: Riesgo de algoritmo none y firmas truncadas',
-            content: 'Demostramos cómo librerías que no validan explícitamente el encabezado alg permiten falsificación de identidad sin conocimiento de la llave secreta.',
-            upvotes: 4,
-            hasUpvoted: false,
-            comments: [],
-            timeAgo: 'hace 2d',
-          },
-        ],
-        libraryPapers: [
-          {
-            id: 'sec_lp1',
-            title: 'OWASP Top 10 API Security Risks 2023',
-            authors: 'OWASP Foundation',
-            doiOrUrl: 'https://owasp.org/www-project-api-security/',
-            summary: 'Estándar de la industria sobre los vectores de ataque más críticos en APIs modernas.',
-            addedBy: 'Director Cátedra Seguridad',
-            tags: ['OWASP', 'API Security', 'BOLA'],
-          },
-        ],
-        upcomingSessions: [
-          {
-            id: 'sec_us1',
-            title: 'Taller: Threat Modeling de Arquitecturas Cloud con STRIDE',
-            dateStr: 'Martes 18:00 UTC',
-            topic: 'Metodología STRIDE y diseño de matrices de mitigación para microservicios.',
-            speaker: 'Director Cátedra Seguridad',
-            attendeesCount: 3,
-            userAttending: false,
-          },
-        ],
-        researchers: [
-          { id: 'sc1', name: 'Director Cátedra Seguridad', role: 'Director de Semillero', level: 15, contributionsCount: 4 },
-        ],
-        isMember: false,
-      },
-    ];
-  }
-
-  // Study Groups state
-  studyGroups = signal<StudyGroup[]>(this.getDefaultStudyGroups());
-
-  readonly currentStudentEmail = computed(() => {
+readonly currentStudentEmail = computed(() => {
     return this.auth.user()?.email?.toLowerCase().trim() || 'guest';
   });
 
@@ -923,65 +565,6 @@ for (let paso = 1; paso <= 3; paso++) {
   private getUserStorageKey(suffix: string): string {
     return `syseng_${this.currentStudentEmail()}_${suffix}`;
   }
-
-  normalizeSemilleroData(groups: any[]): StudyGroup[] {
-    const defaultData = this.getDefaultStudyGroups();
-    return (groups || []).map(g => {
-      const def = defaultData.find(d => d.id === g.id);
-      return {
-        ...g,
-        linesOfResearch: g.linesOfResearch && g.linesOfResearch.length > 0 ? g.linesOfResearch : (def?.linesOfResearch || ['Ingeniería de Software & Arquitectura']),
-        projects: g.projects && g.projects.length > 0 ? g.projects : (def?.projects || []),
-        researchFeed: g.researchFeed && g.researchFeed.length > 0 ? g.researchFeed : (def?.researchFeed || []),
-        libraryPapers: g.libraryPapers && g.libraryPapers.length > 0 ? g.libraryPapers : (def?.libraryPapers || []),
-        upcomingSessions: g.upcomingSessions && g.upcomingSessions.length > 0 ? g.upcomingSessions : (def?.upcomingSessions || []),
-        researchers: g.researchers && g.researchers.length > 0 ? g.researchers : (def?.researchers || []),
-      };
-    });
-  }
-
-  // Semillero Workspace State
-  selectedGuild = signal<StudyGroup | null>(null);
-  activeGuildSection = signal<'feed' | 'projects' | 'papers' | 'sessions' | 'team'>('feed');
-
-  // Feed post creation state
-  newPostTitle = signal('');
-  newPostContent = signal('');
-  newPostType = signal<'hallazgo' | 'pregunta' | 'benchmark' | 'paper'>('hallazgo');
-  newPostCode = signal('');
-  newPostCodeLang = signal('cpp');
-  showCodeInput = signal(false);
-
-  // Comments state
-  expandedComments = signal<Record<string, boolean>>({});
-  commentInputMap = signal<Record<string, string>>({});
-
-  // Modals state
-  showCreateGuildModal = signal(false);
-  newGuildName = signal('');
-  newGuildTag = signal('');
-  newGuildCategory = signal<'systems' | 'algorithms' | 'backend' | 'frontend' | 'security' | 'ai'>('systems');
-  newGuildDescription = signal('');
-  guildActionError = signal<string | null>(null);
-
-  showCreateProjectModal = signal(false);
-  newProjectTitle = signal('');
-  newProjectDesc = signal('');
-  newProjectStack = signal('');
-  newProjectRepo = signal('');
-
-  showSharePaperModal = signal(false);
-  newPaperTitle = signal('');
-  newPaperAuthors = signal('');
-  newPaperUrl = signal('');
-  newPaperSummary = signal('');
-  newPaperTags = signal('');
-
-  showCreateSessionModal = signal(false);
-  newSessionTitle = signal('');
-  newSessionDate = signal('');
-  newSessionTopic = signal('');
-  newSessionSpeaker = signal('');
 
   // Recommendations
   readonly currentRecommendation = signal<PathRecommendation>({
@@ -1218,7 +801,6 @@ for (let paso = 1; paso <= 3; paso++) {
 
     // Cargar datos reales y telemetría de racha
     this.streakService.loadStatus();
-    this.loadClans();
     this.loadLeaderboard();
 
     const userKeyDiagRes = this.getUserStorageKey('diagnostic_result');
@@ -1278,13 +860,6 @@ for (let paso = 1; paso <= 3; paso++) {
       });
     }
 
-    try {
-      const userKeyGroups = this.getUserStorageKey('study_groups');
-      const groupsRaw = localStorage.getItem(userKeyGroups);
-      if (groupsRaw && this.studyGroups().length === 0) {
-        this.studyGroups.set(this.normalizeSemilleroData(JSON.parse(groupsRaw)));
-      }
-    } catch {}
   }
 
   readonly currentAsciiAvatar = computed(() => {
@@ -1421,7 +996,7 @@ for (let paso = 1; paso <= 3; paso++) {
     if (lower.includes('racha') || lower.includes('xp') || lower.includes('ranking')) {
       return 'Para maximizar tu XP y escalar en el ranking: cada lección otorga +20 XP, los retos +50 XP, completar cursos +150 XP y mantener rachas diarias otorga bonificaciones progresivas (+25 XP por día consecutivo).';
     }
-    return `Basado en tu perfil actual (Nivel ${this.userLevel()} - ${this.specialization().title}): te recomiendo continuar con tu curso asignado en la pestaña whoami y resolver el reto semanal en tu clan de estudio para obtener experiencia acelerada.`;
+    return `Basado en tu perfil actual (Nivel ${this.userLevel()} - ${this.specialization().title}): te recomiendo continuar con tu curso asignado en la pestaña whoami y resolver ejercicios prácticos para obtener experiencia acelerada.`;
   }
 
   readonly currentQuestion = computed(() => this.diagQuestions[this.currentDiagQuestionIndex()]);
@@ -1574,109 +1149,6 @@ for (let paso = 1; paso <= 3; paso++) {
     this.diagnosticAnswers = {};
   }
 
-  readonly myGroupName = computed(() => {
-    const mine = this.studyGroups().find(g => g.isMember);
-    return mine ? `${mine.tag} ${mine.name}` : 'Sin clan asignado (Explorador Independiente)';
-  });
-
-  openCreateGuildModal() {
-    this.newGuildName.set('');
-    this.newGuildTag.set('');
-    this.newGuildCategory.set('systems');
-    this.newGuildDescription.set('');
-    this.guildActionError.set(null);
-    this.showCreateGuildModal.set(true);
-  }
-
-  closeCreateGuildModal() {
-    this.showCreateGuildModal.set(false);
-  }
-
-  createGuild() {
-    const name = this.newGuildName().trim();
-    const rawTag = this.newGuildTag().trim().toUpperCase();
-    const desc = this.newGuildDescription().trim();
-
-    if (!name || !rawTag || !desc) {
-      this.guildActionError.set('Por favor completa todos los campos del clan.');
-      return;
-    }
-
-    const tag = rawTag.startsWith('[') ? rawTag : `[${rawTag}]`;
-    const newId = 'clan_' + Date.now();
-    const currentUser = this.auth.user();
-
-    const createdGuild: StudyGroup = {
-      id: newId,
-      name,
-      tag,
-      category: this.newGuildCategory() as any,
-      description: desc,
-      membersCount: 1,
-      streakDays: 1,
-      linesOfResearch: ['Desarrollo Tecnológico e Innovación', 'Ingeniería de Software Aplicada'],
-      projects: [
-        {
-          id: 'proj_init_' + Date.now(),
-          title: `Proyecto Semilla: ${name}`,
-          description: `Iniciativa de investigación aplicada fundada por ${currentUser?.name || 'Tú'} para explorar soluciones computacionales avanzadas.`,
-          leadResearcher: currentUser?.name || 'Tú',
-          status: 'en_progreso',
-          techStack: ['Python', 'TypeScript', 'Docker'],
-          membersJoined: [currentUser?.name || 'Tú'],
-          createdAt: 'Hoy',
-        }
-      ],
-      researchFeed: [
-        {
-          id: 'feed_init_' + Date.now(),
-          author: `${currentUser?.name || 'Tú'}`,
-          authorRole: 'Investigador Principal',
-          type: 'hallazgo',
-          title: `Acta de Inicio: ${name}`,
-          content: 'Se formaliza la apertura de la línea de investigación y convocatoria de cadetes investigadores.',
-          upvotes: 1,
-          comments: [],
-          timeAgo: 'hace un momento',
-        }
-      ],
-      libraryPapers: [],
-      upcomingSessions: [],
-      researchers: [
-        {
-          id: 'mem_init_' + Date.now(),
-          name: currentUser?.name || 'Tú',
-          role: 'Fundador / Investigador Principal',
-          level: this.userLevel(),
-          contributionsCount: 1,
-          isCurrentUser: true,
-        }
-      ],
-      weeklyChallenge: {
-        title: `Reto Fundacional de ${name}: Resolver 3 retos de código`,
-        xpReward: 350,
-        completed: false,
-      },
-      recentLogs: [
-        {
-          author: `${currentUser?.name || 'Tú'} (Lvl ${this.userLevel()})`,
-          message: 'Fundó el semillero e inició las actividades de investigación.',
-          timeAgo: 'hace un momento',
-        },
-      ],
-      isMember: true,
-    };
-
-    // Cambiar membresía al nuevo clan
-    this.studyGroups.update(groups => [
-      createdGuild,
-      ...groups.map(g => ({ ...g, isMember: false })),
-    ]);
-
-    this.saveStudyGroups();
-    this.showCreateGuildModal.set(false);
-  }
-
   loadLeaderboard(): void {
     const email = this.currentStudentEmail();
     const query = email ? `?email=${encodeURIComponent(email)}` : '';
@@ -1688,276 +1160,6 @@ for (let paso = 1; paso <= 3; paso++) {
       },
       error: () => {}
     });
-  }
-
-  loadClans(): void {
-    const email = this.currentStudentEmail();
-    const query = email ? `?email=${encodeURIComponent(email)}` : '';
-    this.api.get<any[]>(`/clans${query}`).subscribe({
-      next: (remoteClans) => {
-        if (Array.isArray(remoteClans) && remoteClans.length > 0) {
-          const defaults = this.getDefaultStudyGroups();
-          const merged = defaults.map(def => {
-            const remote = remoteClans.find((r: any) => r.id === def.id || r.tag === def.tag);
-            if (remote) {
-              const isMem = remote.isMember ?? remote.is_member ?? def.isMember;
-              return {
-                ...def,
-                isMember: Boolean(isMem),
-                streakDays: Number(remote.streakDays ?? remote.streak_days ?? def.streakDays),
-                membersCount: Math.max(def.researchers.length, Number(remote.membersCount ?? remote.members_count ?? 1)),
-              };
-            }
-            return def;
-          });
-          this.studyGroups.set(merged);
-          const currentSel = this.selectedGuild();
-          if (currentSel) {
-            const updated = merged.find(c => c.id === currentSel.id);
-            if (updated) this.selectedGuild.set(updated);
-          }
-        }
-      },
-      error: () => {}
-    });
-  }
-
-  openGuildWorkspace(guild: StudyGroup) {
-    this.router.navigate(['/clan'], { queryParams: { id: guild.id } });
-  }
-
-  closeGuildWorkspace() {
-    this.selectedGuild.set(null);
-  }
-
-  joinGuild(id: string) {
-    this.clansService.joinClan(id);
-    this.streakService.recordActivity('pulse');
-    this.studyGroups.update(groups =>
-      groups.map(g => ({ ...g, isMember: g.id === id }))
-    );
-    const email = this.currentStudentEmail();
-    this.api.post<{ success: boolean; message: string }>(`/clans/${id}/join`, { email }).subscribe({
-      next: () => {
-        this.loadClans();
-      },
-      error: () => {}
-    });
-  }
-
-  leaveGuild(id: string) {
-    this.clansService.leaveClan(id);
-    this.studyGroups.update(groups =>
-      groups.map(g => g.id === id ? { ...g, isMember: false } : g)
-    );
-    const email = this.currentStudentEmail();
-    this.api.post<{ success: boolean; message: string }>(`/clans/${id}/leave`, { email }).subscribe({
-      next: () => {
-        this.loadClans();
-      },
-      error: () => {}
-    });
-  }
-
-  publishClanPost() {
-    const guild = this.selectedGuild();
-    if (!guild) return;
-
-    const title = this.newPostTitle().trim();
-    const content = this.newPostContent().trim();
-    if (!title || !content) return;
-
-    const email = this.currentStudentEmail();
-    const payload = {
-      title,
-      content,
-      type: this.newPostType(),
-      code_snippet: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCode().trim() : undefined,
-      code_language: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCodeLang() : undefined,
-      email,
-    };
-
-    this.api.post<{ success: boolean; post: ResearchLogEntry }>(`/clans/${guild.id}/posts`, payload).subscribe({
-      next: (res) => {
-        this.newPostTitle.set('');
-        this.newPostContent.set('');
-        this.newPostCode.set('');
-        this.showCodeInput.set(false);
-        this.loadClans();
-        if (res && res.post) {
-          const updatedFeed = [res.post, ...(guild.researchFeed || [])];
-          this.selectedGuild.set({ ...guild, researchFeed: updatedFeed });
-        }
-        this.streakService.recordActivity('pulse');
-      },
-      error: () => {
-        // Fallback local
-        const currentUser = this.auth.user();
-        const myName = currentUser?.name || 'Tú';
-        const newEntry: ResearchLogEntry = {
-          id: 'rf_' + Date.now(),
-          author: myName,
-          authorRole: 'Miembro del Clan',
-          type: this.newPostType(),
-          title,
-          content,
-          codeSnippet: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCode().trim() : undefined,
-          codeLanguage: this.showCodeInput() && this.newPostCode().trim() ? this.newPostCodeLang() : undefined,
-          upvotes: 1,
-          hasUpvoted: true,
-          comments: [],
-          timeAgo: 'hace un momento',
-        };
-        const updatedFeed = [newEntry, ...(guild.researchFeed || [])];
-        const updatedGuild: StudyGroup = {
-          ...guild,
-          researchFeed: updatedFeed,
-        };
-        this.selectedGuild.set(updatedGuild);
-        this.studyGroups.update(groups =>
-          groups.map(g => (g.id === guild.id ? updatedGuild : g))
-        );
-        this.newPostTitle.set('');
-        this.newPostContent.set('');
-        this.newPostCode.set('');
-        this.showCodeInput.set(false);
-      }
-    });
-  }
-
-  togglePostUpvote(postId: string) {
-    const guild = this.selectedGuild();
-    if (!guild) return;
-
-    // Actualización optimista inmediata
-    const updatedFeed = (guild.researchFeed || []).map(p => {
-      if (p.id === postId) {
-        const hasVoted = !p.hasUpvoted;
-        return {
-          ...p,
-          hasUpvoted: hasVoted,
-          upvotes: hasVoted ? p.upvotes + 1 : Math.max(0, p.upvotes - 1),
-        };
-      }
-      return p;
-    });
-
-    const updatedGuild: StudyGroup = { ...guild, researchFeed: updatedFeed };
-    this.selectedGuild.set(updatedGuild);
-    this.studyGroups.update(groups =>
-      groups.map(g => (g.id === guild.id ? updatedGuild : g))
-    );
-
-    const numId = parseInt(postId.replace('rf_', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
-      this.api.post<{ success: boolean; hasUpvoted: boolean; upvotes: number }>(`/clans/posts/${numId}/upvote`, {
-        email: this.currentStudentEmail(),
-      }).subscribe();
-    }
-  }
-
-  toggleComments(postId: string) {
-    this.expandedComments.update(map => ({
-      ...map,
-      [postId]: !map[postId],
-    }));
-  }
-
-  updateCommentInput(postId: string, text: string) {
-    this.commentInputMap.update(map => ({
-      ...map,
-      [postId]: text,
-    }));
-  }
-
-  submitPostComment(postId: string) {
-    const text = (this.commentInputMap()[postId] || '').trim();
-    if (!text) return;
-
-    const guild = this.selectedGuild();
-    if (!guild) return;
-
-    const currentUser = this.auth.user();
-    const myName = currentUser?.name || 'Tú';
-
-    // Optimistic comment
-    const newComment: ResearchComment = {
-      id: 'c_' + Date.now(),
-      author: `${myName} (Lvl ${this.userLevel()})`,
-      text,
-      timeAgo: 'hace un momento',
-    };
-
-    const updatedFeed = (guild.researchFeed || []).map(p => {
-      if (p.id === postId) {
-        return {
-          ...p,
-          comments: [...(p.comments || []), newComment],
-        };
-      }
-      return p;
-    });
-
-    const updatedGuild: StudyGroup = {
-      ...guild,
-      researchFeed: updatedFeed,
-    };
-
-    this.selectedGuild.set(updatedGuild);
-    this.studyGroups.update(groups =>
-      groups.map(g => (g.id === guild.id ? updatedGuild : g))
-    );
-
-    this.commentInputMap.update(map => ({
-      ...map,
-      [postId]: '',
-    }));
-
-    const numId = parseInt(postId.replace('rf_', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
-      this.api.post<{ success: boolean; comment: any }>(`/clans/posts/${numId}/comments`, {
-        comment: text,
-        email: this.currentStudentEmail(),
-      }).subscribe({
-        next: () => this.loadClans(),
-      });
-    }
-  }
-
-  completeClanChallenge() {
-    const guild = this.selectedGuild();
-    if (!guild || guild.weeklyChallenge.completed) return;
-
-    const currentUser = this.auth.user();
-    const myName = currentUser?.name || 'Tú';
-
-    const updatedGuild: StudyGroup = {
-      ...guild,
-      weeklyChallenge: {
-        ...guild.weeklyChallenge,
-        completed: true,
-      },
-      recentLogs: [
-        {
-          author: `${myName} (Lvl ${this.userLevel()})`,
-          message: `Superó el reto semanal: "${guild.weeklyChallenge.title}" (+${guild.weeklyChallenge.xpReward} XP)`,
-          timeAgo: 'hace un momento',
-        },
-        ...(guild.recentLogs || []),
-      ].slice(0, 4),
-    };
-
-    this.selectedGuild.set(updatedGuild);
-    this.studyGroups.update(groups =>
-      groups.map(g => (g.id === guild.id ? updatedGuild : g))
-    );
-    this.saveStudyGroups();
-  }
-
-  private saveStudyGroups() {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(this.getUserStorageKey('study_groups'), JSON.stringify(this.studyGroups()));
-    }
   }
 
   completedCount(): number {
@@ -2092,7 +1294,6 @@ for (let paso = 1; paso <= 3; paso++) {
     const enrollmentsCount = this.enrollments().length;
     const completedCourses = this.completedCount();
     const studyMins = this.todayStudyMinutes();
-    const isClanMember = this.studyGroups().some(g => g.isMember);
 
     return [
       {
@@ -2208,16 +1409,16 @@ for (let paso = 1; paso <= 3; paso++) {
         shaFingerprint: 'sha256:b1a2c3d4e5f60789',
       },
       {
-        id: 'clan_brotherhood',
-        title: 'Pertenencia a Clan',
+        id: 'terminal_veteran',
+        title: 'Veterano de Terminal',
         category: 'special',
-        icon: 'shield',
-        description: 'Te uniste a un clan o semillero de investigación técnica.',
-        requirement: 'Unirte a 1 clan',
-        targetCount: 1,
-        currentCount: isClanMember ? 1 : 0,
-        progressPercent: isClanMember ? 100 : 0,
-        unlocked: isClanMember,
+        icon: 'terminal',
+        description: 'Superaste con destreza desafíos técnicos y ejercicios de práctica.',
+        requirement: 'Resuelve 5 retos',
+        targetCount: 5,
+        currentCount: Math.min(5, challenges),
+        progressPercent: Math.min(100, Math.round((challenges / 5) * 100)),
+        unlocked: challenges >= 5,
         level: 'silver',
         shaFingerprint: 'sha256:4a5b6c7d8e9f0123',
       },

@@ -141,8 +141,7 @@ export class OnboardingComponent implements OnInit {
     this.ideExecutionState.set('idle');
   }
 
-  // Paso 5: Comunidad / Racha
-  readonly communityTab = signal<'streak' | 'clan'>('streak');
+  // Paso 5: Experiencia y Racha
   readonly demoXp = signal<number>(650);
   readonly xpGainedNotice = signal<boolean>(false);
   boostXp(): void {
@@ -153,9 +152,6 @@ export class OnboardingComponent implements OnInit {
     }
     this.xpGainedNotice.set(true);
     setTimeout(() => this.xpGainedNotice.set(false), 1200);
-  }
-  setCommunityTab(tab: 'streak' | 'clan'): void {
-    this.communityTab.set(tab);
   }
 
   readonly tourSteps: TourStepDefinition[] = [
@@ -225,20 +221,20 @@ export class OnboardingComponent implements OnInit {
         { icon: 'lock', title: 'Mérito Estricto', hint: 'El siguiente reto se desbloquea solo si superas todos los tests.' }
       ],
       proTip: '¡Haz clic en [▶ Run Script] en el simulador para ver la compilación en vivo!',
-      ctaText: 'Siguiente: Clanes, Racha & Perfil →'
+      ctaText: 'Siguiente: Racha & Perfil →'
     },
     {
       step: 5,
-      tag: 'PASO 05 // COMUNIDAD',
+      tag: 'PASO 05 // PROGRESO',
       tagColor: 'cyan',
-      title: 'Clanes, Racha Diaria & Perfil',
-      subtitle: 'Comunidad, fuego diario y acreditación de logros en tu hoja de vida.',
-      headline: 'Gana experiencia (XP), protege tu racha diaria y colabora con otros cadetes.',
-      routeLocation: 'Barra Superior → 🔥 / Mi Clan ( /clan ) / Perfil ( /perfil )',
+      title: 'Racha Diaria & Perfil Profesional',
+      subtitle: 'Constancia, fuego diario y acreditación de logros en tu hoja de vida.',
+      headline: 'Gana experiencia (XP), protege tu racha diaria y construye tu historial de ingeniería.',
+      routeLocation: 'Barra Superior → 🔥 Racha Diaria / Perfil ( /perfil )',
       routeLink: '/perfil',
       highlights: [
         { icon: 'flame', title: 'Racha de Fuego (🔥)', hint: '1 reto al día mantiene tu racha y bonifica tu XP.' },
-        { icon: 'boxes', title: 'Clanes de Cadetes', hint: 'Únete a un escuadrón técnico para competir en la liga semanal.' },
+        { icon: 'award', title: 'Nivel y Liga XP', hint: 'Sube de rango técnico a medida que acumulas experiencia.' },
         { icon: 'user', title: 'Hoja de Vida Técnica', hint: 'Historial de retos, insignias ganadas y credencial digital.' }
       ],
       proTip: 'Pulsa [⚡ Práctica Diaria (+50 XP)] en el simulador para ver subir tu barra.',

@@ -287,8 +287,6 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
           contextualTip = { icon: 'code', text: 'Si te bloqueas en este ejercicio, haz clic en mí para darte pistas.', tag: 'Tutor en Vivo' };
         } else if (url.includes('/perfil')) {
           contextualTip = { icon: 'award', text: '¡Revisa tu racha y nivel! La constancia hace al ingeniero.', tag: 'Progreso SysEng' };
-        } else if (url.includes('/clan') || url.includes('/comunidad')) {
-          contextualTip = { icon: 'users', text: 'Aprender y colaborar en clanes multiplica tu retención técnica.', tag: 'Comunidad' };
         }
         this.speakTip(contextualTip, 9000);
       }

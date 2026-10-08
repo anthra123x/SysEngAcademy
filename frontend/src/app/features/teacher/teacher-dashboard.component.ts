@@ -16,8 +16,6 @@ import {
 } from '../../core/services/teacher.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
-import { ClansService } from '../../core/services/clans.service';
-import { StudyGroup, GitPullRequest, ResearchProjectTask, ResearchLogEntry } from '../../core/models/clan';
 
 @Component({
   selector: 'app-teacher-dashboard',
@@ -30,7 +28,6 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
   private readonly teacherSvc = inject(TeacherService);
   private readonly route = inject(ActivatedRoute);
   readonly auth = inject(AuthService);
-  readonly clansSvc = inject(ClansService);
 
   private routeSub?: Subscription;
 
@@ -42,52 +39,7 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
   readonly searchQuery = signal<string>('');
   readonly statusFilter = signal<'all' | 'verified' | 'unverified'>('all');
   readonly activityTypeFilter = signal<'all' | 'challenge' | 'quiz' | 'terminal'>('all');
-  readonly activeTab = signal<'students' | 'activities' | 'activity' | 'ai' | 'clans'>('students');
-
-  // Estados para pestaña de Clanes & Squads
-  readonly selectedClanId = signal<string>('krnl');
-  readonly clanCategoryFilter = signal<string>('all');
-  readonly clanSubTab = signal<'prs' | 'kanban' | 'rfcs' | 'drills'>('prs');
-  readonly showNewClanTaskModal = signal<boolean>(false);
-  readonly newClanTaskTitle = signal<string>('');
-  readonly newClanTaskType = signal<'feature' | 'bug' | 'perf' | 'security' | 'arch'>('arch');
-  readonly newClanTaskXp = signal<number>(50);
-
-  readonly showEndorseModal = signal<boolean>(false);
-  readonly endorseTarget = signal<{ clanId: string; logId: string; title: string } | null>(null);
-  readonly endorseNote = signal<string>('Aporte técnico de alto nivel. Aprobado para inclusión curricular con Aval de Cátedra.');
-
-  readonly filteredClans = computed(() => {
-    const list = this.clansSvc.studyGroups();
-    const filter = this.clanCategoryFilter();
-    if (filter === 'all') return list;
-    return list.filter(c => c.category === filter);
-  });
-
-  readonly selectedClan = computed<StudyGroup | null>(() => {
-    const list = this.clansSvc.studyGroups();
-    const currentId = this.selectedClanId();
-    return list.find(c => c.id === currentId) || list[0] || null;
-  });
-
-  readonly selectedClanProject = computed(() => {
-    const clan = this.selectedClan();
-    return clan?.projects?.[0] || null;
-  });
-
-  readonly pendingPrsCount = computed(() => {
-    let count = 0;
-    for (const c of this.clansSvc.studyGroups()) {
-      for (const p of c.projects || []) {
-        for (const pr of p.pullRequests || []) {
-          if (pr.status === 'open' && !pr.reviews?.some(r => r.isTeacher && r.verdict === 'approved')) {
-            count++;
-          }
-        }
-      }
-    }
-    return count;
-  });
+  readonly activeTab = signal<'students' | 'activities' | 'activity' | 'ai'>('students');
 
   readonly selectedStudentDetail = signal<TeacherStudentDetail | null>(null);
 
@@ -148,7 +100,7 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     // Sincronización reactiva con queryParams de la URL (navbar pills)
     this.routeSub = this.route.queryParams.subscribe(params => {
       const tab = params['tab'];
-      if (tab === 'students' || tab === 'activities' || tab === 'activity' || tab === 'ai' || tab === 'clans') {
+      if (tab === 'students' || tab === 'activities' || tab === 'activity' || tab === 'ai') {
         this.activeTab.set(tab);
       }
     });
@@ -186,62 +138,8 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  setTab(tab: 'students' | 'activities' | 'activity' | 'ai' | 'clans') {
+  setTab(tab: 'students' | 'activities' | 'activity' | 'ai') {
     this.activeTab.set(tab);
-  }
-
-  selectClan(id: string) {
-    this.selectedClanId.set(id);
-  }
-
-  setClanSubTab(tab: 'prs' | 'kanban' | 'rfcs' | 'drills') {
-    this.clanSubTab.set(tab);
-  }
-
-  approvePrAsTeacher(clanId: string, projectId: string, prId: string) {
-    this.clansSvc.reviewProjectPullRequest(clanId, projectId, prId, {
-      verdict: 'approved',
-      comment: 'Aval oficial de Cátedra: Implementación y tests técnicos conformes a los estándares del semillero.',
-    });
-  }
-
-  mergePrAsTeacher(clanId: string, projectId: string, prId: string) {
-    this.clansSvc.mergeProjectPullRequest(clanId, projectId, prId);
-  }
-
-  openEndorseModal(clanId: string, logId: string, title: string) {
-    this.endorseTarget.set({ clanId, logId, title });
-    this.showEndorseModal.set(true);
-  }
-
-  submitEndorsement() {
-    const target = this.endorseTarget();
-    if (!target) return;
-    this.clansSvc.teacherEndorseLog(target.clanId, target.logId, this.endorseNote());
-    this.showEndorseModal.set(false);
-    this.endorseTarget.set(null);
-  }
-
-  resolveDrillAsTeacher(clanId: string) {
-    this.clansSvc.resolveWeeklyDrill(clanId);
-  }
-
-  openNewClanTaskModal() {
-    this.newClanTaskTitle.set('');
-    this.newClanTaskType.set('arch');
-    this.newClanTaskXp.set(50);
-    this.showNewClanTaskModal.set(true);
-  }
-
-  submitNewClanTask() {
-    const title = this.newClanTaskTitle().trim();
-    if (!title) return;
-    const clan = this.selectedClan();
-    const proj = this.selectedClanProject();
-    if (!clan || !proj) return;
-
-    this.clansSvc.addProjectTask(clan.id, proj.id, title, this.newClanTaskType(), 'Cátedra / Docente');
-    this.showNewClanTaskModal.set(false);
   }
 
   loadAllData() {

@@ -127,55 +127,6 @@
           &__icon {
             font-size: 0.85rem;
           }
-
-          &--clan {
-            background: rgba(10, 233, 138, 0.08);
-            border: 1px solid rgba(10, 233, 138, 0.28);
-            color: var(--text-primary);
-            padding: 5px 12px;
-            gap: 6px;
-
-            .clan-pill-tag {
-              font-family: var(--font-mono);
-              font-size: 0.7rem;
-              font-weight: 700;
-              color: var(--primary);
-              background: rgba(10, 233, 138, 0.16);
-              padding: 1px 6px;
-              border-radius: 4px;
-              letter-spacing: 0.04em;
-            }
-
-            .clan-pill-fire {
-              font-family: var(--font-mono);
-              font-size: 0.68rem;
-              font-weight: 700;
-              color: #FFB800;
-              background: rgba(255, 184, 0, 0.12);
-              padding: 1px 5px;
-              border-radius: 4px;
-            }
-
-            &:hover {
-              border-color: var(--primary);
-              background: rgba(10, 233, 138, 0.15);
-              box-shadow: 0 0 12px rgba(10, 233, 138, 0.2);
-            }
-
-            &.active {
-              background: rgba(10, 233, 138, 0.2);
-              border-color: var(--primary);
-              color: var(--primary);
-              box-shadow: 0 0 16px rgba(10, 233, 138, 0.25);
-            }
-          }
-
-          &--clans-explore {
-            color: var(--text-secondary);
-            &:hover {
-              color: var(--text-primary);
-            }
-          }
         }
 
         @media (max-width: 768px) {
@@ -489,21 +440,7 @@
           background: var(--bg-surface-2);
         }
 
-        &--clan {
-          color: var(--text-primary);
-          gap: 10px;
 
-          .clan-drop-tag {
-            font-family: var(--font-mono);
-            font-size: 0.68rem;
-            font-weight: 700;
-            color: var(--primary);
-            background: rgba(10, 233, 138, 0.12);
-            border: 1px solid rgba(10, 233, 138, 0.25);
-            padding: 1px 6px;
-            border-radius: 4px;
-          }
-        }
 
         &--danger {
           color: var(--danger);
@@ -622,30 +559,7 @@
             border-left: 3px solid var(--primary);
           }
 
-          &.mobile-clan-link {
-            background: rgba(10, 233, 138, 0.08);
-            border: 1px solid rgba(10, 233, 138, 0.25);
-            color: var(--text-primary);
-            gap: 8px;
 
-            .clan-pill-tag {
-              font-family: var(--font-mono);
-              font-size: 0.7rem;
-              font-weight: 700;
-              color: var(--primary);
-              background: rgba(10, 233, 138, 0.16);
-              padding: 2px 6px;
-              border-radius: 4px;
-            }
-
-            .clan-pill-fire {
-              font-family: var(--font-mono);
-              font-size: 0.7rem;
-              font-weight: 700;
-              color: #FFB800;
-              margin-left: auto;
-            }
-          }
         }
       }
 

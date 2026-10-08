@@ -16,11 +16,7 @@ class ClanWorkflowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Asegurar que la BD tiene los semilleros y proyectos iniciales
-        if (ClanProject::count() === 0) {
-            $seeder = new ClanWorkflowSeeder();
-            $seeder->run();
-        }
+        $this->markTestSkipped('Módulo de clanes y semilleros retirado temporalmente a petición del usuario.');
     }
 
     public function test_can_list_clans_with_engineering_workflow()

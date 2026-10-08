@@ -2,7 +2,6 @@ import { Component, inject, computed, signal, OnInit, OnDestroy } from '@angular
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { StreakService } from '../../core/services/streak.service';
-import { ClansService } from '../../core/services/clans.service';
 
 @Component({
   selector: 'app-mobile-bottom-nav',
@@ -289,7 +288,6 @@ export class MobileBottomNavComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   router = inject(Router);
   streakService = inject(StreakService);
-  clansService = inject(ClansService);
 
   readonly isByteOpen = signal(false);
 
@@ -340,5 +338,4 @@ export class MobileBottomNavComponent implements OnInit, OnDestroy {
 
   readonly studentStreak = computed(() => this.streakService.currentStreak());
   readonly isStreakActive = computed(() => this.streakService.isStreakActive());
-  readonly userClan = computed(() => this.clansService.userClan());
 }

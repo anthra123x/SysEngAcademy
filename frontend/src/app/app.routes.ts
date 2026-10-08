@@ -44,8 +44,8 @@ export const routes: Routes = [
   },
   {
     path: 'clan',
-    loadComponent: () => import('./features/clan/clan.component').then(m => m.ClanComponent),
-    canActivate: [authGuard]
+    redirectTo: 'cursos',
+    pathMatch: 'full'
   },
   {
     path: 'docente',

@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\CourseReviewController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\ForumController;
 use App\Http\Controllers\Api\HomeController;
-use App\Http\Controllers\Api\ClanController;
 use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\LearningPathController;
 use App\Http\Controllers\Api\LessonController;
@@ -38,29 +37,11 @@ Route::get('/courses/{course}/forum', [ForumController::class, 'index']);
 Route::get('/forum/posts/{id}', [ForumController::class, 'show']);
 Route::get('/leaderboard', [LeaderboardController::class, 'index']);
 
-// Clanes y Telemetría de Racha (público / híbrido con fallback de email o token)
-Route::get('/clans', [ClanController::class, 'index']);
-Route::get('/clans/{id}', [ClanController::class, 'show']);
+// Telemetría de Racha y Hábito de Estudio (público / híbrido con fallback de email o token)
 Route::post('/user/activity-ping', [StreakController::class, 'ping']);
 Route::get('/user/streak', [StreakController::class, 'status']);
 Route::get('/user/streak/recovery-drill', [StreakController::class, 'recoveryDrill']);
 Route::post('/user/streak/recover', [StreakController::class, 'recover']);
-Route::post('/clans/{id}/join', [ClanController::class, 'join']);
-Route::post('/clans/{id}/leave', [ClanController::class, 'leave']);
-Route::post('/clans/{id}/posts', [ClanController::class, 'storePost']);
-Route::post('/clans/posts/{postId}/upvote', [ClanController::class, 'toggleUpvote']);
-Route::post('/clans/posts/{postId}/comments', [ClanController::class, 'storeComment']);
-Route::post('/clans', [ClanController::class, 'storeClan']);
-
-// Workflow de Ingeniería de Clanes (Kanban, Git, PRs, Vercel, Cátedra)
-Route::post('/clans/{id}/projects/{projectId}/tasks', [ClanController::class, 'storeProjectTask']);
-Route::patch('/clans/{id}/projects/{projectId}/tasks/{taskId}/status', [ClanController::class, 'updateProjectTaskStatus']);
-Route::post('/clans/{id}/projects/{projectId}/tasks/{taskId}/assign', [ClanController::class, 'assignProjectTask']);
-Route::post('/clans/{id}/projects/{projectId}/pull-requests', [ClanController::class, 'storeProjectPullRequest']);
-Route::post('/clans/{id}/projects/{projectId}/pull-requests/{prId}/reviews', [ClanController::class, 'reviewProjectPullRequest']);
-Route::post('/clans/{id}/projects/{projectId}/pull-requests/{prId}/merge', [ClanController::class, 'mergeProjectPullRequest']);
-Route::post('/clans/{id}/posts/{postId}/endorse', [ClanController::class, 'endorsePost']);
-Route::post('/clans/{id}/drills/resolve', [ClanController::class, 'resolveDrill']);
 
 // Code execution routes (public, rate limited)
 Route::get('/languages', [CodeExecutionController::class, 'languages']);
