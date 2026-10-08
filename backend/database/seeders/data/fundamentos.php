@@ -13,9 +13,10 @@ return [
     [
         'slug' => 'introduccion-programacion',
         'title' => 'Introducción a la Programación',
-        'description' => 'Aprende los fundamentos absolutos de la programación. Sin experiencia previa requerida. Cubriremos variables, tipos de datos, estructuras de control y funciones básicas con ejemplos prácticos.',
+        'description' => 'Aprende los fundamentos absolutos de la programación con pseudocódigo y algoritmos. Sin experiencia previa requerida. Cubriremos variables, tipos de datos, estructuras de control y funciones con ejemplos prácticos.',
         'category' => 'programacion-basica',
         'difficulty' => 'beginner',
+        'language' => 'pseint',
         'duration_hours' => 12,
         'is_free' => true,
         'learning_path' => 'fundamentos-programacion',
@@ -36,20 +37,25 @@ return [
                             ['h', '¿Qué es una variable?'],
                             ['p', 'Una variable es un espacio en la memoria del ordenador que tiene un nombre y guarda un valor que puede cambiar durante la ejecución del programa. Piensa en ella como una caja etiquetada: la etiqueta es el nombre y el contenido es el dato.'],
                             ['p', 'Al crear una variable estás reservando memoria para guardar información. La ventaja de usar variables es que puedes reutilizar ese dato muchas veces sin repetirlo y puedes modificarlo cuando el programa lo necesite.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-// Declarar y asignar una variable
-$nombre = "Ada";
-$edad = 36;
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo variables_ejemplo
+    // Declarar variables y su tipo
+    Definir nombre Como Cadena
+    Definir edad Como Entero
 
-// Usar la variable más tarde
-echo "Hola, " . $nombre;
-echo "Tienes " . $edad . " años.";
-PHP],
+    // Asignar valores
+    nombre <- "Ada"
+    edad <- 36
+
+    // Mostrar valores en pantalla
+    Escribir "Hola, ", nombre
+    Escribir "Tienes ", edad, " años."
+FinAlgoritmo
+PSEINT],
                             ['h', 'Reglas para nombrar variables'],
                             ['p', 'Los nombres de variables deben ser descriptivos para que el código se lea como una frase. Un buen nombre explica qué contiene la variable sin necesidad de comentarios.'],
                             ['list', [
-                                'Usa nombres descriptivos: $totalCarrito en vez de $x',
+                                'Usa nombres descriptivos: totalCarrito en vez de x',
                                 'Mantén un estilo consistente: camelCase o snake_case',
                                 'Evita palabras reservadas del lenguaje',
                                 'No uses nombres demasiado cortos ni ambiguos',
@@ -96,21 +102,30 @@ PHP],
                             ['h', 'Tipos de datos básicos'],
                             ['p', 'Los tipos de datos dicen qué clase de información guarda una variable y qué operaciones se pueden hacer con ella. Los más comunes son enteros, decimales, texto y booleanos.'],
                             ['p', 'Elegir el tipo correcto evita errores sutiles: sumar números no es lo mismo que concatenar texto, y comparar valores de tipos distintos suele dar resultados inesperados.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-$entero = 42;          // int
-$precio = 19.99;       // float
-$nombre = "Ada";       // string
-$activo = true;        // bool
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo tipos_datos_ejemplo
+    Definir entero Como Entero
+    Definir precio Como Real
+    Definir nombre Como Cadena
+    Definir activo Como Logico
 
-var_dump($entero, $precio, $nombre, $activo);
-PHP],
+    entero <- 42
+    precio <- 19.99
+    nombre <- "Ada"
+    activo <- Verdadero
+
+    Escribir "Entero: ", entero
+    Escribir "Real: ", precio
+    Escribir "Cadena: ", nombre
+    Escribir "Lógico: ", activo
+FinAlgoritmo
+PSEINT],
                             ['h', 'Tipos más usados'],
                             ['list', [
-                                'int: números enteros, como 42 o -7',
-                                'float: números decimales, como 3.14',
-                                'string: cadenas de texto, como "hola"',
-                                'bool: verdadero o falso (true / false)',
+                                'Entero (int): números enteros, como 42 o -7',
+                                'Real (float): números decimales, como 3.14 o 19.99',
+                                'Cadena (string): texto entre comillas, como "Ada"',
+                                'Lógico (bool): valores de verdad (Verdadero / Falso)',
                             ]],
                             ['p', 'Muchos lenguajes son de tipado fuerte y detectan errores al mezclar tipos; otros convierten automáticamente. Conocer el sistema de tipos de tu lenguaje te ahorra depuraciones largas.'],
                             ['h', 'Puntos clave'],
@@ -125,12 +140,12 @@ PHP],
                             'title' => 'Comprueba lo aprendido',
                             'questions' => [
                                 ['q' => '¿Qué tipo de dato usarías para guardar el precio de un producto?', 'type' => 'single', 'answers' => [
-                                    ['float', true, 'Los precios suelen tener decimales y se guardan como float.'],
-                                    ['int', false, 'int no admite decimales, perderías los céntimos.'],
-                                    ['bool', false, 'bool solo guarda verdadero o falso.'],
-                                    ['string', false, 'string es texto; operar con precios como texto es incorrecto.'],
+                                    ['float / Real', true, 'Los precios suelen tener decimales y se guardan como float o Real.'],
+                                    ['int / Entero', false, 'int no admite decimales, perderías los céntimos.'],
+                                    ['bool / Lógico', false, 'bool solo guarda verdadero o falso.'],
+                                    ['string / Cadena', false, 'string es texto; operar con precios como texto es incorrecto.'],
                                 ]],
-                                ['q' => '¿Qué representa el tipo bool?', 'type' => 'single', 'answers' => [
+                                ['q' => '¿Qué representa el tipo bool o Lógico?', 'type' => 'single', 'answers' => [
                                     ['Un valor verdadero o falso', true, 'bool es el tipo lógico con dos estados posibles.'],
                                     ['Un número entero positivo', false, 'Eso es int.'],
                                     ['Una cadena de caracteres', false, 'Eso es string.'],
@@ -154,22 +169,24 @@ PHP],
                             ['h', 'Operadores y expresiones'],
                             ['p', 'Los operadores son símbolos que combinan valores para producir resultados nuevos. Una expresión es cualquier combinación de valores y operadores que se puede evaluar.'],
                             ['p', 'Existen operadores aritméticos para calcular, de comparación para decidir y lógicos para combinar condiciones. Dominarlos te permite expresar cualquier regla de negocio.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-$a = 10;
-$b = 3;
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo operadores_ejemplo
+    Definir a, b Como Entero
+    a <- 10
+    b <- 3
 
-echo $a + $b;    // 13 suma
-echo $a % $b;    // 1 módulo (resto)
-echo $a > $b;    // true comparación
-echo ($a > 5) && ($b < 5); // true lógico
-PHP],
+    Escribir a + b              // 13 suma
+    Escribir a % b              // 1 módulo (resto de dividir 10 entre 3)
+    Escribir a > b              // VERDADERO comparación
+    Escribir (a > 5) Y (b < 5)  // VERDADERO operador lógico Y
+FinAlgoritmo
+PSEINT],
                             ['h', 'Familias de operadores'],
                             ['list', [
-                                'Aritméticos: +, -, *, /, %',
-                                'Comparación: ==, !=, <, >, <=, >=',
-                                'Lógicos: && (y), || (o), ! (no)',
-                                'Asignación: =, +=, -=',
+                                'Aritméticos: +, -, *, /, % (o mod)',
+                                'Comparación: =, <>, <, >, <=, >= (en otros lenguajes ==, !=)',
+                                'Lógicos: Y (&&), O (||), NO (!)',
+                                'Asignación: <- o =',
                             ]],
                             ['p', 'El orden de evaluación importa: primero se resuelven paréntesis, luego multiplicaciones y divisiones, después sumas y restas. Usa paréntesis para que la intención sea explícita.'],
                             ['h', 'Puntos clave'],
@@ -190,15 +207,15 @@ PHP],
                                     ['36', false, 'No es un resultado posible para esta expresión.'],
                                 ]],
                                 ['q' => '¿Qué operador usarías para saber si un número es par?', 'type' => 'single', 'answers' => [
-                                    ['El módulo % comparando el resto con 0', true, 'Si n % 2 == 0 el número es par; el resto divide exacto.'],
-                                    ['El operador de concatenación .', false, 'Ese operador une texto, no analiza números.'],
-                                    ['El operador de asignación =', false, 'La asignación guarda un valor, no comprueba paridad.'],
+                                    ['El módulo % (o mod) comparando el resto con 0', true, 'Si n % 2 = 0 el número es par; el resto divide exacto.'],
+                                    ['El operador de concatenación de texto', false, 'Ese operador une texto, no analiza números.'],
+                                    ['El operador de asignación (<- o =)', false, 'La asignación guarda un valor, no comprueba paridad.'],
                                     ['El operador de incremento ++', false, '++ solo suma uno al valor.'],
                                 ]],
-                                ['q' => '¿Cuándo es verdadera la expresión (a > 5) && (b < 5)?', 'type' => 'single', 'answers' => [
-                                    ['Solo cuando ambas condiciones son verdaderas a la vez', true, 'El && exige que las dos condiciones se cumplan simultáneamente.'],
-                                    ['Cuando al menos una condición es verdadera', false, 'Eso describe al operador || (o).'],
-                                    ['Cuando ninguna condición se cumple', false, 'Con && ambas deben cumplirse.'],
+                                ['q' => '¿Cuándo es verdadera la expresión (a > 5) Y (b < 5)?', 'type' => 'single', 'answers' => [
+                                    ['Solo cuando ambas condiciones son verdaderas a la vez', true, 'El operador Y (&&) exige que las dos condiciones se cumplan simultáneamente.'],
+                                    ['Cuando al menos una condición es verdadera', false, 'Eso describe al operador O (||).'],
+                                    ['Cuando ninguna condición se cumple', false, 'Con el operador Y ambas deben cumplirse.'],
                                     ['Siempre, sin importar los valores', false, 'El resultado depende de los valores de a y b.'],
                                 ]],
                             ],
@@ -219,54 +236,58 @@ PHP],
                             ['h', 'Condicionales: if, else, elif'],
                             ['p', 'Los condicionales permiten que el programa tome decisiones: ejecuta un bloque de código solo cuando se cumple una condición. Son el mecanismo básico para expresar reglas en código.'],
                             ['p', 'La condición se evalúa como verdadera o falsa; si es verdadera se ejecuta el bloque del if, si no, el del else cuando existe. Los else if encadenan varias alternativas.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-$edad = 17;
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo condicionales_ejemplo
+    Definir edad Como Entero
+    edad <- 17
 
-if ($edad >= 18) {
-    echo "Eres mayor de edad";
-} elseif ($edad >= 13) {
-    echo "Eres adolescente";
-} else {
-    echo "Eres niño";
-}
-PHP],
+    Si edad >= 18 Entonces
+        Escribir "Eres mayor de edad"
+    SiNo
+        Si edad >= 13 Entonces
+            Escribir "Eres adolescente"
+        SiNo
+            Escribir "Eres niño"
+        FinSi
+    FinSi
+FinAlgoritmo
+PSEINT],
                             ['h', 'Consejos para condicionales limpios'],
                             ['list', [
                                 'Ordena las condiciones de la más específica a la más general',
-                                'Evita condiciones anidadas muy profundas: extrae funciones',
-                                'Considera return temprano para salir antes de anidar',
+                                'Evita condiciones anidadas muy profundas: extrae funciones o subprocesos',
+                                'Considera estructuras de decisión clara (Si ... Entonces ... SiNo)',
                                 'Usa nombres de variables que hagan la condición legible',
                             ]],
-                            ['p', 'Un error común es confundir asignación con comparación. En muchos lenguajes una sola igualdad asigna y una doble compara, así que revisa siempre el símbolo usado.'],
+                            ['p', 'Un error común es confundir asignación con comparación. En muchos lenguajes una sola igualdad asigna y una doble compara, mientras que en pseudocódigo se usa <- para asignar y = o == para comparar.'],
                             ['h', 'Puntos clave'],
                             ['list', [
-                                'if ejecuta un bloque cuando la condición es verdadera',
-                                'else cubre el caso contrario',
-                                'elseif permite múltiples alternativas',
+                                'Si (if) ejecuta un bloque cuando la condición es verdadera',
+                                'SiNo (else) cubre el caso contrario',
+                                'SiNo Si (elseif) permite múltiples alternativas',
                                 'La legibilidad de las condiciones importa tanto como su lógica',
                             ]],
                         ],
                         'quiz' => [
                             'title' => 'Comprueba lo aprendido',
                             'questions' => [
-                                ['q' => '¿Qué hace el bloque else en un condicional?', 'type' => 'single', 'answers' => [
-                                    ['Se ejecuta cuando la condición del if es falsa', true, 'El else captura el caso contrario a la condición principal.'],
-                                    ['Se ejecuta siempre, sin importar la condición', false, 'Si la condición es verdadera, solo corre el bloque del if.'],
-                                    ['Se ejecuta antes que el if', false, 'El if se evalúa primero y decide qué rama corre.'],
-                                    ['Se ejecuta solo si hay un error', false, 'Para errores se usan excepciones, no el else.'],
+                                ['q' => '¿Qué hace el bloque SiNo (else) en un condicional?', 'type' => 'single', 'answers' => [
+                                    ['Se ejecuta cuando la condición principal es falsa', true, 'El SiNo captura el caso contrario a la condición del Si.'],
+                                    ['Se ejecuta siempre, sin importar la condición', false, 'Si la condición es verdadera, solo corre el bloque del Si.'],
+                                    ['Se ejecuta antes que el Si', false, 'El Si se evalúa primero y decide qué rama corre.'],
+                                    ['Se ejecuta solo si hay un error', false, 'Para errores se usa control de errores, no el SiNo.'],
                                 ]],
                                 ['q' => '¿Cuál es un error común al escribir condicionales?', 'type' => 'single', 'answers' => [
-                                    ['Confundir = (asignar) con == (comparar)', true, 'Usar una igualdad donde se necesita comparación cambia el valor y el flujo.'],
+                                    ['Confundir el operador de asignación con el de comparación', true, 'Usar una asignación donde se necesita comparar altera el valor y desvía el flujo.'],
                                     ['Usar nombres descriptivos', false, 'Eso es una buena práctica, no un error.'],
                                     ['Escribir la condición en una línea', false, 'Es válido; el estilo no cambia la lógica.'],
-                                    ['Incluir un else final', false, 'El else final es opcional y correcto.'],
+                                    ['Incluir un SiNo final', false, 'El SiNo final es opcional y correcto.'],
                                 ]],
-                                ['q' => '¿Cuándo tiene sentido encadenar elseif?', 'type' => 'single', 'answers' => [
-                                    ['Cuando hay varias alternativas excluyentes que evaluar en orden', true, 'elseif recorre las opciones hasta encontrar la primera verdadera.'],
+                                ['q' => '¿Cuándo tiene sentido encadenar alternativas con SiNo Si (elseif)?', 'type' => 'single', 'answers' => [
+                                    ['Cuando hay varias alternativas excluyentes que evaluar en orden', true, 'Recorre las opciones hasta encontrar la primera verdadera.'],
                                     ['Cuando quieres repetir un bloque varias veces', false, 'Para repetir se usan ciclos, no condicionales.'],
                                     ['Cuando necesitas almacenar muchos datos', false, 'Para datos se usan variables y colecciones.'],
-                                    ['Cuando la condición puede ser verdadera y falsa a la vez', false, 'Una condición es booleana: una sola de las dos ramas corre.'],
+                                    ['Cuando la condición puede ser verdadera y falsa a la vez', false, 'Una condición es booleana: una sola de las ramas corre.'],
                                 ]],
                             ],
                         ],
@@ -279,51 +300,54 @@ PHP],
                         'blocks' => [
                             ['h', 'Ciclos: for y while'],
                             ['p', 'Los ciclos repiten un bloque de código mientras se cumple una condición. Son la herramienta perfecta para recorrer listas, contar elementos o esperar a que algo cambie.'],
-                            ['p', 'El for se usa cuando sabes cuántas veces repetir; el while cuando la repetición depende de una condición que puede cambiar dentro del bloque. Elegir el correcto hace el código más natural.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-// for: número fijo de repeticiones
-for ($i = 0; $i < 5; $i++) {
-    echo $i;
-}
+                            ['p', 'El ciclo Para (for) se usa cuando sabes cuántas veces repetir; el Mientras (while) cuando la repetición depende de una condición que puede cambiar dentro del bloque.'],
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo ciclos_ejemplo
+    Definir i, turnos Como Entero
 
-// while: repite mientras la condición sea verdadera
-$turnos = 0;
-while ($turnos < 3) {
-    echo "Turno " . $turnos;
-    $turnos++;
-}
-PHP],
+    // Para (for): número fijo de repeticiones (de 0 a 4)
+    Para i <- 0 Hasta 4 Con Paso 1
+        Escribir i
+    FinPara
+
+    // Mientras (while): repite mientras la condición sea verdadera
+    turnos <- 0
+    Mientras turnos < 3 Hacer
+        Escribir "Turno ", turnos
+        turnos <- turnos + 1
+    FinMientras
+FinAlgoritmo
+PSEINT],
                             ['h', 'Riesgo principal: ciclos infinitos'],
-                            ['p', 'Un ciclo infinito ocurre cuando la condición nunca se vuelve falsa. En el while debes asegurarte de que algo dentro del bloque modifique la variable de control; de lo contrario el programa no termina.'],
+                            ['p', 'Un ciclo infinito ocurre cuando la condición nunca se vuelve falsa. En el Mientras debes asegurarte de que algo dentro del bloque modifique la variable de control; de lo contrario el programa no termina.'],
                             ['h', 'Puntos clave'],
                             ['list', [
-                                'for es ideal cuando el número de repeticiones es conocido',
-                                'while se usa cuando la condición cambia dentro del bloque',
-                                'Siempre debe haber una forma de salir del ciclo',
+                                'Para (for) es ideal cuando el número de repeticiones es conocido',
+                                'Mientras (while) se usa cuando la condición cambia dinámicamente',
+                                'Siempre debe haber una condición o variable que permita salir del ciclo',
                                 'Recorrer colecciones es el uso más frecuente de los ciclos',
                             ]],
                         ],
                         'quiz' => [
                             'title' => 'Comprueba lo aprendido',
                             'questions' => [
-                                ['q' => '¿Cuándo conviene usar un while en lugar de un for?', 'type' => 'single', 'answers' => [
-                                    ['Cuando no sabemos cuántas veces se repetirá y depende de una condición dinámica', true, 'El while evalúa la condición en cada iteración y no exige un contador fijo.'],
-                                    ['Cuando siempre queremos repetir exactamente 10 veces', false, 'Ese caso clásico es de for.'],
-                                    ['Cuando queremos recorrer un array completo', false, 'Recorrer una colección se resuelve bien con for o foreach.'],
+                                ['q' => '¿Cuándo conviene usar un Mientras (while) en lugar de un Para (for)?', 'type' => 'single', 'answers' => [
+                                    ['Cuando no sabemos cuántas veces se repetirá y depende de una condición dinámica', true, 'El Mientras evalúa la condición en cada iteración y no exige un contador fijo.'],
+                                    ['Cuando siempre queremos repetir exactamente 10 veces', false, 'Ese caso clásico es del ciclo Para.'],
+                                    ['Cuando queremos recorrer un arreglo completo', false, 'Recorrer una colección se resuelve naturalmente con Para.'],
                                     ['Cuando tenemos una sola instrucción', false, 'La cantidad de instrucciones no define el tipo de ciclo.'],
                                 ]],
                                 ['q' => '¿Qué provoca un ciclo infinito?', 'type' => 'single', 'answers' => [
-                                    ['Que la condición nunca se vuelva falsa', true, 'Si nada modifica la condición, el ciclo no tiene salida.'],
+                                    ['Que la condición de parada nunca se vuelva falsa', true, 'Si nada modifica la condición, el ciclo no tiene salida.'],
                                     ['Que el ciclo tenga muchas iteraciones', false, 'Muchas iteraciones no son infinitas; terminan en algún momento.'],
                                     ['Que el bloque tenga comentarios', false, 'Los comentarios no afectan al flujo del ciclo.'],
-                                    ['Que se use echo dentro del bloque', false, 'Salida por pantalla no influye en la condición.'],
+                                    ['Que se imprima texto dentro del bloque', false, 'La salida por pantalla no influye en la condición.'],
                                 ]],
-                                ['q' => 'En for ($i = 0; $i < 5; $i++), ¿cuántas veces se ejecuta el bloque?', 'type' => 'single', 'answers' => [
-                                    ['5 veces', true, 'Con $i desde 0 hasta 4 inclusive, la condición se cumple 5 veces.'],
+                                ['q' => 'En un bucle Para que va desde 0 hasta 4 (Para i <- 0 Hasta 4), ¿cuántas veces se ejecuta el bloque?', 'type' => 'single', 'answers' => [
+                                    ['5 veces', true, 'Con i desde 0 hasta 4 inclusive (0, 1, 2, 3 y 4), se completan 5 repeticiones.'],
                                     ['4 veces', false, 'Al empezar en 0, los valores 0,1,2,3,4 suman 5 iteraciones.'],
-                                    ['6 veces', false, 'La condición es < 5, así que el valor 5 no entra.'],
-                                    ['Infinitas veces', false, 'El ++ avanza el contador; el ciclo termina.'],
+                                    ['6 veces', false, 'Se detiene al alcanzar el límite 4.'],
+                                    ['Infinitas veces', false, 'El contador avanza en cada paso; el ciclo termina.'],
                                 ]],
                             ],
                         ],
@@ -336,30 +360,40 @@ PHP],
                         'preview' => false,
                         'blocks' => [
                             ['h', 'Funciones y parámetros'],
-                            ['p', 'Una función es un bloque de código con nombre que recibe entradas, las procesa y devuelve un resultado. Permite escribir una vez y reutilizar muchas veces, además de dividir el problema en piezas pequeñas.'],
-                            ['p', 'Los parámetros son los valores que la función recibe; los argumentos son los valores concretos que pasas al llamarla. Definir funciones pequeñas y con una sola responsabilidad mejora enormemente la calidad del código.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-function calcularPrecioConIva(float $precio, float $iva = 0.21): float
-{
-    return $precio * (1 + $iva);
-}
+                            ['p', 'Una función o procedimiento es un bloque de código con nombre que recibe entradas, las procesa y puede devolver un resultado o ejecutar una acción. Permite escribir una vez y reutilizar muchas veces, dividiendo problemas grandes en piezas pequeñas.'],
+                            ['p', 'Los parámetros son los valores que la función recibe; los argumentos son los datos concretos que pasas al invocarla. En pseudocódigo usamos Funciones cuando retornan un valor y Procedimientos (o SubProcesos) para ejecutar acciones.'],
+                            ['code', 'pseint', <<<'PSEINT'
+// Función con retorno para calcular precio con IVA
+Funcion total <- CalcularPrecioConIva(precio, iva)
+    Definir total Como Real
+    total <- precio * (1 + iva)
+FinFuncion
 
-echo calcularPrecioConIva(100);      // 121.0
-echo calcularPrecioConIva(100, 0.10); // 110.0
-PHP],
+// Procedimiento que ejecuta una acción sin retorno
+SubProceso Saludar(nombre)
+    Escribir "Hola, ", nombre, "!"
+FinSubProceso
+
+Algoritmo funciones_y_parametros
+    Definir resultado Como Real
+    resultado <- CalcularPrecioConIva(100, 0.21)
+    Escribir "Precio con IVA: ", resultado // 121
+
+    Saludar("Ana") // Invoca al procedimiento
+FinAlgoritmo
+PSEINT],
                             ['h', 'Ventajas de usar funciones'],
                             ['list', [
                                 'Evitan duplicar código: escribe la lógica una sola vez',
                                 'Aíslan errores: cada función se prueba por separado',
                                 'Dan nombre a las operaciones y documentan la intención',
-                                'Facilitan los tests automáticos',
+                                'Facilitan los tests automáticos y la modularidad',
                             ]],
                             ['p', 'Un buen ejercicio es refactorizar: cuando repites el mismo cálculo tres veces, conviértelo en función. El código resultante es más corto y más fácil de mantener.'],
                             ['h', 'Puntos clave'],
                             ['list', [
-                                'Una función recibe parámetros y devuelve un resultado',
-                                'Los parámetros opcionales tienen valores por defecto',
+                                'Una función recibe parámetros y puede devolver un resultado',
+                                'Los subprocesos o procedimientos ejecutan acciones reutilizables',
                                 'La responsabilidad única hace las funciones más fiables',
                                 'Llamar una función ejecuta su bloque cuantas veces quieras',
                             ]],
@@ -379,11 +413,11 @@ PHP],
                                     ['Porque elimina la necesidad de variables', false, 'Las funciones siguen usando variables internamente.'],
                                     ['Porque evita escribir condiciones', false, 'Las condiciones siguen siendo necesarias dentro de las funciones.'],
                                 ]],
-                                ['q' => '¿Qué devuelve la llamada calcularPrecioConIva(100) si el iva por defecto es 0.21?', 'type' => 'single', 'answers' => [
-                                    ['121.0', true, 'El precio por defecto aplica iva 0.21: 100 * 1.21 = 121.'],
-                                    ['100.0', false, 'Eso sería sin aplicar ningún iva.'],
-                                    ['21.0', false, '21 es solo el importe del iva, no el total.'],
-                                    ['110.0', false, '110 corresponde al iva del 10%, no al 21% por defecto.'],
+                                ['q' => '¿Qué resultado produce la llamada CalcularPrecioConIva(100, 0.21)?', 'type' => 'single', 'answers' => [
+                                    ['121.0', true, 'El cálculo aplica: 100 * (1 + 0.21) = 121.0.'],
+                                    ['100.0', false, 'Eso sería sin aplicar ningún IVA.'],
+                                    ['21.0', false, '21 es solo el importe del IVA, no el precio total.'],
+                                    ['110.0', false, '110 corresponde al 10%, no al 21%.'],
                                 ]],
                             ],
                         ],
@@ -403,17 +437,19 @@ PHP],
                             ['h', '¿Qué es un programa?'],
                             ['p', 'Un programa es una secuencia de instrucciones que un ordenador ejecuta para resolver una tarea. El código fuente es el texto que escribes; el compilador o intérprete lo convierte en acciones reales.'],
                             ['p', 'Todo programa sigue un ciclo: recibe una entrada, la procesa siguiendo la lógica que definiste y produce una salida. Incluso los sistemas más complejos son esa idea con muchas capas.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-// Entrada
-$nombre = "Ana";
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo mi_primer_programa
+    // Entrada
+    Definir nombre, saludo Como Cadena
+    nombre <- "Ana"
 
-// Proceso
-$saludo = "Hola, " . $nombre;
+    // Proceso
+    saludo <- "Hola, " + nombre
 
-// Salida
-echo $saludo;
-PHP],
+    // Salida
+    Escribir saludo
+FinAlgoritmo
+PSEINT],
                             ['h', 'Partes de un programa'],
                             ['list', [
                                 'Entrada: datos que llegan del usuario, archivos o sensores',
@@ -463,17 +499,23 @@ PHP],
                             ['h', 'Depurando tu código'],
                             ['p', 'Depurar es encontrar y corregir errores. Los errores de sintaxis impiden ejecutar; los de lógica producen resultados incorrectos sin romper el programa. Aprender a depurar es tan importante como escribir código.'],
                             ['p', 'La estrategia básica consiste en localizar la zona sospechosa, observar los valores de las variables y comprobar si coinciden con lo esperado. Los depuradores permiten pausar la ejecución e inspeccionar el estado.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-function dividir($a, $b) {
-    if ($b === 0) {
-        throw new InvalidArgumentException("No dividas entre cero");
-    }
-    return $a / $b;
-}
+                            ['code', 'pseint', <<<'PSEINT'
+Funcion resultado <- Dividir(a, b)
+    Definir resultado Como Real
+    Si b = 0 Entonces
+        Escribir "Error: No es posible dividir entre cero"
+        resultado <- 0
+    SiNo
+        resultado <- a / b
+    FinSi
+FinFuncion
 
-echo dividir(10, 2); // 5
-PHP],
+Algoritmo prueba_depuracion
+    Definir cociente Como Real
+    cociente <- Dividir(10, 2)
+    Escribir "Resultado: ", cociente // 5
+FinAlgoritmo
+PSEINT],
                             ['h', 'Tipos de errores comunes'],
                             ['list', [
                                 'Sintaxis: faltan símbolos o el orden es inválido',
@@ -523,22 +565,19 @@ PHP],
                             ['h', 'Primeros pasos en Programación Orientada a Objetos'],
                             ['p', 'La Programación Orientada a Objetos (POO) organiza el código alrededor de objetos: estructuras que combinan datos (propiedades) y comportamiento (métodos). Una clase es la receta; un objeto es la instancia concreta.'],
                             ['p', 'La POO favorece el modelado del mundo real: un Usuario, un Pedido o un Carrito se convierten en clases con atributos y acciones. Esto mejora la organización en proyectos grandes.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-class Usuario {
-    public function __construct(
-        public string $nombre,
-        public int $edad
-    ) {}
+                            ['code', 'python', <<<'PY'
+# Ejemplo introductorio de clase y objeto en Python
+class Usuario:
+    def __init__(self, nombre: str, edad: int):
+        self.nombre = nombre
+        self.edad = edad
 
-    public function saludar(): string {
-        return "Hola, soy " . $this->nombre;
-    }
-}
+    def saludar(self) -> str:
+        return f"Hola, soy {self.nombre}"
 
-$ada = new Usuario("Ada", 36);
-echo $ada->saludar();
-PHP],
+ada = Usuario("Ada", 36)
+print(ada.saludar())  # Imprime: Hola, soy Ada
+PY],
                             ['h', 'Conceptos esenciales'],
                             ['list', [
                                 'Clase: definición de tipo con propiedades y métodos',
@@ -595,29 +634,33 @@ PHP],
                             ['h', 'Arreglos y representación en memoria contigua'],
                             ['p', 'Un arreglo (o array) es una colección ordenada de elementos almacenados en posiciones contiguas de memoria. Cada elemento tiene asignado un número llamado índice (index), que por convención universal comienza en 0.'],
                             ['p', 'La gran ventaja de la indexación contigua es el acceso aleatorio O(1): la computadora calcula la dirección de memoria exacta multiplicando el índice por el tamaño de bytes del dato.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-// Declaración e inicialización de un array
-$lenguajes = ["Python", "PHP", "JavaScript", "TypeScript"];
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo arreglos_en_memoria
+    // Un arreglo almacena elementos ordenados en posiciones contiguas
+    Dimension lenguajes[4]
+    Definir lenguajes Como Cadena
 
-// Acceso directo por índice (base 0)
-echo $lenguajes[0]; // Imprime: Python
-echo $lenguajes[2]; // Imprime: JavaScript
+    lenguajes[0] <- "Python"
+    lenguajes[1] <- "PSeInt"
+    lenguajes[2] <- "JavaScript"
+    lenguajes[3] <- "TypeScript"
 
-// Longitud del array
-echo "Total de tecnologías: " . count($lenguajes);
-PHP],
+    // Acceso directo por índice (base 0)
+    Escribir lenguajes[0] // Imprime: Python
+    Escribir lenguajes[2] // Imprime: JavaScript
+FinAlgoritmo
+PSEINT],
                             ['h', 'Operaciones comunes sobre arrays'],
                             ['list', [
                                 'Acceso directo por índice: tiempo constante O(1)',
                                 'Búsqueda secuencial (Linear Search): recorre elemento por elemento en O(n)',
                                 'Inserción al final: rápida y directa',
-                                'Modificación de elementos: asignando un nuevo valor a $array[indice]',
+                                'Modificación de elementos: asignando un nuevo valor a arreglo[indice]',
                             ]],
                             ['h', 'Puntos clave'],
                             ['list', [
-                                'Los índices inician siempre en 0',
-                                'Acceder fuera de los límites genera errores de tipo IndexOutOfBounds o Undefined index',
+                                'Los índices inician siempre en 0 en la mayoría de arquitecturas',
+                                'Acceder fuera de los límites genera errores de desbordamiento (IndexOutOfBounds)',
                                 'Son la base para construir estructuras más complejas como pilas, colas y tablas hash',
                             ]],
                         ],
@@ -648,36 +691,46 @@ PHP],
                         'blocks' => [
                             ['h', 'Iteración y filtrado de datos'],
                             ['p', 'En el desarrollo profesional rara vez trabajamos con datos aislados. Casi todas las aplicaciones procesan listas: listas de estudiantes, productos en un carrito, transacciones financieras o registros de bases de datos.'],
-                            ['p', 'Para procesar estas listas combinamos bucles for / foreach con condicionales para filtrar o calcular acumulados.'],
-                            ['code', 'php', <<<'PHP'
-<?php
-$calificaciones = [85, 92, 58, 74, 99, 45, 88];
-$aprobados = [];
-$sumaTotal = 0;
+                            ['p', 'Para procesar estas listas combinamos bucles con condicionales para filtrar o calcular acumulados.'],
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo recorrido_arreglo
+    Dimension notas[5]
+    Definir notas, i, aprobados, sumaTotal Como Entero
+    Definir promedio Como Real
 
-foreach ($calificaciones as $nota) {
-    $sumaTotal += $nota;
-    if ($nota >= 60) {
-        $aprobados[] = $nota; // Agregar al nuevo array
-    }
-}
+    notas[0] <- 85
+    notas[1] <- 92
+    notas[2] <- 58
+    notas[3] <- 74
+    notas[4] <- 90
 
-$promedio = $sumaTotal / count($calificaciones);
-echo "Promedio general: " . round($promedio, 2);
-echo "Aprobados: " . count($aprobados);
-PHP],
+    sumaTotal <- 0
+    aprobados <- 0
+
+    Para i <- 0 Hasta 4 Con Paso 1
+        sumaTotal <- sumaTotal + notas[i]
+        Si notas[i] >= 60 Entonces
+            aprobados <- aprobados + 1
+        FinSi
+    FinPara
+
+    promedio <- sumaTotal / 5
+    Escribir "Promedio general: ", promedio
+    Escribir "Total de aprobados: ", aprobados
+FinAlgoritmo
+PSEINT],
                             ['h', 'Buenas prácticas al manipular colecciones'],
                             ['list', [
                                 'Evita modificar el tamaño de un array mientras lo estás iterando',
-                                'Usa nombres en plural para colecciones y en singular para el elemento actual: foreach ($usuarios as $usuario)',
+                                'Usa nombres en plural para colecciones y en singular para el elemento actual',
                                 'Prefiere generar nuevos arreglos limpios en vez de mutar destructivamente los datos originales',
                             ]],
                         ],
                         'quiz' => [
                             'title' => 'Comprueba lo aprendido',
                             'questions' => [
-                                ['q' => '¿Qué estructura es ideal para recorrer todos los elementos de un array sin necesidad de gestionar manualmente el contador?', 'type' => 'single', 'answers' => [
-                                    ['El bucle foreach o for...of', true, 'Se encarga internamente de avanzar y extraer cada elemento secuencialmente.'],
+                                ['q' => '¿Qué estructura es ideal para recorrer todos los elementos de un array secuencialmente?', 'type' => 'single', 'answers' => [
+                                    ['El bucle Para o Mientras (o foreach en lenguajes modernos)', true, 'Se encarga internamente de avanzar y extraer cada elemento ordenadamente.'],
                                     ['Un condicional if anidado', false, 'Los condicionales evalúan una sola vez, no repiten código.'],
                                     ['Una función recursiva sin caso base', false, 'Una función recursiva sin caso base provoca un desbordamiento de pila (Stack Overflow).'],
                                     ['Una sentencia switch', false, 'Switch sirve para ramificar decisiones, no para iterar.'],
@@ -707,27 +760,30 @@ PHP],
                                 '4. Diseño de algoritmos: escribir las instrucciones paso a paso (pseudocódigo) para llegar a la solución.',
                             ]],
                             ['h', 'Ejemplo: Diseñar un sistema de validación de contraseñas'],
-                            ['p', 'En vez de intentar resolver todo con una expresión gigante e incomprensible, descomponemos las reglas en funciones atómicas:'],
-                            ['code', 'php', <<<'PHP'
-<?php
-function tieneLongitudMinima(string $clave, int $min = 8): bool {
-    return strlen($clave) >= $min;
-}
+                            ['p', 'En vez de intentar resolver todo de golpe, descomponemos las reglas en funciones y validaciones atómicas:'],
+                            ['code', 'pseint', <<<'PSEINT'
+Funcion valido <- TieneLongitudMinima(clave, longitudRequerida)
+    Definir valido Como Logico
+    valido <- Longitud(clave) >= longitudRequerida
+FinFuncion
 
-function tieneNumero(string $clave): bool {
-    return preg_match('/[0-9]/', $clave) === 1;
-}
+Funcion seguro <- EsContrasenaSegura(clave)
+    Definir seguro Como Logico
+    // Descomponemos el problema en verificaciones claras:
+    seguro <- TieneLongitudMinima(clave, 8)
+FinFuncion
 
-function tieneMayuscula(string $clave): bool {
-    return preg_match('/[A-Z]/', $clave) === 1;
-}
+Algoritmo validar_acceso
+    Definir clave Como Cadena
+    clave <- "claveSegura123"
 
-function esContrasenaSegura(string $clave): bool {
-    return tieneLongitudMinima($clave) 
-        && tieneNumero($clave) 
-        && tieneMayuscula($clave);
-}
-PHP],
+    Si EsContrasenaSegura(clave) Entonces
+        Escribir "Contraseña segura"
+    SiNo
+        Escribir "Contraseña no cumple requisitos"
+    FinSi
+FinAlgoritmo
+PSEINT],
                             ['h', 'Puntos clave'],
                             ['list', [
                                 'Divide y vencerás: cada función debe tener una sola responsabilidad (Principio SRP)',
@@ -773,9 +829,9 @@ PHP],
                                     ['El ordenador se reinicia inmediatamente', false, 'El sistema operativo detecta el alto consumo pero no se reinicia.'],
                                     ['La variable se convierte en booleano', false, 'Las variables no cambian de tipo por un bucle.'],
                                 ]],
-                                ['q' => '¿Cuál es la función principal del valor de retorno (return) en una función?', 'type' => 'single', 'answers' => [
+                                ['q' => '¿Cuál es la función principal del valor de retorno (return / variable de retorno) en una función?', 'type' => 'single', 'answers' => [
                                     ['Devolver el resultado computado al punto donde fue invocada', true, 'Permite reutilizar la salida de la función en otras expresiones.'],
-                                    ['Imprimir el texto en la pantalla', false, 'Imprimir es responsabilidad de echo o print, no de return.'],
+                                    ['Imprimir el texto en la pantalla', false, 'Imprimir es responsabilidad de Escribir (o print/echo), no de return.'],
                                     ['Detener la ejecución de todo el sistema operativo', false, 'Return solo finaliza la ejecución de la función actual.'],
                                     ['Borrar las variables de la base de datos', false, 'No tiene relación con bases de datos.'],
                                 ]],
@@ -793,9 +849,10 @@ PHP],
     [
         'slug' => 'algoritmos-ordenamiento',
         'title' => 'Algoritmos de Ordenamiento',
-        'description' => 'Estudia los algoritmos de ordenamiento más importantes: Bubble Sort, Selection Sort, Merge Sort, Quick Sort. Aprende a analizar su complejidad temporal y espacial con Big-O notation.',
+        'description' => 'Estudia los algoritmos de ordenamiento más importantes: Bubble Sort, Selection Sort, Merge Sort, Quick Sort. Aprende a analizar su complejidad temporal y espacial con Big-O notation y pseudocódigo ejecutable.',
         'category' => 'algoritmos',
         'difficulty' => 'intermediate',
+        'language' => 'pseint',
         'duration_hours' => 8,
         'is_free' => true,
         'learning_path' => 'fundamentos-programacion',
@@ -816,15 +873,18 @@ PHP],
                             ['h', 'Notación Big-O'],
                             ['p', 'La notación Big-O describe cómo crece el tiempo de ejecución de un algoritmo cuando crece la entrada. No mide segundos: mide la tasa de crecimiento en el peor caso, lo que permite comparar algoritmos de forma independiente de la máquina.'],
                             ['p', 'O(1) significa tiempo constante, O(n) tiempo proporcional a la entrada y O(n²) tiempo cuadrático. La misma máquina puede tardar milisegundos u horas según el algoritmo elegido.'],
-                            ['code', 'python', <<<'PY'
-# O(n): el tiempo crece linealmente con la entrada
-def buscar_maximo(datos):
-    maximo = datos[0]
-    for valor in datos:
-        if valor > maximo:
-            maximo = valor
-    return maximo
-PY],
+                            ['code', 'pseint', <<<'PSEINT'
+// O(n): el tiempo crece linealmente con la cantidad de datos
+Funcion maximo <- BuscarMaximo(datos, n)
+    Definir maximo, i Como Entero
+    maximo <- datos[0]
+    Para i <- 1 Hasta n - 1
+        Si datos[i] > maximo Entonces
+            maximo <- datos[i]
+        FinSi
+    FinPara
+FinFuncion
+PSEINT],
                             ['h', 'Complejidades comunes'],
                             ['list', [
                                 'O(1): constante, no depende del tamaño (acceder a un array)',
@@ -875,16 +935,17 @@ PY],
                             ['h', 'Comparando algoritmos en la práctica'],
                             ['p', 'La complejidad teórica es el punto de partida, pero la práctica añade matices: el tamaño real de los datos, el caso promedio y las constantes de cada implementación también importan.'],
                             ['p', 'Un algoritmo O(n log n) con constantes altas puede perder contra uno O(n²) con constantes bajas si la entrada es pequeña. Por eso se miden ambas cosas: análisis asintótico y benchmarks reales.'],
-                            ['code', 'python', <<<'PY'
-import time
-
-def medir(funcion, datos):
-    inicio = time.perf_counter()
-    funcion(datos)
-    return time.perf_counter() - inicio
-
-# Comparar implementaciones reales con la misma entrada
-PY],
+                            ['code', 'pseint', <<<'PSEINT'
+// Comparativa de operaciones según el orden asintótico
+Algoritmo comparar_eficiencia
+    // Para n = 1000 elementos:
+    // O(n²) realiza aproximadamente 1,000,000 operaciones en el peor caso
+    // O(n log n) divide el problema y requiere unas 10,000 operaciones
+    Escribir "Para n = 1000:"
+    Escribir "O(n^2) ≈ 1,000,000 operaciones"
+    Escribir "O(n log n) ≈ 10,000 operaciones"
+FinAlgoritmo
+PSEINT],
                             ['h', 'Criterios de comparación'],
                             ['list', [
                                 'Complejidad temporal en el peor y mejor caso',
@@ -934,15 +995,21 @@ PY],
                             ['h', 'Complejidad espacial'],
                             ['p', 'La complejidad espacial mide cuánta memoria adicional consume un algoritmo según crece la entrada. Un algoritmo puede ser rapidísimo en tiempo pero inviable por la memoria que requiere.'],
                             ['p', 'Los algoritmos in-place ordenan dentro del propio array sin copias grandes; otros, como Merge Sort, construyen arreglos auxiliares. La elección depende de los recursos del sistema.'],
-                            ['code', 'python', <<<'PY'
-# In-place: sin copias adicionales (memoria O(1) extra)
-def invertir(lista):
-    izq, der = 0, len(lista) - 1
-    while izq < der:
-        lista[izq], lista[der] = lista[der], lista[izq]
-        izq += 1
-        der -= 1
-PY],
+                            ['code', 'pseint', <<<'PSEINT'
+// In-place: sin copias adicionales (memoria extra O(1))
+SubProceso Invertir(a, n)
+    Definir izq, der, aux Como Entero
+    izq <- 0
+    der <- n - 1
+    Mientras izq < der Hacer
+        aux <- a[izq]
+        a[izq] <- a[der]
+        a[der] <- aux
+        izq <- izq + 1
+        der <- der - 1
+    FinMientras
+FinSubProceso
+PSEINT],
                             ['h', 'Comparación típica'],
                             ['list', [
                                 'Bubble Sort y Selection Sort: O(1) extra, in-place',
@@ -998,21 +1065,34 @@ PY],
                             ['h', 'Bubble Sort'],
                             ['p', 'Bubble Sort compara elementos adyacentes y los intercambia si están en el orden incorrecto. En cada pasada, el elemento más grande "flota" hasta su posición final, de ahí el nombre de burbuja.'],
                             ['p', 'Su complejidad es O(n²) en el peor caso, pero si hacemos una pasada sin intercambios podemos terminar antes: el mejor caso es O(n) con una lista ya ordenada.'],
-                            ['code', 'python', <<<'PY'
-def bubble_sort(lista):
-    n = len(lista)
-    for i in range(n):
-        intercambios = False
-        for j in range(n - i - 1):
-            if lista[j] > lista[j + 1]:
-                lista[j], lista[j + 1] = lista[j + 1], lista[j]
-                intercambios = True
-        if not intercambios:
-            break
-    return lista
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo BubbleSortDemo
+    Dimension lista[4]
+    lista[0] <- 5; lista[1] <- 2; lista[2] <- 9; lista[3] <- 1
+    Definir n, i, j, aux Como Entero
+    Definir intercambios Como Logico
+    n <- 4
 
-print(bubble_sort([5, 2, 9, 1]))
-PY],
+    Para i <- 0 Hasta n - 2 Hacer
+        intercambios <- Falso
+        Para j <- 0 Hasta n - i - 2 Hacer
+            Si lista[j] > lista[j + 1] Entonces
+                aux <- lista[j]
+                lista[j] <- lista[j + 1]
+                lista[j + 1] <- aux
+                intercambios <- Verdadero
+            FinSi
+        FinPara
+        Si NO intercambios Entonces
+            i <- n // Romper ciclo si ya está ordenado
+        FinSi
+    FinPara
+
+    Para i <- 0 Hasta n - 1 Hacer
+        Escribir lista[i]
+    FinPara
+FinAlgoritmo
+PSEINT],
                             ['h', 'Características'],
                             ['list', [
                                 'Complejidad: O(n²) peor caso, O(n) mejor caso',
@@ -1062,19 +1142,32 @@ PY],
                             ['h', 'Selection Sort'],
                             ['p', 'Selection Sort busca el elemento mínimo de la porción no ordenada y lo intercambia con la primera posición de esa porción. Así construye la lista ordenada de izquierda a derecha.'],
                             ['p', 'Siempre hace el mismo número de comparaciones, sin importar el orden de entrada: O(n²) en todos los casos. Es simple, in-place y con pocos intercambios.'],
-                            ['code', 'python', <<<'PY'
-def selection_sort(lista):
-    n = len(lista)
-    for i in range(n):
-        minimo = i
-        for j in range(i + 1, n):
-            if lista[j] < lista[minimo]:
-                minimo = j
-        lista[i], lista[minimo] = lista[minimo], lista[i]
-    return lista
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo SelectionSortDemo
+    Dimension lista[4]
+    lista[0] <- 5; lista[1] <- 2; lista[2] <- 9; lista[3] <- 1
+    Definir n, i, j, minPos, aux Como Entero
+    n <- 4
 
-print(selection_sort([5, 2, 9, 1]))
-PY],
+    Para i <- 0 Hasta n - 2 Hacer
+        minPos <- i
+        Para j <- i + 1 Hasta n - 1 Hacer
+            Si lista[j] < lista[minPos] Entonces
+                minPos <- j
+            FinSi
+        FinPara
+        Si minPos <> i Entonces
+            aux <- lista[i]
+            lista[i] <- lista[minPos]
+            lista[minPos] <- aux
+        FinSi
+    FinPara
+
+    Para i <- 0 Hasta n - 1 Hacer
+        Escribir lista[i]
+    FinPara
+FinAlgoritmo
+PSEINT],
                             ['h', 'Características'],
                             ['list', [
                                 'Complejidad: O(n²) siempre, mejor, peor y promedio',
@@ -1124,19 +1217,28 @@ PY],
                             ['h', 'Insertion Sort'],
                             ['p', 'Insertion Sort construye la lista ordenada elemento a elemento: toma cada nuevo elemento y lo inserta en la posición correcta dentro de la parte ya ordenada, desplazando los mayores a la derecha.'],
                             ['p', 'Es el algoritmo que usamos de forma natural al ordenar cartas en la mano. Su mejor caso es O(n) con datos casi ordenados, lo que lo hace muy útil como ordenamiento adaptativo o híbrido.'],
-                            ['code', 'python', <<<'PY'
-def insertion_sort(lista):
-    for i in range(1, len(lista)):
-        actual = lista[i]
-        j = i - 1
-        while j >= 0 and lista[j] > actual:
-            lista[j + 1] = lista[j]
-            j -= 1
-        lista[j + 1] = actual
-    return lista
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo InsertionSortDemo
+    Dimension lista[4]
+    lista[0] <- 5; lista[1] <- 2; lista[2] <- 9; lista[3] <- 1
+    Definir n, i, j, actual Como Entero
+    n <- 4
 
-print(insertion_sort([5, 2, 9, 1]))
-PY],
+    Para i <- 1 Hasta n - 1 Hacer
+        actual <- lista[i]
+        j <- i - 1
+        Mientras j >= 0 Y lista[j] > actual Hacer
+            lista[j + 1] <- lista[j]
+            j <- j - 1
+        FinMientras
+        lista[j + 1] <- actual
+    FinPara
+
+    Para i <- 0 Hasta n - 1 Hacer
+        Escribir lista[i]
+    FinPara
+FinAlgoritmo
+PSEINT],
                             ['h', 'Características'],
                             ['list', [
                                 'Complejidad: O(n²) peor caso, O(n) mejor caso',
@@ -1163,7 +1265,7 @@ PY],
                                     ['Con datos binarios solamente', false, 'Ordena cualquier tipo comparable.'],
                                 ]],
                                 ['q' => '¿Cómo funciona la inserción de un elemento?', 'type' => 'single', 'answers' => [
-                                    ['Desplaza los mayores a la derecha y coloca el elemento en el hueco', true, 'El while mueve valores hasta encontrar la posición correcta.'],
+                                    ['Desplaza los mayores a la derecha y coloca el elemento en el hueco', true, 'El bucle mientras desplaza valores hasta encontrar la posición correcta.'],
                                     ['Intercambia con el vecino hasta llegar al inicio', false, 'Eso es más parecido a Bubble Sort.'],
                                     ['Lo copia a un array nuevo', false, 'Inserta in-place sin arrays auxiliares.'],
                                     ['Lo compara solo con el primer elemento', false, 'Compara con toda la parte ordenada según haga falta.'],
@@ -1192,25 +1294,44 @@ PY],
                             ['h', 'Merge Sort'],
                             ['p', 'Merge Sort aplica divide y vencerás: divide la lista en mitades, las ordena por separado y luego las combina. Su complejidad garantizada es O(n log n) en todos los casos.'],
                             ['p', 'La operación de mezcla compara los primeros elementos de cada mitad y toma el menor, construyendo una lista ordenada. Requiere O(n) de memoria extra para las copias temporales.'],
-                            ['code', 'python', <<<'PY'
-def merge_sort(lista):
-    if len(lista) <= 1:
-        return lista
-    medio = len(lista) // 2
-    izq = merge_sort(lista[:medio])
-    der = merge_sort(lista[medio:])
-    return mezclar(izq, der)
+                            ['code', 'pseint', <<<'PSEINT'
+SubProceso Fusionar(izq, mid, der, a, aux)
+    Definir i, j, k Como Entero
+    i <- izq
+    j <- mid + 1
+    k <- izq
+    Mientras i <= mid Y j <= der Hacer
+        Si a[i] <= a[j] Entonces
+            aux[k] <- a[i]; i <- i + 1
+        Sino
+            aux[k] <- a[j]; j <- j + 1
+        FinSi
+        k <- k + 1
+    FinMientras
+    Mientras i <= mid Hacer
+        aux[k] <- a[i]; i <- i + 1; k <- k + 1
+    FinMientras
+    Mientras j <= der Hacer
+        aux[k] <- a[j]; j <- j + 1; k <- k + 1
+    FinMientras
+    Para i <- izq Hasta der Hacer
+        a[i] <- aux[i]
+    FinPara
+FinSubProceso
 
-def mezclar(izq, der):
-    resultado = []
-    i = j = 0
-    while i < len(izq) and j < len(der):
-        if izq[i] <= der[j]:
-            resultado.append(izq[i]); i += 1
-        else:
-            resultado.append(der[j]); j += 1
-    return resultado + izq[i:] + der[j:]
-PY],
+Algoritmo MergeSortDemo
+    Dimension a[4], aux[4]
+    a[0] <- 5; a[1] <- 2; a[2] <- 9; a[3] <- 1
+    // Divide y fusiona mitades ordenadas
+    Fusionar(0, 0, 1, a, aux)
+    Fusionar(2, 2, 3, a, aux)
+    Fusionar(0, 1, 3, a, aux)
+
+    Para i <- 0 Hasta 3 Hacer
+        Escribir a[i]
+    FinPara
+FinAlgoritmo
+PSEINT],
                             ['h', 'Características'],
                             ['list', [
                                 'Complejidad: O(n log n) garantizado en todos los casos',
@@ -1260,18 +1381,39 @@ PY],
                             ['h', 'Quick Sort'],
                             ['p', 'Quick Sort elige un pivote, particiona la lista en menores y mayores que el pivote, y ordena cada partición de forma recursiva. Es uno de los algoritmos más rápidos en la práctica.'],
                             ['p', 'Su promedio es O(n log n), pero con un mal pivote (por ejemplo, el primero en una lista ya ordenada) se degrada a O(n²). Elegir el pivote aleatorio o la mediana de tres reduce ese riesgo.'],
-                            ['code', 'python', <<<'PY'
-def quick_sort(lista):
-    if len(lista) <= 1:
-        return lista
-    pivote = lista[len(lista) // 2]
-    menores = [x for x in lista if x < pivote]
-    iguales = [x for x in lista if x == pivote]
-    mayores = [x for x in lista if x > pivote]
-    return quick_sort(menores) + iguales + quick_sort(mayores)
+                            ['code', 'pseint', <<<'PSEINT'
+SubProceso p <- Particionar(izq, der, a)
+    Definir pivote, i, j, aux Como Entero
+    pivote <- a[der]
+    i <- izq - 1
+    Para j <- izq Hasta der - 1 Hacer
+        Si a[j] <= pivote Entonces
+            i <- i + 1
+            aux <- a[i]; a[i] <- a[j]; a[j] <- aux
+        FinSi
+    FinPara
+    aux <- a[i + 1]; a[i + 1] <- a[der]; a[der] <- aux
+    p <- i + 1
+FinSubProceso
 
-print(quick_sort([5, 2, 9, 1]))
-PY],
+SubProceso Quicksort(izq, der, a)
+    Definir p Como Entero
+    Si izq < der Entonces
+        p <- Particionar(izq, der, a)
+        Quicksort(izq, p - 1, a)
+        Quicksort(p + 1, der, a)
+    FinSi
+FinSubProceso
+
+Algoritmo QuickSortDemo
+    Dimension a[4]
+    a[0] <- 5; a[1] <- 2; a[2] <- 9; a[3] <- 1
+    Quicksort(0, 3, a)
+    Para i <- 0 Hasta 3 Hacer
+        Escribir a[i]
+    FinPara
+FinAlgoritmo
+PSEINT],
                             ['h', 'Características'],
                             ['list', [
                                 'Promedio: O(n log n); peor caso: O(n²)',
@@ -1321,22 +1463,38 @@ PY],
                             ['h', 'Búsqueda binaria'],
                             ['p', 'La búsqueda binaria encuentra un elemento en una lista ordenada descartando la mitad de las opciones en cada paso: compara con el centro y decide si seguir a la izquierda o a la derecha.'],
                             ['p', 'Su complejidad es O(log n): con un millón de elementos basta con unas veinte comparaciones. Es uno de los mejores ejemplos del poder de reducir el espacio de búsqueda.'],
-                            ['code', 'python', <<<'PY'
-def busqueda_binaria(lista, objetivo):
-    izq, der = 0, len(lista) - 1
-    while izq <= der:
-        medio = (izq + der) // 2
-        if lista[medio] == objetivo:
-            return medio
-        elif lista[medio] < objetivo:
-            izq = medio + 1
-        else:
-            der = medio - 1
-    return -1
+                            ['code', 'pseint', <<<'PSEINT'
+Algoritmo BusquedaBinariaDemo
+    Dimension datos[6]
+    datos[0] <- 1; datos[1] <- 3; datos[2] <- 5
+    datos[3] <- 7; datos[4] <- 9; datos[5] <- 11
 
-datos = [1, 3, 5, 7, 9, 11]
-print(busqueda_binaria(datos, 7))  # índice 3
-PY],
+    Definir objetivo, izq, der, medio, pos Como Entero
+    objetivo <- 7
+    izq <- 0
+    der <- 5
+    pos <- -1
+
+    Mientras izq <= der Y pos = -1 Hacer
+        medio <- Trunc((izq + der) / 2)
+        Si datos[medio] = objetivo Entonces
+            pos <- medio
+        Sino
+            Si datos[medio] < objetivo Entonces
+                izq <- medio + 1
+            Sino
+                der <- medio - 1
+            FinSi
+        FinSi
+    FinMientras
+
+    Si pos <> -1 Entonces
+        Escribir "Encontrado en índice: ", pos
+    Sino
+        Escribir "No encontrado"
+    FinSi
+FinAlgoritmo
+PSEINT],
                             ['h', 'Requisitos y variantes'],
                             ['list', [
                                 'La lista debe estar ordenada de antemano',
