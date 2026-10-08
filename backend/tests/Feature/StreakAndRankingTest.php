@@ -75,14 +75,6 @@ class StreakAndRankingTest extends TestCase
     }
 
     /**
-     * Verifica que el endpoint de clanes devuelva clanes reales con miembros reales.
-     */
-    public function test_clans_returns_real_clans_and_members(): void
-    {
-        $this->markTestSkipped('Módulo de clanes retirado temporalmente.');
-    }
-
-    /**
      * Verifica que si el estudiante no trabaja en días previos, su racha se apague
      * y pase a estado 'extinguished' con can_recover en true.
      */

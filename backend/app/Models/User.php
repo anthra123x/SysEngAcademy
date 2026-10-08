@@ -62,17 +62,6 @@ class User extends Authenticatable
         return $this->hasMany(UserDailyActivity::class);
     }
 
-    public function clanMemberships()
-    {
-        return $this->hasMany(ClanMember::class);
-    }
-
-    public function clans()
-    {
-        return $this->belongsToMany(Clan::class, 'clan_members', 'user_id', 'clan_id')
-                    ->withPivot('role', 'joined_at');
-    }
-
     public function courseReviews()
     {
         return $this->hasMany(CourseReview::class);
