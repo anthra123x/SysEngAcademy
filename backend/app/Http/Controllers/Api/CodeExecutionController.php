@@ -231,17 +231,93 @@ class CodeExecutionController extends Controller
 
             $res = $this->runLocally($language, $code, $input);
             $actual = trim($res['stdout']);
-            $passed = $actual === $expected && $res['exit_code'] === 0;
+            $passed = self::matchesOutput($actual, $expected) && $res['exit_code'] === 0;
 
             $results[] = [
                 'input' => $input,
                 'expected' => $expected,
                 'actual' => $actual,
                 'passed' => $passed,
+                'stderr' => !empty($res['stderr']) ? trim($res['stderr']) : null,
+                'exit_code' => $res['exit_code'],
             ];
         }
 
         return $results;
+    }
+
+    public static function matchesOutput(string $actual, string $expected): bool
+    {
+        $normActual = self::normalizeOutput($actual);
+        $normExpected = self::normalizeOutput($expected);
+
+        // 1. Coincidencia exacta normalizada
+        if ($normActual === $normExpected) {
+            return true;
+        }
+
+        // 2. Coincidencia sin distinción de mayúsculas/minúsculas
+        if (mb_strtolower($normActual) === mb_strtolower($normExpected)) {
+            return true;
+        }
+
+        // 3. Tolerancia a prompts de entrada interactivos (ej: "Ingrese nombre:\nHola, Ana!" vs "Hola, Ana!")
+        $actLines = array_values(array_filter(array_map('trim', explode("\n", $normActual)), fn ($l) => $l !== ''));
+        $expLines = array_values(array_filter(array_map('trim', explode("\n", $normExpected)), fn ($l) => $l !== ''));
+
+        if (count($expLines) > 0 && count($actLines) >= count($expLines)) {
+            $trailingLines = array_slice($actLines, -count($expLines));
+            $trailingJoined = implode("\n", $trailingLines);
+            if ($trailingJoined === $normExpected || mb_strtolower($trailingJoined) === mb_strtolower($normExpected)) {
+                return true;
+            }
+        }
+
+        // 4. Si la salida esperada es de una sola línea y aparece al final de la última línea
+        if (count($actLines) > 0 && count($expLines) === 1) {
+            $lastLine = $actLines[count($actLines) - 1];
+            if (str_ends_with(mb_strtolower($lastLine), mb_strtolower($expLines[0]))) {
+                return true;
+            }
+        }
+
+        // 5. Equivalencia numérica directa (ej: "121" vs "121.0" o "0" vs "0.0")
+        if ($normActual !== '' && $normExpected !== '' && is_numeric($normActual) && is_numeric($normExpected)) {
+            if (abs((float) $normActual - (float) $normExpected) < 0.0001) {
+                return true;
+            }
+        }
+
+        // 6. Equivalencia por tokens (ej: secuencia de números separados por saltos de línea vs espacios)
+        $actTokens = array_values(array_filter(preg_split('/\s+/', $normActual), fn ($t) => $t !== ''));
+        $expTokens = array_values(array_filter(preg_split('/\s+/', $normExpected), fn ($t) => $t !== ''));
+        if (count($actTokens) > 1 && count($actTokens) === count($expTokens)) {
+            $allMatch = true;
+            foreach ($actTokens as $i => $token) {
+                $expToken = $expTokens[$i];
+                if (mb_strtolower($token) === mb_strtolower($expToken)) {
+                    continue;
+                }
+                if (is_numeric($token) && is_numeric($expToken) && abs((float) $token - (float) $expToken) < 0.0001) {
+                    continue;
+                }
+                $allMatch = false;
+                break;
+            }
+            if ($allMatch) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function normalizeOutput(string $text): string
+    {
+        $text = str_replace("\r", '', $text);
+        $lines = explode("\n", $text);
+        $trimmed = array_map(fn ($l) => rtrim($l, " \t"), $lines);
+        return trim(implode("\n", $trimmed));
     }
 
     private function cleanTempDir(string $dir): void

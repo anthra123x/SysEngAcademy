@@ -281,6 +281,12 @@
                         <span class="diff-label">Obtenido:</span>
                         <code class="diff-actual">{{ test.actual || '(vacío)' }}</code>
                       </div>
+                      @if (test.stderr) {
+                        <div class="diff-line">
+                          <span class="diff-label">Detalle:</span>
+                          <code class="diff-error">{{ test.stderr }}</code>
+                        </div>
+                      }
                     </div>
                   }
                 </div>

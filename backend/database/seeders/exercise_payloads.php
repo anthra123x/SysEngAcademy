@@ -28,22 +28,23 @@ return [
         'language' => 'pseint',
         'starter'  => <<<'PSEINT'
 Algoritmo funciones_y_parametros
-    // Declara un procedimiento Saludar(nombre) que imprima un saludo,
-    // y un algoritmo que lo invoque con "Ana".
+    // 1) Declara el SubProceso o Procedimiento Saludar(nombre) que escriba "Hola, ", nombre, "!"
+    // 2) Declara la variable nombre (Cadena) y léela con Leer
+    // 3) Llama a Saludar(nombre)
 FinAlgoritmo
 PSEINT,
         'solution' => <<<'PSEINT'
 Algoritmo funciones_y_parametros
-    Procedimiento Saludar(nombre)
+    SubProceso Saludar(nombre)
         Escribir "Hola, ", nombre, "!"
-    FinProcedimiento
+    FinSubProceso
 
-    Definir nombre Cadena
+    Definir nombre Como Cadena
     Leer nombre
     Saludar(nombre)
 FinAlgoritmo
 PSEINT,
-        'hint'     => 'Un procedimiento se declara con Procedimiento y termina en FinProcedimiento. Para concatenar se escriben los valores separados por comas.',
+        'hint'     => 'Declara el procedimiento con "SubProceso Saludar(nombre)", lee el dato con "Leer nombre" y llama a "Saludar(nombre)".',
         'tests'    => [
             ['Ana', 'Hola, Ana!'],
             ['Carlos', 'Hola, Carlos!'],

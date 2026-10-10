@@ -13,6 +13,7 @@ use App\Models\QuizAnswer;
 use App\Models\QuizQuestion;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class CourseSeeder extends Seeder
@@ -86,8 +87,10 @@ class CourseSeeder extends Seeder
                         $this->command?->error("  ✗ Falló reintento para {$slug}: {$e2->getMessage()}");
                     }
                 }
-            }
         }
+
+        // Invalidar caché de lecciones para que los estudiantes vean las preguntas actualizadas de inmediato
+        Cache::flush();
     }
 
     public function seedCourse(array $course): void
@@ -189,6 +192,12 @@ class CourseSeeder extends Seeder
             ['title' => $quiz['title'] ?? 'Comprueba lo aprendido']
         );
 
+        // Eliminar preguntas sobrantes si el temario redujo la cantidad de preguntas
+        $targetCount = count($quiz['questions']);
+        QuizQuestion::where('quiz_id', $quizModel->id)
+            ->where('order', '>', $targetCount)
+            ->delete();
+
         foreach (array_values($quiz['questions']) as $qi => $question) {
             $q = QuizQuestion::updateOrCreate(
                 ['quiz_id' => $quizModel->id, 'order' => $qi + 1],
@@ -201,14 +210,16 @@ class CourseSeeder extends Seeder
             $answers = $question['answers'] ?? [];
             shuffle($answers); // Mezcla aleatoria para evitar que la primera opción sea siempre la correcta
 
+            // Recrear las respuestas limpias para garantizar ausencia de opciones duplicadas u obsoletas
+            $q->answers()->delete();
+
             foreach ($answers as $answer) {
-                QuizAnswer::updateOrCreate(
-                    ['question_id' => $q->id, 'answer_text' => (string) $answer[0]],
-                    [
-                        'is_correct' => (bool) ($answer[1] ?? false),
-                        'explanation' => $answer[2] ?? null,
-                    ]
-                );
+                QuizAnswer::create([
+                    'question_id' => $q->id,
+                    'answer_text' => (string) $answer[0],
+                    'is_correct' => (bool) ($answer[1] ?? false),
+                    'explanation' => $answer[2] ?? null,
+                ]);
             }
         }
     }

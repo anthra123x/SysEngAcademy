@@ -149,7 +149,56 @@ class InteractivityTest extends TestCase
             ->assertJsonPath('results.0.explanation', '2 + 2 es 4.')
             ->assertJsonPath('results.1.correct', false)
             ->assertJsonPath('results.1.correct_answer_ids.0', $q2->answers->firstWhere('is_correct', true)->id)
-            ->assertJsonPath('results.1.selected_ids.0', $bad2->id);
+            ->assertJsonPath('results.1.selected_ids.0', $bad2->id)
+            ->assertJsonPath('results.1.explanation', 'No.');
+    }
+
+    public function test_quiz_attempt_con_opcion_vacia_y_guardado_progreso(): void
+    {
+        $suffix = uniqid();
+        $course = $this->makeCourse($suffix);
+        $module = Module::create(['course_id' => $course->id, 'title' => 'Módulo 1', 'order' => 1]);
+        $lesson = $this->makeLesson($module, "leccion-quiz-prog-{$suffix}", 1, preview: true);
+        $quiz = $this->makeQuiz($lesson);
+
+        $q1 = $quiz->questions()->orderBy('order')->get()[0];
+        $q2 = $quiz->questions()->orderBy('order')->get()[1];
+        $good1 = $q1->answers->firstWhere('is_correct', true);
+        $good2 = $q2->answers->firstWhere('is_correct', true);
+
+        $student = $this->studentUser();
+        Sanctum::actingAs($student);
+
+        // 1. Caso con opción vacía (el alumno no marca nada en q2)
+        $respEmpty = $this->postJson("/api/lessons/{$lesson->slug}/quiz/attempt", [
+            'answers' => [
+                $q1->id => [$good1->id],
+                $q2->id => [],
+            ],
+        ]);
+
+        $respEmpty->assertOk()
+            ->assertJsonPath('score', 50)
+            ->assertJsonPath('passed', false)
+            ->assertJsonPath('results.1.explanation', 'No seleccionaste ninguna opción para esta pregunta.');
+
+        // 2. Caso aprobado (100%) actualiza el progreso en BD
+        $respPass = $this->postJson("/api/lessons/{$lesson->slug}/quiz/attempt", [
+            'answers' => [
+                $q1->id => [$good1->id],
+                $q2->id => [$good2->id],
+            ],
+        ]);
+
+        $respPass->assertOk()
+            ->assertJsonPath('score', 100)
+            ->assertJsonPath('passed', true);
+
+        $this->assertDatabaseHas('lesson_progress', [
+            'user_id' => $student->id,
+            'lesson_id' => $lesson->id,
+            'score' => 100,
+        ]);
     }
 
     public function test_quiz_attempt_requiere_autenticacion(): void

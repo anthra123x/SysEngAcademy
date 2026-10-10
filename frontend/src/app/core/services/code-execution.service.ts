@@ -20,6 +20,8 @@ export interface TestResult {
   expected: string;
   actual: string;
   passed: boolean;
+  stderr?: string;
+  exit_code?: number;
 }
 
 export interface CodeExecutionResponse {
@@ -97,6 +99,28 @@ export function matchesOutput(actual: string, expected: string): boolean {
     }
   }
 
+  // 5. Equivalencia numérica directa (ej: "121" vs "121.0" o "0" vs "0.0")
+  if (normActual !== '' && normExpected !== '' && !isNaN(Number(normActual)) && !isNaN(Number(normExpected))) {
+    if (Math.abs(Number(normActual) - Number(normExpected)) < 0.0001) {
+      return true;
+    }
+  }
+
+  // 6. Equivalencia por tokens (ej: secuencia de números separados por saltos de línea vs espacios)
+  const actTokens = normActual.split(/\s+/).filter(Boolean);
+  const expTokens = normExpected.split(/\s+/).filter(Boolean);
+  if (actTokens.length > 1 && actTokens.length === expTokens.length) {
+    const allMatch = actTokens.every((token, i) => {
+      const expToken = expTokens[i];
+      if (token.toLowerCase() === expToken.toLowerCase()) return true;
+      if (!isNaN(Number(token)) && !isNaN(Number(expToken))) {
+        return Math.abs(Number(token) - Number(expToken)) < 0.0001;
+      }
+      return false;
+    });
+    if (allMatch) return true;
+  }
+
   return false;
 }
 
@@ -127,11 +151,14 @@ export class CodeExecutionService {
         const testRes = runPseint(code, t.input || '');
         const actual = testRes.stdout;
         const expected = t.expected || '';
+        const passed = matchesOutput(actual, expected) && testRes.exit_code === 0;
         return {
           input: t.input,
           expected: t.expected,
           actual: testRes.stdout,
-          passed: matchesOutput(actual, expected),
+          passed,
+          stderr: testRes.stderr || (testRes.error ? `Línea ${testRes.error.line}: ${testRes.error.message}` : undefined),
+          exit_code: testRes.exit_code,
         };
       });
 

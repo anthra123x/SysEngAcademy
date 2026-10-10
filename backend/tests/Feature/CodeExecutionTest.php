@@ -206,6 +206,83 @@ class CodeExecutionTest extends TestCase
         $this->assertFalse($data['tests'][0]['passed']);
     }
 
+    public function test_execute_tests_matches_numeric_equivalence_and_token_sequences(): void
+    {
+        $code = <<<'PY'
+mode = input().strip()
+if mode == 'float':
+    print(121.0)
+else:
+    print("1 2 3")
+PY;
+
+        $response = $this->postJson('/api/code/execute', [
+            'language' => 'python',
+            'code' => $code,
+            'tests' => [
+                ['input' => 'float', 'expected' => '121'],
+                ['input' => 'tokens', 'expected' => "1\n2\n3"],
+            ],
+        ]);
+
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertCount(2, $data['tests']);
+        $this->assertTrue($data['tests'][0]['passed'], 'Debe aceptar 121.0 como equivalente numérico a 121');
+        $this->assertTrue($data['tests'][1]['passed'], 'Debe aceptar 1 2 3 como equivalente a tokens 1\n2\n3');
+    }
+
+    public function test_execute_tests_propagates_stderr_on_runtime_error(): void
+    {
+        Http::fake([
+            'https://emkc.org/api/v2/piston/execute' => Http::response([
+                'run' => [
+                    'stdout' => '',
+                    'stderr' => "ZeroDivisionError: division by zero\n",
+                    'code' => 1,
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->postJson('/api/code/execute', [
+            'language' => 'python',
+            'code' => 'print(1 / 0)',
+            'tests' => [
+                ['input' => '', 'expected' => '42'],
+            ],
+        ]);
+
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertCount(1, $data['tests']);
+        $this->assertFalse($data['tests'][0]['passed']);
+        $this->assertEquals(1, $data['tests'][0]['exit_code']);
+        $this->assertStringContainsString('ZeroDivisionError', $data['tests'][0]['stderr']);
+    }
+
+    public function test_matches_output_intelligence_rules(): void
+    {
+        // 1. Exacto y espacios
+        $this->assertTrue(\App\Http\Controllers\Api\CodeExecutionController::matchesOutput("Hola Mundo\n", "Hola Mundo"));
+
+        // 2. Mayúsculas/minúsculas
+        $this->assertTrue(\App\Http\Controllers\Api\CodeExecutionController::matchesOutput("hola mundo", "HOLA MUNDO"));
+
+        // 3. Prompt interactivo
+        $this->assertTrue(\App\Http\Controllers\Api\CodeExecutionController::matchesOutput("Ingrese nombre:\nHola Ana", "Hola Ana"));
+
+        // 4. Salida esperada en última línea
+        $this->assertTrue(\App\Http\Controllers\Api\CodeExecutionController::matchesOutput("Resultado: 42", "42"));
+
+        // 5. Equivalencia numérica float
+        $this->assertTrue(\App\Http\Controllers\Api\CodeExecutionController::matchesOutput("121.000", "121"));
+        $this->assertTrue(\App\Http\Controllers\Api\CodeExecutionController::matchesOutput("0", "0.0"));
+
+        // 6. Tokens
+        $this->assertTrue(\App\Http\Controllers\Api\CodeExecutionController::matchesOutput("5 10 15", "5\n10\n15"));
+        $this->assertFalse(\App\Http\Controllers\Api\CodeExecutionController::matchesOutput("5 10 16", "5\n10\n15"));
+    }
+
     public function test_execute_validates_required_language(): void
     {
         $response = $this->postJson('/api/code/execute', [

@@ -115,8 +115,8 @@ class LessonController extends Controller
         $results = [];
 
         foreach ($quiz->questions as $question) {
-            $correctIds = $question->answers
-                ->where('is_correct', true)
+            $correctAnswers = $question->answers->where('is_correct', true);
+            $correctIds = $correctAnswers
                 ->pluck('id')
                 ->map(fn ($id) => (int) $id)
                 ->sort()
@@ -131,23 +131,58 @@ class LessonController extends Controller
                 $correct++;
             }
 
+            // Explicación puntual y contextual
+            $explanation = '';
+            if ($isCorrect) {
+                $explanation = $correctAnswers->first()?->explanation
+                    ?? '¡Correcto! Excelente comprensión del concepto.';
+            } else {
+                if (empty($selectedIds)) {
+                    $explanation = 'No seleccionaste ninguna opción para esta pregunta.';
+                } else {
+                    $selectedAnswers = $question->answers->whereIn('id', $selectedIds);
+                    $selectedExplanations = $selectedAnswers
+                        ->pluck('explanation')
+                        ->filter()
+                        ->values()
+                        ->all();
+
+                    if (!empty($selectedExplanations)) {
+                        $explanation = implode(' ', $selectedExplanations);
+                    } else {
+                        $correctExpl = $correctAnswers->first()?->explanation;
+                        $explanation = $correctExpl
+                            ? "Tu selección no es la adecuada. Ten en cuenta: {$correctExpl}"
+                            : 'Opción incorrecta. Revisa el contenido de la lección y vuelve a intentarlo.';
+                    }
+                }
+            }
+
             $results[] = [
                 'question_id' => $question->id,
                 'correct' => $isCorrect,
                 'correct_answer_ids' => $correctIds,
                 'selected_ids' => $selectedIds,
-                'explanation' => $question->answers->firstWhere('is_correct', true)?->explanation
-                    ?? 'Revisa el contenido de la lección y vuelve a intentarlo.',
+                'explanation' => $explanation,
             ];
         }
 
         $score = $total > 0 ? (int) round(($correct / $total) * 100) : 0;
+        $passed = $score >= 60;
+
+        $user = $request->user('jwt') ?: $request->user('sanctum');
+        if ($user && $passed) {
+            LessonProgress::updateOrCreate(
+                ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+                ['score' => $score]
+            );
+        }
 
         return response()->json([
             'score' => $score,
             'correct' => $correct,
             'total' => $total,
-            'passed' => $score >= 60,
+            'passed' => $passed,
             'results' => $results,
         ]);
     }
