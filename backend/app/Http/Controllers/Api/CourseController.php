@@ -30,6 +30,19 @@ class CourseController extends Controller
             return $courses->toArray();
         });
 
+        if ($user = $request->user('jwt') ?: $request->user('sanctum')) {
+            $userEnrollments = $user->enrollments()->pluck('progress_percent', 'course_id')->toArray();
+            if (isset($data['data']) && is_array($data['data'])) {
+                foreach ($data['data'] as &$c) {
+                    $cid = $c['id'];
+                    $c['enrolled'] = isset($userEnrollments[$cid]);
+                    $c['progress_percent'] = $userEnrollments[$cid] ?? 0;
+                    $c['completed'] = ($userEnrollments[$cid] ?? 0) >= 100;
+                }
+                unset($c);
+            }
+        }
+
         return response()->json($data);
     }
 
@@ -59,29 +72,38 @@ class CourseController extends Controller
                 ->where('course_id', $course['id'])
                 ->first();
 
+            $completedLessonIds = $user->lessonProgress()
+                ->whereHas('lesson', fn ($q) => $q->whereHas('module', fn ($q2) => $q2->where('course_id', $course['id'])))
+                ->whereNotNull('completed_at')
+                ->pluck('lesson_id')
+                ->toArray();
+
+            $totalLessons = 0;
+            foreach ($course['modules'] as &$module) {
+                foreach ($module['lessons'] as &$lesson) {
+                    $totalLessons++;
+                    $lesson['completed'] = in_array($lesson['id'], $completedLessonIds);
+                }
+                unset($lesson);
+            }
+            unset($module);
+
+            $realProgress = $totalLessons > 0 ? (int) round((count($completedLessonIds) / $totalLessons) * 100) : 0;
+            if ($enrollment && $enrollment->progress_percent !== $realProgress) {
+                $enrollment->update([
+                    'progress_percent' => $realProgress,
+                    'completed_at' => $realProgress >= 100 ? ($enrollment->completed_at ?? now()) : null,
+                ]);
+            }
+
             $course['enrolled'] = (bool) $enrollment;
-            $course['progress_percent'] = $enrollment ? $enrollment->progress_percent : 0;
+            $course['progress_percent'] = $enrollment ? $enrollment->progress_percent : $realProgress;
+            $course['completed'] = ($enrollment && $enrollment->completed_at !== null) || $realProgress >= 100;
 
             $userReview = \App\Models\CourseReview::where('course_id', $course['id'])
                 ->where('user_id', $user->id)
                 ->first();
             $course['user_review'] = $userReview;
-
-            if ($enrollment) {
-                $completedLessonIds = $user->lessonProgress()
-                    ->whereHas('lesson', fn ($q) => $q->whereHas('module', fn ($q2) => $q2->where('course_id', $course['id'])))
-                    ->whereNotNull('completed_at')
-                    ->pluck('lesson_id')
-                    ->toArray();
-
-                foreach ($course['modules'] as &$module) {
-                    foreach ($module['lessons'] as &$lesson) {
-                        $lesson['completed'] = in_array($lesson['id'], $completedLessonIds);
-                    }
-                    unset($lesson);
-                }
-                unset($module);
-            }
         }
 
         return response()->json($course);

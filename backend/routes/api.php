@@ -59,6 +59,7 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
 
     Route::post('/lessons/{lesson}/complete', [LessonController::class, 'complete']);
     Route::post('/lessons/{lesson}/quiz/attempt', [LessonController::class, 'attempt']);
+    Route::post('/lessons/sync-guest-progress', [LessonController::class, 'syncGuestProgress']);
 
     // Calificaciones y Reseñas
     Route::post('/courses/{slug}/reviews', [CourseReviewController::class, 'store']);

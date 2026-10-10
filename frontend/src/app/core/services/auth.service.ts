@@ -149,6 +149,9 @@ export class AuthService {
     localStorage.setItem('syseng_token', res.token);
     localStorage.setItem('syseng_user', JSON.stringify(res.user));
     this._user.set(res.user);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('syseng-auth-login', { detail: res }));
+    }
   }
 
   clearSession(redirect = false) {

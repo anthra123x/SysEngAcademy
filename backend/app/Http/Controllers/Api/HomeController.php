@@ -8,6 +8,8 @@ use App\Models\Course;
 use App\Models\LearningPath;
 use Illuminate\Support\Facades\Cache;
 
+use Illuminate\Http\Request;
+
 /**
  * Endpoint agregado para la página de inicio: una sola llamada con
  * categorías, rutas y cursos destacados (cacheado) en vez de tres
@@ -15,7 +17,7 @@ use Illuminate\Support\Facades\Cache;
  */
 class HomeController extends Controller
 {
-    public function show()
+    public function show(Request $request)
     {
         $payload = Cache::remember('api.home.v2', now()->addMinutes(5), function () {
             $categories = Category::withCount('courses')->orderBy('name')->get()->toArray();
@@ -44,6 +46,19 @@ class HomeController extends Controller
                 'courses' => ['data' => $courses],
             ];
         });
+
+        if ($user = $request->user('jwt') ?: $request->user('sanctum')) {
+            $enrollments = $user->enrollments()->pluck('progress_percent', 'course_id')->toArray();
+            if (isset($payload['courses']['data']) && is_array($payload['courses']['data'])) {
+                foreach ($payload['courses']['data'] as &$c) {
+                    $cid = $c['id'];
+                    $c['enrolled'] = isset($enrollments[$cid]);
+                    $c['progress_percent'] = $enrollments[$cid] ?? 0;
+                    $c['completed'] = ($enrollments[$cid] ?? 0) >= 100;
+                }
+                unset($c);
+            }
+        }
 
         return response()->json($payload);
     }

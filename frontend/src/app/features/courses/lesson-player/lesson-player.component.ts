@@ -40,6 +40,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     slug: string;
     title: string;
     enrolled?: boolean;
+    progress_percent?: number;
     modules?: CourseModule[];
   } | null>(null);
   loading   = signal(true);
@@ -682,6 +683,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
           slug: course.slug,
           title: course.title,
           enrolled: course.enrolled,
+          progress_percent: course.progress_percent,
           modules: course.modules,
         });
         if (this.auth.isAuthenticated() && !course.enrolled && course.id) {
@@ -716,11 +718,15 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     if (!lesson || this.completing()) return;
     this.completing.set(true);
     this.coursesSvc.completeLesson(lesson.id, score, lesson.slug, this.courseSlug()).subscribe({
-      next: () => {
+      next: (res: { progress_percent?: number }) => {
         this.completed.set(true);
         this.completing.set(false);
         this.markLessonCompletedInCourse(lesson.id);
-        this.course.update(c => (c ? { ...c, enrolled: true } : c));
+        this.course.update(c => (c ? {
+          ...c,
+          enrolled: true,
+          progress_percent: typeof res?.progress_percent === 'number' ? res.progress_percent : c.progress_percent,
+        } : c));
       },
       error: (err: HttpErrorResponse) => {
         this.completing.set(false);
@@ -835,6 +841,17 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
       next: result => {
         this.quizResult.set(result);
         this.quizSubmitting.set(false);
+        if (result.passed) {
+          this.completed.set(true);
+          this.markLessonCompletedInCourse(lesson.id);
+          this.coursesSvc.saveCompletedLesson(lesson.id, lesson.slug);
+          this.coursesSvc.syncEnrollmentProgress(this.courseSlug(), lesson.id);
+          this.course.update(c => (c ? {
+            ...c,
+            enrolled: true,
+            progress_percent: result.course_progress_percent ?? c.progress_percent,
+          } : c));
+        }
       },
       error: (err: HttpErrorResponse) => {
         this.quizSubmitting.set(false);

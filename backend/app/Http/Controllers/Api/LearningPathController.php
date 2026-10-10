@@ -99,7 +99,7 @@ class LearningPathController extends Controller
         return response()->json($data);
     }
 
-    public function show(string $slug)
+    public function show(Request $request, string $slug)
     {
         $path = Cache::remember("api.path.v2.{$slug}", now()->addMinutes(10), function () use ($slug) {
             $lp = LearningPath::with([
@@ -158,6 +158,7 @@ class LearningPathController extends Controller
             $recReasonMap = array_column($recConfig, 'reason', 'course_id');
 
             $crossCourses = [];
+
             if (!empty($recIds)) {
                 $courses = Course::with(['category', 'instructor'])
                     ->withCount('lessons')
@@ -197,6 +198,50 @@ class LearningPathController extends Controller
 
             return $data;
         });
+
+        // Fusión de progreso del usuario por hito y curso en vivo
+        if ($user = $request->user('jwt') ?: $request->user('sanctum')) {
+            $userEnrollments = $user->enrollments()->get()->keyBy('course_id');
+            $totalLevels = count($path['levels'] ?? []);
+            $completedLevels = 0;
+
+            if (isset($path['levels']) && is_array($path['levels'])) {
+                foreach ($path['levels'] as &$lvl) {
+                    $primaryProgress = 0;
+                    $primaryCompleted = false;
+
+                    if (isset($lvl['courses']) && is_array($lvl['courses'])) {
+                        foreach ($lvl['courses'] as &$c) {
+                            $cid = (int) $c['id'];
+                            $enr = $userEnrollments->get($cid);
+                            $cProg = $enr ? (int) $enr->progress_percent : 0;
+                            $cDone = $cProg >= 100 || ($enr && $enr->completed_at !== null);
+
+                            $c['enrolled'] = (bool) $enr;
+                            $c['progress_percent'] = $cProg;
+                            $c['completed'] = $cDone;
+
+                            if (!empty($c['is_primary'])) {
+                                $primaryProgress = $cProg;
+                                $primaryCompleted = $cDone;
+                            }
+                        }
+                        unset($c);
+                    }
+
+                    $lvl['progress_percent'] = $primaryProgress;
+                    $lvl['completed'] = $primaryCompleted;
+                    if ($primaryCompleted) {
+                        $completedLevels++;
+                    }
+                }
+                unset($lvl);
+            }
+
+            $path['user_progress_percent'] = $totalLevels > 0 ? (int) round(($completedLevels / $totalLevels) * 100) : 0;
+            $path['completed_levels_count'] = $completedLevels;
+            $path['total_levels_count'] = $totalLevels;
+        }
 
         return response()->json($path);
     }

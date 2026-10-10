@@ -55,11 +55,30 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
                 </div>
               </div>
 
+              <!-- Roadmap user progress -->
+              @if (path()!.user_progress_percent !== undefined) {
+                <div class="path-user-progress" aria-label="Progreso en la ruta">
+                  <div class="user-progress-header">
+                    <span class="user-progress-title">
+                      <app-icon name="trophy" [size]="16" color="var(--primary)" />
+                      Tu progreso en esta ruta
+                    </span>
+                    <span class="user-progress-pct">{{ path()!.user_progress_percent }}%</span>
+                  </div>
+                  <div class="user-progress-track">
+                    <div class="user-progress-fill" [style.width.%]="path()!.user_progress_percent"></div>
+                  </div>
+                  <div class="user-progress-sub">
+                    {{ path()!.completed_levels_count ?? 0 }} de {{ path()!.total_levels_count ?? (path()!.levels?.length ?? 0) }} hitos completados
+                  </div>
+                </div>
+              }
+
               <!-- Direct Path Actions (Canonical Style: Solid Primary + Green Outline) -->
               <div class="path-hero__actions">
                 @if (firstCourseSlug()) {
                   <a [routerLink]="['/cursos', firstCourseSlug()]" class="btn btn-primary btn-lg">
-                    Comenzar Ruta
+                    {{ (path()!.user_progress_percent ?? 0) > 0 ? 'Continuar Ruta' : 'Comenzar Ruta' }}
                   </a>
                 } @else {
                   <a routerLink="/cursos" class="btn btn-primary btn-lg">
@@ -89,11 +108,17 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
               <div class="milestone-station" [class.is-last]="isLast">
                 <!-- Spine on the Left -->
                 <div class="station-spine">
-                  <div class="station-node">
-                    <span class="station-num">{{ formatOrder(level.order) }}</span>
+                  <div class="station-node" [class.station-node--completed]="level.completed" [class.station-node--in-progress]="!level.completed && (level.progress_percent ?? 0) > 0">
+                    <span class="station-num">
+                      @if (level.completed) {
+                        ✓
+                      } @else {
+                        {{ formatOrder(level.order) }}
+                      }
+                    </span>
                   </div>
                   @if (!isLast) {
-                    <div class="station-line"></div>
+                    <div class="station-line" [class.station-line--completed]="level.completed"></div>
                   }
                 </div>
 
@@ -112,6 +137,15 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
                             · {{ getComplementaryCourses(level).length }} {{ getComplementaryCourses(level).length === 1 ? 'recomendación' : 'recomendaciones' }}
                           }
                         </span>
+                        @if (level.completed) {
+                          <span class="badge badge-success milestone-status-badge">
+                            <app-icon name="check-circle" [size]="12" /> Hito Completado
+                          </span>
+                        } @else if ((level.progress_percent ?? 0) > 0) {
+                          <span class="badge badge-primary milestone-status-badge">
+                            <app-icon name="clock" [size]="12" /> En progreso ({{ level.progress_percent }}%)
+                          </span>
+                        }
                       </div>
                       <h3 class="station-title">{{ level.title }}</h3>
                       @if (level.description) {
@@ -158,9 +192,16 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
                                 <span class="pcc-divider">·</span>
                                 <span class="pcc-lessons"><app-icon name="book" [size]="12" /> {{ primary.lessons_count ?? 0 }} lecciones</span>
                               </div>
-                              <div class="pcc-cta pcc-cta--primary">
-                                <span>Iniciar Curso Troncal</span>
-                                <span class="pcc-cta-arrow" aria-hidden="true">→</span>
+                              <div class="pcc-cta pcc-cta--primary" [class.pcc-cta--completed]="primary.completed">
+                                @if (primary.completed) {
+                                  <span><app-icon name="check-circle" [size]="14" /> Completado (100%)</span>
+                                } @else if ((primary.progress_percent ?? 0) > 0) {
+                                  <span>Continuar Curso ({{ primary.progress_percent }}%)</span>
+                                  <span class="pcc-cta-arrow" aria-hidden="true">→</span>
+                                } @else {
+                                  <span>Iniciar Curso Troncal</span>
+                                  <span class="pcc-cta-arrow" aria-hidden="true">→</span>
+                                }
                               </div>
                             </div>
                           </a>
@@ -215,9 +256,16 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
                                     <span class="pcc-divider">·</span>
                                     <span class="pcc-lessons"><app-icon name="book" [size]="12" /> {{ comp.lessons_count ?? 0 }} lecc.</span>
                                   </div>
-                                  <div class="pcc-cta pcc-cta--comp">
-                                    <span>Ver complementario</span>
-                                    <span class="pcc-cta-arrow" aria-hidden="true">→</span>
+                                  <div class="pcc-cta pcc-cta--comp" [class.pcc-cta--completed]="comp.completed">
+                                    @if (comp.completed) {
+                                      <span><app-icon name="check-circle" [size]="12" /> Completado</span>
+                                    } @else if ((comp.progress_percent ?? 0) > 0) {
+                                      <span>Continuar ({{ comp.progress_percent }}%)</span>
+                                      <span class="pcc-cta-arrow" aria-hidden="true">→</span>
+                                    } @else {
+                                      <span>Ver complementario</span>
+                                      <span class="pcc-cta-arrow" aria-hidden="true">→</span>
+                                    }
                                   </div>
                                 </div>
                               </a>
@@ -243,9 +291,9 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
                   <!-- Connector Bridge to Next Milestone -->
                   @if (!isLast) {
-                    <div class="milestone-bridge">
+                    <div class="milestone-bridge" [class.milestone-bridge--unlocked]="level.completed">
                       <div class="bridge-arrow">
-                        <span>↓</span> Requisito para desbloquear el Hito {{ level.order + 1 }}
+                        <span>↓</span> {{ level.completed ? '¡Hito superado! Avanza al Hito ' + (level.order + 1) : 'Requisito para desbloquear el Hito ' + (level.order + 1) }}
                       </div>
                     </div>
                   }
@@ -475,6 +523,59 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       background: var(--border);
     }
 
+    /* User Progress Card */
+    .path-user-progress {
+      margin-top: var(--sp-4);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-3) var(--sp-5);
+      max-width: 580px;
+
+      .user-progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--sp-2);
+      }
+
+      .user-progress-title {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-2);
+        font-weight: var(--font-semibold);
+        font-size: var(--text-sm);
+        color: var(--text-primary);
+      }
+
+      .user-progress-pct {
+        font-family: var(--font-mono);
+        font-weight: var(--font-bold);
+        font-size: var(--text-sm);
+        color: var(--primary);
+      }
+
+      .user-progress-track {
+        height: 6px;
+        background: var(--bg-surface-2);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .user-progress-fill {
+        height: 100%;
+        background: var(--primary);
+        border-radius: 999px;
+        transition: width 0.4s ease;
+      }
+
+      .user-progress-sub {
+        margin-top: var(--sp-2);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+      }
+    }
+
     /* ---------- ROADMAP LEVELS SECTION ---------- */
     .levels-section {
       padding: var(--sp-4) 0 var(--sp-16);
@@ -556,6 +657,23 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
         color: var(--primary);
       }
 
+      &--completed {
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 0 20px rgba(10, 233, 138, 0.45);
+
+        .station-num {
+          color: #08090D;
+          font-weight: 900;
+        }
+      }
+
+      &--in-progress {
+        background: rgba(10, 233, 138, 0.12);
+        border-color: var(--primary);
+        box-shadow: 0 0 16px rgba(10, 233, 138, 0.3);
+      }
+
       @media (max-width: 768px) {
         width: 24px;
         height: 24px;
@@ -574,9 +692,22 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       min-height: 60px;
       margin: 4px 0;
 
+      &--completed {
+        background: linear-gradient(180deg, var(--primary), rgba(10, 233, 138, 0.5));
+      }
+
       @media (max-width: 768px) {
         margin: 2px 0;
       }
+    }
+
+    .milestone-status-badge {
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .station-content {
@@ -920,6 +1051,12 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
         background: rgba(255, 184, 0, 0.08);
         border: 1px solid rgba(255, 184, 0, 0.28);
         color: #FFB800 !important;
+      }
+
+      &--completed {
+        background: rgba(10, 233, 138, 0.16) !important;
+        border: 1px solid rgba(10, 233, 138, 0.45) !important;
+        color: var(--primary) !important;
       }
 
       @media (max-width: 768px) {

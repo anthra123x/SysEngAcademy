@@ -34,6 +34,9 @@ export interface LearningPath {
   courses?: Course[];
   courses_count?: number;
   complementary_courses?: Course[];
+  user_progress_percent?: number;
+  completed_levels_count?: number;
+  total_levels_count?: number;
 }
 
 export interface LearningPathLevel {
@@ -43,6 +46,9 @@ export interface LearningPathLevel {
   order: number;
   description?: string;
   courses?: Course[];
+  progress_percent?: number;
+  completed?: boolean;
+  enrolled?: boolean;
 }
 
 export interface Course {
@@ -67,6 +73,7 @@ export interface Course {
   lessons_count?: number;
   enrolled?: boolean;
   progress_percent?: number;
+  completed?: boolean;
   rating_avg?: number;
   rating_count?: number;
   user_review?: CourseReview | null;
@@ -298,6 +305,8 @@ export interface QuizAttemptResult {
   total: number;
   /** Backend: true si score >= 60 (aprobado). */
   passed?: boolean;
+  completed?: boolean;
+  course_progress_percent?: number;
   results: QuizAttemptQuestionResult[];
 }
 

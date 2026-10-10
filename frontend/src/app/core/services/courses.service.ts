@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import {
   Course,
@@ -63,6 +63,17 @@ export function isModuleUnlockedForStudent(
 @Injectable({ providedIn: 'root' })
 export class CoursesService {
   private api = inject(ApiService);
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('syseng-auth-login', () => {
+        this.syncGuestLessonsToServer().subscribe({ error: () => {} });
+      });
+      if (this.getUserEmail() !== 'guest') {
+        this.syncGuestLessonsToServer().subscribe({ error: () => {} });
+      }
+    }
+  }
 
   getAll(filters?: CourseFilters): Observable<PaginatedResponse<Course>> {
     const cached = this.readCache();
@@ -200,6 +211,49 @@ export class CoursesService {
     }
   }
 
+  syncGuestLessonsToServer(): Observable<{ synced: number } | null> {
+    if (typeof window === 'undefined') return of(null);
+    const email = this.getUserEmail();
+    if (email === 'guest') return of(null);
+
+    try {
+      const guestIdsRaw = localStorage.getItem('syseng_guest_completed_lessons');
+      const guestSlugsRaw = localStorage.getItem('syseng_guest_completed_lesson_slugs');
+      const guestIds: number[] = guestIdsRaw ? JSON.parse(guestIdsRaw) : [];
+      const guestSlugs: string[] = guestSlugsRaw ? JSON.parse(guestSlugsRaw) : [];
+
+      if ((!guestIds || guestIds.length === 0) && (!guestSlugs || guestSlugs.length === 0)) {
+        return of(null);
+      }
+
+      return this.api.post<{ synced: number }>('/lessons/sync-guest-progress', {
+        lesson_ids: guestIds,
+        lesson_slugs: guestSlugs,
+      }).pipe(
+        tap(() => {
+          const userSet = this.getCompletedLessonIds();
+          guestIds.forEach(id => userSet.add(Number(id)));
+          localStorage.setItem(`syseng_${email}_completed_lessons`, JSON.stringify(Array.from(userSet)));
+
+          if (guestSlugs.length > 0) {
+            const userSlugKey = `syseng_${email}_completed_lesson_slugs`;
+            const userSlugs: string[] = JSON.parse(localStorage.getItem(userSlugKey) || '[]');
+            guestSlugs.forEach(s => {
+              if (!userSlugs.includes(s)) userSlugs.push(s);
+            });
+            localStorage.setItem(userSlugKey, JSON.stringify(userSlugs));
+          }
+
+          localStorage.removeItem('syseng_guest_completed_lessons');
+          localStorage.removeItem('syseng_guest_completed_lesson_slugs');
+        })
+      );
+    } catch (e) {
+      console.warn('Error syncing guest lessons', e);
+      return of(null);
+    }
+  }
+
   enrichCourseWithCompletions(course: Course): Course {
     if (!course || !course.modules) return course;
     const completedIds = this.getCompletedLessonIds();
@@ -247,29 +301,10 @@ export class CoursesService {
     }
     const isComp = !!lesson.completed || this.isLessonCompleted(numId, lesson.slug);
 
-    // Mezcla aleatoria de opciones de respuesta del quiz para evitar que la opción correcta siempre sea la primera
-    const quiz = lesson.quiz
-      ? {
-          ...lesson.quiz,
-          questions: (lesson.quiz.questions ?? []).map(q => {
-            const answers = [...(q.answers ?? [])];
-            for (let i = answers.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [answers[i], answers[j]] = [answers[j], answers[i]];
-            }
-            return {
-              ...q,
-              answers,
-            };
-          }),
-        }
-      : lesson.quiz;
-
     return {
       ...lesson,
       id: numId,
       completed: isComp,
-      quiz,
     };
   }
 

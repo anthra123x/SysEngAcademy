@@ -17,8 +17,9 @@ class LessonController extends Controller
     {
         // El contenido base (y el quiz sin respuestas correctas) es común a
         // todos los usuarios: se cachea. Los datos por usuario (completed,
-        // prev/next) se calculan fuera del caché.
-        $lesson = Cache::remember("api.lesson.v6.{$slug}", now()->addMinutes(10), function () use ($slug) {
+        // El contenido base es común y se cachea. Los quizzes se aleatorizan
+        // por cuenta y los datos de progreso se calculan en vivo fuera de la caché.
+        $lesson = Cache::remember("api.lesson.v8.{$slug}", now()->addMinutes(10), function () use ($slug) {
             $lesson = Lesson::with(['module.course', 'quiz.questions.answers'])
                 ->where('slug', $slug)
                 ->firstOrFail()
@@ -28,21 +29,6 @@ class LessonController extends Controller
             if (empty($lesson['language'])) {
                 $lesson['language'] = $this->inferLessonLanguage($lesson);
             }
-
-            // Nunca exponer la respuesta correcta: la evaluación es server-side.
-            // Mezclamos las respuestas (shuffle) para evitar que la opción correcta siempre sea la primera.
-            $questions = $lesson['quiz']['questions'] ?? [];
-            foreach ($questions as &$question) {
-                $answers = $question['answers'] ?? [];
-                shuffle($answers);
-                foreach ($answers as &$answer) {
-                    unset($answer['is_correct'], $answer['explanation']);
-                }
-                unset($answer);
-                $question['answers'] = $answers;
-            }
-            unset($question);
-            $lesson['quiz']['questions'] = $questions;
 
             // Nunca exponer la solución de referencia de un ejercicio: el
             // alumno debe resolverlo. Se conserva solo en el seeder.
@@ -80,11 +66,74 @@ class LessonController extends Controller
                 ->exists()
             : false;
 
+        // Aleatorización de preguntas y opciones por cuenta de usuario
+        if (!empty($lesson['quiz']['questions'])) {
+            $lesson['quiz']['questions'] = $this->randomizeQuizForUser(
+                $lesson['quiz']['questions'],
+                $user ? (int) $user->id : null,
+                (int) ($lesson['quiz']['id'] ?? $lesson['id'])
+            );
+        }
+
         [$prev, $next] = $this->siblings($lesson);
         $lesson['prev_lesson'] = $prev;
         $lesson['next_lesson'] = $next;
 
         return response()->json($lesson);
+    }
+
+    /**
+     * Aleatoriza determinísticamente el orden de preguntas y opciones
+     * según el ID de cuenta del usuario, garantizando variabilidad entre estudiantes.
+     */
+    protected function randomizeQuizForUser(array $questions, ?int $userId, int $quizId): array
+    {
+        $seed = $userId
+            ? crc32("account:{$userId}:quiz:{$quizId}")
+            : crc32(request()->ip() . ":quiz:{$quizId}");
+
+        // 1. Barajar preguntas según la cuenta
+        $questions = $this->seededShuffle($questions, $seed);
+
+        // 2. Barajar opciones de cada pregunta eliminando respuestas correctas
+        foreach ($questions as $qIndex => &$question) {
+            $answers = $question['answers'] ?? [];
+            $qSeed = crc32("{$seed}:q:{$question['id']}:{$qIndex}");
+            $shuffledAnswers = $this->seededShuffle($answers, $qSeed);
+
+            foreach ($shuffledAnswers as &$ans) {
+                unset($ans['is_correct'], $ans['explanation']);
+            }
+            unset($ans);
+
+            $question['answers'] = $shuffledAnswers;
+        }
+        unset($question);
+
+        return $questions;
+    }
+
+    /**
+     * Fisher-Yates shuffle determinista basado en generador LCG
+     * sin alterar el estado global de números aleatorios de PHP.
+     */
+    protected function seededShuffle(array $items, int $seed): array
+    {
+        $count = count($items);
+        if ($count <= 1) {
+            return $items;
+        }
+
+        $state = $seed;
+        for ($i = $count - 1; $i > 0; $i--) {
+            $state = ($state * 1103515245 + 12345) & 0x7fffffff;
+            $j = $state % ($i + 1);
+            $temp = $items[$i];
+            $items[$i] = $items[$j];
+            $items[$j] = $temp;
+        }
+
+        return array_values($items);
     }
 
     /**
@@ -170,19 +219,52 @@ class LessonController extends Controller
         $score = $total > 0 ? (int) round(($correct / $total) * 100) : 0;
         $passed = $score >= 60;
 
-        $user = $request->user('jwt') ?: $request->user('sanctum');
-        if ($user && $passed) {
-            LessonProgress::updateOrCreate(
-                ['user_id' => $user->id, 'lesson_id' => $lesson->id],
-                ['score' => $score]
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+        $courseProgress = null;
+
+        if ($user) {
+            $courseId = $lesson->module->course_id;
+
+            // Asegurar enrollment automático si el usuario empieza a estudiar
+            $enrollment = Enrollment::firstOrCreate(
+                ['user_id' => $user->id, 'course_id' => $courseId],
+                ['enrolled_at' => now(), 'progress_percent' => 0]
             );
+
+            $existing = LessonProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
+
+            if ($passed) {
+                LessonProgress::updateOrCreate(
+                    ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+                    [
+                        'score' => max($score, (int) ($existing?->score ?? 0)),
+                        'completed_at' => $existing?->completed_at ?? now(),
+                    ]
+                );
+            } else {
+                if (!$existing || $score > ($existing->score ?? 0)) {
+                    LessonProgress::updateOrCreate(
+                        ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+                        ['score' => $score]
+                    );
+                }
+            }
+
+            $courseProgress = $this->recalculateCourseProgress($user->id, $courseId, $enrollment);
         }
+
+        $isCompleted = (bool) (
+            $passed ||
+            ($user && LessonProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->whereNotNull('completed_at')->exists())
+        );
 
         return response()->json([
             'score' => $score,
             'correct' => $correct,
             'total' => $total,
             'passed' => $passed,
+            'completed' => $isCompleted,
+            'course_progress_percent' => $courseProgress,
             'results' => $results,
         ]);
     }
@@ -193,36 +275,128 @@ class LessonController extends Controller
 
         $request->validate(['score' => 'nullable|integer|min:0|max:100']);
 
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Debes iniciar sesión para registrar tu progreso.'], 401);
+        }
+
         $courseId = $lesson->module->course_id;
 
-        $enrollment = Enrollment::where('user_id', $request->user()->id)
-            ->where('course_id', $courseId)
-            ->firstOrFail();
-
-        LessonProgress::updateOrCreate(
-            ['user_id' => $request->user()->id, 'lesson_id' => $lesson->id],
-            ['completed_at' => now(), 'score' => $request->score]
+        $enrollment = Enrollment::firstOrCreate(
+            ['user_id' => $user->id, 'course_id' => $courseId],
+            ['enrolled_at' => now(), 'progress_percent' => 0]
         );
 
-        // Recalcular progreso del curso
+        $existing = LessonProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
+        $submittedScore = $request->score !== null ? (int) $request->score : null;
+        $finalScore = $submittedScore !== null
+            ? max($submittedScore, (int) ($existing?->score ?? 0))
+            : ($existing?->score ?? 100);
+
+        LessonProgress::updateOrCreate(
+            ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+            [
+                'completed_at' => $existing?->completed_at ?? now(),
+                'score' => $finalScore,
+            ]
+        );
+
+        $progress = $this->recalculateCourseProgress($user->id, $courseId, $enrollment);
+
+        return response()->json([
+            'progress_percent' => $progress,
+            'completed' => true,
+            'message' => 'Lección completada con éxito.',
+        ]);
+    }
+
+    public function syncGuestProgress(Request $request)
+    {
+        $request->validate([
+            'lesson_ids' => 'nullable|array',
+            'lesson_ids.*' => 'integer',
+            'lesson_slugs' => 'nullable|array',
+            'lesson_slugs.*' => 'string',
+        ]);
+
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'No autorizado.'], 401);
+        }
+
+        $lessonIds = collect($request->input('lesson_ids', []));
+        $lessonSlugs = $request->input('lesson_slugs', []);
+
+        if (!empty($lessonSlugs)) {
+            $slugIds = Lesson::whereIn('slug', $lessonSlugs)->pluck('id');
+            $lessonIds = $lessonIds->merge($slugIds)->unique();
+        }
+
+        if ($lessonIds->isEmpty()) {
+            return response()->json(['synced' => 0, 'message' => 'No hay lecciones para sincronizar.']);
+        }
+
+        $lessons = Lesson::with('module')->whereIn('id', $lessonIds)->get();
+        $syncedCount = 0;
+        $affectedCourseIds = [];
+
+        foreach ($lessons as $lesson) {
+            if (!$lesson->module || !$lesson->module->course_id) {
+                continue;
+            }
+
+            $courseId = $lesson->module->course_id;
+            $affectedCourseIds[$courseId] = true;
+
+            $enrollment = Enrollment::firstOrCreate(
+                ['user_id' => $user->id, 'course_id' => $courseId],
+                ['enrolled_at' => now(), 'progress_percent' => 0]
+            );
+
+            $existing = LessonProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
+            LessonProgress::updateOrCreate(
+                ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+                [
+                    'completed_at' => $existing?->completed_at ?? now(),
+                    'score' => max(100, (int) ($existing?->score ?? 0)),
+                ]
+            );
+            $syncedCount++;
+        }
+
+        foreach (array_keys($affectedCourseIds) as $cId) {
+            $enr = Enrollment::where('user_id', $user->id)->where('course_id', $cId)->first();
+            if ($enr) {
+                $this->recalculateCourseProgress($user->id, $cId, $enr);
+            }
+        }
+
+        return response()->json([
+            'synced' => $syncedCount,
+            'message' => "Progreso sincronizado exitosamente ({$syncedCount} lecciones).",
+        ]);
+    }
+
+    protected function recalculateCourseProgress(int $userId, int $courseId, Enrollment $enrollment): int
+    {
         $totalLessons = DB::table('lessons')
             ->join('modules', 'lessons.module_id', '=', 'modules.id')
             ->where('modules.course_id', $courseId)
             ->count();
 
-        $completedLessons = LessonProgress::where('user_id', $request->user()->id)
+        $completedLessons = LessonProgress::where('user_id', $userId)
             ->whereHas('lesson', fn ($q) => $q->whereHas('module', fn ($q2) => $q2->where('course_id', $courseId)))
             ->whereNotNull('completed_at')
             ->count();
 
-        $progress = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+        $progress = $totalLessons > 0 ? (int) round(($completedLessons / $totalLessons) * 100) : 0;
 
         $enrollment->update([
             'progress_percent' => $progress,
-            'completed_at' => $progress >= 100 ? now() : null,
+            'completed_at' => $progress >= 100 ? ($enrollment->completed_at ?? now()) : null,
         ]);
 
-        return response()->json(['progress_percent' => $progress, 'message' => 'Lección completada.']);
+        return $progress;
     }
 
     /**
