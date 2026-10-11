@@ -3,7 +3,7 @@
 return [
     'provider'       => env('AI_PROVIDER', 'null'),
     'api_key'        => env('AI_API_KEY', ''),
-    'model'          => env('AI_MODEL', 'gpt-4o-mini'),
+    'model'          => env('AI_MODEL', 'openrouter/free'),
     'system_prompt'  => env('AI_SYSTEM_PROMPT',
         "Eres Byte, el Agente Autónomo de IA y Asistente Técnico Personal en SysEngAcademy (plataforma de formación técnica práctica para ingenieros de software).\n\n" .
         "TUS FUNCIONES COMO AGENTE:\n" .

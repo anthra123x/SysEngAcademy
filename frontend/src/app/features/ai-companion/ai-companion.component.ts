@@ -479,29 +479,43 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
         content: m.content,
       }));
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.getOpenRouterKey()}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://sysengacademy.dev',
-        'X-Title': 'SysEngAcademy Byte Companion',
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
-        stream: true,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...history,
-          { role: 'user', content: userMessage },
-        ],
-        temperature: 0.2,
-        max_tokens: 650,
-      }),
-    });
+    const candidateModels = ['openrouter/free', 'google/gemma-4-31b-it:free', 'liquid/lfm-2.5-2.6b:free'];
+    let response: Response | null = null;
 
-    if (!response.ok || !response.body) {
-      throw new Error(`OpenRouter HTTP ${response.status}`);
+    for (const model of candidateModels) {
+      try {
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.getOpenRouterKey()}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://sysengacademy.dev',
+            'X-Title': 'SysEngAcademy Byte Companion',
+          },
+          body: JSON.stringify({
+            model,
+            stream: true,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ...history,
+              { role: 'user', content: userMessage },
+            ],
+            temperature: 0.2,
+            max_tokens: 650,
+          }),
+        });
+
+        if (res.ok && res.body) {
+          response = res;
+          break;
+        }
+      } catch {
+        // Probar siguiente modelo candidato
+      }
+    }
+
+    if (!response || !response.body) {
+      throw new Error('OpenRouter free models unavailable');
     }
 
     const reader = response.body.getReader();

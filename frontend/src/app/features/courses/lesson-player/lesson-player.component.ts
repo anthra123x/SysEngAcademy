@@ -750,12 +750,6 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     });
   }
 
-  askByte() {
-    const lesson = this.lesson();
-    if (!lesson) return;
-    window.dispatchEvent(new CustomEvent('ai-companion:open', { detail: { lesson_id: lesson.id, lesson_title: lesson.title } }));
-  }
-
   // ===== Copy =====
 
   copyCode(text: string, index: number) {

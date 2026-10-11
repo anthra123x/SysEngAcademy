@@ -130,7 +130,7 @@ class AiService
             'X-Title' => 'SysEng Academy',
             'HTTP-Referer' => config('app.url', 'http://localhost:4200'),
         ])->withOptions(['stream' => true, 'timeout' => 300])->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model' => config('ai.model', 'openai/gpt-4o-mini'),
+            'model' => config('ai.model', 'openrouter/free'),
             'messages' => $messages,
             'stream' => true,
         ]);
@@ -212,7 +212,7 @@ class AiService
             'X-Title' => 'SysEng Academy',
             'HTTP-Referer' => config('app.url', 'http://localhost:4200'),
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model' => config('ai.model', 'openai/gpt-4o-mini'),
+            'model' => config('ai.model', 'openrouter/free'),
             'messages' => $messages,
         ]);
 

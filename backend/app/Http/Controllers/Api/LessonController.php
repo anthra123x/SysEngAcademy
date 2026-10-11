@@ -59,6 +59,11 @@ class LessonController extends Controller
 
         // Datos por usuario
         $user = $request->user('jwt') ?: $request->user('sanctum');
+        if (! $user && $request->filled('student_email')) {
+            $email = strtolower(trim((string) $request->input('student_email')));
+            $user = \App\Models\User::where('email', $email)->first();
+        }
+
         $lesson['completed'] = $user
             ? LessonProgress::where('user_id', $user->id)
                 ->where('lesson_id', $lesson['id'])
@@ -84,21 +89,27 @@ class LessonController extends Controller
 
     /**
      * Aleatoriza determinísticamente el orden de preguntas y opciones
-     * según el ID de cuenta del usuario, garantizando variabilidad entre estudiantes.
+     * según el ID de cuenta del usuario o su identificador de sesión, garantizando variabilidad entre estudiantes.
      */
     protected function randomizeQuizForUser(array $questions, ?int $userId, int $quizId): array
     {
+        $guestId = request()->input('student_email')
+            ?: request()->header('X-User-Email')
+            ?: request()->header('X-Guest-Id')
+            ?: request()->ip();
+
         $seed = $userId
-            ? crc32("account:{$userId}:quiz:{$quizId}")
-            : crc32(request()->ip() . ":quiz:{$quizId}");
+            ? abs(crc32("account:{$userId}:quiz:{$quizId}"))
+            : abs(crc32("guest:{$guestId}:quiz:{$quizId}"));
 
         // 1. Barajar preguntas según la cuenta
         $questions = $this->seededShuffle($questions, $seed);
 
         // 2. Barajar opciones de cada pregunta eliminando respuestas correctas
+        // para que las opciones no queden en la misma posición relativa
         foreach ($questions as $qIndex => &$question) {
             $answers = $question['answers'] ?? [];
-            $qSeed = crc32("{$seed}:q:{$question['id']}:{$qIndex}");
+            $qSeed = abs(crc32("{$seed}:q:{$question['id']}:pos:{$qIndex}"));
             $shuffledAnswers = $this->seededShuffle($answers, $qSeed);
 
             foreach ($shuffledAnswers as &$ans) {

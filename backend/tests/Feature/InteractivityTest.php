@@ -205,6 +205,63 @@ class InteractivityTest extends TestCase
         ]);
     }
 
+    public function test_quiz_aleatoriza_preguntas_y_opciones_segun_usuario_o_estudiante(): void
+    {
+        $suffix = uniqid();
+        $course = $this->makeCourse($suffix);
+        $module = Module::create(['course_id' => $course->id, 'title' => 'Módulo 1', 'order' => 1]);
+        $lesson = $this->makeLesson($module, "leccion-quiz-rand-{$suffix}", 1, preview: true);
+        $quiz = $this->makeQuiz($lesson);
+
+        // Crear una 3ra pregunta para tener más permutaciones de preguntas
+        $q3 = QuizQuestion::create(['quiz_id' => $quiz->id, 'question' => '¿Qué es un bucle?', 'type' => 'single', 'order' => 3]);
+        QuizAnswer::create(['question_id' => $q3->id, 'answer_text' => 'Estructura repetitiva', 'is_correct' => true, 'explanation' => 'Sí']);
+        QuizAnswer::create(['question_id' => $q3->id, 'answer_text' => 'Una variable', 'is_correct' => false, 'explanation' => 'No']);
+        QuizAnswer::create(['question_id' => $q3->id, 'answer_text' => 'Un tipo de dato', 'is_correct' => false, 'explanation' => 'No']);
+        QuizAnswer::create(['question_id' => $q3->id, 'answer_text' => 'Un archivo', 'is_correct' => false, 'explanation' => 'No']);
+
+        $userA = User::create([
+            'email' => "estudiante-a-{$suffix}@sysengacademy.dev",
+            'name' => 'Estudiante A',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+        ]);
+        $userB = User::create([
+            'email' => "estudiante-b-{$suffix}@sysengacademy.dev",
+            'name' => 'Estudiante B',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+        ]);
+
+        Sanctum::actingAs($userA);
+        $respA = $this->getJson("/api/lessons/{$lesson->slug}")->assertOk();
+        $questionsA = $respA->json('quiz.questions');
+
+        Sanctum::actingAs($userB);
+        $respB = $this->getJson("/api/lessons/{$lesson->slug}")->assertOk();
+        $questionsB = $respB->json('quiz.questions');
+
+        $this->assertNotEmpty($questionsA);
+        $this->assertNotEmpty($questionsB);
+
+        // Las opciones de las preguntas no exponen is_correct ni explanation
+        foreach ($questionsA as $q) {
+            foreach ($q['answers'] as $ans) {
+                $this->assertArrayNotHasKey('is_correct', $ans);
+                $this->assertArrayNotHasKey('explanation', $ans);
+            }
+        }
+
+        // Variabilidad determinista: al menos las preguntas u opciones difieren entre cuentas
+        $idsA = array_column($questionsA, 'id');
+        $idsB = array_column($questionsB, 'id');
+        $answersA = array_column($questionsA[0]['answers'], 'id');
+        $answersB = array_column($questionsB[0]['answers'], 'id');
+
+        $hasVariation = ($idsA !== $idsB) || ($answersA !== $answersB);
+        $this->assertTrue($hasVariation, 'El orden de preguntas u opciones debe variar según el usuario');
+    }
+
     public function test_quiz_attempt_requiere_autenticacion(): void
     {
         $this->postJson('/api/lessons/cualquiera/quiz/attempt', ['answers' => []])

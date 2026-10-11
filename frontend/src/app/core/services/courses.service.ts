@@ -118,7 +118,12 @@ export class CoursesService {
   }
 
   getLesson(lessonSlug: string): Observable<LessonDetail> {
-    return this.api.get<LessonDetail>(`/lessons/${lessonSlug}`).pipe(
+    const email = this.getUserEmail();
+    const params: Record<string, string> = {};
+    if (email && email !== 'guest') {
+      params['student_email'] = email;
+    }
+    return this.api.get<LessonDetail>(`/lessons/${lessonSlug}`, params).pipe(
       map(lesson => this.enrichLessonWithCompletions(lesson))
     );
   }
