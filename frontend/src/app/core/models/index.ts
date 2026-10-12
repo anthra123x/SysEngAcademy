@@ -145,6 +145,7 @@ export interface Lesson {
   user_score?: number | null;
   last_code?: string | null;
   last_quiz_answers?: Record<string, number[]> | null;
+  last_quiz_results?: QuizAttemptQuestionResult[] | null;
 }
 
 export interface Enrollment {

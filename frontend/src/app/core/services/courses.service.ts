@@ -228,7 +228,9 @@ export class CoursesService {
     const email = this.getUserEmail();
     const key = `syseng_${email}_quiz_${lessonSlug}`;
     try {
-      localStorage.setItem(key, JSON.stringify({ answers, score, results, updatedAt: new Date().toISOString() }));
+      const existing = this.getSavedQuizAttempt(lessonSlug);
+      const finalResults = (results && results.length > 0) ? results : existing?.results;
+      localStorage.setItem(key, JSON.stringify({ answers, score, results: finalResults, updatedAt: new Date().toISOString() }));
     } catch (e) {
       console.warn('Error saving quiz attempt to localStorage', e);
     }
@@ -392,7 +394,11 @@ export class CoursesService {
     }
     if (lesson.last_quiz_answers && lesson.slug) {
       const savedScore = typeof lesson.user_score === 'number' ? lesson.user_score : 100;
-      this.saveQuizAttempt(lesson.slug, lesson.last_quiz_answers, savedScore);
+      const existingQuiz = this.getSavedQuizAttempt(lesson.slug);
+      const resultsToSave = (lesson.last_quiz_results && lesson.last_quiz_results.length > 0)
+        ? lesson.last_quiz_results
+        : existingQuiz?.results;
+      this.saveQuizAttempt(lesson.slug, lesson.last_quiz_answers, savedScore, resultsToSave);
     }
 
     const resolvedScore = typeof lesson.user_score === 'number'
@@ -408,6 +414,7 @@ export class CoursesService {
       user_score: resolvedScore,
       last_code: lesson.last_code || this.getSavedStudentCode(numId),
       last_quiz_answers: lesson.last_quiz_answers || savedQuiz?.answers || null,
+      last_quiz_results: lesson.last_quiz_results || savedQuiz?.results || null,
     };
   }
 

@@ -63,6 +63,10 @@ class LessonController extends Controller
             $email = strtolower(trim((string) $request->input('student_email')));
             $user = \App\Models\User::where('email', $email)->first();
         }
+        if (! $user && $request->hasHeader('X-User-Email')) {
+            $email = strtolower(trim((string) $request->header('X-User-Email')));
+            $user = \App\Models\User::where('email', $email)->first();
+        }
 
         $progress = $user
             ? LessonProgress::where('user_id', $user->id)
@@ -74,6 +78,40 @@ class LessonController extends Controller
         $lesson['user_score'] = $progress?->score !== null ? (int) $progress->score : null;
         $lesson['last_code'] = $progress?->last_code;
         $lesson['last_quiz_answers'] = $progress?->last_answers;
+
+        if ($progress && !empty($progress->last_answers) && !empty($lesson['quiz']['questions'])) {
+            $savedAnswers = (array) $progress->last_answers;
+            $quizResults = [];
+            foreach ($lesson['quiz']['questions'] as $q) {
+                $cIds = collect($q['answers'] ?? [])
+                    ->where('is_correct', true)
+                    ->pluck('id')
+                    ->map(fn($id) => (int)$id)
+                    ->sort()
+                    ->values()
+                    ->all();
+                $sIds = array_map('intval', (array)($savedAnswers[$q['id']] ?? []));
+                sort($sIds);
+                $isQCorrect = !empty($cIds) && $cIds === $sIds;
+
+                $explanation = '';
+                if ($isQCorrect) {
+                    $explanation = collect($q['answers'] ?? [])->where('is_correct', true)->first()['explanation']
+                        ?? '¡Correcto! Respuesta guardada con éxito.';
+                } else {
+                    $explanation = 'Respuesta anterior guardada.';
+                }
+
+                $quizResults[] = [
+                    'question_id' => (int) $q['id'],
+                    'correct' => $isQCorrect,
+                    'correct_answer_ids' => $cIds,
+                    'selected_ids' => $sIds,
+                    'explanation' => $explanation,
+                ];
+            }
+            $lesson['last_quiz_results'] = $quizResults;
+        }
 
         // Aleatorización de preguntas y opciones por cuenta de usuario
         if (!empty($lesson['quiz']['questions'])) {

@@ -726,20 +726,25 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
           if (score !== null && (savedAnswers || detail.completed)) {
             const totalQ = detail.quiz.questions.length;
             const approxCorrect = Math.round((score / 100) * totalQ);
-            const results: QuizAttemptQuestionResult[] = savedQuiz?.results || detail.quiz.questions.map(q => {
-              const sel = (savedAnswers && savedAnswers[q.id]) || [];
-              return {
-                question_id: q.id,
-                correct: score >= 90,
-                correct_answer_ids: [],
-                selected_ids: sel,
-                explanation: score >= 90 ? 'Respuesta guardada con éxito.' : 'Respuesta anterior.',
-              };
-            });
+            const results: QuizAttemptQuestionResult[] = (savedQuiz?.results && savedQuiz.results.length > 0)
+              ? savedQuiz.results
+              : ((detail.last_quiz_results && detail.last_quiz_results.length > 0)
+                ? detail.last_quiz_results
+                : detail.quiz.questions.map(q => {
+                    const sel = (savedAnswers && savedAnswers[q.id]) || [];
+                    const isQCorrect = score >= 90;
+                    return {
+                      question_id: q.id,
+                      correct: isQCorrect,
+                      correct_answer_ids: isQCorrect ? [...sel] : [],
+                      selected_ids: sel,
+                      explanation: isQCorrect ? 'Respuesta guardada con éxito.' : 'Respuesta anterior.',
+                    };
+                  }));
 
             this.quizResult.set({
               score,
-              correct: savedQuiz?.results ? savedQuiz.results.filter(r => r.correct).length : approxCorrect,
+              correct: (savedQuiz?.results || detail.last_quiz_results) ? results.filter(r => r.correct).length : approxCorrect,
               total: totalQ,
               passed: score >= 90,
               required_score: 90,
@@ -891,12 +896,21 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
 
   isCorrectAnswer(qid: number, aid: number): boolean {
     const res = this.resultFor(qid);
-    return !!res && res.correct_answer_ids.includes(aid);
+    if (!res) return false;
+    if (res.correct_answer_ids && res.correct_answer_ids.length > 0) {
+      return res.correct_answer_ids.includes(aid);
+    }
+    return res.correct && res.selected_ids.includes(aid);
   }
 
   isWrongAnswer(qid: number, aid: number): boolean {
     const res = this.resultFor(qid);
-    return !!res && res.selected_ids.includes(aid) && !res.correct_answer_ids.includes(aid);
+    if (!res) return false;
+    if (!res.selected_ids.includes(aid)) return false;
+    if (res.correct_answer_ids && res.correct_answer_ids.length > 0) {
+      return !res.correct_answer_ids.includes(aid);
+    }
+    return !res.correct;
   }
 
   correctAnswersText(q: LessonQuizQuestion, res: QuizAttemptQuestionResult): string {
