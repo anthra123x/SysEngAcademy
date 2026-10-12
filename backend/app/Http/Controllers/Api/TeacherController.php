@@ -7,6 +7,7 @@ use App\Modules\Academics\Services\StudentManagementService;
 use App\Modules\Academics\Services\StudentRosterService;
 use App\Modules\Academics\Services\TeacherAnalyticsService;
 use App\Modules\Users\Services\UserService;
+use App\Services\TransactionalMailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -121,16 +122,18 @@ class TeacherController extends Controller
                 $lessons = $student->lessonProgress()->count();
                 $xp = max(50, $student->xp ?: 50);
 
-                \Illuminate\Support\Facades\Mail::send('emails.progress-digest', [
-                    'userName'         => $student->name,
-                    'userEmail'        => $student->email,
-                    'streakDays'       => $streak,
-                    'completedLessons' => $lessons,
-                    'totalXp'          => $xp,
-                ], function ($message) use ($student) {
-                    $message->to($student->email)
-                        ->subject('📊 Resumen de tu Progreso Académico - SysEng Academy');
-                });
+                TransactionalMailService::send(
+                    toEmail: $student->email,
+                    subject: '📊 Resumen de tu Progreso Académico - SysEng Academy',
+                    view: 'emails.progress-digest',
+                    viewData: [
+                        'userName'         => $student->name,
+                        'userEmail'        => $student->email,
+                        'streakDays'       => $streak,
+                        'completedLessons' => $lessons,
+                        'totalXp'          => $xp,
+                    ]
+                );
                 $sentCount++;
             } catch (\Throwable $e) {
                 logger()->error("Error enviando digest a {$student->email}: " . $e->getMessage());
@@ -159,14 +162,16 @@ class TeacherController extends Controller
             try {
                 $streak = max(1, $student->current_streak ?: 1);
 
-                \Illuminate\Support\Facades\Mail::send('emails.streak-reminder', [
-                    'userName'   => $student->name,
-                    'userEmail'  => $student->email,
-                    'streakDays' => $streak,
-                ], function ($message) use ($student) {
-                    $message->to($student->email)
-                        ->subject('🔥 ¡Alerta! Tu racha en SysEng Academy está por vencerse');
-                });
+                TransactionalMailService::send(
+                    toEmail: $student->email,
+                    subject: '🔥 ¡Alerta! Tu racha en SysEng Academy está por vencerse',
+                    view: 'emails.streak-reminder',
+                    viewData: [
+                        'userName'   => $student->name,
+                        'userEmail'  => $student->email,
+                        'streakDays' => $streak,
+                    ]
+                );
                 $sentCount++;
             } catch (\Throwable $e) {
                 logger()->error("Error enviando recordatorio a {$student->email}: " . $e->getMessage());

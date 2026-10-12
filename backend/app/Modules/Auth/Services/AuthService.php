@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Auth\DTOs\LoginDTO;
 use App\Modules\Auth\DTOs\RegisterDTO;
 use App\Services\AuthTokenService;
+use App\Services\TransactionalMailService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -127,19 +128,17 @@ class AuthService
         $verifyCode = sprintf('%06d', mt_rand(100000, 999999));
         Cache::put("email_verify_code_{$user->id}", $verifyCode, now()->addHours(24));
 
-        try {
-            Mail::send('emails.verify-code', [
+        TransactionalMailService::send(
+            toEmail: $user->email,
+            subject: "Nuevo Código de Verificación: {$verifyCode} - SysEng Academy",
+            view: 'emails.verify-code',
+            viewData: [
                 'userName'   => $user->name,
                 'verifyCode' => $verifyCode,
                 'userEmail'  => $user->email,
                 'verifyUrl'  => config('app.frontend_url', 'http://localhost:4200'),
-            ], function ($message) use ($user, $verifyCode) {
-                $message->to($user->email)
-                    ->subject("Nuevo Código de Verificación: {$verifyCode} - SysEng Academy");
-            });
-        } catch (\Throwable $e) {
-            logger()->error('Error reenviando verificación: ' . $e->getMessage());
-        }
+            ]
+        );
 
         return [
             'message'           => 'Código de confirmación reenviado a tu correo.',
@@ -242,19 +241,17 @@ class AuthService
         Cache::put("password_reset_code_{$user->id}", $resetCode, now()->addMinutes(30));
         Cache::put("password_reset_code_{$cleanEmail}", $resetCode, now()->addMinutes(30));
 
-        try {
-            Mail::send('emails.verify-code', [
+        TransactionalMailService::send(
+            toEmail: $user->email,
+            subject: "Código de Recuperación: {$resetCode} - SysEng Academy",
+            view: 'emails.verify-code',
+            viewData: [
                 'userName'   => $user->name,
                 'verifyCode' => $resetCode,
                 'userEmail'  => $user->email,
                 'verifyUrl'  => config('app.frontend_url', 'http://localhost:4200'),
-            ], function ($message) use ($user, $resetCode) {
-                $message->to($user->email)
-                    ->subject("Código de Recuperación: {$resetCode} - SysEng Academy");
-            });
-        } catch (\Throwable $e) {
-            logger()->error('Error enviando correo de recuperación: ' . $e->getMessage());
-        }
+            ]
+        );
 
         return [
             'message'       => 'Código de recuperación generado exitosamente. Revisa tu correo o utiliza el código asignado.',
