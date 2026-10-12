@@ -73,6 +73,7 @@ export interface ActivityFeedItem {
 }
 
 export interface CodelabStats {
+  totalStudents?: number;
   solvedToday: number;
   solvedTodayTrend: string;
   communityChallengesCount: number;

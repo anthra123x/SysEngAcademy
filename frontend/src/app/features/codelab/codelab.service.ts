@@ -424,63 +424,17 @@ export class CodelabService {
 
   // Global real-time metrics signal populated from PostgreSQL backend
   readonly stats = signal<CodelabStats>({
-    solvedToday: 2,
-    solvedTodayTrend: '+18% hoy',
-    communityChallengesCount: 5,
-    topRankUser: 'reco',
-    topRankXp: 1195,
+    totalStudents: 25,
+    solvedToday: 0,
+    solvedTodayTrend: '0 hoy',
+    communityChallengesCount: 0,
+    topRankUser: 'Por Disputar',
+    topRankXp: 0,
     topRankPosition: 1,
-    latencyMs: 14.2,
+    latencyMs: 0,
     sandboxHealthPercent: 99.98,
-    podium: [
-      {
-        rank: 1,
-        name: 'reco',
-        username: 'kleincontreras47',
-        role: 'Estudiante • Racha: 3d 🔥',
-        xp: 1195,
-        avatar: 'R',
-        isCurrentUser: false,
-      },
-      {
-        rank: 2,
-        name: 'Adrian Camilo Leon Pacheco',
-        username: 'cirius0708',
-        role: 'Estudiante • Racha: 1d 🔥',
-        xp: 295,
-        avatar: 'A',
-        isCurrentUser: false,
-      },
-      {
-        rank: 3,
-        name: 'Miguel Hernando Estrada Angarita',
-        username: 'miguelestradaangarita',
-        role: 'Estudiante • Racha: 1d 🔥',
-        xp: 250,
-        avatar: 'M',
-        isCurrentUser: false,
-      },
-    ],
-    activityFeed: [
-      {
-        icon: 'bolt',
-        user: '@estudiante_sys',
-        text: 'optimizó solución en Python para Implementación de Algoritmo Raft (12ms).',
-        time: 'hace 6 min',
-      },
-      {
-        icon: 'rocket',
-        user: '@camilo',
-        text: 'publicó nuevo reto de Prueba de Creacion de Reto (MEDIA).',
-        time: 'hace 35 min',
-      },
-      {
-        icon: 'verified',
-        user: '@jonathansalcedomoreno',
-        text: 'alcanzó una racha activa de 6 días con 185 XP.',
-        time: 'hoy',
-      },
-    ],
+    podium: [],
+    activityFeed: [],
   });
 
   // Tab counters computed

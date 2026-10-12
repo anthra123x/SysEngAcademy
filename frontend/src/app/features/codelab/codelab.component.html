@@ -107,10 +107,15 @@
           </div>
           <div class="kpi-card__content">
             <div class="kpi-card__value-group">
-              <span class="kpi-value">#{{ stats().topRankPosition }} {{ stats().topRankUser }}</span>
-              <span class="kpi-trend kpi-trend--amber">{{ stats().topRankXp | number }} XP</span>
+              @if (stats().podium && stats().podium!.length > 0) {
+                <span class="kpi-value">#{{ stats().topRankPosition }} {{ stats().topRankUser }}</span>
+                <span class="kpi-trend kpi-trend--amber">{{ stats().topRankXp | number }} XP</span>
+              } @else {
+                <span class="kpi-value">{{ stats().topRankUser }}</span>
+                <span class="kpi-trend kpi-trend--amber">Puesto #1 Libre</span>
+              }
             </div>
-            <span class="kpi-label">Ranking Semanal Top 10</span>
+            <span class="kpi-label">Líder del Podio Semanal</span>
           </div>
         </div>
       </div>
@@ -684,40 +689,63 @@
                 </svg>
                 <h4 class="sidebar-card__title">Podio de la Facultad</h4>
               </div>
-              <span class="badge-week">Semana 12</span>
+              <span class="badge-week">Semana Activa</span>
             </div>
 
             <p class="sidebar-card__desc">
-              Estudiantes con mayor optimización de microsegundos y retos compartidos.
+              Estudiantes con retos superados y mayor optimización algorítmica en CodeLab.
             </p>
 
-            <div class="podium-list">
-              @for (member of stats().podium; track member.rank) {
-                <div class="podium-item" [class.podium-item--current]="member.isCurrentUser">
-                  <div class="podium-item__left">
-                    <span class="podium-rank" [class.rank-gold]="member.rank === 1" [class.rank-silver]="member.rank === 2" [class.rank-bronze]="member.rank === 3">
-                      #{{ member.rank }}
-                    </span>
-                    <div class="podium-avatar" [class.avatar-current]="member.isCurrentUser">
-                      {{ member.avatar }}
-                    </div>
-                    <div class="podium-user-info">
-                      <span class="podium-name">
-                        {{ member.name }}
-                        @if (member.isCurrentUser) {
-                          <span class="podium-you">(Tú)</span>
-                        }
+            @if (stats().podium && stats().podium!.length > 0) {
+              <div class="podium-list">
+                @for (member of stats().podium; track member.rank) {
+                  <div class="podium-item" [class.podium-item--current]="member.isCurrentUser">
+                    <div class="podium-item__left">
+                      <span class="podium-rank" [class.rank-gold]="member.rank === 1" [class.rank-silver]="member.rank === 2" [class.rank-bronze]="member.rank === 3">
+                        #{{ member.rank }}
                       </span>
-                      <span class="podium-sub">{{ member.role }}</span>
+                      <div class="podium-avatar" [class.avatar-current]="member.isCurrentUser">
+                        {{ member.avatar }}
+                      </div>
+                      <div class="podium-user-info">
+                        <span class="podium-name">
+                          {{ member.name }}
+                          @if (member.isCurrentUser) {
+                            <span class="podium-you">(Tú)</span>
+                          }
+                        </span>
+                        <span class="podium-sub">{{ member.role }}</span>
+                      </div>
                     </div>
+                    <span class="podium-xp" [class.xp-gold]="member.rank === 1">{{ member.xp | number }} XP</span>
                   </div>
-                  <span class="podium-xp" [class.xp-gold]="member.rank === 1">{{ member.xp | number }} XP</span>
+                }
+              </div>
+            } @else {
+              <div class="podium-empty-box">
+                <div class="podium-empty-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                    <path d="M4 22h16"></path>
+                    <path d="M10 14.66V17c0 .55-.45 1-1 1H7c-.55 0-1 .45-1 1v3h12v-3c0-.55-.45-1-1-1h-2c-.55 0-1-.45-1-1v-2.34c0-.77.34-1.5 1-2.01l4.47-3.35C20.08 7.82 20.25 7 19.5 6.25 18.75 5.5 18 5.67 17.5 6.5L12 11.5 6.5 6.5C6 5.67 5.25 5.5 4.5 6.25c-.75.75-.58 1.57.03 2.05L9 11.65c.66.51 1 1.24 1 2.01z"></path>
+                  </svg>
                 </div>
-              }
-            </div>
+                <h5 class="empty-podium-title">Podio de la Facultad Disponible</h5>
+                <p class="empty-podium-desc">
+                  Ningún estudiante ha superado o publicado retos en CodeLab todavía. ¡Resuelve un reto para reclamar la primera posición!
+                </p>
+                <button class="btn-claim-podium" type="button" (click)="openRandomChallenge()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                  <span>Reclamar Puesto #1</span>
+                </button>
+              </div>
+            }
 
-            <button class="btn-view-leaderboard" type="button" routerLink="/community">
-              Ver Tabla General Completa (128 Estudiantes)
+            <button class="btn-view-leaderboard" type="button" routerLink="/perfil">
+              Ver Ranking General ({{ stats().totalStudents || 25 }} Estudiantes)
             </button>
           </div>
 
@@ -774,6 +802,10 @@
                     <span class="activity-time">{{ activity.time }}</span>
                   </div>
                 </div>
+              } @empty {
+                <div class="activity-empty-box">
+                  <span class="activity-empty-text">Esperando nueva actividad de la facultad...</span>
+                </div>
               }
             </div>
           </div>
@@ -800,7 +832,7 @@
       <div class="telemetry-data">
         <div class="telemetry-stats-text">
           <span class="telemetry-label">Latencia Promedio</span>
-          <span class="telemetry-value">{{ stats().latencyMs }} ms</span>
+          <span class="telemetry-value">{{ stats().latencyMs > 0 ? (stats().latencyMs + ' ms') : '0.00 ms (En espera)' }}</span>
           <span class="telemetry-sub">{{ stats().sandboxHealthPercent }}% Sandbox Health</span>
         </div>
 

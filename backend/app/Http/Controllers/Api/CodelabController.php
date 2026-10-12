@@ -521,47 +521,84 @@ class CodelabController extends Controller
     private function computeStats(?User $currentUser = null): array
     {
         $todayStart = now()->startOfDay();
-        $totalSolved = CodelabSubmission::where('status', 'passed')->count();
-        $solvedToday = CodelabSubmission::where('status', 'passed')
+
+        // 1. Total real registered students in the platform
+        $totalStudents = User::count();
+
+        // 2. Real challenges solved by authenticated students
+        $solvedToday = CodelabSubmission::whereNotNull('user_id')
+            ->where('status', 'passed')
             ->where('created_at', '>=', $todayStart)
             ->count();
 
-        // If today is 0, show total solved so metrics are real
-        $displaySolved = $solvedToday > 0 ? $solvedToday : max($totalSolved, 1);
-        $communityCount = CodelabChallenge::where('is_community', true)->count();
+        // 3. Real challenges created by students (where user_id is set)
+        $communityCount = CodelabChallenge::whereNotNull('user_id')->count();
 
-        // 1. REAL PODIUM: Top 3 users in the database by XP
-        $topUsers = User::orderBy('xp', 'desc')->take(3)->get();
+        // 4. REAL CODELAB PODIUM:
+        // Rank students who have solved challenges in CodeLab by CodeLab XP earned and passed solutions
+        $codelabUsers = User::whereHas('codelabSubmissions', function ($q) {
+                $q->where('status', 'passed');
+            })
+            ->orWhereHas('codelabChallenges')
+            ->withCount([
+                'codelabSubmissions as codelab_solved' => function ($q) {
+                    $q->where('status', 'passed');
+                },
+                'codelabChallenges as challenges_created'
+            ])
+            ->get();
+
         $podium = [];
-        foreach ($topUsers as $i => $u) {
-            $isCur = $currentUser && ($currentUser->id === $u->id);
-            $userHandle = explode('@', $u->email)[0];
-            $roleLabel = $u->specialization 
-                ?? ($u->role === 'student' ? 'Estudiante • Racha: ' . max(1, (int) $u->current_streak) . 'd 🔥' : 'Facultad');
 
-            $podium[] = [
-                'rank' => $i + 1,
-                'name' => $u->name,
-                'username' => $userHandle,
-                'role' => $roleLabel,
-                'xp' => (int) $u->xp,
-                'avatar' => strtoupper(substr($u->name, 0, 1)),
-                'isCurrentUser' => $isCur,
-            ];
+        if ($codelabUsers->isNotEmpty()) {
+            $sortedCodelabUsers = $codelabUsers->sortByDesc('codelab_solved')->values()->take(3);
+            foreach ($sortedCodelabUsers as $i => $u) {
+                $isCur = $currentUser && ($currentUser->id === $u->id);
+                $userHandle = Str::slug($u->name, '');
+                if (empty($userHandle)) {
+                    $userHandle = explode('@', $u->email)[0];
+                }
+                $roleLabel = "{$u->codelab_solved} retos superados";
+                if ($u->challenges_created > 0) {
+                    $roleLabel .= " • {$u->challenges_created} creados";
+                }
+
+                $podium[] = [
+                    'rank' => $i + 1,
+                    'name' => $u->name,
+                    'username' => $userHandle,
+                    'role' => $roleLabel,
+                    'xp' => (int) $u->xp,
+                    'avatar' => strtoupper(substr($u->name, 0, 1)),
+                    'isCurrentUser' => $isCur,
+                ];
+            }
         }
 
-        // 2. REAL ACTIVITY FEED: Recent submissions, challenges, and streak achievements from the DB
+        // Leader stats
+        if (!empty($podium)) {
+            $topRankUser = $podium[0]['name'];
+            $topRankXp = $podium[0]['xp'];
+            $topRankPosition = 1;
+        } else {
+            $topRankUser = 'Por Disputar';
+            $topRankXp = 0;
+            $topRankPosition = 1;
+        }
+
+        // 5. REAL ACTIVITY FEED:
+        // Only real student submissions, real challenges and authentic active streaks
         $activityFeed = [];
 
-        // Recent passed submissions
-        $recentSubs = CodelabSubmission::with(['user', 'challenge'])
+        $realSubs = CodelabSubmission::with(['user', 'challenge'])
+            ->whereNotNull('user_id')
             ->where('status', 'passed')
             ->orderBy('created_at', 'desc')
             ->take(3)
             ->get();
 
-        foreach ($recentSubs as $sub) {
-            $subUser = $sub->user ? explode('@', $sub->user->email)[0] : 'estudiante_sys';
+        foreach ($realSubs as $sub) {
+            $subUser = $sub->user ? Str::slug($sub->user->name, '') : 'estudiante';
             $chTitle = $sub->challenge?->title ?? 'reto';
             $activityFeed[] = [
                 'icon' => 'bolt',
@@ -571,14 +608,14 @@ class CodelabController extends Controller
             ];
         }
 
-        // Recent created challenges
-        $recentChs = CodelabChallenge::with('user')
+        $realChs = CodelabChallenge::with('user')
+            ->whereNotNull('user_id')
             ->orderBy('created_at', 'desc')
             ->take(2)
             ->get();
 
-        foreach ($recentChs as $ch) {
-            $chAuthor = $ch->user ? explode('@', $ch->user->email)[0] : ($ch->author_username ?? 'facultad');
+        foreach ($realChs as $ch) {
+            $chAuthor = $ch->user ? Str::slug($ch->user->name, '') : 'estudiante';
             $activityFeed[] = [
                 'icon' => 'rocket',
                 'user' => '@' . $chAuthor,
@@ -587,38 +624,39 @@ class CodelabController extends Controller
             ];
         }
 
-        // Real active streaks
-        $streakUsers = User::where('current_streak', '>', 0)
+        // Active real student streaks from the platform
+        $streakUsers = User::where('current_streak', '>=', 1)
             ->orderBy('current_streak', 'desc')
-            ->take(2)
+            ->take(3)
             ->get();
 
         foreach ($streakUsers as $su) {
-            $suHandle = explode('@', $su->email)[0];
+            $suHandle = Str::slug($su->name, '');
+            if (empty($suHandle)) {
+                $suHandle = explode('@', $su->email)[0];
+            }
             $activityFeed[] = [
                 'icon' => 'verified',
                 'user' => '@' . $suHandle,
-                'text' => "alcanzó una racha activa de {$su->current_streak} días con {$su->xp} XP.",
+                'text' => "mantiene racha activa de {$su->current_streak} días con {$su->xp} XP.",
                 'time' => 'hoy',
             ];
         }
 
-        // Limit feed to top 5 most relevant items
         $activityFeed = array_slice($activityFeed, 0, 5);
 
-        // Telemetry averages
-        $avgLatency = CodelabSubmission::avg('execution_time_ms');
-        $latencyMs = $avgLatency ? round((float) $avgLatency, 2) : 14.2;
-
-        $topLeader = $topUsers->first();
+        // Real Telemetry Latency
+        $avgLatency = CodelabSubmission::whereNotNull('user_id')->avg('execution_time_ms');
+        $latencyMs = $avgLatency ? round((float) $avgLatency, 2) : 0;
 
         return [
-            'solvedToday' => $displaySolved,
-            'solvedTodayTrend' => '+18% hoy',
+            'totalStudents' => $totalStudents,
+            'solvedToday' => $solvedToday,
+            'solvedTodayTrend' => $solvedToday > 0 ? "+{$solvedToday} hoy" : '0 hoy',
             'communityChallengesCount' => $communityCount,
-            'topRankUser' => $topLeader?->name ?? 'Estudiante',
-            'topRankXp' => (int) ($topLeader?->xp ?? 0),
-            'topRankPosition' => 1,
+            'topRankUser' => $topRankUser,
+            'topRankXp' => $topRankXp,
+            'topRankPosition' => $topRankPosition,
             'latencyMs' => $latencyMs,
             'sandboxHealthPercent' => 99.98,
             'podium' => $podium,
