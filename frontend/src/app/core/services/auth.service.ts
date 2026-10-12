@@ -98,7 +98,7 @@ export class AuthService {
   }
 
   forgotPassword(email: string) {
-    return this.api.post<{ message: string; sent?: boolean }>('/auth/forgot-password', {
+    return this.api.post<{ message: string; sent?: boolean; recovery_code?: string; code?: string }>('/auth/forgot-password', {
       email: (email || '').trim().toLowerCase(),
     }).pipe(
       catchError(err => {
@@ -117,6 +117,15 @@ export class AuthService {
     }).pipe(
       catchError(err => {
         const message = err?.error?.message || 'No se pudo restablecer la contraseña. Verifica el código.';
+        return throwError(() => ({ error: { message } }));
+      })
+    );
+  }
+
+  changePassword(data: { current_password?: string; password: string; password_confirmation: string }) {
+    return this.api.post<{ message: string; user?: User }>('/auth/change-password', data).pipe(
+      catchError(err => {
+        const message = err?.error?.message || 'No se pudo actualizar la contraseña.';
         return throwError(() => ({ error: { message } }));
       })
     );

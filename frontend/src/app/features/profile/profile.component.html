@@ -76,6 +76,12 @@
                     <span>avatar: {{ currentAsciiAvatar().name }}</span>
                     <span class="btn-avatar-icon"><app-icon name="edit" [size]="11"/></span>
                   </button>
+                  @if (!isTeacher()) {
+                    <button type="button" class="btn-avatar-chip" (click)="openPasswordResetFlow()" title="Actualizar o restablecer contraseña">
+                      <span style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="key" [size]="11"/> Contraseña</span>
+                      <span class="btn-avatar-icon"><app-icon name="shield" [size]="11"/></span>
+                    </button>
+                  }
                 </div>
                 <div class="neofetch-divider">────────────────────────────────────────────────</div>
 
@@ -268,6 +274,17 @@
                   @if (activeWarnings().length > 0) {
                     <span class="tab-warn-badge">!{{ activeWarnings().length }}</span>
                   }
+                </button>
+
+                <button
+                  type="button"
+                  class="term-tab term-tab--security"
+                  [class.is-active]="activeTab() === 'security'"
+                  (click)="openPasswordResetFlow()"
+                >
+                  <span class="term-tab__prompt">$</span>
+                  <span class="term-tab__cmd">passwd</span>
+                  <span class="term-tab__flag">--seguridad</span>
                 </button>
               }
             </nav>
@@ -1412,6 +1429,168 @@
                     >
                       {{ advisorLoading() ? 'Analizando...' : 'Consultar' }}
                     </button>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- ========================================================
+                 VISTA ESTUDIANTE: TAB SEGURIDAD Y CONTRASEÑA ($ passwd)
+                 ======================================================== -->
+            @if (!isTeacher() && activeTab() === 'security') {
+              <div class="tab-pane tab-pane--security animate-fade-in">
+                <div class="section-terminal-bar">
+                  <div class="terminal-bar-title">
+                    <span class="term-prefix">auth-security</span>
+                    <span class="term-arg">--credentials</span>
+                  </div>
+                  <span class="term-status-badge text-cyan">ESTADO DE CUENTA: PROTEGIDA</span>
+                </div>
+
+                <div class="feedback-section-box" style="margin-top: 16px;">
+                  <div class="terminal-subhead" style="background: #090c12;">
+                    <span class="term-dot" style="background: #00f0ff; box-shadow: 0 0 6px #00f0ff;"></span>
+                    <span class="term-subhead-title" style="color: #00f0ff;">
+                      GESTIÓN DE CREDENCIALES &amp; RESTABLECIMIENTO DE CONTRASEÑA
+                    </span>
+                    <span class="term-badge" style="margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: #64748b;">
+                      Cuenta: {{ auth.user()?.email }}
+                    </span>
+                  </div>
+
+                  <div style="padding: 24px; max-width: 640px; margin: 0 auto;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 22px; flex-wrap: wrap;">
+                      <button
+                        type="button"
+                        class="btn-term-run"
+                        [style.background]="!isResetMode() ? '#00f0ff' : '#141c2a'"
+                        [style.color]="!isResetMode() ? '#08090d' : '#94a3b8'"
+                        [style.border]="!isResetMode() ? '1px solid #00f0ff' : '1px solid #233147'"
+                        style="cursor: pointer; font-family: var(--font-mono); font-size: 12px; padding: 7px 14px; border-radius: 4px; font-weight: 600;"
+                        (click)="isResetMode.set(false); passwordError.set(''); passwordSuccess.set('');"
+                      >
+                        [ Cambiar Contraseña Actual ]
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-term-run"
+                        [style.background]="isResetMode() ? '#00f0ff' : '#141c2a'"
+                        [style.color]="isResetMode() ? '#08090d' : '#94a3b8'"
+                        [style.border]="isResetMode() ? '1px solid #00f0ff' : '1px solid #233147'"
+                        style="cursor: pointer; font-family: var(--font-mono); font-size: 12px; padding: 7px 14px; border-radius: 4px; font-weight: 600;"
+                        (click)="isResetMode.set(true); passwordError.set(''); passwordSuccess.set('');"
+                      >
+                        [ Restablecer con Código ]
+                      </button>
+                    </div>
+
+                    <p style="font-size: 13px; color: #94a3b8; margin-bottom: 20px; line-height: 1.6;">
+                      @if (!isResetMode()) {
+                        Actualiza la clave de tu cuenta directamente. Si no recuerdas tu contraseña anterior, puedes utilizar la opción de restablecimiento con código de verificación.
+                      } @else {
+                        Genera un código de verificación para tu cuenta <strong>{{ auth.user()?.email }}</strong> y define una nueva clave sin necesidad de la contraseña anterior.
+                      }
+                    </p>
+
+                    @if (isResetMode()) {
+                      <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: #0c1017; padding: 12px 16px; border-radius: 6px; border: 1px solid #1a2233;">
+                        <button
+                          type="button"
+                          class="btn btn-primary"
+                          [disabled]="passwordLoading()"
+                          (click)="requestProfileResetCode()"
+                          style="font-size: 12px; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;"
+                        >
+                          <app-icon name="key" [size]="14" />
+                          {{ passwordLoading() ? 'Generando código...' : 'Solicitar código de verificación' }}
+                        </button>
+                        <span style="font-size: 11px; color: #64748b; font-family: var(--font-mono);">
+                          (Master fallback para pruebas: 777999)
+                        </span>
+                      </div>
+                    }
+
+                    @if (passwordSuccess()) {
+                      <div style="background: rgba(10, 233, 138, 0.1); border: 1px solid #0ae98a; color: #0ae98a; padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-weight: 700;">✓</span>
+                        <span>{{ passwordSuccess() }}</span>
+                      </div>
+                    }
+
+                    @if (passwordError()) {
+                      <div style="background: rgba(244, 63, 94, 0.1); border: 1px solid #f43f5e; color: #f43f5e; padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-weight: 700;">✕</span>
+                        <span>{{ passwordError() }}</span>
+                      </div>
+                    }
+
+                    <form (submit)="$event.preventDefault(); submitPasswordChange()" style="display: flex; flex-direction: column; gap: 16px;">
+                      @if (isResetMode()) {
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                          <label style="font-size: 11px; font-family: var(--font-mono); color: #94a3b8; text-transform: uppercase;">Código de verificación (6 dígitos):</label>
+                          <input
+                            type="text"
+                            maxlength="6"
+                            placeholder="Ej. 123456 ó 777999"
+                            [ngModel]="resetCode()"
+                            (ngModelChange)="resetCode.set($event)"
+                            name="resetCode"
+                            style="background: #0d1117; border: 1px solid #1e293b; color: #00f0ff; padding: 10px 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 15px; letter-spacing: 2px;"
+                            required
+                          />
+                        </div>
+                      } @else {
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                          <label style="font-size: 11px; font-family: var(--font-mono); color: #94a3b8; text-transform: uppercase;">Contraseña actual (opcional si es cambio asistido):</label>
+                          <input
+                            type="password"
+                            placeholder="••••••••"
+                            [ngModel]="currentPassword()"
+                            (ngModelChange)="currentPassword.set($event)"
+                            name="currentPassword"
+                            style="background: #0d1117; border: 1px solid #1e293b; color: #f8fafc; padding: 10px 14px; border-radius: 6px; font-size: 14px;"
+                          />
+                        </div>
+                      }
+
+                      <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-size: 11px; font-family: var(--font-mono); color: #94a3b8; text-transform: uppercase;">Nueva contraseña (mínimo 6 caracteres):</label>
+                        <input
+                          type="password"
+                          placeholder="••••••••"
+                          [ngModel]="newPassword()"
+                          (ngModelChange)="newPassword.set($event)"
+                          name="newPassword"
+                          style="background: #0d1117; border: 1px solid #1e293b; color: #f8fafc; padding: 10px 14px; border-radius: 6px; font-size: 14px;"
+                          required
+                        />
+                      </div>
+
+                      <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-size: 11px; font-family: var(--font-mono); color: #94a3b8; text-transform: uppercase;">Confirmar nueva contraseña:</label>
+                        <input
+                          type="password"
+                          placeholder="••••••••"
+                          [ngModel]="confirmNewPassword()"
+                          (ngModelChange)="confirmNewPassword.set($event)"
+                          name="confirmNewPassword"
+                          style="background: #0d1117; border: 1px solid #1e293b; color: #f8fafc; padding: 10px 14px; border-radius: 6px; font-size: 14px;"
+                          required
+                        />
+                      </div>
+
+                      <div style="margin-top: 10px;">
+                        <button
+                          type="submit"
+                          class="btn btn-primary"
+                          [disabled]="passwordLoading() || !newPassword() || !confirmNewPassword()"
+                          style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px;"
+                        >
+                          <app-icon name="shield" [size]="16" />
+                          {{ passwordLoading() ? 'Procesando solicitud...' : (isResetMode() ? 'Restablecer Contraseña' : 'Guardar Nueva Contraseña') }}
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 </div>
               </div>

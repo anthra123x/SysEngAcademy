@@ -51,6 +51,7 @@ Route::post('/code/execute', [CodeExecutionController::class, 'execute']);
 // fallback a Sanctum para tokens legados / tests.
 Route::middleware('auth:jwt,sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::get('/profile/summary', [ProfileController::class, 'show']);
 

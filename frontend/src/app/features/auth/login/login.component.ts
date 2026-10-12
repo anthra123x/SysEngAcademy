@@ -605,7 +605,13 @@ export class LoginComponent {
     this.auth.forgotPassword(email).subscribe({
       next: (res: any) => {
         this.forgotLoading.set(false);
-        this.forgotSuccess.set(res?.message || 'Código generado correctamente. Revisa tu correo o utiliza el código de cátedra.');
+        const code = res?.recovery_code || res?.code;
+        if (code) {
+          this.resetCode = code;
+          this.forgotSuccess.set(`Código de recuperación generado: ${code}. Ingresa tu nueva contraseña para completar el restablecimiento.`);
+        } else {
+          this.forgotSuccess.set(res?.message || 'Código generado correctamente. Revisa tu correo o utiliza el código de cátedra (777999).');
+        }
         this.forgotStep.set(2);
       },
       error: (err: any) => {

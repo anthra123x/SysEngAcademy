@@ -146,4 +146,29 @@ class AuthController extends Controller
 
         return response()->json($result);
     }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'current_password' => 'nullable|string',
+            'password'         => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'password.required'  => 'La nueva contraseña es obligatoria.',
+            'password.min'       => 'La nueva contraseña debe contener al menos 6 caracteres.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+        ]);
+
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'No autorizado.'], 401);
+        }
+
+        $result = $this->authService->changePassword(
+            user: $user,
+            newPassword: $validated['password'],
+            currentPassword: $validated['current_password'] ?? null
+        );
+
+        return response()->json($result);
+    }
 }

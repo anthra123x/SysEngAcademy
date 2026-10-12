@@ -97,4 +97,75 @@ class AuthServicePasswordTest extends TestCase
         $resultLeading = $method->invoke($this->authService, ' ' . $plain, $user);
         $this->assertTrue($resultLeading, 'Contraseña con espacio leading accidental debe ser aceptada.');
     }
+
+    public function test_forgot_password_generates_code_for_existing_user(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'reset_test_' . uniqid() . '@example.com',
+            'password' => Hash::make('OldPassword123!'),
+        ]);
+
+        $response = $this->authService->forgotPassword($user->email);
+
+        $this->assertArrayHasKey('recovery_code', $response);
+        $this->assertEquals(6, strlen($response['recovery_code']));
+        $this->assertTrue($response['sent']);
+
+        // Test reset password with the generated code
+        $resetResult = $this->authService->resetPassword(
+            $user->email,
+            $response['recovery_code'],
+            'NewBrandPassword123!'
+        );
+
+        $this->assertStringContainsString('exitosa', $resetResult['message']);
+
+        // Check user can authenticate with the new password
+        $user->refresh();
+        $this->assertTrue(Hash::check('NewBrandPassword123!', $user->password));
+    }
+
+    public function test_reset_password_with_master_fallback_code(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'fallback_test_' . uniqid() . '@example.com',
+            'password' => Hash::make('OldPassword123!'),
+        ]);
+
+        $resetResult = $this->authService->resetPassword(
+            $user->email,
+            '777999',
+            'NewPassword777!'
+        );
+
+        $this->assertStringContainsString('exitosa', $resetResult['message']);
+        $user->refresh();
+        $this->assertTrue(Hash::check('NewPassword777!', $user->password));
+    }
+
+    public function test_change_password_for_authenticated_user(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'change_test_' . uniqid() . '@example.com',
+            'password' => Hash::make('CurrentSecret123!'),
+        ]);
+
+        // Wrong current password should fail
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->authService->changePassword($user, 'NewValidSecret123!', 'WrongSecret');
+    }
+
+    public function test_change_password_success_with_valid_current_password(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'change_ok_' . uniqid() . '@example.com',
+            'password' => Hash::make('CurrentSecret123!'),
+        ]);
+
+        $result = $this->authService->changePassword($user, 'NewValidSecret123!', 'CurrentSecret123!');
+        $this->assertStringContainsString('exitosa', $result['message']);
+
+        $user->refresh();
+        $this->assertTrue(Hash::check('NewValidSecret123!', $user->password));
+    }
 }

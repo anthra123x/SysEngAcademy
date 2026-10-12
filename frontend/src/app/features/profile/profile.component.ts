@@ -90,9 +90,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private onDiagnosticUpdated = () => this.initLocalData();
 
   // Tab state: student vs teacher
-  activeTab = signal<'overview' | 'streak' | 'achievements' | 'leaderboard' | 'advisor'>('overview');
+  activeTab = signal<'overview' | 'streak' | 'achievements' | 'leaderboard' | 'advisor' | 'security'>('overview');
   activeTeacherTab = signal<'overview' | 'students' | 'activities' | 'advisor'>('overview');
   selectedBadgeFilter = signal<'all' | 'unlocked' | 'challenges' | 'courses'>('all');
+
+  // Security & Password Management
+  currentPassword = signal('');
+  newPassword = signal('');
+  confirmNewPassword = signal('');
+  resetCode = signal('');
+  isResetMode = signal(false);
+  passwordLoading = signal(false);
+  passwordSuccess = signal('');
+  passwordError = signal('');
 
   constructor() {
     effect(() => {
@@ -645,6 +655,8 @@ readonly currentStudentEmail = computed(() => {
     const qp = this.route.snapshot.queryParams;
     if ((qp['onboarding'] === 'true' || qp['tab'] === 'diagnostic') && !this.isTeacher()) {
       this.router.navigate(['/onboarding']);
+    } else if (qp['tab'] === 'security' || qp['tab'] === 'password') {
+      this.activeTab.set('security');
     }
   }
 
@@ -1647,4 +1659,113 @@ readonly currentStudentEmail = computed(() => {
       };
     });
   });
+
+  openPasswordResetFlow() {
+    this.activeTab.set('security');
+    this.passwordSuccess.set('');
+    this.passwordError.set('');
+  }
+
+  requestProfileResetCode() {
+    const user = this.auth.user();
+    if (!user?.email) {
+      this.passwordError.set('No se encontró el correo de tu cuenta.');
+      return;
+    }
+
+    this.passwordLoading.set(true);
+    this.passwordError.set('');
+    this.passwordSuccess.set('');
+
+    this.auth.forgotPassword(user.email).subscribe({
+      next: (res: any) => {
+        this.passwordLoading.set(false);
+        const code = res?.recovery_code || res?.code;
+        if (code) {
+          this.resetCode.set(code);
+          this.passwordSuccess.set(`Código de recuperación generado: ${code}. Ingrésalo abajo junto a tu nueva contraseña.`);
+        } else {
+          this.passwordSuccess.set(res?.message || 'Código de recuperación generado. Revisa tu correo o utiliza el código de cátedra (777999).');
+        }
+        this.isResetMode.set(true);
+      },
+      error: (err: any) => {
+        this.passwordLoading.set(false);
+        this.passwordError.set(err.error?.message || 'Error al generar el código de recuperación.');
+      }
+    });
+  }
+
+  submitPasswordChange() {
+    const user = this.auth.user();
+    if (!user?.email) {
+      this.passwordError.set('No hay sesión activa.');
+      return;
+    }
+
+    const nPass = this.newPassword().trim();
+    const cPass = this.confirmNewPassword().trim();
+
+    if (!nPass || nPass.length < 6) {
+      this.passwordError.set('La nueva contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (nPass !== cPass) {
+      this.passwordError.set('Las contraseñas no coinciden.');
+      return;
+    }
+
+    this.passwordLoading.set(true);
+    this.passwordError.set('');
+    this.passwordSuccess.set('');
+
+    if (this.isResetMode()) {
+      const code = this.resetCode().trim();
+      if (!code || code.length < 6) {
+        this.passwordLoading.set(false);
+        this.passwordError.set('Por favor ingresa un código de 6 dígitos.');
+        return;
+      }
+
+      this.auth.resetPassword({
+        email: user.email,
+        code,
+        password: nPass,
+        password_confirmation: cPass,
+      }).subscribe({
+        next: (res: any) => {
+          this.passwordLoading.set(false);
+          this.passwordSuccess.set(res?.message || '¡Contraseña restablecida exitosamente!');
+          this.currentPassword.set('');
+          this.newPassword.set('');
+          this.confirmNewPassword.set('');
+          this.resetCode.set('');
+          this.isResetMode.set(false);
+        },
+        error: (err: any) => {
+          this.passwordLoading.set(false);
+          this.passwordError.set(err.error?.message || 'El código es inválido o ha expirado.');
+        }
+      });
+    } else {
+      this.auth.changePassword({
+        current_password: this.currentPassword().trim() || undefined,
+        password: nPass,
+        password_confirmation: cPass,
+      }).subscribe({
+        next: (res: any) => {
+          this.passwordLoading.set(false);
+          this.passwordSuccess.set(res?.message || '¡Contraseña actualizada exitosamente!');
+          this.currentPassword.set('');
+          this.newPassword.set('');
+          this.confirmNewPassword.set('');
+        },
+        error: (err: any) => {
+          this.passwordLoading.set(false);
+          this.passwordError.set(err.error?.message || 'No se pudo actualizar la contraseña.');
+        }
+      });
+    }
+  }
 }
