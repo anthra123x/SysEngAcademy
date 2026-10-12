@@ -23,6 +23,25 @@ export const routes: Routes = [
     loadComponent: () => import('./features/courses/course-detail/course-detail.component').then(m => m.CourseDetailComponent)
   },
   {
+    path: 'codelab',
+    loadComponent: () => import('./features/codelab/codelab.component').then(m => m.CodelabComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'codelab/:slug',
+    loadComponent: () => import('./features/codelab/codelab-solver/codelab-solver.component').then(m => m.CodelabSolverComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'arena',
+    redirectTo: 'codelab',
+    pathMatch: 'full'
+  },
+  {
+    path: 'arena/:slug',
+    redirectTo: 'codelab/:slug'
+  },
+  {
     path: 'cursos/:slug/leccion/:lessonSlug',
     loadComponent: () => import('./features/courses/lesson-player/lesson-player.component').then(m => m.LessonPlayerComponent),
     canActivate: [authGuard]

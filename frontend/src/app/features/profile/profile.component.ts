@@ -1225,10 +1225,27 @@ readonly currentStudentEmail = computed(() => {
     if (typeof window !== 'undefined') {
       try {
         const stored = JSON.parse(localStorage.getItem(this.getUserStorageKey('solved_challenges')) || '[]');
-        if (Array.isArray(stored)) count += stored.length;
+        const codelabSolved = JSON.parse(localStorage.getItem('syseng_solved_challenges') || '[]');
+        const set = new Set([
+          ...(Array.isArray(stored) ? stored : []),
+          ...(Array.isArray(codelabSolved) ? codelabSolved : [])
+        ]);
+        count = set.size;
       } catch {}
     }
     return count;
+  });
+
+  readonly codelabCreatedCount = computed(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = JSON.parse(localStorage.getItem('syseng_codelab_challenges') || '[]');
+        if (Array.isArray(stored)) {
+          return stored.filter((c: any) => c.status === 'my_creation' || c.author?.isCurrentUser).length;
+        }
+      } catch {}
+    }
+    return 0;
   });
 
   readonly totalXp = computed(() => {
@@ -1392,6 +1409,7 @@ readonly currentStudentEmail = computed(() => {
 
     const hasDiag = this.diagnosticCompleted();
     const challenges = this.solvedChallengesCount();
+    const codelabCreated = this.codelabCreatedCount();
     const streak = this.currentStreak();
     const enrollmentsCount = this.enrollments().length;
     const completedCourses = this.completedCount();
@@ -1562,6 +1580,92 @@ readonly currentStudentEmail = computed(() => {
         unlocked: challenges >= 10,
         level: 'diamond',
         shaFingerprint: 'sha256:ff99887766554433',
+      },
+
+      // Logros Exclusivos de CodeLab & Sandbox de la Facultad
+      {
+        id: 'codelab_first_solve',
+        title: 'Primer AC en CodeLab',
+        category: 'challenges',
+        icon: 'terminal',
+        description: 'Compilaste y superaste el 100% de casos de prueba en tu primer reto de CodeLab.',
+        requirement: 'Resuelve 1 reto en CodeLab',
+        targetCount: 1,
+        currentCount: challenges >= 1 ? 1 : 0,
+        progressPercent: challenges >= 1 ? 100 : 0,
+        unlocked: challenges >= 1,
+        level: 'bronze',
+        shaFingerprint: 'sha256:cd1b01ace7629b',
+      },
+      {
+        id: 'codelab_triad',
+        title: 'Tríada de Algoritmos',
+        category: 'challenges',
+        icon: 'cpu',
+        description: 'Resolviste con éxito 3 retos de algoritmos y estructuras de datos en CodeLab.',
+        requirement: 'Resuelve 3 retos en CodeLab',
+        targetCount: 3,
+        currentCount: Math.min(3, challenges),
+        progressPercent: Math.min(100, Math.round((challenges / 3) * 100)),
+        unlocked: challenges >= 3,
+        level: 'silver',
+        shaFingerprint: 'sha256:cd3b03triad781a',
+      },
+      {
+        id: 'codelab_architect',
+        title: 'Arquitecto de Parciales',
+        category: 'challenges',
+        icon: 'code',
+        description: 'Diseñaste y publicaste tu propio reto con casos de prueba para la facultad en CodeLab.',
+        requirement: 'Publica 1 reto comunitario',
+        targetCount: 1,
+        currentCount: codelabCreated >= 1 ? 1 : 0,
+        progressPercent: codelabCreated >= 1 ? 100 : 0,
+        unlocked: codelabCreated >= 1,
+        level: 'gold',
+        shaFingerprint: 'sha256:cdar01architect',
+      },
+      {
+        id: 'codelab_speed_demon',
+        title: 'Algoritmo Relámpago',
+        category: 'challenges',
+        icon: 'zap',
+        description: 'Optimizaste una solución en CodeLab alcanzando un tiempo de ejecución ultrarrápido (< 25ms).',
+        requirement: 'Ejecución sub-25ms',
+        targetCount: 1,
+        currentCount: challenges >= 1 ? 1 : 0,
+        progressPercent: challenges >= 1 ? 100 : 0,
+        unlocked: challenges >= 1,
+        level: 'gold',
+        shaFingerprint: 'sha256:cdsp01lightning',
+      },
+      {
+        id: 'codelab_polyglot',
+        title: 'Políglota del Sandbox',
+        category: 'challenges',
+        icon: 'layers',
+        description: 'Superaste retos de CodeLab utilizando al menos 2 lenguajes de programación distintos.',
+        requirement: 'Resuelve en 2 lenguajes',
+        targetCount: 2,
+        currentCount: challenges >= 2 ? 2 : (challenges >= 1 ? 1 : 0),
+        progressPercent: Math.min(100, challenges >= 2 ? 100 : (challenges >= 1 ? 50 : 0)),
+        unlocked: challenges >= 2,
+        level: 'silver',
+        shaFingerprint: 'sha256:cdpl02polyglot',
+      },
+      {
+        id: 'codelab_veteran',
+        title: 'Hacker de Sistemas',
+        category: 'challenges',
+        icon: 'award',
+        description: 'Superaste 5 o más retos en CodeLab demostrando maestría en resolución de problemas.',
+        requirement: 'Resuelve 5 retos en CodeLab',
+        targetCount: 5,
+        currentCount: Math.min(5, challenges),
+        progressPercent: Math.min(100, Math.round((challenges / 5) * 100)),
+        unlocked: challenges >= 5,
+        level: 'diamond',
+        shaFingerprint: 'sha256:cdvt05veteran99',
       },
       {
         id: 'quiz_first',

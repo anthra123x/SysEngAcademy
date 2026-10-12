@@ -1,0 +1,1077 @@
+<div class="codelab-page">
+  <!-- Subtle Blueprint Matrix SVG Background -->
+  <div class="codelab-blueprint-bg" aria-hidden="true"></div>
+
+  <div class="codelab-container">
+    <!-- 1. HERO / ARENA BANNER SECTION -->
+    <header class="codelab-hero">
+      <!-- Breadcrumbs & Status Indicator -->
+      <div class="codelab-hero__status-bar">
+        <div class="codelab-terminal-breadcrumb">
+          <svg class="terminal-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 17 10 11 4 5"></polyline>
+            <line x1="12" y1="19" x2="20" y2="19"></line>
+          </svg>
+          <span class="breadcrumb-path">terminal://syseng/codelab/challenges</span>
+          <span class="terminal-cursor"></span>
+        </div>
+
+        <div class="codelab-live-badge">
+          <span class="live-beacon">
+            <span class="live-beacon__ping"></span>
+            <span class="live-beacon__dot"></span>
+          </span>
+          <span class="live-text">MOTOR DE EVALUACIÓN O(1) ONLINE</span>
+        </div>
+      </div>
+
+      <!-- Headline & Call to Action Bar -->
+      <div class="codelab-hero__main">
+        <div class="codelab-hero__titles">
+          <div class="kernel-version-badge">
+            <span class="badge-tag">v3.4 CodeLab Kernel</span>
+            <span class="badge-divider">|</span>
+            <span class="badge-semester">Semestre 2025-1</span>
+          </div>
+
+          <h1 class="codelab-hero__title">
+            Arena de Código &amp; <span class="title-highlight">Retos Algorítmicos</span>
+          </h1>
+
+          <p class="codelab-hero__description">
+            Resuelve desafíos reales de Ingeniería de Sistemas, compite en tiempo de ejecución de microsegundos y comparte tus propios problemas de parciales con la comunidad universitaria.
+          </p>
+        </div>
+
+        <!-- Hero Actions -->
+        <div class="codelab-hero__actions">
+          <button class="btn-create-challenge" (click)="openCreateModal()" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <span>+ Crear y Publicar Reto</span>
+          </button>
+
+          <button class="btn-random-challenge" (click)="openRandomChallenge()" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Reto Aleatorio del Día</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Live Metric Tickers -->
+      <div class="codelab-kpis-grid">
+        <div class="kpi-card">
+          <div class="kpi-card__icon kpi-card__icon--primary">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <polyline points="9 12 11 14 15 10"></polyline>
+            </svg>
+          </div>
+          <div class="kpi-card__content">
+            <div class="kpi-card__value-group">
+              <span class="kpi-value">{{ stats().solvedToday }}</span>
+              <span class="kpi-trend kpi-trend--primary">{{ stats().solvedTodayTrend }}</span>
+            </div>
+            <span class="kpi-label">Retos Resueltos Hoy</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__icon kpi-card__icon--cyan">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="kpi-card__content">
+            <div class="kpi-card__value-group">
+              <span class="kpi-value">{{ stats().communityChallengesCount }}</span>
+              <span class="kpi-trend kpi-trend--cyan">comunidad</span>
+            </div>
+            <span class="kpi-label">Creados por Estudiantes</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__icon kpi-card__icon--amber">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </div>
+          <div class="kpi-card__content">
+            <div class="kpi-card__value-group">
+              <span class="kpi-value">#{{ stats().topRankPosition }} {{ stats().topRankUser }}</span>
+              <span class="kpi-trend kpi-trend--amber">{{ stats().topRankXp | number }} XP</span>
+            </div>
+            <span class="kpi-label">Ranking Semanal Top 10</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. DAILY / FEATURED PROBLEM SPOTLIGHT CARD (HERO SPLIT) -->
+    @if (spotlightChallenge(); as spotlight) {
+      <section class="codelab-spotlight-section">
+        <div class="spotlight-header">
+          <div class="spotlight-header__left">
+            <svg class="star-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <h2 class="spotlight-title">Problema Destacado del Día</h2>
+            <span class="badge-double-xp">Doble XP</span>
+          </div>
+          <div class="spotlight-header__countdown">
+            <span class="countdown-label">Tiempo Restante:</span>
+            <span class="countdown-time">{{ countdownTimer() }}</span>
+          </div>
+        </div>
+
+        <div class="spotlight-card">
+          <div class="spotlight-card__ambient-glow"></div>
+
+          <!-- Left Column: Problem Narrative & Specs -->
+          <div class="spotlight-card__left">
+            <div class="spotlight-card__content">
+              <!-- Meta Badges -->
+              <div class="spotlight-meta-badges">
+                <span class="badge-difficulty badge-difficulty--media">
+                  <span class="dot"></span> Media
+                </span>
+                <span class="badge-acceptance">
+                  Aceptación: {{ spotlight.acceptanceRate }}%
+                </span>
+                <span class="badge-xp">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="8" r="7"></circle>
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                  </svg>
+                  +{{ spotlight.xp }} XP
+                </span>
+                <span class="badge-challenge-id">
+                  ID: #{{ spotlight.id | uppercase }}
+                </span>
+              </div>
+
+              <!-- Title & Description -->
+              <div class="spotlight-info">
+                <h3 class="spotlight-problem-title" (click)="openSolver(spotlight)">
+                  {{ spotlight.title }}
+                </h3>
+                <p class="spotlight-problem-desc">
+                  {{ spotlight.description }}
+                </p>
+              </div>
+
+              <!-- Tags -->
+              <div class="spotlight-tags">
+                @for (tag of spotlight.tags; track tag) {
+                  <span class="tag-pill tag-pill--accent">{{ tag }}</span>
+                }
+                @for (lang of spotlight.languages; track lang) {
+                  <span class="tag-pill tag-pill--lang">{{ lang }}</span>
+                }
+              </div>
+            </div>
+
+            <!-- Contributor info & Action -->
+            <div class="spotlight-footer">
+              <div class="spotlight-author">
+                <div class="author-avatar">{{ spotlight.author.avatarInitial || 'M' }}</div>
+                <div class="author-details">
+                  <div class="author-name-group">
+                    <span class="author-name">&#64;{{ spotlight.author.username }}</span>
+                    <svg class="verified-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                  </div>
+                  <span class="author-role">{{ spotlight.author.role }}</span>
+                </div>
+              </div>
+
+              <div class="spotlight-actions">
+                <button class="btn-spotlight-bookmark" (click)="toggleBookmark(spotlight)" type="button">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+                  </svg>
+                  <span>Guardar</span>
+                </button>
+
+                <button class="btn-spotlight-solve" (click)="openSolver(spotlight)" type="button">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                  <span>Resolver Ahora</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive Code IDE Terminal Preview -->
+          <div class="spotlight-card__right">
+            <!-- Terminal Header Bar -->
+            <div class="terminal-bar">
+              <div class="mac-buttons">
+                <span class="mac-dot mac-dot--red"></span>
+                <span class="mac-dot mac-dot--yellow"></span>
+                <span class="mac-dot mac-dot--green"></span>
+                <span class="active-filename">{{ spotlight.solutionPreview?.filename || 'solution_morris.py' }}</span>
+              </div>
+              <div class="benchmark-pill">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>{{ spotlight.solutionPreview?.benchmark || '1.84ms benchmark' }}</span>
+              </div>
+            </div>
+
+            <!-- Code Preview with line numbers -->
+            <div class="terminal-code-body">
+              <div class="line-numbers" aria-hidden="true">
+                <span>01</span>
+                <span>02</span>
+                <span>03</span>
+                <span>04</span>
+                <span>05</span>
+                <span>06</span>
+                <span>07</span>
+                <span>08</span>
+                <span>09</span>
+                <span>10</span>
+              </div>
+              <pre class="code-pre"><code><span class="syn-purple">class</span> <span class="syn-cyan">Solution</span>:
+    <span class="syn-purple">def</span> <span class="syn-green">invertTreeMorris</span>(self, root: Optional[TreeNode]) -&gt; Optional[TreeNode]:
+        curr = root
+        <span class="syn-purple">while</span> curr:
+            <span class="syn-comment"># Swap left &amp; right branches in place</span>
+            curr.left, curr.right = curr.right, curr.left
+            curr = curr.right
+        <span class="syn-purple">return</span> root
+
+<span class="syn-comment"># Test Case 01: [4, 2, 7, 1, 3, 6, 9] -&gt; PASS (0.42ms)</span></code></pre>
+            </div>
+
+            <!-- Terminal Test Runner Footer & Bell Curve Distribution -->
+            <div class="terminal-footer">
+              <div class="test-stats">
+                <div class="test-stats__passed">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                  <span>14/14 Casos Superados (4 ocultos)</span>
+                </div>
+                <span class="test-stats__speed-percentile">Top 98.4% más veloz</span>
+              </div>
+
+              <!-- Runtime & Memory Distribution Benchmark Panel -->
+              <div class="benchmark-distribution-card">
+                <div class="dist-metric-col">
+                  <span class="dist-lbl">Tiempo de Ejecución</span>
+                  <span class="dist-val text-cyan">1.84 ms <small>(p98.4)</small></span>
+                </div>
+
+                <!-- Mini Bell Curve SVG -->
+                <div class="bell-curve-wrap">
+                  <svg class="bell-curve-svg" fill="none" viewBox="0 0 120 30">
+                    <path d="M0 28 Q30 28 45 20 Q60 5 75 16 Q90 26 120 28" stroke="#00D9FF" stroke-width="1.5" stroke-opacity="0.5"></path>
+                    <path d="M0 28 Q30 28 45 20 Q60 5 75 16 Q90 26 120 28 L120 30 L0 30 Z" fill="#00D9FF" fill-opacity="0.12"></path>
+                    <line stroke="#0AE98A" stroke-dasharray="2 2" stroke-width="1.5" x1="88" x2="88" y1="2" y2="30"></line>
+                    <circle cx="88" cy="18" fill="#0AE98A" r="3.5"></circle>
+                  </svg>
+                  <span class="bell-curve-pin">Tú</span>
+                </div>
+
+                <div class="dist-metric-col text-right">
+                  <span class="dist-lbl">Memoria Usada</span>
+                  <span class="dist-val text-green">14.1 MB <small>(Top 95%)</small></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- 3. COMMUNITY & FILTER TOOLBAR -->
+    <section class="codelab-filters-section">
+      <!-- Tabs Switcher -->
+      <div class="tabs-bar">
+        <div class="tabs-group">
+          <button
+            class="tab-btn"
+            [class.is-active]="codelabService.activeTab() === 'todos'"
+            (click)="setTab('todos')"
+            type="button"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Todos los Retos</span>
+            <span class="tab-badge">{{ tabCounts().todos }}</span>
+          </button>
+
+          <button
+            class="tab-btn"
+            [class.is-active]="codelabService.activeTab() === 'oficiales'"
+            (click)="setTab('oficiales')"
+            type="button"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <polyline points="9 12 11 14 15 10"></polyline>
+            </svg>
+            <span>Oficiales SysEng</span>
+          </button>
+
+          <button
+            class="tab-btn tab-btn--community"
+            [class.is-active]="codelabService.activeTab() === 'comunidad'"
+            (click)="setTab('comunidad')"
+            type="button"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span>Creados por la Comunidad</span>
+            <span class="tab-badge tab-badge--amber">{{ tabCounts().comunidad }}</span>
+          </button>
+
+          <button
+            class="tab-btn"
+            [class.is-active]="codelabService.activeTab() === 'mis_retos'"
+            (click)="setTab('mis_retos')"
+            type="button"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path>
+              <circle cx="12" cy="13" r="2"></circle>
+            </svg>
+            <span>Mis Retos Publicados</span>
+          </button>
+
+          <button
+            class="tab-btn"
+            [class.is-active]="codelabService.activeTab() === 'mis_soluciones'"
+            (click)="setTab('mis_soluciones')"
+            type="button"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 11 12 14 22 4"></polyline>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            <span>Mis Soluciones</span>
+          </button>
+        </div>
+
+        <div class="active-filters-hint">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          <span>Filtros Activos: <strong class="filter-count">{{ activeFiltersText() }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Semester Track Selector Pills (Academic Roadmaps) -->
+      <div class="semester-tracks-bar">
+        <span class="tracks-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+          Materias:
+        </span>
+        <button
+          class="track-pill"
+          [class.is-active]="codelabService.selectedTrack() === 'all'"
+          (click)="setSemesterTrack('all')"
+          type="button"
+        >
+          Todas las Asignaturas
+        </button>
+        <button
+          class="track-pill"
+          [class.is-active]="codelabService.selectedTrack() === 'sem1-3'"
+          (click)="setSemesterTrack('sem1-3')"
+          type="button"
+        >
+          Sem 1-3: Algoritmos &amp; Estructuras I
+        </button>
+        <button
+          class="track-pill"
+          [class.is-active]="codelabService.selectedTrack() === 'sem4-5'"
+          (click)="setSemesterTrack('sem4-5')"
+          type="button"
+        >
+          Sem 4-5: Sistemas Operativos &amp; Redes
+        </button>
+        <button
+          class="track-pill"
+          [class.is-active]="codelabService.selectedTrack() === 'sem6-7'"
+          (click)="setSemesterTrack('sem6-7')"
+          type="button"
+        >
+          Sem 6-7: Concurrencia &amp; Bases de Datos
+        </button>
+        <button
+          class="track-pill"
+          [class.is-active]="codelabService.selectedTrack() === 'sem8-10'"
+          (click)="setSemesterTrack('sem8-10')"
+          type="button"
+        >
+          Sem 8-10: Sistemas Distribuidos &amp; Compiladores
+        </button>
+      </div>
+
+      <!-- Search and Dropdown Controls -->
+      <div class="controls-grid">
+        <!-- Search Input -->
+        <div class="search-input-wrap">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            #searchInput
+            class="search-input"
+            type="text"
+            placeholder="Buscar por nombre, algoritmo, lenguaje o autor..."
+            [value]="codelabService.searchQuery()"
+            (input)="onSearchInput($event)"
+          />
+          <kbd class="shortcut-badge">CTRL+K</kbd>
+        </div>
+
+        <!-- Dificultad Filter -->
+        <div class="select-wrap">
+          <select class="custom-select" (change)="onDifficultyChange($event)" [value]="codelabService.selectedDifficulty()">
+            <option value="">Dificultad (Todas)</option>
+            <option value="facil">🟢 Fácil</option>
+            <option value="media">🟡 Media</option>
+            <option value="dificil">🔴 Difícil</option>
+            <option value="hardcore">🟣 Hardcore / Sistemas</option>
+          </select>
+          <svg class="select-arrow" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 10l5 5 5-5z"/>
+          </svg>
+        </div>
+
+        <!-- Lenguaje Filter -->
+        <div class="select-wrap">
+          <select class="custom-select" (change)="onLanguageChange($event)" [value]="codelabService.selectedLanguage()">
+            <option value="">Lenguaje (Todos)</option>
+            <option value="python">Python 3</option>
+            <option value="javascript">JavaScript / TS</option>
+            <option value="go">Go 1.22</option>
+            <option value="cpp">C++ 20</option>
+            <option value="rust">Rust</option>
+            <option value="java">Java 21</option>
+          </select>
+          <svg class="select-arrow" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 10l5 5 5-5z"/>
+          </svg>
+        </div>
+
+        <!-- Categoría Filter -->
+        <div class="select-wrap">
+          <select class="custom-select" (change)="onCategoryChange($event)" [value]="codelabService.selectedCategory()">
+            <option value="">Categoría (Todas)</option>
+            <option value="algoritmos">Algoritmos &amp; Grafos</option>
+            <option value="estructuras">Estructuras de Datos</option>
+            <option value="concurrencia">Concurrencia &amp; Hilos</option>
+            <option value="so">Sistemas Operativos &amp; Redes</option>
+            <option value="bd">Bases de Datos &amp; SQL</option>
+            <option value="compiladores">Compiladores &amp; Autómatas</option>
+          </select>
+          <svg class="select-arrow" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 10l5 5 5-5z"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CHALLENGE GRID / PROBLEM LIST (CATALOG + SIDEBAR HYBRID) -->
+    <section class="codelab-list-section">
+      <div class="catalog-with-sidebar-grid">
+        <!-- Main Catalog Rows (Left Column) -->
+        <div class="catalog-main-col">
+          <!-- Header row labels for desktop -->
+          <div class="table-header-row">
+        <div class="col-status">ESTADO</div>
+        <div class="col-title">TÍTULO DEL DESAFÍO &amp; TAGS</div>
+        <div class="col-difficulty">DIFICULTAD &amp; ACEPTACIÓN</div>
+        <div class="col-author">AUTOR / ORIGEN</div>
+        <div class="col-actions">MÉTRICAS &amp; ACCIÓN</div>
+      </div>
+
+      <!-- CHALLENGE ITEMS -->
+      @if (challenges().length === 0) {
+        <div class="empty-challenges">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="m4.93 4.93 4.24 4.24"></path>
+            <path d="m14.83 9.17 4.24-4.24"></path>
+            <path d="m14.83 14.83 4.24 4.24"></path>
+            <path d="m9.17 14.83-4.24 4.24"></path>
+          </svg>
+          <h3>No se encontraron desafíos</h3>
+          <p>Prueba ajustando los filtros de búsqueda o crea un nuevo reto para la comunidad.</p>
+          <button class="btn-clear-filters" (click)="clearFilters()">Restablecer Filtros</button>
+        </div>
+      }
+
+      <div class="challenge-rows-list">
+        @for (item of challenges(); track item.id) {
+          <article class="challenge-row" [class.is-solved]="item.status === 'solved'">
+            <!-- Status col -->
+            <div class="row-col col-status">
+              @if (item.status === 'solved') {
+                <div class="status-icon status-icon--solved" title="Desafío Resuelto">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                </div>
+                <span class="mobile-status-label status-solved">Resuelto</span>
+              } @else if (item.status === 'my_creation') {
+                <div class="status-icon status-icon--creation" title="Tu Reto Creado">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                  </svg>
+                </div>
+                <span class="mobile-status-label status-creation">Tu Reto</span>
+              } @else {
+                <div class="status-icon status-icon--pending" title="Pendiente">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="9"></circle>
+                  </svg>
+                </div>
+                <span class="mobile-status-label status-pending">Pendiente</span>
+              }
+            </div>
+
+            <!-- Title & tags col -->
+            <div class="row-col col-title">
+              <div class="challenge-title-group">
+                <h3 class="challenge-title" (click)="openSolver(item)">
+                  {{ item.title }}
+                </h3>
+                @if (item.isOfficial) {
+                  <span class="origin-badge origin-badge--official">OFICIAL</span>
+                }
+                @if (item.author.isCurrentUser) {
+                  <span class="origin-badge origin-badge--user">TU CREACIÓN</span>
+                }
+              </div>
+
+              <p class="challenge-desc-snippet">{{ item.description }}</p>
+
+              <div class="challenge-tags-row">
+                @for (t of item.tags; track t) {
+                  <span class="tag-pill tag-pill--accent">{{ t }}</span>
+                }
+                @for (l of item.languages; track l) {
+                  <span class="tag-pill tag-pill--lang">{{ l }}</span>
+                }
+              </div>
+            </div>
+
+            <!-- Difficulty & stats col -->
+            <div class="row-col col-difficulty">
+              <div class="diff-badge-wrapper">
+                <span class="badge-difficulty" [ngClass]="'badge-difficulty--' + item.difficulty">
+                  <span class="dot"></span>
+                  {{ item.difficulty === 'facil' ? 'Fácil' : item.difficulty === 'media' ? 'Media' : item.difficulty === 'dificil' ? 'Difícil' : 'Hardcore' }}
+                </span>
+              </div>
+              <span class="success-rate-text">
+                Éxito: <strong>{{ item.acceptanceRate }}%</strong> ({{ item.testCasesCount }} Test Cases)
+              </span>
+            </div>
+
+            <!-- Author col -->
+            <div class="row-col col-author">
+              <div class="author-avatar-sm" [class.author-avatar-sm--official]="item.isOfficial">
+                @if (item.isOfficial) {
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                } @else {
+                  {{ item.author.avatarInitial || item.author.name[0] }}
+                }
+              </div>
+              <div class="author-meta-block">
+                <div class="author-header">
+                  <span class="author-handle">&#64;{{ item.author.username }}</span>
+                  @if (item.isOfficial || item.author.isTopContributor || item.author.isMonitor) {
+                    <svg class="verified-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                  }
+                </div>
+                <span class="author-subtext">
+                  {{ item.author.isTopContributor ? 'Top Contribuidor' : item.author.isMonitor ? 'Monitor' : item.isOfficial ? 'Curaduría Oficial' : item.author.role }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Metrics & Action button -->
+            <div class="row-col col-actions">
+              <div class="metrics-counter-group">
+                <button
+                  class="upvote-btn"
+                  [class.is-voted]="item.userVoted"
+                  (click)="voteChallenge(item, $event)"
+                  title="Votar desafío"
+                  type="button"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                  <span>{{ item.upvotes }}</span>
+                </button>
+
+                <div class="comments-counter">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span>{{ item.commentsCount }}</span>
+                </div>
+              </div>
+
+              <button
+                class="btn-row-action"
+                [class.btn-row-action--solved]="item.status === 'solved'"
+                (click)="openSolver(item)"
+                type="button"
+              >
+                {{ item.status === 'solved' ? 'Reintentar' : item.author.isCurrentUser ? 'Administrar' : 'Resolver' }}
+              </button>
+            </div>
+          </article>
+        }
+        </div> <!-- close challenge-rows-list -->
+      </div> <!-- close catalog-main-col -->
+
+        <!-- Sidebar: Faculty Leaderboard & Live Activity Feed (Right Column) -->
+        <aside class="catalog-sidebar-col">
+          <!-- Faculty Podium Leaderboard -->
+          <div class="sidebar-card faculty-podium-card">
+            <div class="sidebar-card__header">
+              <div class="sidebar-card__title-group">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2">
+                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                  <path d="M4 22h16"></path>
+                  <path d="M10 14.66V17c0 .55-.45 1-1 1H7c-.55 0-1 .45-1 1v3h12v-3c0-.55-.45-1-1-1h-2c-.55 0-1-.45-1-1v-2.34c0-.77.34-1.5 1-2.01l4.47-3.35C20.08 7.82 20.25 7 19.5 6.25 18.75 5.5 18 5.67 17.5 6.5L12 11.5 6.5 6.5C6 5.67 5.25 5.5 4.5 6.25c-.75.75-.58 1.57.03 2.05L9 11.65c.66.51 1 1.24 1 2.01z"></path>
+                </svg>
+                <h4 class="sidebar-card__title">Podio de la Facultad</h4>
+              </div>
+              <span class="badge-week">Semana 12</span>
+            </div>
+
+            <p class="sidebar-card__desc">
+              Estudiantes con mayor optimización de microsegundos y retos compartidos.
+            </p>
+
+            <div class="podium-list">
+              @for (member of stats().podium; track member.rank) {
+                <div class="podium-item" [class.podium-item--current]="member.isCurrentUser">
+                  <div class="podium-item__left">
+                    <span class="podium-rank" [class.rank-gold]="member.rank === 1" [class.rank-silver]="member.rank === 2" [class.rank-bronze]="member.rank === 3">
+                      #{{ member.rank }}
+                    </span>
+                    <div class="podium-avatar" [class.avatar-current]="member.isCurrentUser">
+                      {{ member.avatar }}
+                    </div>
+                    <div class="podium-user-info">
+                      <span class="podium-name">
+                        {{ member.name }}
+                        @if (member.isCurrentUser) {
+                          <span class="podium-you">(Tú)</span>
+                        }
+                      </span>
+                      <span class="podium-sub">{{ member.role }}</span>
+                    </div>
+                  </div>
+                  <span class="podium-xp" [class.xp-gold]="member.rank === 1">{{ member.xp | number }} XP</span>
+                </div>
+              }
+            </div>
+
+            <button class="btn-view-leaderboard" type="button" routerLink="/community">
+              Ver Tabla General Completa (128 Estudiantes)
+            </button>
+          </div>
+
+          <!-- Live Community Activity Feed -->
+          <div class="sidebar-card activity-feed-card">
+            <div class="sidebar-card__header">
+              <div class="sidebar-card__title-group">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" stroke-width="2">
+                  <path d="M4 11a9 9 0 0 1 9 9"></path>
+                  <path d="M4 4a16 16 0 0 1 16 16"></path>
+                  <circle cx="5" cy="19" r="1"></circle>
+                </svg>
+                <h4 class="sidebar-card__title">Feed en Vivo de la Comunidad</h4>
+              </div>
+              <span class="live-pulse-dot" title="En vivo"></span>
+            </div>
+
+            <div class="activity-feed-list">
+              @for (activity of stats().activityFeed; track $index) {
+                <div class="activity-feed-item">
+                  <span class="activity-icon">
+                    @switch (activity.icon) {
+                      @case ('rocket') {
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0AE98A" stroke-width="2">
+                          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                        </svg>
+                      }
+                      @case ('bolt') {
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2">
+                          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                      }
+                      @case ('school') {
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2">
+                          <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                          <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                        </svg>
+                      }
+                      @default {
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" stroke-width="2">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      }
+                    }
+                  </span>
+                  <div class="activity-content">
+                    <p class="activity-text">
+                      @if (activity.user) {
+                        <strong class="activity-user">{{ activity.user }}</strong>
+                      }
+                      {{ activity.text }}
+                    </p>
+                    <span class="activity-time">{{ activity.time }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </aside>
+      </div> <!-- close catalog-with-sidebar-grid -->
+    </section>
+
+    <!-- 5. INLINE VISUAL DATA: PERFORMANCE TELEMETRY BENCHMARK -->
+    <section class="codelab-telemetry-section">
+      <div class="telemetry-info">
+        <div class="telemetry-title-group">
+          <svg class="insights-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <h4 class="telemetry-title">Métricas de Evaluación en Tiempo Real</h4>
+        </div>
+        <p class="telemetry-desc">
+          Los tiempos de ejecución de las soluciones son validados en sandboxes aislados con contenedores Linux gVisor y reportados en microsegundos (μs).
+        </p>
+      </div>
+
+      <div class="telemetry-data">
+        <div class="telemetry-stats-text">
+          <span class="telemetry-label">Latencia Promedio</span>
+          <span class="telemetry-value">{{ stats().latencyMs }} ms</span>
+          <span class="telemetry-sub">{{ stats().sandboxHealthPercent }}% Sandbox Health</span>
+        </div>
+
+        <div class="telemetry-sparkline">
+          <svg width="140" height="40" viewBox="0 0 140 40" fill="none">
+            <path d="M0 32 L20 28 L40 35 L60 18 L80 22 L100 8 L120 14 L140 4" stroke="#0AE98A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M0 32 L20 28 L40 35 L60 18 L80 22 L100 8 L120 14 L140 4 L140 40 L0 40 Z" fill="#0AE98A" fill-opacity="0.1"/>
+            <circle cx="140" cy="4" r="3.5" fill="#0AE98A"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. STUDENT CREATION MODAL / DRAWER TEASER BANNER (BOTTOM ANCHOR) -->
+    <!-- 6. STUDENT CREATION MODAL / DRAWER TEASER BANNER (BOTTOM ANCHOR) -->
+    <section class="codelab-creator-banner" id="challenge-creator-drawer">
+      <div class="codelab-creator-banner__grid creator-banner-grid">
+        <!-- Left Side: Community Call to Action -->
+        <div class="codelab-creator-banner__left creator-banner__left">
+          <div class="codelab-creator-banner__titles creator-banner__titles">
+            <div class="creator-banner__badge">
+              <span class="badge-icon-box">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M16 18l6-6-6-6"></path>
+                  <path d="M8 6l-6 6 6 6"></path>
+                </svg>
+              </span>
+              <span class="badge-text">SysEng Community Studio &amp; Parciales</span>
+            </div>
+
+            <h3 class="creator-banner__headline">
+              ¿Tienes un ejercicio de tu parcial o taller?
+              <span class="headline-gradient">Compártelo con la facultad.</span>
+            </h3>
+
+            <p class="creator-banner__desc">
+              Sube tus propios enunciados con casos de prueba públicos y ocultos. Nuestro sandbox evalúa la memoria y latencia de cada estudiante, otorgándote puntos de reputación y badges de desarrollador élite en tu perfil.
+            </p>
+          </div>
+
+          <!-- 3-Step Student Publishing Pipeline -->
+          <div class="creator-pipeline-grid">
+            <div class="pipeline-card">
+              <span class="pipeline-step-badge step-green">01. Define</span>
+              <span class="pipeline-title">Enunciado &amp; Casos</span>
+              <span class="pipeline-sub">Entradas stdin / salidas stdout</span>
+            </div>
+            <div class="pipeline-card">
+              <span class="pipeline-step-badge step-cyan">02. Sandbox</span>
+              <span class="pipeline-title">Límites gVisor O(1)</span>
+              <span class="pipeline-sub">Cotas de RAM y timeouts seguros</span>
+            </div>
+            <div class="pipeline-card">
+              <span class="pipeline-step-badge step-amber">03. Review</span>
+              <span class="pipeline-title">Revisión por Pares</span>
+              <span class="pipeline-sub">Aprobación de pares y +XP</span>
+            </div>
+          </div>
+
+          <!-- Action Button & Estimate -->
+          <div class="codelab-creator-banner__footer creator-banner__footer">
+            <button class="btn-open-creator" (click)="openCreateModal()" type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              <span>Abrir Editor de Retos</span>
+            </button>
+            <div class="estimate-capsule">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" stroke-width="2.2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              <span>Proceso asistido ~3 min</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Mini Interactive Test-Case Builder Preview & Mockup -->
+        <div class="codelab-creator-banner__right creator-banner__right">
+          <div class="studio-preview-header">
+            <div class="studio-header-left">
+              <div class="terminal-traffic-dots">
+                <span class="dot dot--red"></span>
+                <span class="dot dot--yellow"></span>
+                <span class="dot dot--green"></span>
+              </div>
+              <div class="studio-preview-title">
+                <span class="prompt-sym">&gt;_</span>
+                <span>Test Case Studio Preview</span>
+              </div>
+            </div>
+            <span class="preview-mode-tag">
+              <span class="pulse-ring"></span>
+              Modo Edición
+            </span>
+          </div>
+
+          <div class="studio-form-mock">
+            <div class="mock-input-group">
+              <div class="mock-label-bar">
+                <span class="mock-label">TÍTULO DEL PROBLEMA</span>
+                <span class="mock-category-tag">SISTEMAS OPERATIVOS</span>
+              </div>
+              <div class="mock-input-wrap">
+                <span class="input-sym">&gt;</span>
+                <input class="mock-input" type="text" readonly value="Detección de Interbloqueos (Deadlock Detection)" />
+              </div>
+            </div>
+
+            <div class="mock-io-grid">
+              <div class="mock-io-col">
+                <div class="io-header">
+                  <span class="io-label">INPUT (STDIN)</span>
+                  <span class="io-badge io-badge--cyan">TEST 1 • PÚBLICO</span>
+                </div>
+                <div class="mock-code-box syn-cyan">
+                  <div class="code-line"><span class="line-num">01</span><span>4 4</span></div>
+                  <div class="code-line"><span class="line-num">02</span><span>P0 R0</span></div>
+                  <div class="code-line"><span class="line-num">03</span><span>R0 P1</span></div>
+                  <div class="code-line"><span class="line-num">04</span><span>P1 R1</span></div>
+                </div>
+              </div>
+
+              <div class="mock-io-col">
+                <div class="io-header">
+                  <span class="io-label">EXPECTED (STDOUT)</span>
+                  <span class="io-badge io-badge--green">STDOUT • EXIT 0</span>
+                </div>
+                <div class="mock-code-box syn-green">
+                  <div class="code-line"><span class="line-num">01</span><span>CYCLE_DETECTED: TRUE</span></div>
+                  <div class="code-line"><span class="line-num">02</span><span>PROCESSES: [P0, P1]</span></div>
+                  <div class="code-line"><span class="line-num">03</span><span>STATE: DEADLOCK</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mock-meta-row">
+              <div class="test-count-hint">
+                <span class="bullet-indicator"></span>
+                <span>Casos: <strong>3 Públicos / 12 Ocultos</strong></span>
+              </div>
+              <span class="safe-validation-badge">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Validación Segura gVisor</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="studio-preview-footer">
+            <div class="compiler-status">
+              <span class="compiler-dot"></span>
+              <span class="compiler-text">COMPILADOR GCC, CLANG &amp; PYPY LISTO</span>
+            </div>
+            <button class="btn-preview-demo" (click)="openCreateModal()" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <span>Probar en Editor</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 7. MODAL / DRAWER INTERACTIVO PARA CREAR RETO -->
+  @if (isCreateModalOpen()) {
+    <div class="codelab-modal-backdrop" (click)="closeCreateModal()">
+      <div class="codelab-modal" (click)="$event.stopPropagation()">
+        <div class="codelab-modal__header">
+          <div class="modal-title-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0AE98A" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <h2>Publicar Nuevo Reto de Código</h2>
+          </div>
+          <button class="btn-close-modal" (click)="closeCreateModal()" type="button">✕</button>
+        </div>
+
+        <form class="codelab-modal__body" (ngSubmit)="submitNewChallenge()">
+          <div class="form-field">
+            <label>Título del Reto *</label>
+            <input
+              class="form-control"
+              type="text"
+              name="newTitle"
+              [(ngModel)]="newChallengeData.title"
+              placeholder="Ej. Algoritmo de Dijkstra con Cola de Prioridad"
+              required
+            />
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-field">
+              <label>Dificultad *</label>
+              <select class="form-control" name="newDiff" [(ngModel)]="newChallengeData.difficulty">
+                <option value="facil">🟢 Fácil (30 XP)</option>
+                <option value="media">🟡 Media (50 XP)</option>
+                <option value="dificil">🔴 Difícil (80 XP)</option>
+                <option value="hardcore">🟣 Hardcore / Sistemas (120 XP)</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Categoría *</label>
+              <select class="form-control" name="newCat" [(ngModel)]="newChallengeData.category">
+                <option value="algoritmos">Algoritmos &amp; Grafos</option>
+                <option value="estructuras">Estructuras de Datos</option>
+                <option value="concurrencia">Concurrencia &amp; Hilos</option>
+                <option value="so">Sistemas Operativos &amp; Redes</option>
+                <option value="bd">Bases de Datos &amp; SQL</option>
+                <option value="compiladores">Compiladores</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label>Enunciado y Restricciones (Markdown) *</label>
+            <textarea
+              class="form-control form-textarea"
+              name="newDesc"
+              [(ngModel)]="newChallengeData.description"
+              rows="4"
+              placeholder="Describe el problema, los casos borde y las cotas de complejidad de tiempo y espacio esperadas..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-field">
+              <label>Input de Prueba (Stdin) *</label>
+              <textarea
+                class="form-control font-mono"
+                name="newStdin"
+                [(ngModel)]="newChallengeData.inputStdin"
+                rows="3"
+                placeholder="Ej. [3, 2, 4], target = 6"
+                required
+              ></textarea>
+            </div>
+
+            <div class="form-field">
+              <label>Output Esperado (Stdout) *</label>
+              <textarea
+                class="form-control font-mono"
+                name="newStdout"
+                [(ngModel)]="newChallengeData.expectedStdout"
+                rows="3"
+                placeholder="Ej. [1, 2]"
+                required
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="codelab-modal__footer">
+            <button class="btn-cancel" (click)="closeCreateModal()" type="button">Cancelar</button>
+            <button class="btn-publish-submit" type="submit">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Publicar en la Comunidad</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

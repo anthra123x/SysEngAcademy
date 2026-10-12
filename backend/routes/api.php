@@ -57,6 +57,15 @@ Route::post('/ai/quiz-feedback', [AiChatController::class, 'quizFeedback']);
 // Protected routes: JWT stateless primero (sin consulta a BD), con
 // fallback a Sanctum para tokens legados / tests.
 Route::middleware('auth:jwt,sanctum')->group(function () {
+    // CodeLab (Retos & Sandbox Comunitario - Exclusivo para estudiantes autenticados)
+    Route::get('/codelab/challenges', [\App\Http\Controllers\Api\CodelabController::class, 'index']);
+    Route::get('/codelab/challenges/{slug}', [\App\Http\Controllers\Api\CodelabController::class, 'show']);
+    Route::post('/codelab/challenges', [\App\Http\Controllers\Api\CodelabController::class, 'store'])->middleware('throttle:15,1');
+    Route::post('/codelab/challenges/{id}/vote', [\App\Http\Controllers\Api\CodelabController::class, 'vote'])->middleware('throttle:30,1');
+    Route::post('/codelab/challenges/{id}/submit', [\App\Http\Controllers\Api\CodelabController::class, 'submit'])->middleware('throttle:20,1');
+    Route::get('/codelab/stats', [\App\Http\Controllers\Api\CodelabController::class, 'stats']);
+    Route::get('/codelab/stream', [\App\Http\Controllers\Api\CodelabController::class, 'stream']);
+
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     Route::get('/auth/me', [AuthController::class, 'me']);

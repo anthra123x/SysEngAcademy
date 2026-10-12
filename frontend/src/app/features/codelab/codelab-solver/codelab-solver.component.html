@@ -1,0 +1,355 @@
+<div class="solver-page">
+  <!-- Top Navigation & Header Bar -->
+  <header class="solver-topbar">
+    <div class="solver-topbar__left">
+      <button class="btn-back" (click)="goBack()" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Volver a CodeLab</span>
+      </button>
+
+      <div class="topbar-divider"></div>
+
+      @if (challenge(); as c) {
+        <div class="problem-breadcrumb">
+          <span class="problem-id">#{{ c.id | uppercase }}</span>
+          <span class="problem-title-text">{{ c.title }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="solver-topbar__right">
+      <div class="lang-selector-wrap">
+        <label>Lenguaje:</label>
+        <select class="select-lang" [value]="selectedLang()" (change)="onLanguageChange($event)">
+          <option value="python">Python 3</option>
+          <option value="javascript">JavaScript (ES6)</option>
+          <option value="cpp">C++ 20</option>
+          <option value="go">Go 1.22</option>
+          <option value="rust">Rust</option>
+          <option value="java">Java 21</option>
+        </select>
+      </div>
+
+      <div class="mobile-mode-switcher">
+        <button
+          type="button"
+          class="btn-mode"
+          [class.is-active]="mobileViewMode() === 'statement'"
+          (click)="mobileViewMode.set('statement')"
+        >
+          Enunciado
+        </button>
+        <button
+          type="button"
+          class="btn-mode"
+          [class.is-active]="mobileViewMode() === 'workbench'"
+          (click)="mobileViewMode.set('workbench')"
+        >
+          Editor & Consola
+        </button>
+      </div>
+
+      <button class="btn-tool" (click)="resetCode()" title="Restablecer plantilla inicial" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Reset</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Split Workbench Area -->
+  <main class="solver-workbench">
+    @if (challenge(); as c) {
+      <!-- LEFT PANEL: Problem Statement & Testcases -->
+      <section class="workbench-left" [class.is-mobile-hidden]="mobileViewMode() === 'workbench'">
+        <div class="panel-tabs">
+          <button
+            class="panel-tab-btn"
+            [class.is-active]="activeLeftTab() === 'enunciado'"
+            (click)="activeLeftTab.set('enunciado')"
+            type="button"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            <span>Enunciado</span>
+          </button>
+
+          <button
+            class="panel-tab-btn"
+            [class.is-active]="activeLeftTab() === 'soluciones'"
+            (click)="activeLeftTab.set('soluciones')"
+            type="button"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            <span>Soluciones de la Comunidad ({{ c.upvotes }})</span>
+          </button>
+        </div>
+
+        <div class="panel-content">
+          @if (activeLeftTab() === 'enunciado') {
+            <div class="statement-wrapper">
+              <div class="statement-header">
+                <h1 class="statement-title">{{ c.title }}</h1>
+
+                <div class="statement-meta-row">
+                  <span class="badge-difficulty" [ngClass]="'badge-difficulty--' + c.difficulty">
+                    <span class="dot"></span>
+                    {{ c.difficulty === 'facil' ? 'Fácil' : c.difficulty === 'media' ? 'Media' : c.difficulty === 'dificil' ? 'Difícil' : 'Hardcore' }}
+                  </span>
+
+                  <span class="badge-acceptance">Aceptación: {{ c.acceptanceRate }}%</span>
+                  <span class="badge-xp">+{{ c.xp }} XP</span>
+                  <span class="badge-origin">{{ c.isOfficial ? 'Oficial SysEng' : 'Comunidad' }}</span>
+                </div>
+              </div>
+
+              <div class="statement-body">
+                <h3>Descripción</h3>
+                <p>{{ c.description }}</p>
+
+                <h3>Casos de Ejemplo</h3>
+                @for (tc of c.testCases; track tc.expected; let idx = $index) {
+                  @if (!tc.isHidden) {
+                    <div class="example-box">
+                      <div class="example-title">Ejemplo {{ idx + 1 }}:</div>
+                      <div class="example-io">
+                        <div class="io-line">
+                          <span class="io-lbl">Entrada:</span>
+                          <code>{{ tc.input || 'Sin parámetros' }}</code>
+                        </div>
+                        <div class="io-line">
+                          <span class="io-lbl">Salida esperada:</span>
+                          <code>{{ tc.expected }}</code>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                }
+
+                <h3>Restricciones</h3>
+                <ul class="constraints-list">
+                  <li>Tiempo límite de ejecución: <strong>1.5 segundos</strong> por caso de prueba.</li>
+                  <li>Límite de memoria auxiliar: <strong>256 MB</strong> en sandbox gVisor.</li>
+                  <li>El código debe pasar tanto los casos públicos como los casos de prueba ocultos.</li>
+                </ul>
+
+                <div class="author-citation">
+                  <span>Publicado por: <strong>&#64;{{ c.author.username }}</strong> ({{ c.author.role }})</span>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="solutions-wrapper">
+              <h3>Soluciones Destacadas</h3>
+              <p class="solutions-note">Aprende de las arquitecturas y optimizaciones compartidas por tus compañeros.</p>
+
+              @if (c.solutionPreview; as sp) {
+                <div class="solution-card">
+                  <div class="solution-card__header">
+                    <span class="solution-author">&#64;{{ c.author.username }} (Solución de Referencia)</span>
+                    <span class="solution-bench">{{ sp.benchmark }}</span>
+                  </div>
+                  <pre class="solution-code"><code>{{ sp.code }}</code></pre>
+                </div>
+              } @else {
+                <div class="empty-solutions">
+                  <p>Aún no hay soluciones compartidas para este reto. ¡Sé el primero en resolverlo y publicar tu código!</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL: Editor CodeMirror & Execution Console -->
+      <section class="workbench-right" [class.is-mobile-hidden]="mobileViewMode() === 'statement'">
+        <!-- Code Editor Area -->
+        <div class="editor-container" #editorContainer></div>
+
+        <!-- Bottom Testrunner & Console Panel -->
+        <div class="console-panel">
+          <div class="console-header">
+            <div class="console-tabs">
+              <button
+                class="console-tab-btn"
+                [class.is-active]="activeConsoleTab() === 'testcases'"
+                (click)="activeConsoleTab.set('testcases')"
+                type="button"
+              >
+                <span>Casos de Prueba</span>
+              </button>
+
+              <button
+                class="console-tab-btn"
+                [class.is-active]="activeConsoleTab() === 'salida'"
+                (click)="activeConsoleTab.set('salida')"
+                type="button"
+              >
+                <span>Consola de Salida</span>
+                @if (executionResult(); as res) {
+                  <span class="res-dot" [class.res-dot--pass]="res.exit_code === 0"></span>
+                }
+              </button>
+            </div>
+
+            <div class="console-actions">
+              <button
+                class="btn-run"
+                [disabled]="isRunning()"
+                (click)="runTests()"
+                type="button"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span>{{ isRunning() ? 'Ejecutando...' : 'Ejecutar Pruebas' }}</span>
+              </button>
+
+              <button
+                class="btn-submit"
+                [disabled]="isRunning()"
+                (click)="submitSolution()"
+                type="button"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Enviar Solución</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="console-body">
+            @if (activeConsoleTab() === 'testcases') {
+              <div class="testcases-list">
+                @for (tc of c.testCases; track tc.expected; let idx = $index) {
+                  <div class="testcase-item" [class.testcase-item--hidden]="tc.isHidden">
+                    <div class="tc-header">
+                      <span class="tc-title">{{ tc.label || ('Caso ' + (idx + 1)) }}</span>
+                      @if (tc.isHidden) {
+                        <span class="tc-lock-badge">🔒 Caso Oculto</span>
+                      }
+                    </div>
+
+                    @if (!tc.isHidden) {
+                      <div class="tc-details">
+                        <div class="tc-param">
+                          <span class="tc-key">Input:</span>
+                          <code>{{ tc.input || 'Vacío' }}</code>
+                        </div>
+                        <div class="tc-param">
+                          <span class="tc-key">Esperado:</span>
+                          <code>{{ tc.expected }}</code>
+                        </div>
+                      </div>
+                    } @else {
+                      <div class="tc-hidden-desc">Este caso de prueba evalúa casos borde y se ejecuta en sandbox gVisor.</div>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="console-output-box">
+                @if (executionResult(); as res) {
+                  <div class="exec-metrics-bar">
+                    <span class="exec-status" [class.is-pass]="res.exit_code === 0">
+                      {{ res.exit_code === 0 ? '✓ Ejecución Exitosa' : '✕ Error de Ejecución' }}
+                    </span>
+                    <div class="metrics-badges">
+                      <span class="exec-badge exec-badge--time">{{ res.execution_time_ms }} ms</span>
+                      <span class="exec-badge exec-badge--speed">Top {{ res.percentile_speed || 98.4 }}% veloz</span>
+                      <span class="exec-badge exec-badge--memory">{{ res.memory_mb || 14.1 }} MB</span>
+                      <span class="exec-badge exec-badge--eff">Top {{ res.percentile_memory || 95.0 }}% RAM</span>
+                    </div>
+                  </div>
+
+                  <pre class="stdout-pre"><code>{{ res.stdout || res.stderr || 'Sin salida estándar generada.' }}</code></pre>
+
+                  @if (res.tests && res.tests.length > 0) {
+                    <div class="tests-breakdown">
+                      <h4>Verificación de Casos:</h4>
+                      @for (t of res.tests; track t.expected; let i = $index) {
+                        <div class="test-eval-row" [class.is-pass]="t.passed">
+                          <span>Caso {{ i + 1 }}: {{ t.passed ? '✓ PASÓ' : '✕ FALLÓ' }}</span>
+                          @if (!t.passed) {
+                            <span class="diff-hint">Esperado: {{ t.expected }} | Obtenido: {{ t.actual }}</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                } @else {
+                  <div class="console-placeholder">
+                    Haz clic en <strong>Ejecutar Pruebas</strong> para compilar tu código y verificar la salida con los casos de prueba configurados.
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+    }
+  </main>
+
+  <!-- Solved Celebration Modal -->
+  @if (isSolvedCelebrationOpen()) {
+    <div class="solver-celebration-backdrop" (click)="closeCelebration()">
+      <div class="solver-celebration-modal" (click)="$event.stopPropagation()">
+        <div class="celebration-badge-glow">
+          <span class="trophy-icon">🏆</span>
+        </div>
+
+        <h2 class="celebration-title">¡Desafío Resuelto Exitosamente!</h2>
+        <p class="celebration-subtitle">
+          Tu código pasó todos los casos de prueba (públicos y ocultos) y tu solución ha sido registrada en la base de datos de SysEng Academy.
+        </p>
+
+        <div class="celebration-metrics-grid">
+          <div class="c-metric-card">
+            <span class="c-metric-label">XP Ganados</span>
+            <span class="c-metric-value text-green">+{{ challenge()?.xp || 50 }} XP</span>
+            <small class="c-metric-sub text-green">Registrado en PostgreSQL</small>
+          </div>
+          <div class="c-metric-card">
+            <span class="c-metric-label">Tiempo de Ejecución</span>
+            <span class="c-metric-value text-cyan">{{ executionResult()?.execution_time_ms || 1.84 }} ms</span>
+            <small class="c-metric-sub text-cyan">Top {{ executionResult()?.percentile_speed || 98.4 }}% más veloz</small>
+          </div>
+          <div class="c-metric-card">
+            <span class="c-metric-label">Memoria Auxiliar</span>
+            <span class="c-metric-value text-purple">{{ executionResult()?.memory_mb || 14.1 }} MB</span>
+            <small class="c-metric-sub text-purple">Top {{ executionResult()?.percentile_memory || 95.0 }}% eficiente</small>
+          </div>
+        </div>
+
+        <div class="celebration-actions">
+          <button class="btn-c-outline" (click)="viewCommunitySolutions()" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            <span>Ver Soluciones de la Comunidad</span>
+          </button>
+
+          <button class="btn-c-next" (click)="goToNextChallenge()" type="button">
+            <span>Siguiente Reto</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

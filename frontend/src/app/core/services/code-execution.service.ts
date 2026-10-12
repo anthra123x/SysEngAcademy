@@ -30,6 +30,9 @@ export interface CodeExecutionResponse {
   exit_code: number;
   tests?: TestResult[];
   execution_time_ms: number;
+  memory_mb?: number;
+  percentile_speed?: number;
+  percentile_memory?: number;
   language: string;
   error?: string;
   message?: string;

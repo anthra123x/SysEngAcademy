@@ -15,8 +15,10 @@ import { GlobalToastComponent } from './shared/components/global-toast.component
     <main [class.classroom-mode]="isClassroomMode()">
       <router-outlet />
     </main>
-    <app-mobile-bottom-nav />
-    <app-ai-companion />
+    @if (!isClassroomMode()) {
+      <app-mobile-bottom-nav />
+      <app-ai-companion />
+    }
     <app-global-toast />
   `,
   styles: [`
@@ -39,7 +41,16 @@ import { GlobalToastComponent } from './shared/components/global-toast.component
 })
 export class App {
   private router = inject(Router);
-  readonly isClassroomMode = signal(this.router.url.includes('/leccion/'));
+  readonly isClassroomMode = signal(
+    this.checkClassroomMode(this.router.url)
+  );
+
+  private checkClassroomMode(url: string): boolean {
+    const cleanUrl = (url || '').split('?')[0].split('#')[0];
+    return cleanUrl.includes('/leccion/') ||
+      (cleanUrl.startsWith('/codelab/') && cleanUrl !== '/codelab' && cleanUrl !== '/codelab/') ||
+      (cleanUrl.startsWith('/arena/') && cleanUrl !== '/arena' && cleanUrl !== '/arena/');
+  }
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -51,7 +62,7 @@ export class App {
 
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
-        this.isClassroomMode.set(event.urlAfterRedirects.includes('/leccion/'));
+        this.isClassroomMode.set(this.checkClassroomMode(event.urlAfterRedirects));
       }
     });
   }

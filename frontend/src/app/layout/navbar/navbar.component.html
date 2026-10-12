@@ -24,6 +24,10 @@
           <a routerLink="/cursos" routerLinkActive="active" class="nav-pill">
             <span class="nav-pill__text">Cursos</span>
           </a>
+          <a routerLink="/codelab" routerLinkActive="active" class="nav-pill nav-pill--codelab">
+            <span class="nav-pill__text">CodeLab</span>
+            <span class="nav-pill__badge">NUEVO</span>
+          </a>
           @if (isTeacher()) {
             <a routerLink="/docente" routerLinkActive="active" class="nav-pill nav-pill--teacher-badge">
               <span class="nav-pill__text">Panel Docente</span>

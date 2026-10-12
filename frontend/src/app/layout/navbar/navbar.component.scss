@@ -142,6 +142,27 @@
             }
           }
 
+          &.nav-pill--codelab {
+            .nav-pill__badge {
+              font-size: 9px;
+              padding: 1px 5px;
+              border-radius: 4px;
+              background: rgba(10, 233, 138, 0.15);
+              color: var(--primary);
+              font-family: var(--font-mono, monospace);
+              font-weight: 700;
+              letter-spacing: 0.04em;
+              line-height: 1.2;
+            }
+
+            &.active {
+              .nav-pill__badge {
+                background: rgba(8, 9, 13, 0.25);
+                color: #08090D;
+              }
+            }
+          }
+
           &__icon {
             font-size: 0.85rem;
           }

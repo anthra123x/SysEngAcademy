@@ -302,7 +302,8 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
     const isTeacherRoute = url.startsWith('/docente') || (url.startsWith('/perfil') && this.isTeacherMode());
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
     const isLessonMobile = url.includes('/leccion/') && isMobile;
-    const shouldHide = isTeacherRoute || isLessonMobile;
+    const isCodelabSolver = (url.startsWith('/codelab/') && url !== '/codelab') || (url.startsWith('/arena/') && url !== '/arena');
+    const shouldHide = isTeacherRoute || isLessonMobile || isCodelabSolver;
     this.hidden.set(shouldHide);
     if (shouldHide) this.closePanel();
 

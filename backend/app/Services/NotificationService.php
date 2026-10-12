@@ -51,6 +51,23 @@ class NotificationService
             return $p->completed_at && $p->lesson && in_array($p->lesson->type, ['practice', 'challenge', 'interactive']);
         })->count();
 
+        // Métricas exclusivas de CodeLab & Sandbox Comunitario
+        $codelabSolvedCount = \App\Models\CodelabSubmission::where('user_id', $user->id)
+            ->where('status', 'passed')
+            ->distinct('challenge_id')
+            ->count('challenge_id');
+
+        $codelabCreatedCount = \App\Models\CodelabChallenge::where('user_id', $user->id)->count();
+
+        $codelabFastest = \App\Models\CodelabSubmission::where('user_id', $user->id)
+            ->where('status', 'passed')
+            ->min('execution_time_ms');
+
+        $codelabLanguagesCount = \App\Models\CodelabSubmission::where('user_id', $user->id)
+            ->where('status', 'passed')
+            ->distinct('language')
+            ->count('language');
+
         $streak = (int) ($user->current_streak ?? 0);
         $xp = (int) ($user->xp ?? 0);
         $studyMins = (int) round(($user->today_study_seconds ?? 0) / 60);
@@ -155,6 +172,50 @@ class NotificationService
                 'description' => 'Superaste 10 retos prácticos de código y algoritmos.',
                 'icon'        => 'brain-circuit',
                 'unlocked'    => $solvedChallenges >= 10,
+            ],
+
+            // CodeLab & Sandbox de la Facultad (Logros Exclusivos)
+            [
+                'id'          => 'codelab_first_solve',
+                'title'       => 'Primer AC en CodeLab',
+                'description' => 'Compilaste y superaste el 100% de casos de prueba en tu primer reto de CodeLab.',
+                'icon'        => 'terminal',
+                'unlocked'    => $codelabSolvedCount >= 1,
+            ],
+            [
+                'id'          => 'codelab_triad',
+                'title'       => 'Tríada de Algoritmos',
+                'description' => 'Resolviste con éxito 3 retos de algoritmos y estructuras de datos en CodeLab.',
+                'icon'        => 'cpu',
+                'unlocked'    => $codelabSolvedCount >= 3,
+            ],
+            [
+                'id'          => 'codelab_architect',
+                'title'       => 'Arquitecto de Parciales',
+                'description' => 'Diseñaste y publicaste tu propio reto con casos de prueba para la facultad en CodeLab.',
+                'icon'        => 'code',
+                'unlocked'    => $codelabCreatedCount >= 1,
+            ],
+            [
+                'id'          => 'codelab_speed_demon',
+                'title'       => 'Algoritmo Relámpago',
+                'description' => 'Optimizaste una solución en CodeLab alcanzando un tiempo de ejecución ultrarrápido (< 25ms).',
+                'icon'        => 'zap',
+                'unlocked'    => ($codelabFastest !== null && $codelabFastest <= 25),
+            ],
+            [
+                'id'          => 'codelab_polyglot',
+                'title'       => 'Políglota del Sandbox',
+                'description' => 'Superaste retos de CodeLab utilizando al menos 2 lenguajes de programación distintos.',
+                'icon'        => 'layers',
+                'unlocked'    => $codelabLanguagesCount >= 2,
+            ],
+            [
+                'id'          => 'codelab_veteran',
+                'title'       => 'Hacker de Sistemas',
+                'description' => 'Superaste 5 o más retos en CodeLab demostrando maestría en resolución de problemas.',
+                'icon'        => 'award',
+                'unlocked'    => $codelabSolvedCount >= 5,
             ],
 
             // Quizzes & Precisión
