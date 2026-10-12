@@ -64,12 +64,16 @@ class LessonController extends Controller
             $user = \App\Models\User::where('email', $email)->first();
         }
 
-        $lesson['completed'] = $user
+        $progress = $user
             ? LessonProgress::where('user_id', $user->id)
                 ->where('lesson_id', $lesson['id'])
-                ->whereNotNull('completed_at')
-                ->exists()
-            : false;
+                ->first()
+            : null;
+
+        $lesson['completed'] = (bool) ($progress && $progress->completed_at);
+        $lesson['user_score'] = $progress?->score !== null ? (int) $progress->score : null;
+        $lesson['last_code'] = $progress?->last_code;
+        $lesson['last_quiz_answers'] = $progress?->last_answers;
 
         // Aleatorización de preguntas y opciones por cuenta de usuario
         if (!empty($lesson['quiz']['questions'])) {
@@ -251,12 +255,14 @@ class LessonController extends Controller
 
             $existing = LessonProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
 
+            $effectiveScore = max($score, (int) ($existing?->score ?? 0));
             if ($passed) {
                 LessonProgress::updateOrCreate(
                     ['user_id' => $user->id, 'lesson_id' => $lesson->id],
                     [
-                        'score' => max($score, (int) ($existing?->score ?? 0)),
+                        'score' => $effectiveScore,
                         'completed_at' => $existing?->completed_at ?? now(),
+                        'last_answers' => $submitted,
                     ]
                 );
             } else {
@@ -264,8 +270,9 @@ class LessonController extends Controller
                 LessonProgress::updateOrCreate(
                     ['user_id' => $user->id, 'lesson_id' => $lesson->id],
                     [
-                        'score' => max($score, (int) ($existing?->score ?? 0)),
+                        'score' => $effectiveScore,
                         'completed_at' => $alreadyPassed ? $existing->completed_at : null,
+                        'last_answers' => $submitted,
                     ]
                 );
             }
@@ -346,12 +353,17 @@ class LessonController extends Controller
             ? max($submittedScore, (int) ($existing?->score ?? 0))
             : ($existing?->score ?? 100);
 
+        $progressData = [
+            'completed_at' => $existing?->completed_at ?? now(),
+            'score'        => $finalScore,
+        ];
+        if ($request->filled('code')) {
+            $progressData['last_code'] = $request->input('code');
+        }
+
         LessonProgress::updateOrCreate(
             ['user_id' => $user->id, 'lesson_id' => $lesson->id],
-            [
-                'completed_at' => $existing?->completed_at ?? now(),
-                'score' => $finalScore,
-            ]
+            $progressData
         );
 
         $progress = $this->recalculateCourseProgress($user->id, $courseId, $enrollment);

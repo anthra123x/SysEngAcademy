@@ -8,9 +8,12 @@ class LessonProgress extends Model
 {
     protected $table = 'lesson_progress';
 
-    protected $fillable = ['user_id', 'lesson_id', 'completed_at', 'score'];
+    protected $fillable = ['user_id', 'lesson_id', 'completed_at', 'score', 'last_code', 'last_answers'];
 
-    protected $casts = ['completed_at' => 'datetime'];
+    protected $casts = [
+        'completed_at' => 'datetime',
+        'last_answers' => 'array',
+    ];
 
     public function user()
     {

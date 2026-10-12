@@ -142,6 +142,9 @@ export interface Lesson {
   solution?: string | null;
   hint?: string | null;
   test_cases?: Array<{ input?: string; expected: string }> | Array<[string | null, string]> | any;
+  user_score?: number | null;
+  last_code?: string | null;
+  last_quiz_answers?: Record<string, number[]> | null;
 }
 
 export interface Enrollment {

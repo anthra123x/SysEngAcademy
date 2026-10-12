@@ -314,37 +314,29 @@
                         <button type="button" class="btn btn-secondary-outline" (click)="resetQuizAttempt()">
                           🔄 {{ isPassed ? 'Repetir Quiz' : 'Reintentar Quiz (Mínimo 90%)' }}
                         </button>
-
-                        @if (!isPassed && result.correct < result.total) {
-                          <button
-                            type="button"
-                            class="btn btn-ai-feedback-btn"
-                            (click)="askAiForQuizFeedback()"
-                            [disabled]="aiQuizLoading()"
-                          >
-                            @if (aiQuizLoading()) {
-                              <span class="quiz-spinner"></span> Analizando con Byte IA...
-                            } @else {
-                              🤖 Explicación de Byte IA
-                            }
-                          </button>
-                        }
                       </div>
                     </div>
                   </div>
 
-                  @if (aiQuizFeedback(); as fb) {
+                  @if (aiQuizLoading()) {
+                    <div class="quiz-ai-feedback-card is-loading" style="display:flex; align-items:center; gap:12px; padding:16px;">
+                      <span class="quiz-spinner"></span>
+                      <span style="font-size:0.95rem; color:var(--color-text-muted);">🤖 Byte IA está analizando tus respuestas y generando retroalimentación pedagógica en tiempo real...</span>
+                    </div>
+                  } @else if (aiQuizFeedback(); as fb) {
                     <div class="quiz-ai-feedback-card">
                       <div class="feedback-card-header">
                         <span class="feedback-icon">🤖</span>
                         <h4>Retroalimentación Pedagógica de Byte IA</h4>
                       </div>
                       <div class="feedback-card-body" [innerHTML]="renderAiReply(fb)"></div>
-                      <div class="feedback-card-footer">
-                        <button type="button" class="btn btn-sm btn-primary" (click)="resetQuizAttempt()">
-                          Reintentar Quiz con esta Explicación →
-                        </button>
-                      </div>
+                      @if (!isPassed) {
+                        <div class="feedback-card-footer">
+                          <button type="button" class="btn btn-sm btn-primary" (click)="resetQuizAttempt()">
+                            Reintentar Quiz con esta Explicación →
+                          </button>
+                        </div>
+                      }
                     </div>
                   }
                 }
@@ -365,7 +357,9 @@
                 } @else {
                   <span class="done-chip" style="display:inline-flex; align-items:center; gap:6px;">
                     @if (hasPractice()) {
-                      <app-icon name="trophy" [size]="16" /> Ejercicio Aprobado y Completado
+                      <app-icon name="trophy" [size]="16" /> Ejercicio Aprobado {{ currentLessonScore() ? '(Nota: ' + currentLessonScore() + '%)' : '' }}
+                    } @else if (l.quiz && currentLessonScore()) {
+                      <app-icon name="check" [size]="16" /> Quiz Aprobado (Nota: {{ currentLessonScore() }}%)
                     } @else {
                       <app-icon name="check" [size]="16" /> Lección completada
                     }

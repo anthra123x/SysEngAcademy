@@ -395,7 +395,9 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
       this.langDropdownOpen.set(false);
 
       const activeDef = this.recommendedLangDef();
-      const initCode = this.initialCode() || activeDef.defaultTemplate;
+      const lid = this.lessonId();
+      const savedCode = lid ? this.coursesSvc.getSavedStudentCode(lid) : null;
+      const initCode = savedCode || this.initialCode() || activeDef.defaultTemplate;
       this.code.set(initCode);
       this.isModified.set(false);
 
@@ -493,6 +495,10 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
           const docStr = update.state.doc.toString();
           this.code.set(docStr);
           this.isModified.set(true);
+          const lid = this.lessonId();
+          if (lid) {
+            this.coursesSvc.saveStudentCode(lid, docStr);
+          }
         }
       }),
     ];
@@ -592,6 +598,10 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
     this.code.set(resetTo);
     this.isModified.set(false);
     this.syncEditorDocument(resetTo);
+    const lid = this.lessonId();
+    if (lid) {
+      this.coursesSvc.saveStudentCode(lid, resetTo);
+    }
     this.showToast('Buffer restablecido al código inicial');
   }
 
@@ -743,6 +753,10 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
     }
     this.challengeStatus.set('passed_tests');
     this.recordChallengeCompleted();
+    const lid = this.lessonId();
+    if (lid) {
+      this.coursesSvc.saveStudentCode(lid, this.code());
+    }
     const successMsg = method === 'ai'
       ? `¡Aprobado con ${score}% por Byte IA! Reto superado.`
       : '¡Pruebas superadas con éxito! Ejercicio aprobado por el Sistema.';

@@ -267,6 +267,7 @@ class AiChatController extends Controller
                 [
                     'score'        => max($evaluation['score'], (int) ($existing?->score ?? 0)),
                     'completed_at' => $existing?->completed_at ?? now(),
+                    'last_code'    => $request->input('code'),
                 ]
             );
 
@@ -277,7 +278,10 @@ class AiChatController extends Controller
             if (!$existing || $evaluation['score'] > ($existing->score ?? 0)) {
                 LessonProgress::updateOrCreate(
                     ['user_id' => $user->id, 'lesson_id' => $lesson->id],
-                    ['score' => $evaluation['score']]
+                    [
+                        'score'     => $evaluation['score'],
+                        'last_code' => $request->input('code'),
+                    ]
                 );
             }
             $completed = (bool) ($existing && ($existing->score ?? 0) >= 90 && $existing->completed_at);

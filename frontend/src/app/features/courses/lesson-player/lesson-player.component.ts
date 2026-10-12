@@ -483,6 +483,18 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     return Array.isArray(l?.test_cases) && l.test_cases.length > 0;
   });
 
+  readonly currentLessonScore = computed<number | null>(() => {
+    const qScore = this.quizResult()?.score;
+    if (typeof qScore === 'number') return qScore;
+    const lScore = this.lesson()?.user_score;
+    if (typeof lScore === 'number') return lScore;
+    const savedQuiz = this.lesson()?.slug ? this.coursesSvc.getSavedQuizAttempt(this.lesson()!.slug) : null;
+    if (typeof savedQuiz?.score === 'number') return savedQuiz.score;
+    const savedScore = this.lesson()?.slug ? this.coursesSvc.getLessonScore(this.lesson()!.slug) : null;
+    if (typeof savedScore === 'number') return savedScore;
+    return this.completed() ? 100 : null;
+  });
+
   onChallengeSolved(event: { passed: boolean; method: 'tests' | 'ai'; score?: number; message?: string }): void {
     if (!event.passed) return;
     const lesson = this.lesson();
@@ -492,6 +504,8 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     this.completed.set(true);
     this.markLessonCompletedInCourse(lesson.id);
     this.coursesSvc.saveCompletedLesson(lesson.id, lesson.slug);
+    this.coursesSvc.saveStudentCode(lesson.id, this.code());
+    this.coursesSvc.saveLessonScore(lesson.slug, score);
     this.coursesSvc.syncEnrollmentProgress(this.courseSlug(), lesson.id);
     this.markComplete(score);
   }
@@ -691,8 +705,53 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
         this.lesson.set(detail);
         this.completed.set(!!detail.completed);
         this.loading.set(false);
+
+        // Restaurar código persistido del estudiante o starter code
+        const savedCode = detail.last_code || this.coursesSvc.getSavedStudentCode(detail.id);
         const firstCode = this.contentBlocks().find(b => b.type === 'code')?.text ?? '';
-        this.code.set(detail.starter_code || firstCode);
+        this.code.set(savedCode || detail.starter_code || firstCode);
+
+        // Restaurar estado de quiz si ya fue intentado o aprobado
+        if (detail.quiz && detail.quiz.questions.length > 0) {
+          const savedQuiz = this.coursesSvc.getSavedQuizAttempt(lessonSlug);
+          const savedAnswers = detail.last_quiz_answers || savedQuiz?.answers;
+          const score = typeof detail.user_score === 'number'
+            ? detail.user_score
+            : (typeof savedQuiz?.score === 'number' ? savedQuiz.score : (detail.completed ? 100 : null));
+
+          if (savedAnswers && Object.keys(savedAnswers).length > 0) {
+            this.quizAnswers.set(savedAnswers);
+          }
+
+          if (score !== null && (savedAnswers || detail.completed)) {
+            const totalQ = detail.quiz.questions.length;
+            const approxCorrect = Math.round((score / 100) * totalQ);
+            const results: QuizAttemptQuestionResult[] = savedQuiz?.results || detail.quiz.questions.map(q => {
+              const sel = (savedAnswers && savedAnswers[q.id]) || [];
+              return {
+                question_id: q.id,
+                correct: score >= 90,
+                correct_answer_ids: [],
+                selected_ids: sel,
+                explanation: score >= 90 ? 'Respuesta guardada con éxito.' : 'Respuesta anterior.',
+              };
+            });
+
+            this.quizResult.set({
+              score,
+              correct: savedQuiz?.results ? savedQuiz.results.filter(r => r.correct).length : approxCorrect,
+              total: totalQ,
+              passed: score >= 90,
+              required_score: 90,
+              completed: !!detail.completed || score >= 90,
+              results,
+            });
+
+            // Disparar automáticamente la retroalimentación de Byte IA para que esté disponible sin pulsar botones
+            this.askAiForQuizFeedback();
+          }
+        }
+
         if (!this.course() && detail.module?.course?.slug) {
           this.loadCourse(detail.module.course.slug);
         }
@@ -743,7 +802,7 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     const lesson = this.lesson();
     if (!lesson || this.completing()) return;
     this.completing.set(true);
-    this.coursesSvc.completeLesson(lesson.id, score, lesson.slug, this.courseSlug()).subscribe({
+    this.coursesSvc.completeLesson(lesson.id, score, lesson.slug, this.courseSlug(), this.code()).subscribe({
       next: (res: { progress_percent?: number }) => {
         this.completed.set(true);
         this.completing.set(false);
@@ -874,6 +933,9 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
         } else {
           this.completed.set(false);
         }
+
+        // Retroalimentación automática de Byte IA sin requerir presionar ningún botón
+        this.askAiForQuizFeedback();
       },
       error: (err: HttpErrorResponse) => {
         this.quizSubmitting.set(false);
@@ -914,7 +976,10 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
         };
       });
 
-    if (wrong.length === 0) return;
+    if (wrong.length === 0) {
+      this.aiQuizFeedback.set('🌟 **¡Felicidades!** Has respondido correctamente todas las preguntas del quiz (100%). Demuestras una comprensión sólida y completa de los conceptos pedagógicos evaluados.');
+      return;
+    }
 
     this.aiQuizLoading.set(true);
     this.coursesSvc.getQuizAiFeedback(l.id, wrong).subscribe({

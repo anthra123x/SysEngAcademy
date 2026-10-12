@@ -10,6 +10,7 @@ import {
   Enrollment,
   LessonDetail,
   QuizAttemptResult,
+  QuizAttemptQuestionResult,
   CourseReview,
   CourseReviewsResponse,
   CourseRatingStats,
@@ -222,6 +223,77 @@ export class CoursesService {
     }
   }
 
+  saveQuizAttempt(lessonSlug: string, answers: Record<string, number[]>, score: number, results?: QuizAttemptQuestionResult[]): void {
+    if (typeof window === 'undefined' || !lessonSlug) return;
+    const email = this.getUserEmail();
+    const key = `syseng_${email}_quiz_${lessonSlug}`;
+    try {
+      localStorage.setItem(key, JSON.stringify({ answers, score, results, updatedAt: new Date().toISOString() }));
+    } catch (e) {
+      console.warn('Error saving quiz attempt to localStorage', e);
+    }
+  }
+
+  getSavedQuizAttempt(lessonSlug: string): { answers: Record<string, number[]>; score: number; results?: QuizAttemptQuestionResult[] } | null {
+    if (typeof window === 'undefined' || !lessonSlug) return null;
+    const email = this.getUserEmail();
+    const key = `syseng_${email}_quiz_${lessonSlug}`;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.warn('Error getting quiz attempt from localStorage', e);
+    }
+    return null;
+  }
+
+  saveStudentCode(lessonId: number | string, code: string): void {
+    if (typeof window === 'undefined' || !lessonId || !code) return;
+    const email = this.getUserEmail();
+    const key = `syseng_${email}_code_${lessonId}`;
+    try {
+      localStorage.setItem(key, code);
+    } catch (e) {
+      console.warn('Error saving code to localStorage', e);
+    }
+  }
+
+  getSavedStudentCode(lessonId: number | string): string | null {
+    if (typeof window === 'undefined' || !lessonId) return null;
+    const email = this.getUserEmail();
+    const key = `syseng_${email}_code_${lessonId}`;
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      console.warn('Error getting code from localStorage', e);
+    }
+    return null;
+  }
+
+  saveLessonScore(lessonSlug: string, score: number): void {
+    if (typeof window === 'undefined' || !lessonSlug) return;
+    const email = this.getUserEmail();
+    const key = `syseng_${email}_score_${lessonSlug}`;
+    try {
+      localStorage.setItem(key, String(score));
+    } catch (e) {
+      console.warn('Error saving lesson score to localStorage', e);
+    }
+  }
+
+  getLessonScore(lessonSlug: string): number | null {
+    if (typeof window === 'undefined' || !lessonSlug) return null;
+    const email = this.getUserEmail();
+    const key = `syseng_${email}_score_${lessonSlug}`;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw !== null) return Number(raw);
+    } catch (e) {
+      console.warn('Error getting lesson score from localStorage', e);
+    }
+    return null;
+  }
+
   syncGuestLessonsToServer(): Observable<{ synced: number } | null> {
     if (typeof window === 'undefined') return of(null);
     const email = this.getUserEmail();
@@ -312,10 +384,30 @@ export class CoursesService {
     }
     const isComp = !!lesson.completed || this.isLessonCompleted(numId, lesson.slug);
 
+    if (typeof lesson.user_score === 'number' && lesson.slug) {
+      this.saveLessonScore(lesson.slug, lesson.user_score);
+    }
+    if (lesson.last_code) {
+      this.saveStudentCode(numId, lesson.last_code);
+    }
+    if (lesson.last_quiz_answers && lesson.slug) {
+      const savedScore = typeof lesson.user_score === 'number' ? lesson.user_score : 100;
+      this.saveQuizAttempt(lesson.slug, lesson.last_quiz_answers, savedScore);
+    }
+
+    const resolvedScore = typeof lesson.user_score === 'number'
+      ? lesson.user_score
+      : this.getLessonScore(lesson.slug);
+
+    const savedQuiz = this.getSavedQuizAttempt(lesson.slug);
+
     return {
       ...lesson,
       id: numId,
       completed: isComp,
+      user_score: resolvedScore,
+      last_code: lesson.last_code || this.getSavedStudentCode(numId),
+      last_quiz_answers: lesson.last_quiz_answers || savedQuiz?.answers || null,
     };
   }
 
@@ -361,8 +453,14 @@ export class CoursesService {
     }
   }
 
-  completeLesson(lessonId: number, score?: number, lessonSlug?: string, courseSlug?: string): Observable<{ progress_percent: number }> {
+  completeLesson(lessonId: number, score?: number, lessonSlug?: string, courseSlug?: string, code?: string): Observable<{ progress_percent: number }> {
     this.saveCompletedLesson(lessonId, lessonSlug);
+    if (code) {
+      this.saveStudentCode(lessonId, code);
+    }
+    if (typeof score === 'number' && lessonSlug) {
+      this.saveLessonScore(lessonSlug, score);
+    }
     this.syncEnrollmentProgress(courseSlug, lessonId);
     if (typeof window !== 'undefined') {
       try {
@@ -373,6 +471,7 @@ export class CoursesService {
     const email = this.getUserEmail();
     return this.api.post<{ progress_percent: number }>(`/lessons/${lessonId}/complete`, {
       score,
+      code,
       student_email: email !== 'guest' ? email : undefined,
     }).pipe(
       tap(() => {
@@ -395,6 +494,8 @@ export class CoursesService {
       student_email: email !== 'guest' ? email : undefined,
     }).pipe(
       tap(res => {
+        this.saveQuizAttempt(lessonSlug, answers, res.score, res.results);
+        this.saveLessonScore(lessonSlug, res.score);
         if (res.passed && typeof window !== 'undefined') {
           try {
             localStorage.removeItem(COURSES_CACHE_KEY);
@@ -413,6 +514,7 @@ export class CoursesService {
     language?: string
   ): Observable<AiChallengeEvaluation> {
     const email = this.getUserEmail();
+    this.saveStudentCode(lessonId, code);
     return this.api.post<AiChallengeEvaluation>('/ai/evaluate-challenge', {
       lesson_id: lessonId,
       code,
@@ -420,6 +522,7 @@ export class CoursesService {
       student_email: email !== 'guest' ? email : undefined,
     }).pipe(
       tap(res => {
+        this.saveStudentCode(lessonId, code);
         if (res.passed) {
           this.saveCompletedLesson(lessonId);
           if (typeof window !== 'undefined') {
