@@ -471,6 +471,7 @@ class AuthService
             'sent'      => $sentResult['success'] ?? false,
             'provider'  => $sentResult['provider'] ?? 'unknown',
             'resend_id' => $sentResult['id'] ?? null,
+            'error'     => $sentResult['error'] ?? null,
             'email'     => $cleanEmail,
             'message'   => "Mensaje de confirmación enviado exitosamente a {$cleanEmail}. Revisa tu bandeja de entrada o spam.",
         ];

@@ -25,13 +25,21 @@ class TransactionalMailService
             ?: env('MAIL_PASSWORD')
             ?: base64_decode('cmVfWlF2cmRTZ3hfS0s0TVJkSEtzTXJRdnNHY1J2dE5rQ1lw');
 
-        $fromAddress = config('mail.from.address')
-            ?: env('MAIL_FROM_ADDRESS')
-            ?: 'noreply@sysengacademy.site';
+        $rawFrom = config('mail.from.address') ?: env('MAIL_FROM_ADDRESS');
+        if (empty($rawFrom) || str_contains($rawFrom, 'example.com') || str_contains($rawFrom, 'localhost')) {
+            $fromAddress = 'noreply@sysengacademy.site';
+        } else {
+            $fromAddress = trim($rawFrom);
+        }
 
-        $fromName = config('mail.from.name')
-            ?: env('MAIL_FROM_NAME')
-            ?: 'SysEng Academy';
+        $rawName = config('mail.from.name') ?: env('MAIL_FROM_NAME');
+        if (empty($rawName) || strtolower(trim($rawName)) === 'laravel') {
+            $fromName = 'SysEng Academy';
+        } else {
+            $fromName = trim($rawName);
+        }
+
+        $lastError = null;
 
         // 1. Prioridad: Resend REST API (puerto 443 HTTPS, alta entregabilidad, no sufre bloqueos de puertos SMTP en nubes como Render)
         if (!empty($apiKey)) {
@@ -39,7 +47,7 @@ class TransactionalMailService
                 $html = view($view, $viewData)->render();
 
                 $response = Http::withToken($apiKey)
-                    ->timeout(10)
+                    ->timeout(12)
                     ->post('https://api.resend.com/emails', [
                         'from'    => "{$fromName} <{$fromAddress}>",
                         'to'      => [$toEmail],
@@ -57,10 +65,23 @@ class TransactionalMailService
                     ];
                 }
 
-                logger()->error("TransactionalMailService: Resend API devolvió código {$response->status()}: " . $response->body());
+                $lastError = "Resend API ({$response->status()}): " . $response->body();
+                logger()->error("TransactionalMailService: {$lastError}");
             } catch (Throwable $e) {
-                logger()->error("TransactionalMailService: Excepción conectando a Resend API: " . $e->getMessage());
+                $lastError = "Resend Exception: " . $e->getMessage();
+                logger()->error("TransactionalMailService: {$lastError}");
             }
+        }
+
+        // Si falló Resend y el mailer por defecto es 'log', reportar fallo real para no simular entrega
+        $defaultMailer = config('mail.default', 'log');
+        if ($defaultMailer === 'log' && !empty($lastError)) {
+            return [
+                'success'  => false,
+                'provider' => 'resend_failed',
+                'id'       => null,
+                'error'    => $lastError,
+            ];
         }
 
         // 2. Fallback estándar al mailer configurado en Laravel (SMTP o Log)
