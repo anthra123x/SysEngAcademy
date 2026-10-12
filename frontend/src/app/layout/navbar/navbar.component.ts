@@ -97,15 +97,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   });
 
   readonly isTeacherDocenteZone = computed(() => {
-    return this.isTeacher() && (this.isDocenteRoute() || this.isProfileRoute());
-  });
-
-  readonly currentTeacherTab = computed(() => {
-    const url = this.currentUrl();
-    if (url.includes('tab=activities')) return 'activities';
-    if (url.includes('tab=activity')) return 'activity';
-    if (url.includes('tab=ai')) return 'ai';
-    return 'students';
+    return this.isTeacher() && this.isDocenteRoute();
   });
 
   readonly roleLabel = computed(() => {

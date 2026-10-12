@@ -31,18 +31,60 @@ class StudentManagementService
             ];
         });
 
-        $enrolledCourses = $student->enrollments->map(function ($e) {
+        $enrolledCourses = $student->enrollments->map(function ($e) use ($student) {
+            $totalLessons = $e->course?->modules?->flatMap->lessons?->count() ?? 0;
+            $completedInCourse = $student->lessonProgress->filter(function ($lp) use ($e) {
+                return $lp->lesson?->module?->course_id === $e->course_id;
+            })->count();
+
             return [
-                'id'               => $e->id,
-                'course_id'        => $e->course_id,
-                'title'            => $e->course?->title ?? 'Curso',
-                'progress_percent' => (int) ($e->progress_percent ?? 0),
-                'enrolled_at'      => $e->enrolled_at ? $e->enrolled_at->toIso8601String() : null,
-                'completed_at'     => $e->completed_at ? $e->completed_at->toIso8601String() : null,
+                'id'                => $e->id,
+                'course_id'         => $e->course_id,
+                'title'             => $e->course?->title ?? 'Curso',
+                'difficulty'        => $e->course?->difficulty ?? 'Principiante',
+                'total_lessons'     => $totalLessons,
+                'completed_lessons' => $completedInCourse,
+                'progress_percent'  => (int) ($e->progress_percent ?? 0),
+                'enrolled_at'       => $e->enrolled_at ? $e->enrolled_at->toIso8601String() : null,
+                'completed_at'      => $e->completed_at ? $e->completed_at->toIso8601String() : null,
             ];
         });
 
         $scores = $student->lessonProgress->pluck('score')->filter()->values();
+        $challengesCount = $completedProgress->where('lesson_type', 'code_challenge')->count();
+        $theoryCount = $completedProgress->whereIn('lesson_type', ['article', 'video'])->count();
+        $passedCount = $completedProgress->where('passed', true)->count();
+        $passRate = $completedProgress->count() > 0 ? (int) round(($passedCount / $completedProgress->count()) * 100) : 100;
+
+        $lastProgress = $student->lessonProgress->sortByDesc('completed_at')->first();
+        $lastActiveAt = $lastProgress?->completed_at
+            ? $lastProgress->completed_at->toIso8601String()
+            : ($student->created_at ? $student->created_at->toIso8601String() : null);
+
+        $avgScore = $scores->count() > 0 ? round($scores->avg(), 1) : null;
+        $status = 'optimal';
+        $riskLevel = 'Bajo Riesgo';
+        if (empty($student->email_verified_at)) {
+            $status = 'critical';
+            $riskLevel = 'Alto Riesgo';
+            $diagnostic = 'Cuenta institucional pendiente de activación de correo. Se recomienda instar al estudiante a verificar su cuenta.';
+        } elseif ($avgScore !== null && $avgScore < 60) {
+            $status = 'critical';
+            $riskLevel = 'Alto Riesgo';
+            $diagnostic = 'Rendimiento crítico en evaluaciones (promedio inferior al 60%). Requiere tutoría pedagógica y refuerzo urgente.';
+        } elseif ($completedProgress->count() === 0) {
+            $status = 'warning';
+            $riskLevel = 'Riesgo Moderado';
+            $diagnostic = 'Estudiante matriculado sin entregas completadas aún. Recomendado asignar reto inicial guiado.';
+        } elseif ($avgScore !== null && $avgScore < 80) {
+            $status = 'warning';
+            $riskLevel = 'Riesgo Moderado';
+            $diagnostic = 'Progreso constante aunque con margen de mejora en quizzes evaluativos (promedio ' . $avgScore . '%).';
+        } else {
+            $status = 'optimal';
+            $riskLevel = 'Bajo Riesgo';
+            $diagnostic = 'Excelente rendimiento académico. Comprende con solidez los conceptos prácticos y teóricos del plan curricular.';
+        }
 
         return [
             'student' => [
@@ -55,10 +97,17 @@ class StudentManagementService
                 'created_at'        => $student->created_at ? $student->created_at->toIso8601String() : null,
             ],
             'academic_summary' => [
-                'total_enrolled'  => $enrolledCourses->count(),
-                'total_completed' => $completedProgress->count(),
-                'quizzes_taken'   => $scores->count(),
-                'average_score'   => $scores->count() > 0 ? round($scores->avg(), 1) : null,
+                'total_enrolled'            => $enrolledCourses->count(),
+                'total_completed'           => $completedProgress->count(),
+                'quizzes_taken'             => $scores->count(),
+                'average_score'             => $avgScore,
+                'challenges_count'          => $challengesCount,
+                'theory_count'              => $theoryCount,
+                'pass_rate'                 => $passRate,
+                'last_active_at'            => $lastActiveAt,
+                'status'                    => $status,
+                'retention_risk_level'      => $riskLevel,
+                'ai_pedagogical_diagnostic' => $diagnostic,
             ],
             'courses'           => $enrolledCourses,
             'completed_lessons' => $completedProgress,

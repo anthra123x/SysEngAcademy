@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
   TeacherOverviewResponse,
@@ -27,6 +27,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
 export class TeacherDashboardComponent implements OnInit, OnDestroy {
   private readonly teacherSvc = inject(TeacherService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly auth = inject(AuthService);
 
   private routeSub?: Subscription;
@@ -140,6 +141,12 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
 
   setTab(tab: 'students' | 'activities' | 'activity' | 'ai') {
     this.activeTab.set(tab);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   loadAllData() {
@@ -196,14 +203,19 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
   });
 
   readonly totalStudentsCount = computed(() => {
-    return this.students().length;
+    if (this.students().length > 0) return this.students().length;
+    return this.overview()?.stats?.total_students ?? 0;
   });
 
   readonly totalLessonsCompleted = computed(() => {
-    return this.students().reduce((acc, s) => acc + (s.completed_lessons_count || 0), 0);
+    const sum = this.students().reduce((acc, s) => acc + (s.completed_lessons_count || 0), 0);
+    return sum > 0 ? sum : (this.overview()?.stats?.total_completions ?? 0);
   });
 
   readonly averageQuizScore = computed(() => {
+    if (this.overview()?.stats?.average_score !== undefined && this.overview()?.stats?.average_score !== null && this.overview()!.stats.average_score > 0) {
+      return this.overview()!.stats.average_score;
+    }
     const scored = this.students().filter(s => s.average_quiz_score !== null && s.average_quiz_score > 0);
     if (scored.length > 0) {
       const avg = scored.reduce((acc, s) => acc + (s.average_quiz_score || 0), 0) / scored.length;

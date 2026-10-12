@@ -15,44 +15,19 @@
 
         <!-- Desktop Navigation (Centered) -->
         <nav class="navbar__nav" aria-label="Navegación principal">
-          @if (isTeacherDocenteZone()) {
-            <!-- Navegación exclusiva para el Docente en su panel y perfil -->
-            @if (isDocenteRoute()) {
-              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'students' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'students'">
-                <span class="nav-pill__text">Alumnos</span>
-              </a>
-              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activities' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'activities'">
-                <span class="nav-pill__text">Actividades &amp; Quizzes</span>
-              </a>
-              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'activity' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'activity'">
-                <span class="nav-pill__text">Rendimiento</span>
-              </a>
-              <a [routerLink]="['/docente']" [queryParams]="{ tab: 'ai' }" class="nav-pill nav-pill--doc-neutral" [class.active]="currentTeacherTab() === 'ai'">
-                <span class="nav-pill__text">Byte Asistente IA</span>
-              </a>
-            } @else {
-              <a routerLink="/docente" class="nav-pill nav-pill--doc-neutral">
-                <span class="nav-pill__text">Panel Docente</span>
-              </a>
-              <a routerLink="/perfil" class="nav-pill nav-pill--doc-neutral active">
-                <span class="nav-pill__text">Mi Perfil</span>
-              </a>
-            }
-          } @else {
-            <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-pill">
-              <span class="nav-pill__text">Inicio</span>
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-pill">
+            <span class="nav-pill__text">Inicio</span>
+          </a>
+          <a routerLink="/rutas" routerLinkActive="active" class="nav-pill">
+            <span class="nav-pill__text">Rutas</span>
+          </a>
+          <a routerLink="/cursos" routerLinkActive="active" class="nav-pill">
+            <span class="nav-pill__text">Cursos</span>
+          </a>
+          @if (isTeacher()) {
+            <a routerLink="/docente" routerLinkActive="active" class="nav-pill nav-pill--teacher-badge">
+              <span class="nav-pill__text">Panel Docente</span>
             </a>
-            <a routerLink="/rutas" routerLinkActive="active" class="nav-pill">
-              <span class="nav-pill__text">Rutas</span>
-            </a>
-            <a routerLink="/cursos" routerLinkActive="active" class="nav-pill">
-              <span class="nav-pill__text">Cursos</span>
-            </a>
-            @if (isTeacher()) {
-              <a routerLink="/docente" routerLinkActive="active" class="nav-pill nav-pill--teacher-badge">
-                <span class="nav-pill__text">Panel Docente</span>
-              </a>
-            }
           }
         </nav>
 

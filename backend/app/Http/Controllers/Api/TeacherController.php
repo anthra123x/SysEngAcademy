@@ -41,6 +41,9 @@ class TeacherController extends Controller
     public function overview(Request $request): JsonResponse
     {
         $this->authorizeTeacher($request);
+        if ($request->boolean('refresh') || $request->has('_t')) {
+            $this->analyticsService->invalidateCache();
+        }
         $data = $this->analyticsService->getOverview();
 
         return response()->json($data);

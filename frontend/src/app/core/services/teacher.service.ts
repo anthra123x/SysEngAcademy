@@ -414,39 +414,31 @@ export class TeacherService {
     return result;
   }
 
-  getOverview(): Observable<TeacherOverviewResponse> {
-    const students = this.getLocalStudents();
-    const totalStudents = students.length;
-    const totalCompletions = students.reduce((sum, s) => sum + (s.completed_lessons_count || 0), 0);
-    const totalEnrollments = students.reduce((sum, s) => sum + (s.enrollments_count || 0), 0);
-    const scoredStudents = students.filter(s => s.average_quiz_score !== null && s.average_quiz_score > 0);
-    const avgScore = scoredStudents.length
-      ? Math.round((scoredStudents.reduce((sum, s) => sum + (s.average_quiz_score || 0), 0) / scoredStudents.length) * 10) / 10
-      : (students[0]?.average_quiz_score ?? 0);
+  private getCachedOverview(): TeacherOverviewResponse | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const stored = localStorage.getItem('syseng_teacher_overview_cache');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch {}
+    return null;
+  }
 
-    const initialOverview: TeacherOverviewResponse = {
-      stats: {
-        total_students: totalStudents,
-        total_courses: 43,
-        total_completions: totalCompletions,
-        total_enrollments: totalEnrollments,
-        average_score: avgScore,
-      },
-      recent_activity: [],
-      popular_courses: [
-        { id: 1, title: 'Introducción a la Programación', slug: 'introduccion-programacion', difficulty: 'beginner', enrollments_count: totalEnrollments },
-        { id: 2, title: 'Algoritmos de Ordenamiento', slug: 'algoritmos-ordenamiento', difficulty: 'intermediate', enrollments_count: 0 },
-        { id: 10, title: 'Angular Moderno', slug: 'angular-moderno', difficulty: 'intermediate', enrollments_count: 0 },
-      ],
-    };
+  getOverview(): Observable<TeacherOverviewResponse> {
+    const cached = this.getCachedOverview();
 
     return new Observable<TeacherOverviewResponse>(subscriber => {
-      // Emisión instantánea (0ms)
-      subscriber.next(initialOverview);
+      if (cached && cached.stats) {
+        subscriber.next(cached);
+      }
 
-      this.api.get<TeacherOverviewResponse>('/teacher/overview', { _t: Date.now().toString() }, 25000).subscribe({
+      this.api.get<TeacherOverviewResponse>('/teacher/overview', { _t: Date.now().toString(), refresh: '1' }, 25000).subscribe({
         next: fresh => {
           if (fresh && fresh.stats) {
+            try {
+              localStorage.setItem('syseng_teacher_overview_cache', JSON.stringify(fresh));
+            } catch {}
             subscriber.next(fresh);
           }
           subscriber.complete();
@@ -470,8 +462,9 @@ export class TeacherService {
     }
 
     return new Observable<TeacherStudent[]>(subscriber => {
-      // Emisión instantánea (0ms)
-      subscriber.next(local);
+      if (local && local.length > 0) {
+        subscriber.next(local);
+      }
 
       this.api.get<TeacherStudent[]>('/teacher/students', params, 25000).subscribe({
         next: fresh => {

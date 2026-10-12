@@ -33,6 +33,17 @@ class StudentRosterService
             ->map(function ($u) {
                 $scores = $u->lessonProgress->pluck('score')->filter()->values();
                 $avgScore = $scores->count() > 0 ? round($scores->avg(), 1) : null;
+                $lastProgress = $u->lessonProgress->sortByDesc('completed_at')->first();
+                $lastActive = $lastProgress?->completed_at
+                    ? $lastProgress->completed_at->toIso8601String()
+                    : ($u->updated_at ? $u->updated_at->toIso8601String() : null);
+
+                $status = 'optimal';
+                if (empty($u->email_verified_at) || ($avgScore !== null && $avgScore < 60)) {
+                    $status = 'critical';
+                } elseif ($u->lesson_progress_count === 0 || ($avgScore !== null && $avgScore < 80)) {
+                    $status = 'warning';
+                }
 
                 return [
                     'id'                      => $u->id,
@@ -42,6 +53,8 @@ class StudentRosterService
                     'email_verified'          => !empty($u->email_verified_at),
                     'email_verified_at'       => $u->email_verified_at ? $u->email_verified_at->toIso8601String() : null,
                     'created_at'              => $u->created_at ? $u->created_at->toIso8601String() : null,
+                    'last_active_at'          => $lastActive,
+                    'status'                  => $status,
                     'enrollments_count'       => $u->enrollments_count,
                     'completed_lessons_count' => $u->lesson_progress_count,
                     'quizzes_taken_count'     => $scores->count(),

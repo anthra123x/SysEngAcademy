@@ -29,14 +29,9 @@
                 {{ sendingStreak() ? 'Enviando…' : 'Alertas de Racha' }}
               </span>
             </button>
-            <button type="button" class="btn btn-outline" (click)="openCreateModal('challenge')">
-              <span style="display:inline-flex; align-items:center; gap:6px;">
-                <app-icon name="plus" [size]="14" /> Nuevo Reto
-              </span>
-            </button>
             <button type="button" class="btn btn-primary" (click)="openCreateModal('quiz')">
               <span style="display:inline-flex; align-items:center; gap:6px;">
-                <app-icon name="file-text" [size]="14" /> Crear Quiz
+                <app-icon name="plus" [size]="14" /> Nueva Actividad
               </span>
             </button>
           </div>
@@ -313,6 +308,21 @@
                 <p class="panel-subtext">Diseña retos prácticos de código y evaluaciones teóricas de opción múltiple.</p>
               </div>
 
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn btn-outline btn-sm" (click)="openCreateModal('challenge')">
+                  <span style="display:inline-flex; align-items:center; gap:6px;">
+                    <app-icon name="plus" [size]="13" /> Nuevo Reto
+                  </span>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" (click)="openCreateModal('quiz')">
+                  <span style="display:inline-flex; align-items:center; gap:6px;">
+                    <app-icon name="file-text" [size]="13" /> Crear Quiz
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div class="panel-toolbar">
               <div class="filter-pills">
                 <button
                   type="button"
@@ -622,6 +632,25 @@
             </div>
 
             <div class="modal-body">
+              <div class="filter-pills" style="margin-bottom: 1.25rem;">
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="modalType() === 'quiz'"
+                  (click)="modalType.set('quiz')"
+                >
+                  <app-icon name="file-text" [size]="13" /> Quiz Evaluativo
+                </button>
+                <button
+                  type="button"
+                  class="filter-tab"
+                  [class.is-active]="modalType() === 'challenge'"
+                  (click)="modalType.set('challenge')"
+                >
+                  <app-icon name="code" [size]="13" /> Reto de Código
+                </button>
+              </div>
+
               <div class="field-group">
                 <label class="field-label">Título de la Actividad *</label>
                 <input
