@@ -8,6 +8,8 @@ use Tests\TestCase;
 
 class AuthWorkflowTest extends TestCase
 {
+    use \Illuminate\Foundation\Testing\DatabaseTransactions;
+
     public function test_user_can_register_successfully(): void
     {
         $email = 'estudiante_' . uniqid() . '@sysengacademy.dev';
@@ -167,11 +169,14 @@ class AuthWorkflowTest extends TestCase
     public function test_user_can_request_and_confirm_email_delivery_check(): void
     {
         $testEmail = 'test_deliverability_' . uniqid() . '@example.com';
+        $user = User::factory()->create();
+        $token = \App\Services\AuthTokenService::issue($user);
+        $headers = ['Authorization' => 'Bearer ' . $token];
 
         // 1. Solicitar prueba de entrega de correo
         $response = $this->postJson('/api/auth/test-email', [
             'email' => $testEmail,
-        ]);
+        ], $headers);
 
         $response->assertOk()
             ->assertJsonPath('success', true)
@@ -187,14 +192,14 @@ class AuthWorkflowTest extends TestCase
         $failConfirm = $this->postJson('/api/auth/confirm-test-email', [
             'email' => $testEmail,
             'code'  => '000000',
-        ]);
+        ], $headers);
         $failConfirm->assertStatus(422);
 
         // 3. Confirmar con el código generado
         $confirmResponse = $this->postJson('/api/auth/confirm-test-email', [
             'email' => $testEmail,
             'code'  => $checkCode,
-        ]);
+        ], $headers);
 
         $confirmResponse->assertOk()
             ->assertJsonPath('success', true)

@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "cd frontend && (bun install || npm install) && (bun run build || npm run build) && mkdir -p ../browser && cp -r dist/frontend/browser/* ../browser/ 2>/dev/null || true",
+  "buildCommand": "cd frontend && npm install && npm run build && mkdir -p ../browser && cp -r dist/frontend/browser/* ../browser/ 2>/dev/null || true",
   "outputDirectory": "frontend/dist/frontend/browser",
   "routes": [
     {
