@@ -18,6 +18,20 @@ class ApiSmokeTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        User::updateOrCreate(
+            ['email' => 'estudiante@sysengacademy.dev'],
+            [
+                'name' => 'Estudiante Demo',
+                'password' => bcrypt('estudiante1234'),
+                'role' => 'student',
+                'email_verified_at' => now(),
+            ]
+        );
+    }
+
     public function test_endpoints_publicos_responden(): void
     {
         $this->getJson('/api/categories')->assertOk();
