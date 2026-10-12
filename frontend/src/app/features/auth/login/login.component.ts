@@ -107,14 +107,14 @@ import { AuthService } from '../../../core/services/auth.service';
                   {{ forgotLoading() ? 'Enviando código...' : 'Continuar' }}
                 </button>
               } @else {
-                <p class="modal-desc">Ingresa el código de 6 dígitos enviado a tu correo (o el código de respaldo de cátedra) y tu nueva contraseña.</p>
+                <p class="modal-desc">Hemos enviado un código de 6 dígitos desde <strong>noreply&#64;sysengacademy.site</strong> a tu correo electrónico. Ingrésalo a continuación junto con tu nueva contraseña.</p>
                 <div class="form-group">
                   <label>Código de recuperación (6 dígitos)</label>
                   <input
                     class="input"
                     type="text"
                     [(ngModel)]="resetCode"
-                    placeholder="Ej. 123456 o 777999"
+                    placeholder="000000"
                     maxlength="6"
                     required
                   />
@@ -605,13 +605,8 @@ export class LoginComponent {
     this.auth.forgotPassword(email).subscribe({
       next: (res: any) => {
         this.forgotLoading.set(false);
-        const code = res?.recovery_code || res?.code;
-        if (code) {
-          this.resetCode = code;
-          this.forgotSuccess.set(`Código de recuperación enviado desde noreply@sysengacademy.site y generado: ${code}. Ingresa tu nueva contraseña para completar el restablecimiento.`);
-        } else {
-          this.forgotSuccess.set(res?.message || 'Código enviado desde noreply@sysengacademy.site. Revisa tu correo o utiliza el código de cátedra (777999).');
-        }
+        this.resetCode = '';
+        this.forgotSuccess.set(res?.message || 'Código de recuperación enviado desde noreply@sysengacademy.site. Revisa tu correo o carpeta de spam.');
         this.forgotStep.set(2);
       },
       error: (err: any) => {

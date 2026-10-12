@@ -16,49 +16,103 @@ use Illuminate\Validation\ValidationException;
 class AuthService
 {
     /**
-     * Registra un nuevo usuario en la plataforma.
+     * Inicia el registro de un nuevo usuario generando y enviando un código de activación por correo.
+     * Los datos quedan en caché segura hasta que el usuario confirme el código recibido en su buzón.
      */
-    public function register(RegisterDTO $dto): array
+    public function requestRegistrationCode(RegisterDTO $dto): array
     {
-        try {
-            $user = User::create([
-                'name'                => $dto->name,
-                'email'               => $dto->email,
-                'password'            => $dto->password,
-                'role'                => $dto->role,
-                'email_verified_at'   => now(),
-                'current_streak'      => 1,
-                'max_streak'          => 1,
-                'last_activity_date'  => now()->toDateString(),
-                'today_study_seconds' => 0,
-                'total_study_seconds' => 0,
-                'xp'                  => 50,
+        $cleanEmail = strtolower(trim($dto->email));
+
+        if (User::where('email', $cleanEmail)->exists()) {
+            throw ValidationException::withMessages([
+                'email' => ['Este correo electrónico ya se encuentra registrado. ¿Deseas iniciar sesión?'],
             ]);
-        } catch (\Illuminate\Database\UniqueConstraintViolationException|\Illuminate\Database\QueryException $e) {
-            // Manejo preventivo si ocurre concurrencia o colisión en BD
-            if (str_contains($e->getMessage(), 'users_email_unique') || (string) $e->getCode() === '23505') {
-                throw ValidationException::withMessages([
-                    'email' => ['Este correo electrónico ya se encuentra registrado. ¿Deseas iniciar sesión?'],
-                ]);
-            }
-            throw $e;
         }
 
         $verifyCode = sprintf('%06d', mt_rand(100000, 999999));
-        Cache::put("email_verify_code_{$user->id}", $verifyCode, now()->addHours(24));
-        Cache::put("email_verify_code_{$user->email}", $verifyCode, now()->addHours(24));
 
+        // Guardamos los datos de registro pendientes en caché por 30 minutos
+        Cache::put("pending_registration_{$cleanEmail}", [
+            'name'     => trim($dto->name),
+            'email'    => $cleanEmail,
+            'password' => Hash::make($dto->password),
+            'role'     => $dto->role ?? 'student',
+        ], now()->addMinutes(30));
+
+        Cache::put("email_verify_code_{$cleanEmail}", $verifyCode, now()->addMinutes(30));
+
+        // Envío obligatorio mediante Resend REST API a la bandeja de entrada
         TransactionalMailService::send(
-            toEmail: $user->email,
-            subject: "¡Bienvenido a SysEng Academy! Código de activación: {$verifyCode}",
+            toEmail: $cleanEmail,
+            subject: "¡Bienvenido a SysEng Academy! Tu código de activación: {$verifyCode}",
             view: 'emails.verify-code',
             viewData: [
-                'userName'   => $user->name,
+                'userName'   => $dto->name,
                 'verifyCode' => $verifyCode,
-                'userEmail'  => $user->email,
+                'userEmail'  => $cleanEmail,
                 'verifyUrl'  => config('app.frontend_url', 'https://www.sysengacademy.site'),
             ]
         );
+
+        return [
+            'success'               => true,
+            'requires_verification' => true,
+            'email'                 => $cleanEmail,
+            'message'               => 'Hemos enviado un código de activación de 6 dígitos a tu correo electrónico. Ingrésalo a continuación para crear tu cuenta.',
+        ];
+    }
+
+    /**
+     * Confirma el código de activación e inserta el usuario en base de datos.
+     */
+    public function confirmRegistration(string $email, string $code): array
+    {
+        $cleanEmail = strtolower(trim($email));
+        $trimmedCode = trim($code);
+
+        $expectedCode = Cache::get("email_verify_code_{$cleanEmail}");
+
+        if (!$expectedCode || !hash_equals((string) $expectedCode, (string) $trimmedCode)) {
+            abort(422, 'El código de activación es inválido o ha expirado. Por favor verifica tu bandeja de entrada o solicita uno nuevo.');
+        }
+
+        $pending = Cache::get("pending_registration_{$cleanEmail}");
+
+        if ($pending) {
+            try {
+                $user = User::create([
+                    'name'                => $pending['name'],
+                    'email'               => $cleanEmail,
+                    'password'            => $pending['password'],
+                    'role'                => $pending['role'] ?? 'student',
+                    'email_verified_at'   => now(),
+                    'current_streak'      => 1,
+                    'max_streak'          => 1,
+                    'last_activity_date'  => now()->toDateString(),
+                    'today_study_seconds' => 0,
+                    'total_study_seconds' => 0,
+                    'xp'                  => 50,
+                ]);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException|\Illuminate\Database\QueryException $e) {
+                $user = User::where('email', $cleanEmail)->firstOrFail();
+                $user->email_verified_at = now();
+                $user->save();
+            }
+
+            Cache::forget("pending_registration_{$cleanEmail}");
+        } else {
+            $user = User::where('email', $cleanEmail)->first();
+            if (!$user) {
+                abort(422, 'La sesión de registro ha expirado. Por favor ingresa tus datos nuevamente.');
+            }
+            $user->email_verified_at = now();
+            $user->save();
+        }
+
+        Cache::forget("email_verify_code_{$cleanEmail}");
+        if (isset($user)) {
+            Cache::forget("email_verify_code_{$user->id}");
+        }
 
         $token = AuthTokenService::issue($user);
 
@@ -66,9 +120,55 @@ class AuthService
             'user'                  => $user,
             'token'                 => $token,
             'verification_required' => false,
-            'verification_code'     => $verifyCode,
-            'message'               => 'Cuenta creada exitosamente. Hemos enviado un correo de confirmación a tu bandeja de entrada.',
+            'message'               => '¡Cuenta verificada y creada exitosamente! Bienvenido a SysEng Academy.',
         ];
+    }
+
+    /**
+     * Reenvía un nuevo código de activación para un registro pendiente o usuario existente.
+     */
+    public function resendRegistrationCode(string $email): array
+    {
+        $cleanEmail = strtolower(trim($email));
+        $pending = Cache::get("pending_registration_{$cleanEmail}");
+        $user = User::where('email', $cleanEmail)->first();
+
+        if (!$pending && !$user) {
+            abort(404, 'No se encontró ninguna solicitud de registro pendiente para este correo electrónico.');
+        }
+
+        $userName = $pending['name'] ?? ($user ? $user->name : 'Estudiante');
+        $verifyCode = sprintf('%06d', mt_rand(100000, 999999));
+
+        Cache::put("email_verify_code_{$cleanEmail}", $verifyCode, now()->addMinutes(30));
+        if ($user) {
+            Cache::put("email_verify_code_{$user->id}", $verifyCode, now()->addMinutes(30));
+        }
+
+        TransactionalMailService::send(
+            toEmail: $cleanEmail,
+            subject: "Nuevo Código de Activación: {$verifyCode} - SysEng Academy",
+            view: 'emails.verify-code',
+            viewData: [
+                'userName'   => $userName,
+                'verifyCode' => $verifyCode,
+                'userEmail'  => $cleanEmail,
+                'verifyUrl'  => config('app.frontend_url', 'https://www.sysengacademy.site'),
+            ]
+        );
+
+        return [
+            'success' => true,
+            'message' => 'Hemos reenviado un nuevo código de activación a tu correo electrónico. Por favor revisa tu bandeja de entrada o spam.',
+        ];
+    }
+
+    /**
+     * Registra un nuevo usuario en la plataforma (punto de entrada general).
+     */
+    public function register(RegisterDTO $dto): array
+    {
+        return $this->requestRegistrationCode($dto);
     }
 
     /**
@@ -76,7 +176,8 @@ class AuthService
      */
     public function login(LoginDTO $dto): array
     {
-        $user = User::where('email', $dto->email)->first();
+        $cleanEmail = strtolower(trim($dto->email));
+        $user = User::where('email', $cleanEmail)->first();
 
         $isMatch = $user && $this->verifyUserPassword($dto->password, $user);
 
@@ -86,7 +187,7 @@ class AuthService
             ]);
         }
 
-        // Si por alguna razón histórica no tiene email_verified_at, activarlo de inmediato
+        // Si por alguna razón histórica no tiene email_verified_at, activarlo al iniciar sesión
         if (!$user->email_verified_at) {
             $user->email_verified_at = now();
             $user->save();
@@ -106,19 +207,23 @@ class AuthService
     public function verifyEmail(string $code, ?string $email = null, ?User $user = null): array
     {
         if (!$user && $email) {
-            $user = User::where('email', $email)->first();
+            $user = User::where('email', strtolower(trim($email)))->first();
         }
 
-        if (!$user) {
-            abort(404, 'Usuario no encontrado.');
-        }
+        $cleanEmail = $user ? $user->email : strtolower(trim((string)$email));
 
-        $expectedCode = Cache::get("email_verify_code_{$user->id}");
+        $expectedCode = ($user ? Cache::get("email_verify_code_{$user->id}") : null)
+            ?? Cache::get("email_verify_code_{$cleanEmail}");
 
-        if ($expectedCode === $code || $code === '777999' || strlen($code) === 6) {
-            $user->email_verified_at = now();
-            $user->save();
-            Cache::forget("email_verify_code_{$user->id}");
+        $trimmedCode = trim($code);
+
+        if ($expectedCode && hash_equals((string) $expectedCode, (string) $trimmedCode)) {
+            if ($user) {
+                $user->email_verified_at = now();
+                $user->save();
+                Cache::forget("email_verify_code_{$user->id}");
+            }
+            Cache::forget("email_verify_code_{$cleanEmail}");
 
             return [
                 'message' => '¡Correo electrónico verificado exitosamente!',
@@ -134,33 +239,8 @@ class AuthService
      */
     public function resendVerification(?string $email = null, ?User $user = null): array
     {
-        if (!$user && $email) {
-            $user = User::where('email', $email)->first();
-        }
-
-        if (!$user) {
-            abort(404, 'Usuario no encontrado.');
-        }
-
-        $verifyCode = sprintf('%06d', mt_rand(100000, 999999));
-        Cache::put("email_verify_code_{$user->id}", $verifyCode, now()->addHours(24));
-
-        TransactionalMailService::send(
-            toEmail: $user->email,
-            subject: "Nuevo Código de Verificación: {$verifyCode} - SysEng Academy",
-            view: 'emails.verify-code',
-            viewData: [
-                'userName'   => $user->name,
-                'verifyCode' => $verifyCode,
-                'userEmail'  => $user->email,
-                'verifyUrl'  => config('app.frontend_url', 'https://www.sysengacademy.site'),
-            ]
-        );
-
-        return [
-            'message'           => 'Código de confirmación reenviado a tu correo.',
-            'verification_code' => $verifyCode,
-        ];
+        $targetEmail = $user ? $user->email : strtolower(trim((string)$email));
+        return $this->resendRegistrationCode($targetEmail);
     }
 
     /**
@@ -271,10 +351,8 @@ class AuthService
         );
 
         return [
-            'message'       => 'Código de recuperación generado exitosamente. Revisa tu correo o utiliza el código asignado.',
-            'sent'          => true,
-            'recovery_code' => $resetCode,
-            'code'          => $resetCode,
+            'message' => 'Código de recuperación enviado a tu correo. Por favor revisa tu bandeja de entrada o spam.',
+            'sent'    => true,
         ];
     }
 
@@ -295,7 +373,7 @@ class AuthService
 
         $trimmedCode = trim($code);
 
-        if ($expectedCode === $trimmedCode || $trimmedCode === '777999' || $trimmedCode === '123456' || ($expectedCode && strlen($trimmedCode) === 6)) {
+        if ($expectedCode && hash_equals((string) $expectedCode, (string) $trimmedCode)) {
             $user->password = Hash::make($newPassword);
             $user->save();
             Cache::forget("password_reset_code_{$user->id}");
@@ -389,11 +467,10 @@ class AuthService
         );
 
         return [
-            'success'    => true,
-            'sent'       => $sent,
-            'email'      => $cleanEmail,
-            'message'    => "Mensaje de diagnóstico de correo enviado exitosamente a {$cleanEmail}. Revisa tu bandeja de entrada o spam.",
-            'check_code' => $checkCode,
+            'success' => true,
+            'sent'    => $sent,
+            'email'   => $cleanEmail,
+            'message' => "Mensaje de confirmación enviado exitosamente a {$cleanEmail}. Revisa tu bandeja de entrada o spam.",
         ];
     }
 
@@ -412,7 +489,7 @@ class AuthService
 
         $trimmedCode = trim($code);
 
-        if ($expectedCode === $trimmedCode || $trimmedCode === '777999') {
+        if ($expectedCode && hash_equals((string) $expectedCode, (string) $trimmedCode)) {
             if ($user && !$user->email_verified_at) {
                 $user->email_verified_at = now();
                 $user->save();

@@ -15,7 +15,7 @@ class AuthController extends Controller
         protected AuthService $authService
     ) {}
 
-    public function register(Request $request): JsonResponse
+    public function requestRegistrationCode(Request $request): JsonResponse
     {
         // 1. Sanitizar y normalizar entradas en la frontera (OWASP)
         $cleanEmail = strtolower(trim((string) $request->input('email', '')));
@@ -44,9 +44,58 @@ class AuthController extends Controller
         ]);
 
         $dto = RegisterDTO::fromArray($validated);
-        $result = $this->authService->register($dto);
+        $result = $this->authService->requestRegistrationCode($dto);
+
+        return response()->json($result, 200);
+    }
+
+    public function confirmRegistration(Request $request): JsonResponse
+    {
+        $cleanEmail = strtolower(trim((string) $request->input('email', '')));
+        $request->merge(['email' => $cleanEmail]);
+
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'code'  => 'required|string|size:6',
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email'    => 'Por favor ingresa un correo electrónico válido.',
+            'code.required'  => 'El código de activación es obligatorio.',
+            'code.size'      => 'El código debe tener exactamente 6 dígitos.',
+        ]);
+
+        $result = $this->authService->confirmRegistration(
+            email: $validated['email'],
+            code: $validated['code']
+        );
 
         return response()->json($result, 201);
+    }
+
+    public function resendRegistrationCode(Request $request): JsonResponse
+    {
+        $cleanEmail = strtolower(trim((string) $request->input('email', '')));
+        $request->merge(['email' => $cleanEmail]);
+
+        $validated = $request->validate([
+            'email' => 'required|email',
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email'    => 'Por favor ingresa un correo electrónico válido.',
+        ]);
+
+        $result = $this->authService->resendRegistrationCode($validated['email']);
+
+        return response()->json($result);
+    }
+
+    public function register(Request $request): JsonResponse
+    {
+        if ($request->filled('code')) {
+            return $this->confirmRegistration($request);
+        }
+
+        return $this->requestRegistrationCode($request);
     }
 
     public function verifyEmail(Request $request): JsonResponse
@@ -67,14 +116,13 @@ class AuthController extends Controller
 
     public function resendVerification(Request $request): JsonResponse
     {
-        $request->validate([
-            'email' => 'nullable|email',
-        ]);
+        $cleanEmail = strtolower(trim((string) ($request->input('email') ?? $request->user()?->email)));
 
-        $result = $this->authService->resendVerification(
-            email: $request->email,
-            user: $request->user()
-        );
+        if (empty($cleanEmail)) {
+            return response()->json(['message' => 'El correo electrónico es obligatorio.'], 422);
+        }
+
+        $result = $this->authService->resendRegistrationCode($cleanEmail);
 
         return response()->json($result);
     }

@@ -26,15 +26,19 @@ export class AuthService {
     }
   }
 
-  register(data: { name: string; email: string; password: string; password_confirmation: string }) {
-    return this.api.post<{ user: User; token: string; verification_required?: boolean; verification_code?: string }>('/auth/register', data, 25000).pipe(
-      tap(res => this.setSession(res)),
+  requestRegisterCode(data: { name: string; email: string; password: string; password_confirmation: string }) {
+    return this.api.post<{ success: boolean; requires_verification: boolean; email: string; message: string }>('/auth/register/request-code', {
+      name: data.name.trim(),
+      email: data.email.trim().toLowerCase(),
+      password: data.password,
+      password_confirmation: data.password_confirmation,
+    }, 25000).pipe(
       catchError(err => {
         const errors = err?.error?.errors;
         const firstField = errors ? (Object.values(errors)[0] as string[])?.[0] : null;
         const message = firstField
           || err?.error?.message
-          || 'No se pudo completar el registro. Por favor verifica los datos ingresados e intenta de nuevo.';
+          || 'No se pudo enviar el código de verificación. Por favor verifica tus datos.';
         return throwError(() => ({
           error: {
             message,
@@ -43,6 +47,34 @@ export class AuthService {
         }));
       })
     );
+  }
+
+  confirmRegister(data: { email: string; code: string }) {
+    return this.api.post<{ user: User; token: string; message: string }>('/auth/register/confirm', {
+      email: data.email.trim().toLowerCase(),
+      code: data.code.trim(),
+    }, 25000).pipe(
+      tap(res => this.setSession(res)),
+      catchError(err => {
+        const message = err?.error?.message || 'Código de activación inválido o expirado. Por favor intenta de nuevo.';
+        return throwError(() => ({ error: { message } }));
+      })
+    );
+  }
+
+  resendRegisterCode(email: string) {
+    return this.api.post<{ success: boolean; message: string }>('/auth/register/resend-code', {
+      email: email.trim().toLowerCase(),
+    }, 25000).pipe(
+      catchError(err => {
+        const message = err?.error?.message || 'No se pudo reenviar el código. Intenta de nuevo más tarde.';
+        return throwError(() => ({ error: { message } }));
+      })
+    );
+  }
+
+  register(data: { name: string; email: string; password: string; password_confirmation: string }) {
+    return this.requestRegisterCode(data);
   }
 
   login(credentials: { email: string; password: string }) {
@@ -85,7 +117,7 @@ export class AuthService {
   }
 
   resendVerification(email?: string) {
-    return this.api.post<{ message: string; verification_code?: string }>(
+    return this.api.post<{ message: string }>(
       '/auth/resend-verification',
       { email }
     ).pipe(
@@ -98,7 +130,7 @@ export class AuthService {
   }
 
   forgotPassword(email: string) {
-    return this.api.post<{ message: string; sent?: boolean; recovery_code?: string; code?: string }>('/auth/forgot-password', {
+    return this.api.post<{ message: string; sent?: boolean }>('/auth/forgot-password', {
       email: (email || '').trim().toLowerCase(),
     }).pipe(
       catchError(err => {

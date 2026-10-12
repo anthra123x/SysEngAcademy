@@ -12,11 +12,27 @@ class AuthWorkflowTest extends TestCase
     {
         $email = 'estudiante_' . uniqid() . '@sysengacademy.dev';
 
-        $response = $this->postJson('/api/auth/register', [
+        // 1. Paso 1: Solicitar código de activación
+        $step1 = $this->postJson('/api/auth/register', [
             'name'                  => 'Estudiante Ejemplo',
             'email'                 => $email,
             'password'              => 'ClaveSegura123',
             'password_confirmation' => 'ClaveSegura123',
+        ]);
+
+        $step1->assertStatus(200)
+            ->assertJsonPath('requires_verification', true)
+            ->assertJsonPath('email', strtolower($email));
+
+        // Obtener el código de activación emitido en caché segura (simula el buzón del usuario)
+        $code = \Illuminate\Support\Facades\Cache::get("email_verify_code_" . strtolower($email));
+        $this->assertNotEmpty($code);
+        $this->assertEquals(6, strlen($code));
+
+        // 2. Paso 2: Confirmar código y activar/crear la cuenta
+        $response = $this->postJson('/api/auth/register/confirm', [
+            'email' => $email,
+            'code'  => $code,
         ]);
 
         $response->assertStatus(201)
@@ -54,14 +70,21 @@ class AuthWorkflowTest extends TestCase
         $emailLower = strtolower($base) . '@sysengacademy.dev';
         $emailUpper = strtoupper($base) . '@SYSENGACADEMY.DEV';
 
-        // 1. Registro inicial con minúsculas
+        // 1. Registro inicial completado
         $res1 = $this->postJson('/api/auth/register', [
             'name'                  => 'Primer Registro',
             'email'                 => $emailLower,
             'password'              => 'ClaveSegura123',
             'password_confirmation' => 'ClaveSegura123',
         ]);
-        $res1->assertStatus(201);
+        $res1->assertStatus(200);
+
+        $code = \Illuminate\Support\Facades\Cache::get("email_verify_code_" . $emailLower);
+        $confirmRes = $this->postJson('/api/auth/register/confirm', [
+            'email' => $emailLower,
+            'code'  => $code,
+        ]);
+        $confirmRes->assertStatus(201);
 
         // 2. Intento de registro con mayúsculas del mismo correo debe devolver 422 amigable, NO 500
         $res2 = $this->postJson('/api/auth/register', [
@@ -153,9 +176,10 @@ class AuthWorkflowTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('email', strtolower($testEmail))
-            ->assertJsonStructure(['success', 'email', 'check_code', 'message']);
+            ->assertJsonStructure(['success', 'email', 'message']);
 
-        $checkCode = $response->json('check_code');
+        // El código de verificación se envía al correo y se almacena en la caché segura
+        $checkCode = \Illuminate\Support\Facades\Cache::get("test_email_check_" . strtolower($testEmail));
         $this->assertNotEmpty($checkCode);
         $this->assertEquals(6, strlen($checkCode));
 

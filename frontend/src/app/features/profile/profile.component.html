@@ -1496,7 +1496,7 @@
                       <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: #0c1017; padding: 12px 16px; border-radius: 6px; border: 1px solid #1a2233;">
                         <button
                           type="button"
-                          class="btn btn-primary"
+                          class="btn btn-secondary"
                           [disabled]="passwordLoading()"
                           (click)="requestProfileResetCode()"
                           style="font-size: 12px; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;"
@@ -1504,9 +1504,6 @@
                           <app-icon name="key" [size]="14" />
                           {{ passwordLoading() ? 'Generando código...' : 'Solicitar código de verificación' }}
                         </button>
-                        <span style="font-size: 11px; color: #64748b; font-family: var(--font-mono);">
-                          (Master fallback para pruebas: 777999)
-                        </span>
                       </div>
                     }
 
@@ -1531,7 +1528,7 @@
                           <input
                             type="text"
                             maxlength="6"
-                            placeholder="Ej. 123456 ó 777999"
+                            placeholder="000000"
                             [ngModel]="resetCode()"
                             (ngModelChange)="resetCode.set($event)"
                             name="resetCode"
@@ -1591,91 +1588,6 @@
                         </button>
                       </div>
                     </form>
-                  </div>
-                </div>
-
-                <!-- Diagnóstico y Verificación de Recepción de Correo -->
-                <div class="feedback-section-box" style="margin-top: 24px;">
-                  <div class="terminal-subhead" style="background: #090c12;">
-                    <span class="term-dot" style="background: #0ae98a; box-shadow: 0 0 6px #0ae98a;"></span>
-                    <span class="term-subhead-title" style="color: #0ae98a;">
-                      DIAGNÓSTICO DE RECEPCIÓN DE CORREO &amp; TELEMETRÍA (noreply&#64;sysengacademy.site)
-                    </span>
-                    <span class="term-badge" style="margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: #64748b;">
-                      Canal: Resend REST API
-                    </span>
-                  </div>
-
-                  <div style="padding: 24px; max-width: 640px; margin: 0 auto;">
-                    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 18px; flex-wrap: wrap;">
-                      <div>
-                        <h4 style="margin: 0 0 6px 0; font-size: 15px; color: #f8fafc; font-weight: 700;">
-                          Comprobación de Entrega en Buzón
-                        </h4>
-                        <p style="margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.5;">
-                          Envía un mensaje de prueba con firma digital desde <code>noreply&#64;sysengacademy.site</code> hacia tu correo <strong>{{ auth.user()?.email }}</strong> para verificar que tu buzón no bloquea notificaciones ni códigos de recuperación.
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        class="btn btn-primary"
-                        [disabled]="testEmailLoading()"
-                        (click)="runEmailDeliveryCheck()"
-                        style="font-size: 12px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; background: #0ae98a; color: #08090d; font-weight: 700; border: none; cursor: pointer; border-radius: 4px;"
-                      >
-                        <app-icon name="mail" [size]="14" />
-                        {{ testEmailLoading() ? 'Enviando prueba...' : 'Probar Recepción Ahora' }}
-                      </button>
-                    </div>
-
-                    @if (testEmailSuccess()) {
-                      <div style="background: rgba(10, 233, 138, 0.1); border: 1px solid #0ae98a; color: #0ae98a; padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
-                        <span style="font-weight: 700;">✓</span>
-                        <span>{{ testEmailSuccess() }}</span>
-                      </div>
-                    }
-
-                    @if (testEmailError()) {
-                      <div style="background: rgba(244, 63, 94, 0.1); border: 1px solid #f43f5e; color: #f43f5e; padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
-                        <span style="font-weight: 700;">✕</span>
-                        <span>{{ testEmailError() }}</span>
-                      </div>
-                    }
-
-                    @if (testEmailSent()) {
-                      <div style="background: #080d16; border: 1px dashed #1e293b; border-radius: 8px; padding: 18px; margin-top: 14px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                          <span style="font-size: 12px; color: #00f0ff; font-family: var(--font-mono); font-weight: 600;">
-                            // VERIFICACIÓN DEL CÓDIGO RECIBIDO //
-                          </span>
-                          @if (testEmailCode()) {
-                            <span style="font-size: 11px; color: #64748b; font-family: var(--font-mono);">
-                              Código en telemetría: <strong style="color: #0ae98a;">{{ testEmailCode() }}</strong>
-                            </span>
-                          }
-                        </div>
-
-                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                          <input
-                            type="text"
-                            maxlength="6"
-                            placeholder="Código de 6 dígitos"
-                            [ngModel]="testEmailInputCode()"
-                            (ngModelChange)="testEmailInputCode.set($event)"
-                            style="flex: 1; min-width: 160px; background: #04060a; border: 1px solid #233147; color: #0ae98a; padding: 9px 12px; border-radius: 4px; font-family: var(--font-mono); font-size: 15px; letter-spacing: 2px;"
-                          />
-                          <button
-                            type="button"
-                            class="btn-term-run"
-                            [disabled]="testEmailLoading() || !testEmailInputCode()"
-                            (click)="confirmEmailDeliveryCode()"
-                            style="background: #00f0ff; color: #08090d; border: none; font-weight: 700; padding: 9px 18px; border-radius: 4px; font-size: 12px; cursor: pointer;"
-                          >
-                            Validar Recepción
-                          </button>
-                        </div>
-                      </div>
-                    }
                   </div>
                 </div>
               </div>

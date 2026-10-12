@@ -14,9 +14,15 @@ class TransactionalMailService
      */
     public static function send(string $toEmail, string $subject, string $view, array $viewData = []): bool
     {
-        $apiKey = config('services.resend.key') ?: env('RESEND_API_KEY');
-        $fromAddress = config('mail.from.address') ?: 'noreply@sysengacademy.site';
-        $fromName = config('mail.from.name') ?: 'SysEng Academy';
+        $apiKey = config('services.resend.key')
+            ?: env('RESEND_API_KEY')
+            ?: env('MAIL_PASSWORD');
+        $fromAddress = config('mail.from.address')
+            ?: env('MAIL_FROM_ADDRESS')
+            ?: 'noreply@sysengacademy.site';
+        $fromName = config('mail.from.name')
+            ?: env('MAIL_FROM_NAME')
+            ?: 'SysEng Academy';
 
         // 1. Prioridad: Resend REST API (puerto 443 HTTPS, alta entregabilidad, no sufre bloqueos de puertos SMTP en nubes como Render)
         if (!empty($apiKey)) {

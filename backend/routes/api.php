@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Route;
 
 // Public routes (Rate limited para prevenir abusos y ataques DoS / fuerza bruta)
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:15,1');
+Route::post('/auth/register/request-code', [AuthController::class, 'requestRegistrationCode'])->middleware('throttle:15,1');
+Route::post('/auth/register/confirm', [AuthController::class, 'confirmRegistration'])->middleware('throttle:15,1');
+Route::post('/auth/register/resend-code', [AuthController::class, 'resendRegistrationCode'])->middleware('throttle:6,1');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
 Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail'])->middleware('throttle:15,1');
 Route::post('/auth/resend-verification', [AuthController::class, 'resendVerification'])->middleware('throttle:6,1');

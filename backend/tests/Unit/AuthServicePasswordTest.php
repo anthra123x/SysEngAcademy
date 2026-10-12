@@ -107,14 +107,18 @@ class AuthServicePasswordTest extends TestCase
 
         $response = $this->authService->forgotPassword($user->email);
 
-        $this->assertArrayHasKey('recovery_code', $response);
-        $this->assertEquals(6, strlen($response['recovery_code']));
         $this->assertTrue($response['sent']);
+        $this->assertArrayNotHasKey('recovery_code', $response, 'No debe filtrar el código de recuperación en la respuesta JSON');
 
-        // Test reset password with the generated code
+        // El código debe estar almacenado en la caché segura
+        $cachedCode = \Illuminate\Support\Facades\Cache::get("password_reset_code_{$user->id}");
+        $this->assertNotEmpty($cachedCode);
+        $this->assertEquals(6, strlen($cachedCode));
+
+        // Test reset password with the real generated code
         $resetResult = $this->authService->resetPassword(
             $user->email,
-            $response['recovery_code'],
+            $cachedCode,
             'NewBrandPassword123!'
         );
 
@@ -125,22 +129,19 @@ class AuthServicePasswordTest extends TestCase
         $this->assertTrue(Hash::check('NewBrandPassword123!', $user->password));
     }
 
-    public function test_reset_password_with_master_fallback_code(): void
+    public function test_reset_password_rejects_invalid_or_fake_code(): void
     {
         $user = User::factory()->create([
             'email' => 'fallback_test_' . uniqid() . '@example.com',
             'password' => Hash::make('OldPassword123!'),
         ]);
 
-        $resetResult = $this->authService->resetPassword(
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->authService->resetPassword(
             $user->email,
-            '777999',
+            '000000',
             'NewPassword777!'
         );
-
-        $this->assertStringContainsString('exitosa', $resetResult['message']);
-        $user->refresh();
-        $this->assertTrue(Hash::check('NewPassword777!', $user->password));
     }
 
     public function test_change_password_for_authenticated_user(): void

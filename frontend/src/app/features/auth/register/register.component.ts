@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
@@ -17,79 +17,141 @@ import { AuthService } from '../../../core/services/auth.service';
           </a>
         </div>
 
-        <h1>Crea tu cuenta</h1>
-        <p class="auth-subtitle">Únete a SysEngAcademy y aprende programando.</p>
+        @if (step() === 1) {
+          <h1>Crea tu cuenta</h1>
+          <p class="auth-subtitle">Únete a SysEng Academy y aprende ingeniería práctica.</p>
 
-        @if (error()) {
-          <div class="alert-error">{{ error() }}</div>
+          @if (error()) {
+            <div class="alert-error">{{ error() }}</div>
+          }
+
+          <form (ngSubmit)="submitStep1()" #form="ngForm">
+            <div class="form-group">
+              <label>Nombre completo</label>
+              <input
+                class="input"
+                type="text"
+                name="name"
+                [(ngModel)]="name"
+                placeholder="Tu nombre y apellido"
+                required
+                autocomplete="name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Correo electrónico</label>
+              <input
+                class="input"
+                type="email"
+                name="email"
+                [(ngModel)]="email"
+                placeholder="tu@email.com"
+                required
+                autocomplete="email"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Contraseña</label>
+              <input
+                class="input"
+                type="password"
+                name="password"
+                [(ngModel)]="password"
+                placeholder="Mínimo 8 caracteres (letras y números)"
+                required
+                minlength="8"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Confirmar contraseña</label>
+              <input
+                class="input"
+                type="password"
+                name="password_confirmation"
+                [(ngModel)]="passwordConfirm"
+                placeholder="Repite tu contraseña"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+              style="width: 100%; margin-top: var(--sp-2, 0.5rem);"
+              [disabled]="loading()"
+            >
+              {{ loading() ? 'Enviando código de verificación...' : 'Continuar / Enviar Código' }}
+            </button>
+          </form>
+
+          <p class="auth-link">
+            ¿Ya tienes cuenta?
+            <a routerLink="/auth/login">Inicia sesión</a>
+          </p>
+        } @else {
+          <div class="verify-step">
+            <div class="verify-icon">✉️</div>
+            <h1>Verifica tu correo</h1>
+            <p class="auth-subtitle">
+              Hemos enviado un código de 6 dígitos desde <strong>noreply&#64;sysengacademy.site</strong> a <strong>{{ email }}</strong>.
+            </p>
+
+            @if (successMsg()) {
+              <div class="alert-success">{{ successMsg() }}</div>
+            }
+
+            @if (error()) {
+              <div class="alert-error">{{ error() }}</div>
+            }
+
+            <form (ngSubmit)="submitStep2()">
+              <div class="form-group">
+                <label style="text-align: center; display: block; margin-bottom: 4px;">Código de verificación recibido</label>
+                <input
+                  class="input code-input"
+                  type="text"
+                  name="code"
+                  [(ngModel)]="verificationCode"
+                  placeholder="000000"
+                  maxlength="6"
+                  required
+                  autocomplete="one-time-code"
+                />
+              </div>
+
+              <button
+                type="submit"
+                class="btn btn-primary"
+                style="width: 100%; margin-top: 1rem;"
+                [disabled]="loading() || verificationCode.trim().length !== 6"
+              >
+                {{ loading() ? 'Verificando y creando cuenta...' : 'Verificar y Crear Cuenta' }}
+              </button>
+            </form>
+
+            <div class="verify-secondary-actions">
+              <button
+                type="button"
+                class="btn-resend"
+                [disabled]="resendLoading() || resendCooldown() > 0"
+                (click)="resendCode()"
+              >
+                {{ resendCooldown() > 0 ? ('Reenviar código en ' + resendCooldown() + 's') : (resendLoading() ? 'Reenviando...' : '¿No recibiste el correo? Reenviar código') }}
+              </button>
+
+              <button
+                type="button"
+                class="btn-back"
+                (click)="backToStep1()"
+              >
+                ← Corregir correo o datos
+              </button>
+            </div>
+          </div>
         }
-
-        <form (ngSubmit)="submit()" #form="ngForm">
-          <div class="form-group">
-            <label>Nombre completo</label>
-            <input
-              class="input"
-              type="text"
-              name="name"
-              [(ngModel)]="name"
-              placeholder="Tu nombre completo"
-              required
-              autocomplete="name"
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Correo electrónico</label>
-            <input
-              class="input"
-              type="email"
-              name="email"
-              [(ngModel)]="email"
-              placeholder="tu@email.com"
-              required
-              autocomplete="email"
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Contraseña</label>
-            <input
-              class="input"
-              type="password"
-              name="password"
-              [(ngModel)]="password"
-              placeholder="Mínimo 8 caracteres"
-              required
-              minlength="8"
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Confirmar contraseña</label>
-            <input
-              class="input"
-              type="password"
-              name="password_confirmation"
-              [(ngModel)]="passwordConfirm"
-              placeholder="Repite tu contraseña"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            class="btn btn-primary"
-            style="width:100%; margin-top: var(--sp-2);"
-            [disabled]="loading()"
-          >
-            {{ loading() ? 'Creando cuenta...' : 'Crear Cuenta' }}
-          </button>
-        </form>
-
-        <p class="auth-link">
-          ¿Ya tienes cuenta?
-          <a routerLink="/auth/login">Inicia sesión</a>
-        </p>
       </div>
     </div>
   `,
@@ -149,6 +211,10 @@ import { AuthService } from '../../../core/services/auth.service';
         font-size: var(--text-sm, 0.875rem);
         margin-bottom: var(--sp-6, 1.5rem);
         line-height: 1.5;
+
+        strong {
+          color: #f8fafc;
+        }
       }
 
       .alert-error {
@@ -234,10 +300,6 @@ import { AuthService } from '../../../core/services/auth.service';
         }
       }
 
-      .btn-block {
-        width: 100%;
-      }
-
       .auth-link {
         text-align: center;
         margin-top: var(--sp-5, 1.25rem);
@@ -259,293 +321,93 @@ import { AuthService } from '../../../core/services/auth.service';
       }
 
       .verify-icon {
-        font-size: 3rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .btn-email-preview-trigger {
-        background: rgba(0, 217, 255, 0.12);
-        border: 1px solid rgba(0, 217, 255, 0.35);
-        color: #00d9ff;
-        border-radius: 8px;
-        padding: 8px 14px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 1rem;
-        transition: all 0.15s;
-
-        &:hover {
-          background: rgba(0, 217, 255, 0.22);
-          transform: translateY(-1px);
-        }
-      }
-
-      .dev-hint-box {
-        background: rgba(10, 233, 138, 0.08);
-        border: 1px dashed rgba(10, 233, 138, 0.35);
-        border-radius: 8px;
-        padding: 0.65rem;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        font-size: 0.8rem;
-        color: #94a3b8;
-      }
-
-      .hint-code {
-        color: #0ae98a;
-        font-size: 1.15rem;
-        letter-spacing: 0.2em;
-        font-family: monospace;
-        font-weight: 800;
+        font-size: 2.8rem;
+        margin-bottom: 0.25rem;
       }
 
       .code-input {
         text-align: center;
-        font-size: 1.6rem !important;
-        letter-spacing: 0.25em;
+        font-size: 1.8rem !important;
+        letter-spacing: 0.35em;
         font-family: monospace;
         font-weight: 800;
+        color: #0ae98a !important;
+        background: #06080e !important;
+        border: 2px dashed #00d9ff !important;
+        padding: 12px 16px !important;
       }
 
-      .verify-actions {
+      .verify-secondary-actions {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        margin-top: 1.25rem;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
       }
 
       .btn-resend {
         background: transparent;
         border: none;
         color: #00d9ff;
-        font-size: 0.8125rem;
+        font-size: 0.85rem;
+        font-weight: 600;
         cursor: pointer;
         text-decoration: underline;
+        transition: opacity 0.15s;
 
         &:disabled {
           opacity: 0.5;
-        }
-      }
-
-      /* EMAIL MODAL SIMULATOR */
-      .email-modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(4px);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-      }
-
-      .email-modal-card {
-        background: #0e131f;
-        border: 1px solid #1e293b;
-        border-radius: 12px;
-        max-width: 540px;
-        width: 100%;
-        max-height: 90vh;
-        overflow-y: auto;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
-      }
-
-      .email-modal-topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 16px;
-        background: #08090d;
-        border-bottom: 1px solid #1e293b;
-
-        .email-badge-client {
-          font-size: 11px;
-          color: #94a3b8;
-          font-family: monospace;
+          cursor: not-allowed;
+          text-decoration: none;
         }
 
-        .btn-close-modal {
-          background: transparent;
-          border: none;
-          color: #94a3b8;
-          font-size: 16px;
-          cursor: pointer;
-          &:hover {
-            color: #ffffff;
-          }
-        }
-      }
-
-      .email-preview-container {
-        padding: 0;
-      }
-
-      .email-preview-header {
-        background: linear-gradient(180deg, #141b2d 0%, #0e131f 100%);
-        padding: 20px 24px;
-        text-align: center;
-        border-bottom: 1px solid #1e293b;
-
-        .preview-logo-badge {
-          display: inline-block;
-          background: #00d9ff;
-          color: #030712;
-          font-family: monospace;
-          font-weight: 800;
-          font-size: 13px;
-          padding: 3px 8px;
-          border-radius: 4px;
-          margin-bottom: 6px;
-        }
-
-        .preview-logo-title {
-          font-size: 18px;
-          font-weight: 800;
-          color: #ffffff;
-          margin: 0;
-          span {
-            color: #00d9ff;
-          }
-        }
-      }
-
-      .email-preview-body {
-        padding: 24px;
-
-        .preview-subject-line {
-          font-size: 12px;
-          color: #94a3b8;
-          background: #08090d;
-          padding: 6px 12px;
-          border-radius: 6px;
-          margin-bottom: 16px;
-          border-left: 3px solid #00d9ff;
-          strong {
-            color: #e2e8f0;
-          }
-        }
-
-        .preview-greeting {
-          font-size: 16px;
-          color: #f8fafc;
-          margin: 0 0 10px;
-        }
-
-        .preview-text {
-          font-size: 13px;
-          line-height: 1.6;
-          color: #94a3b8;
-          margin: 0 0 20px;
-        }
-      }
-
-      .preview-code-box {
-        background-color: #06080e;
-        border: 2px dashed #0ae98a;
-        border-radius: 10px;
-        padding: 18px 15px;
-        text-align: center;
-        margin: 18px 0;
-        box-shadow: inset 0 0 16px rgba(10, 233, 138, 0.08);
-
-        .preview-code-label {
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 2px;
+        &:hover:not(:disabled) {
           color: #0ae98a;
-          display: block;
-          margin-bottom: 6px;
-          font-family: monospace;
-        }
-
-        .preview-code-value {
-          font-family: monospace;
-          font-size: 32px;
-          font-weight: 900;
-          letter-spacing: 10px;
-          color: #0ae98a;
-          display: block;
-          text-shadow: 0 0 12px rgba(10, 233, 138, 0.4);
         }
       }
 
-      .preview-security-note {
-        background-color: #121826;
-        border-left: 3px solid #00d9ff;
-        padding: 10px 14px;
-        border-radius: 0 6px 6px 0;
-        font-size: 11px;
-        color: #94a3b8;
-        margin-bottom: 18px;
-        line-height: 1.5;
-      }
-
-      .btn-copy-code {
-        display: block;
-        width: 100%;
-        background: #00d9ff;
-        color: #030712;
+      .btn-back {
+        background: transparent;
         border: none;
-        font-weight: 700;
-        font-size: 13px;
-        padding: 10px;
-        border-radius: 6px;
+        color: #94a3b8;
+        font-size: 0.8125rem;
         cursor: pointer;
-        transition: all 0.15s;
+        transition: color 0.15s;
 
         &:hover {
-          background: #0ae98a;
-        }
-      }
-
-      .email-preview-footer {
-        background-color: #090c14;
-        border-top: 1px solid #161f2e;
-        padding: 14px 20px;
-        text-align: center;
-        font-size: 11px;
-        color: #64748b;
-        line-height: 1.4;
-      }
-
-      .animate-fade-in {
-        animation: fadeIn 0.2s ease-out;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(-4px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+          color: #ffffff;
         }
       }
     `,
   ],
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+
+  step = signal<1 | 2>(1);
 
   name = '';
   email = '';
   password = '';
   passwordConfirm = '';
+  verificationCode = '';
 
   loading = signal(false);
+  resendLoading = signal(false);
+  resendCooldown = signal(0);
   error = signal('');
+  successMsg = signal('');
 
-  submit() {
+  private cooldownTimer: any = null;
+
+  ngOnDestroy(): void {
+    if (this.cooldownTimer) {
+      clearInterval(this.cooldownTimer);
+    }
+  }
+
+  submitStep1() {
     if (this.loading()) return;
 
     const trimmedName = (this.name || '').trim();
@@ -580,13 +442,48 @@ export class RegisterComponent {
 
     this.loading.set(true);
     this.error.set('');
+    this.successMsg.set('');
 
     this.auth
-      .register({
+      .requestRegisterCode({
         name: trimmedName,
         email: trimmedEmail,
         password: trimmedPassword,
         password_confirmation: this.passwordConfirm,
+      })
+      .subscribe({
+        next: (res: any) => {
+          this.loading.set(false);
+          this.step.set(2);
+          this.successMsg.set(res?.message || 'Código de activación enviado a tu correo. Revisa tu buzón o spam.');
+          this.startCooldown(30);
+        },
+        error: err => {
+          this.loading.set(false);
+          const errors = err.error?.errors;
+          const first = errors ? (Object.values(errors)[0] as string[]) : null;
+          this.error.set(first?.[0] ?? err.error?.message ?? 'Error al solicitar el código de activación.');
+        },
+      });
+  }
+
+  submitStep2() {
+    if (this.loading()) return;
+
+    const code = (this.verificationCode || '').trim();
+    if (!code || code.length !== 6) {
+      this.error.set('Por favor ingresa el código de activación de 6 dígitos.');
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set('');
+    this.successMsg.set('');
+
+    this.auth
+      .confirmRegister({
+        email: this.email.trim().toLowerCase(),
+        code,
       })
       .subscribe({
         next: (_res: any) => {
@@ -594,23 +491,58 @@ export class RegisterComponent {
           this.finishRegistration();
         },
         error: err => {
-          const errors = err.error?.errors;
-          const first = errors ? (Object.values(errors)[0] as string[]) : null;
-          this.error.set(first?.[0] ?? err.error?.message ?? 'Error al crear la cuenta.');
           this.loading.set(false);
+          this.error.set(err.error?.message || 'Código de activación inválido o expirado.');
         },
       });
   }
 
+  resendCode() {
+    if (this.resendLoading() || this.resendCooldown() > 0) return;
+
+    this.resendLoading.set(true);
+    this.error.set('');
+    this.successMsg.set('');
+
+    this.auth.resendRegisterCode(this.email.trim().toLowerCase()).subscribe({
+      next: (res: any) => {
+        this.resendLoading.set(false);
+        this.successMsg.set(res?.message || 'Hemos reenviado el código a tu correo electrónico.');
+        this.startCooldown(45);
+      },
+      error: err => {
+        this.resendLoading.set(false);
+        this.error.set(err.error?.message || 'No se pudo reenviar el código. Intenta de nuevo más tarde.');
+      },
+    });
+  }
+
+  backToStep1() {
+    this.step.set(1);
+    this.error.set('');
+    this.successMsg.set('');
+    this.verificationCode = '';
+  }
+
+  private startCooldown(seconds: number) {
+    this.resendCooldown.set(seconds);
+    if (this.cooldownTimer) clearInterval(this.cooldownTimer);
+    this.cooldownTimer = setInterval(() => {
+      const cur = this.resendCooldown();
+      if (cur <= 1) {
+        this.resendCooldown.set(0);
+        clearInterval(this.cooldownTimer);
+      } else {
+        this.resendCooldown.set(cur - 1);
+      }
+    }, 1000);
+  }
+
   finishRegistration() {
     const user = this.auth.user();
-    if (
-      user?.role === 'admin' ||
-      user?.role === 'instructor'
-    ) {
+    if (user?.role === 'admin' || user?.role === 'instructor') {
       this.router.navigate(['/docente']);
     } else {
-      // Redirige directamente al onboarding y diagnóstico del estudiante
       this.router.navigate(['/onboarding']);
     }
   }
