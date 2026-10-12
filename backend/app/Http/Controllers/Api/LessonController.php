@@ -278,6 +278,8 @@ class LessonController extends Controller
             }
 
             $courseProgress = $this->recalculateCourseProgress($user->id, $courseId, $enrollment);
+            $userXp = \App\Services\XpService::syncUserXp($user);
+            \Illuminate\Support\Facades\Cache::forget("student_profile_{$user->id}");
         }
 
         $isCompleted = (bool) (
@@ -293,6 +295,7 @@ class LessonController extends Controller
             'required_score' => 90,
             'completed' => $isCompleted,
             'course_progress_percent' => $courseProgress,
+            'user_xp' => $userXp ?? ($user ? $user->fresh()->xp : null),
             'results' => $results,
         ]);
     }
@@ -367,12 +370,15 @@ class LessonController extends Controller
         );
 
         $progress = $this->recalculateCourseProgress($user->id, $courseId, $enrollment);
+        $userXp = \App\Services\XpService::syncUserXp($user);
+        \Illuminate\Support\Facades\Cache::forget("student_profile_{$user->id}");
 
         return response()->json([
             'progress_percent' => $progress,
             'completed' => true,
             'passed' => true,
             'score' => $finalScore,
+            'user_xp' => $userXp,
             'message' => 'Lección completada con éxito.',
         ]);
     }
@@ -438,8 +444,12 @@ class LessonController extends Controller
             }
         }
 
+        $userXp = \App\Services\XpService::syncUserXp($user);
+        \Illuminate\Support\Facades\Cache::forget("student_profile_{$user->id}");
+
         return response()->json([
             'synced' => $syncedCount,
+            'user_xp' => $userXp,
             'message' => "Progreso sincronizado exitosamente ({$syncedCount} lecciones).",
         ]);
     }

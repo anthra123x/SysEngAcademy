@@ -42,7 +42,14 @@ export interface LeaderboardEntry {
   rankTitle: string;
   specialization: string;
   completedLessons: number;
+  completedCourses?: number;
+  solvedChallenges?: number;
   avgQuizScore: number;
+  streak?: number;
+  studyMinutes?: number;
+  progressPercent?: number;
+  xpToNextLevel?: number;
+  nextLevelXp?: number;
   xp: number;
   isCurrentUser: boolean;
   badgePill: string;
@@ -1193,42 +1200,91 @@ readonly currentStudentEmail = computed(() => {
   readonly totalXp = computed(() => {
     if (this.isDemoStudent()) return 1685;
 
-    const fromChallenges = this.solvedChallengesCount() * 50;
-    const fromCourses = this.completedCount() * 150;
-    const fromEnrollments = this.enrollments().length * 30;
-    const diagBonus = this.diagnosticCompleted() ? 100 : 0;
-    const streakBonus = Math.max(0, this.currentStreak() - 1) * 25;
+    // 1. Prioridad: XP oficial retornado por el endpoint /leaderboard para este usuario
+    const myEmail = this.currentStudentEmail().toLowerCase().trim();
+    const meInLeaderboard = this.remoteLeaderboard()?.find(e =>
+      e.isCurrentUser || (e.email && e.email.toLowerCase().trim() === myEmail)
+    );
+    if (meInLeaderboard && typeof meInLeaderboard.xp === 'number' && meInLeaderboard.xp > 0) {
+      return meInLeaderboard.xp;
+    }
+
+    // 2. XP del usuario autenticado en sesión
+    const authUser = this.auth.user();
+    if (authUser && typeof authUser.xp === 'number' && authUser.xp > 0) {
+      return authUser.xp;
+    }
+
+    // 3. Fallback canónico unificado con el motor de XpService
+    const fromChallenges = this.solvedChallengesCount() * 100;
+    const fromLessons = Math.max(0, this.completedCount() * 25);
+    const fromCourses = this.enrollments().filter(e => e.completed_at !== null || e.progress_percent === 100).length * 250;
+    const streakBonus = Math.max(0, this.currentStreak()) * 20;
     const welcomeBonus = 50;
 
-    return welcomeBonus + fromChallenges + fromCourses + fromEnrollments + diagBonus + streakBonus;
+    return Math.max(50, welcomeBonus + fromLessons + fromChallenges + fromCourses + streakBonus);
   });
 
   readonly userLevel = computed(() => {
     if (this.isDemoStudent()) return 4;
-    if (this.diagnosticCompleted()) {
-      return this.diagnosticResult().assignedLevelNumber || 2;
-    }
+    const xp = this.totalXp();
+    if (xp >= 5500) return 7;
+    if (xp >= 3500) return 6;
+    if (xp >= 2000) return 5;
+    if (xp >= 1000) return 4;
+    if (xp >= 500)  return 3;
+    if (xp >= 200)  return 2;
     return 1;
+  });
+
+  readonly xpLevelThresholds = computed(() => {
+    const lvl = this.userLevel();
+    const thresholds: Record<number, { min: number; max: number }> = {
+      1: { min: 0,    max: 200 },
+      2: { min: 200,  max: 500 },
+      3: { min: 500,  max: 1000 },
+      4: { min: 1000, max: 2000 },
+      5: { min: 2000, max: 3500 },
+      6: { min: 3500, max: 5500 },
+      7: { min: 5500, max: 10000 },
+    };
+    return thresholds[lvl] || { min: 5500, max: 10000 };
   });
 
   readonly xpProgressPercent = computed(() => {
     if (this.isDemoStudent()) return 85;
-    return this.totalXp() % 100;
+    const xp = this.totalXp();
+    const { min, max } = this.xpLevelThresholds();
+    if (this.userLevel() >= 7) return 100;
+    const progress = Math.round(((xp - min) / (max - min)) * 100);
+    return Math.max(0, Math.min(100, progress));
   });
 
   readonly xpToNextLevel = computed(() => {
     if (this.isDemoStudent()) return 15;
-    return 100 - (this.totalXp() % 100);
+    const xp = this.totalXp();
+    const { max } = this.xpLevelThresholds();
+    if (this.userLevel() >= 7) return 0;
+    return Math.max(0, max - xp);
   });
 
   readonly rankTitle = computed(() => {
-    if (this.isDemoStudent()) return 'Arquitecto Principal de Sistemas';
+    if (this.isDemoStudent()) return 'Master Systems Architect';
     const lvl = this.userLevel();
-    if (!this.diagnosticCompleted()) return 'Cadete de Sistemas (Nivel 1)';
-    if (lvl >= 4)  return 'Desarrollador Junior Avanzado (Nivel 4)';
-    if (lvl >= 3)  return 'Desarrollador Intermedio (Nivel 3)';
-    if (lvl >= 2)  return 'Iniciación al Desarrollo (Nivel 2)';
-    return 'Cadete de Sistemas (Nivel 1)';
+    switch (lvl) {
+      case 7: return 'Master Systems Architect';
+      case 6: return 'Tech Lead & Arquitecto';
+      case 5: return 'Ingeniero de Software Senior';
+      case 4: return 'Desarrollador Mid-Level';
+      case 3: return 'Desarrollador Junior';
+      case 2: return 'Desarrollador Trainee';
+      default: return 'Cadete de Sistemas';
+    }
+  });
+
+  readonly myLeaderboardEntry = computed<LeaderboardEntry | null>(() => {
+    const myEmail = this.currentStudentEmail().toLowerCase().trim();
+    return this.leaderboard().find(e => e.isCurrentUser || (e.email && e.email.toLowerCase().trim() === myEmail)) || null;
   });
 
   readonly specialization = computed(() => {
@@ -1465,56 +1521,101 @@ readonly currentStudentEmail = computed(() => {
     const remote = this.remoteLeaderboard();
     const myEmail = this.currentStudentEmail().toLowerCase().trim();
 
+    const isGhostEmail = (em: string): boolean => {
+      const lower = (em || '').toLowerCase().trim();
+      return lower.includes('example.com')
+        || lower.includes('@sysengacademy.dev')
+        || lower.includes('sysengacademy.site')
+        || lower.startsWith('test_')
+        || lower.startsWith('reset_test_')
+        || lower.startsWith('fallback_test_')
+        || lower.startsWith('change_test_')
+        || lower.startsWith('change_ok_')
+        || lower.startsWith('login_test_')
+        || lower.startsWith('usuario_6ac')
+        || lower.startsWith('estudiante_6ac');
+    };
+
+    const getLevelFromXp = (xp: number): number => {
+      if (xp >= 5500) return 7;
+      if (xp >= 3500) return 6;
+      if (xp >= 2000) return 5;
+      if (xp >= 1000) return 4;
+      if (xp >= 500)  return 3;
+      if (xp >= 200)  return 2;
+      return 1;
+    };
+
+    const getTitleFromLevel = (level: number): string => {
+      switch (level) {
+        case 7: return 'Master Systems Architect';
+        case 6: return 'Tech Lead & Arquitecto';
+        case 5: return 'Ingeniero de Software Senior';
+        case 4: return 'Desarrollador Mid-Level';
+        case 3: return 'Desarrollador Junior';
+        case 2: return 'Desarrollador Trainee';
+        default: return 'Cadete de Sistemas';
+      }
+    };
+
     if (remote && remote.length > 0) {
-      return remote.map((entry: any, idx) => {
-        const isMe = (entry.email?.toLowerCase().trim() === myEmail) || entry.isCurrentUser || entry.is_current_user;
-        const rank = idx + 1;
-        let badge = 'ACTIVO';
-        if (rank === 1) badge = 'ORO';
-        else if (rank === 2) badge = 'PLATA';
-        else if (rank === 3) badge = 'BRONCE';
+      return remote
+        .filter((entry: any) => !isGhostEmail(entry.email))
+        .map((entry: any, idx) => {
+          const isMe = (entry.email?.toLowerCase().trim() === myEmail) || entry.isCurrentUser || entry.is_current_user;
+          const rank = idx + 1;
+          let badge = '⚡ ACTIVO';
+          if (rank === 1) badge = '🥇 ORO';
+          else if (rank === 2) badge = '🥈 PLATA';
+          else if (rank === 3) badge = '🥉 BRONCE';
 
-        const name = (entry.name && String(entry.name).trim().length > 0)
-          ? String(entry.name).trim()
-          : (entry.user_name && String(entry.user_name).trim().length > 0)
-            ? String(entry.user_name).trim()
-            : (entry.email ? String(entry.email).split('@')[0] : 'Estudiante');
+          const name = (entry.name && String(entry.name).trim().length > 0)
+            ? String(entry.name).trim()
+            : (entry.user_name && String(entry.user_name).trim().length > 0)
+              ? String(entry.user_name).trim()
+              : (entry.email ? String(entry.email).split('@')[0] : 'Estudiante');
 
-        const nameParts = name.split(/\s+/);
-        const autoAvatar = nameParts.length >= 2
-          ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
-          : name.slice(0, 2).toUpperCase();
+          const nameParts = name.split(/\s+/);
+          const autoAvatar = nameParts.length >= 2
+            ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
+            : name.slice(0, 2).toUpperCase();
 
-        const xp = Number(entry.xp || 100);
-        const level = Number(entry.level) || Math.max(1, Math.min(5, Math.floor(xp / 150) + 1));
-        const rankTitles = ['Junior Dev', 'Algorithmic Solver', 'Systems Builder', 'Junior Engineer', 'Master Architect'];
-        const rankTitle = entry.rankTitle || rankTitles[level - 1] || 'Junior Dev';
+          const xp = Number(entry.xp || 50);
+          const level = Number(entry.level) || getLevelFromXp(xp);
+          const rankTitle = entry.rankTitle || getTitleFromLevel(level);
 
-        return {
-          ...entry,
-          rank,
-          id: entry.id || entry.user_id,
-          name: name,
-          email: entry.email || '',
-          avatarText: entry.avatarText || autoAvatar,
-          level: isMe ? this.userLevel() : level,
-          rankTitle: isMe ? this.rankTitle() : rankTitle,
-          specialization: entry.specialization || (isMe ? this.specialization().title : 'Ingeniería de Software'),
-          completedLessons: entry.completedLessons ?? entry.completed_lessons_count ?? 0,
-          avgQuizScore: entry.avgQuizScore ?? entry.average_quiz_score ?? 100,
-          xp: isMe ? (this.totalXp() || xp) : xp,
-          isCurrentUser: isMe,
-          badgePill: badge,
-        };
-      });
+          return {
+            ...entry,
+            rank,
+            id: entry.id || entry.user_id,
+            name: name,
+            email: entry.email || '',
+            avatarText: entry.avatarText || autoAvatar,
+            level: isMe ? this.userLevel() : level,
+            rankTitle: isMe ? this.rankTitle() : rankTitle,
+            progressPercent: entry.progressPercent ?? (isMe ? this.xpProgressPercent() : 50),
+            xpToNextLevel: entry.xpToNextLevel ?? (isMe ? this.xpToNextLevel() : 100),
+            nextLevelXp: entry.nextLevelXp ?? 500,
+            specialization: entry.specialization || (isMe ? this.specialization().title : 'Ingeniería de Software & Arquitectura'),
+            completedLessons: entry.completedLessons ?? entry.completed_lessons_count ?? 0,
+            completedCourses: entry.completedCourses ?? entry.completed_courses_count ?? 0,
+            solvedChallenges: entry.solvedChallenges ?? 0,
+            avgQuizScore: entry.avgQuizScore ?? entry.average_quiz_score ?? 100,
+            streak: entry.streak ?? 0,
+            studyMinutes: entry.studyMinutes ?? 0,
+            xp: isMe ? (this.totalXp() || xp) : xp,
+            isCurrentUser: isMe,
+            badgePill: badge,
+          };
+        });
     }
 
-    // Generar ranking en tiempo real con TODOS los estudiantes registrados en el sistema
-    const studentsMap = new Map<string, { name: string; email: string; xp: number; completedCount: number; avgQuiz: number }>();
+    // Fallback local en tiempo real excluyendo usuarios fantasma
+    const studentsMap = new Map<string, { name: string; email: string; xp: number; completedCount: number; avgQuiz: number; streak: number }>();
 
     // 1. Estudiante activo en sesión
     const currentUser = this.auth.user();
-    if (currentUser && currentUser.email) {
+    if (currentUser && currentUser.email && !isGhostEmail(currentUser.email)) {
       const email = currentUser.email.toLowerCase().trim();
       studentsMap.set(email, {
         name: currentUser.name || 'Estudiante',
@@ -1522,10 +1623,11 @@ readonly currentStudentEmail = computed(() => {
         xp: this.totalXp() || 50,
         completedCount: this.completedCount() || 0,
         avgQuiz: 100,
+        streak: this.currentStreak() || 0,
       });
     }
 
-    // 2. Alumnos registrados en el sistema
+    // 2. Alumnos registrados en el sistema (sin fantasmas)
     if (typeof window !== 'undefined') {
       try {
         const rawReg = localStorage.getItem('syseng_registered_users');
@@ -1536,8 +1638,8 @@ readonly currentStudentEmail = computed(() => {
               const u = item.user;
               if (!u || !u.email) continue;
               const email = u.email.toLowerCase().trim();
-              if (u.role === 'admin' || u.role === 'instructor') continue; // Docente
-              if (email === 'estudiante@sysengacademy.dev') continue; // Mock
+              if (u.role === 'admin' || u.role === 'instructor') continue;
+              if (isGhostEmail(email)) continue;
 
               if (!studentsMap.has(email)) {
                 let completed = 0;
@@ -1557,44 +1659,14 @@ readonly currentStudentEmail = computed(() => {
                   } catch {}
                 }
 
-                const studentXp = 50 + (completed * 80) + Math.round((score / 100) * 40);
+                const studentXp = 50 + (completed * 25) + Math.round((score / 100) * 50);
                 studentsMap.set(email, {
                   name: u.name || 'Estudiante',
                   email,
                   xp: studentXp,
                   completedCount: completed,
                   avgQuiz: score,
-                });
-              }
-            }
-          }
-        }
-
-        // 3. Alumnos en cache docente
-        const rawCache = localStorage.getItem('syseng_teacher_students_cache');
-        if (rawCache) {
-          const cacheList = JSON.parse(rawCache);
-          if (Array.isArray(cacheList)) {
-            for (const st of cacheList) {
-              if (!st.email) continue;
-              const email = st.email.toLowerCase().trim();
-              if (st.role === 'admin' || st.role === 'instructor') continue;
-
-              const existing = studentsMap.get(email);
-              const doneCount = st.completed_lessons_count || 0;
-              const avg = st.average_quiz_score || 80;
-              const calculatedXp = 50 + (doneCount * 80) + Math.round((avg / 100) * 40);
-
-              if (existing) {
-                existing.completedCount = Math.max(existing.completedCount, doneCount);
-                existing.xp = Math.max(existing.xp, calculatedXp);
-              } else {
-                studentsMap.set(email, {
-                  name: st.name || 'Estudiante',
-                  email,
-                  xp: calculatedXp,
-                  completedCount: doneCount,
-                  avgQuiz: avg,
+                  streak: 1,
                 });
               }
             }
@@ -1618,17 +1690,17 @@ readonly currentStudentEmail = computed(() => {
         avgQuizScore: 100,
         xp: this.totalXp() || 50,
         isCurrentUser: true,
-        badgePill: 'ORO',
+        badgePill: '🥇 ORO',
       }];
     }
 
     return sortedList.map((st, idx) => {
       const rank = idx + 1;
       const isMe = st.email === myEmail;
-      let badge = 'ACTIVO';
-      if (rank === 1) badge = 'ORO';
-      else if (rank === 2) badge = 'PLATA';
-      else if (rank === 3) badge = 'BRONCE';
+      let badge = '⚡ ACTIVO';
+      if (rank === 1) badge = '🥇 ORO';
+      else if (rank === 2) badge = '🥈 PLATA';
+      else if (rank === 3) badge = '🥉 BRONCE';
 
       const name = (st.name && st.name.trim().length > 0)
         ? st.name.trim()
@@ -1639,9 +1711,8 @@ readonly currentStudentEmail = computed(() => {
         ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
         : name.slice(0, 2).toUpperCase();
 
-      const level = Math.max(1, Math.min(5, Math.floor(st.xp / 150) + 1));
-      const rankTitles = ['Junior Dev', 'Algorithmic Solver', 'Systems Builder', 'Junior Engineer', 'Master Architect'];
-      const rankTitle = rankTitles[level - 1] || 'Junior Dev';
+      const level = getLevelFromXp(st.xp);
+      const rankTitle = getTitleFromLevel(level);
 
       return {
         rank,
@@ -1650,9 +1721,10 @@ readonly currentStudentEmail = computed(() => {
         avatarText: autoAvatar,
         level: isMe ? this.userLevel() : level,
         rankTitle: isMe ? this.rankTitle() : rankTitle,
-        specialization: isMe ? this.specialization().title : 'Ingeniería de Software',
+        specialization: isMe ? this.specialization().title : 'Ingeniería de Software & Arquitectura',
         completedLessons: st.completedCount,
         avgQuizScore: st.avgQuiz,
+        streak: st.streak,
         xp: st.xp,
         isCurrentUser: isMe,
         badgePill: badge,

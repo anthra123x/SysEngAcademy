@@ -31,22 +31,20 @@ class StudentProfileService
             $quizzesCount = $scores->count();
             $avgQuizScore = $quizzesCount > 0 ? round($scores->avg(), 1) : 0.0;
 
-            // Retos resueltos estimados a partir de lecciones de tipo reto/práctica
+            // Retos resueltos estimados a partir de lecciones de tipo reto/práctica completadas
             $solvedChallenges = $progress->filter(function ($p) {
-                return $p->lesson && in_array($p->lesson->type, ['practice', 'challenge', 'interactive']);
+                return $p->completed_at && $p->lesson && in_array($p->lesson->type, ['practice', 'challenge', 'interactive']);
             })->count();
 
-            // Puntos de experiencia (XP) y cálculo de nivel
-            $xp = ($solvedChallenges * 50) + ($completedCourses * 150) + ($completedLessons * 20);
-            $level = max(1, (int) floor($xp / 100) + 1);
+            // Puntos de experiencia (XP) y cálculo de nivel unificado mediante XpService
+            $xp = \App\Services\XpService::calculateEarnedXp($user);
+            if ($user->xp !== $xp) {
+                $user->update(['xp' => $xp]);
+            }
 
-            $rankTitle = match (true) {
-                $level >= 10 => 'Arquitecto Principal',
-                $level >= 7  => 'Ingeniero de Software Senior',
-                $level >= 4  => 'Desarrollador FullStack',
-                $level >= 2  => 'Explorador Algorítmico',
-                default      => 'Cadete de Sistemas',
-            };
+            $levelProg = \App\Services\XpService::getLevelProgress($xp);
+            $level = $levelProg['level'];
+            $rankTitle = $levelProg['rank_title'];
 
             return [
                 'user' => [
@@ -61,12 +59,15 @@ class StudentProfileService
                     'enrolled_courses_count'  => $totalEnrolled,
                     'completed_courses_count' => $completedCourses,
                     'completed_lessons_count' => $completedLessons,
-                    'solved_challenges_count' => max($solvedChallenges, 1),
+                    'solved_challenges_count' => $solvedChallenges,
                     'quizzes_taken_count'     => $quizzesCount,
                     'average_quiz_score'      => $avgQuizScore,
                     'xp'                      => $xp,
                     'level'                   => $level,
                     'rank_title'              => $rankTitle,
+                    'progress_percent'        => $levelProg['progress_percent'],
+                    'xp_to_next'              => $levelProg['xp_to_next'],
+                    'next_level_xp'           => $levelProg['next_level_xp'],
                 ],
                 'enrollments' => $enrollments->map(function ($e) {
                     return [

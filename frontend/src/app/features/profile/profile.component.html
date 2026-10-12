@@ -955,72 +955,218 @@
             }
 
             @if (!isTeacher() && activeTab() === 'leaderboard') {
-              <div class="tab-pane animate-fade-in">
+              <div class="tab-pane animate-fade-in leaderboard-pane">
+                <!-- Terminal Header Bar -->
                 <div class="section-terminal-bar">
                   <div class="terminal-bar-title">
-                    <span class="term-prefix">top -b -n 1 | head</span>
-                    <span class="term-arg">--ranking=global-xp</span>
+                    <span class="term-prefix">syseng --leaderboard</span>
+                    <span class="term-arg">--stream=live-academic-xp</span>
                   </div>
                   <span class="term-status-badge text-primary">CUADRO DE HONOR EN TIEMPO REAL</span>
                 </div>
 
+                <!-- Personal Student Status & Level XP Progression Card -->
+                <div class="leaderboard-my-summary-card">
+                  <div class="my-summary-left">
+                    <div class="my-summary-avatar-badge">
+                      <div class="my-summary-avatar">
+                        {{ auth.user()?.name ? (auth.user()!.name.slice(0, 2) | uppercase) : 'ES' }}
+                      </div>
+                      <span class="my-summary-lvl-tag">LVL {{ userLevel() }}</span>
+                    </div>
+                    <div class="my-summary-meta">
+                      <div class="my-summary-name-row">
+                        <h3 class="my-summary-name">{{ auth.user()?.name || 'Estudiante' }}</h3>
+                        <span class="my-summary-rank-badge">
+                          <app-icon name="trophy" [size]="14" color="#00f0ff" />
+                          Posición #{{ myRank() }} de {{ leaderboard().length }}
+                        </span>
+                      </div>
+                      <div class="my-summary-title">{{ rankTitle() }}</div>
+                      <div class="my-summary-spec">
+                        <app-icon name="terminal" [size]="12" />
+                        {{ specialization().title }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="my-summary-right">
+                    <div class="my-xp-stats-top">
+                      <div class="my-xp-val-group">
+                        <span class="my-xp-label">EXPERIENCIA ACUMULADA</span>
+                        <span class="my-xp-big-val">{{ totalXp() }} <span class="my-xp-unit">XP</span></span>
+                      </div>
+                      <div class="my-next-lvl-val-group">
+                        <span class="my-next-lvl-label">META SIGUIENTE NIVEL</span>
+                        <span class="my-next-lvl-val">
+                          @if (userLevel() >= 7) {
+                            Rango Supremo
+                          } @else {
+                            {{ xpToNextLevel() }} XP restantes
+                          }
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="my-level-progress-wrapper">
+                      <div class="my-level-progress-bar">
+                        <div class="my-level-progress-fill" [style.width.%]="xpProgressPercent()"></div>
+                      </div>
+                      <div class="my-level-progress-marks">
+                        <span>{{ totalXp() }} XP</span>
+                        <span>{{ xpProgressPercent() }}% completado</span>
+                        <span>{{ xpLevelThresholds().max }} XP</span>
+                      </div>
+                    </div>
+
+                    <div class="my-quick-pills">
+                      <span class="quick-pill">
+                        <app-icon name="check-circle" [size]="12" color="#0ae98a" />
+                        {{ completedCount() }} cursos completados
+                      </span>
+                      <span class="quick-pill">
+                        <app-icon name="flame" [size]="12" color="#f97316" />
+                        {{ currentStreak() }} {{ currentStreak() === 1 ? 'día' : 'días' }} de racha
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3D Glassmorphic Podium Section for Top 3 -->
                 <div class="podium-section" [class.is-single-leader]="leaderboard().length === 1">
                   @if (leaderboard().length >= 2) {
                     <div class="podium-step podium-silver" [class.is-me]="leaderboard()[1].isCurrentUser">
-                      <div class="podium-avatar"><app-icon name="medal" [size]="28" color="#94a3b8" /></div>
+                      <div class="podium-aura"></div>
+                      <div class="podium-badge-header">
+                        <app-icon name="medal" [size]="20" color="#cbd5e1" />
+                        <span class="podium-badge-text">2° LUGAR</span>
+                      </div>
+                      <div class="podium-avatar">
+                        <span class="podium-avatar-text">{{ leaderboard()[1].avatarText }}</span>
+                      </div>
                       <div class="podium-name" [title]="leaderboard()[1].name">
                         <span class="podium-text-truncate">{{ leaderboard()[1].name }}</span>
                         @if (leaderboard()[1].isCurrentUser) { <span class="podium-tu-tag">(Tú)</span> }
                       </div>
+                      <div class="podium-rank-title">{{ leaderboard()[1].rankTitle }}</div>
                       <div class="podium-xp">{{ leaderboard()[1].xp }} XP</div>
-                      <div class="podium-block step-2">#2</div>
+                      <div class="podium-block step-2">
+                        <span class="podium-rank-num">#2</span>
+                        <span class="podium-pedestal-label">PLATA</span>
+                      </div>
                     </div>
                   }
                   @if (leaderboard().length >= 1) {
                     <div class="podium-step podium-gold" [class.is-me]="leaderboard()[0].isCurrentUser">
-                      <div class="podium-avatar"><app-icon name="trophy" [size]="32" color="#eab308" /></div>
+                      <div class="podium-aura"></div>
+                      <div class="podium-crown">
+                        <app-icon name="trophy" [size]="26" color="#facc15" />
+                      </div>
+                      <div class="podium-badge-header">
+                        <span class="podium-badge-text">🏆 LÍDER SUPREMO</span>
+                      </div>
+                      <div class="podium-avatar">
+                        <span class="podium-avatar-text">{{ leaderboard()[0].avatarText }}</span>
+                      </div>
                       <div class="podium-name" [title]="leaderboard()[0].name">
                         <span class="podium-text-truncate">{{ leaderboard()[0].name }}</span>
                         @if (leaderboard()[0].isCurrentUser) { <span class="podium-tu-tag">(Tú)</span> }
                       </div>
+                      <div class="podium-rank-title">{{ leaderboard()[0].rankTitle }}</div>
                       <div class="podium-xp">{{ leaderboard()[0].xp }} XP</div>
-                      <div class="podium-block step-1">#1</div>
+                      <div class="podium-block step-1">
+                        <span class="podium-rank-num">#1</span>
+                        <span class="podium-pedestal-label">ORO</span>
+                      </div>
                     </div>
                   }
                   @if (leaderboard().length >= 3) {
                     <div class="podium-step podium-bronze" [class.is-me]="leaderboard()[2].isCurrentUser">
-                      <div class="podium-avatar"><app-icon name="medal" [size]="24" color="#d97706" /></div>
+                      <div class="podium-aura"></div>
+                      <div class="podium-badge-header">
+                        <app-icon name="medal" [size]="20" color="#f97316" />
+                        <span class="podium-badge-text">3° LUGAR</span>
+                      </div>
+                      <div class="podium-avatar">
+                        <span class="podium-avatar-text">{{ leaderboard()[2].avatarText }}</span>
+                      </div>
                       <div class="podium-name" [title]="leaderboard()[2].name">
                         <span class="podium-text-truncate">{{ leaderboard()[2].name }}</span>
                         @if (leaderboard()[2].isCurrentUser) { <span class="podium-tu-tag">(Tú)</span> }
                       </div>
+                      <div class="podium-rank-title">{{ leaderboard()[2].rankTitle }}</div>
                       <div class="podium-xp">{{ leaderboard()[2].xp }} XP</div>
-                      <div class="podium-block step-3">#3</div>
+                      <div class="podium-block step-3">
+                        <span class="podium-rank-num">#3</span>
+                        <span class="podium-pedestal-label">BRONCE</span>
+                      </div>
                     </div>
                   }
                 </div>
 
+                <!-- Global Ranking Table with Modern Glassmorphism & Cyber Accents -->
                 <div class="leaderboard-table-shell">
+                  <div class="leaderboard-table-header-strip">
+                    <span class="tb-title">TABLA DE POSICIONES GENERAL</span>
+                    <span class="tb-count">{{ leaderboard().length }} estudiantes calificados</span>
+                  </div>
                   <div class="leaderboard-head">
-                    <span class="lcol-rank">RANGO</span>
+                    <span class="lcol-rank">POSICIÓN</span>
                     <span class="lcol-user">ESTUDIANTE</span>
-                    <span class="lcol-spec">ESPECIALIDAD</span>
+                    <span class="lcol-title">RANGO / TÍTULO</span>
                     <span class="lcol-level">NIVEL</span>
-                    <span class="lcol-score">QUIZZES</span>
+                    <span class="lcol-metrics">DESEMPEÑO</span>
+                    <span class="lcol-streak">RACHA</span>
                     <span class="lcol-xp">XP TOTAL</span>
                   </div>
                   @for (entry of leaderboard(); track entry.rank) {
                     <div class="leaderboard-row" [class.is-current-user]="entry.isCurrentUser">
-                      <span class="lcol-rank">#{{ entry.rank }}</span>
-                      <span class="lcol-user">
-                        <span class="user-avatar-tag">{{ entry.avatarText }}</span>
-                        <strong class="user-display-name" [title]="entry.name">{{ entry.name }}</strong>
-                        @if (entry.isCurrentUser) { <span class="cat-chip" style="color: #00f0ff; margin-left: 6px;">(Tú)</span> }
+                      <span class="lcol-rank">
+                        <span class="rank-badge" [class.rank-1]="entry.rank === 1" [class.rank-2]="entry.rank === 2" [class.rank-3]="entry.rank === 3">
+                          @if (entry.rank === 1) { 🥇 }
+                          @else if (entry.rank === 2) { 🥈 }
+                          @else if (entry.rank === 3) { 🥉 }
+                          @else { #{{ entry.rank }} }
+                        </span>
                       </span>
-                      <span class="lcol-spec"><span class="cat-chip">{{ entry.specialization }}</span></span>
-                      <span class="lcol-level"><span class="cat-chip">Lvl {{ entry.level }}</span></span>
-                      <span class="lcol-score"><span class="cat-chip">{{ entry.avgQuizScore }}%</span></span>
-                      <span class="lcol-xp"><strong style="color: #0ae98a;">{{ entry.xp }} XP</strong></span>
+                      <span class="lcol-user">
+                        <span class="user-avatar-tag" [class.user-avatar-gold]="entry.rank === 1" [class.user-avatar-me]="entry.isCurrentUser">
+                          {{ entry.avatarText }}
+                        </span>
+                        <div class="user-info-stack">
+                          <strong class="user-display-name" [title]="entry.name">{{ entry.name }}</strong>
+                          <span class="user-sub-spec">{{ entry.specialization }}</span>
+                        </div>
+                        @if (entry.isCurrentUser) { <span class="badge-tu-tag">(TÚ)</span> }
+                      </span>
+                      <span class="lcol-title">
+                        <span class="rank-title-chip">{{ entry.rankTitle }}</span>
+                      </span>
+                      <span class="lcol-level">
+                        <span class="cat-chip level-chip">Lvl {{ entry.level }}</span>
+                      </span>
+                      <span class="lcol-metrics">
+                        <span class="metric-score" [title]="'Promedio en Quizzes'">
+                          <app-icon name="target" [size]="12" />
+                          {{ entry.avgQuizScore }}%
+                        </span>
+                        <span class="metric-lessons" [title]="'Lecciones completadas'">
+                          {{ entry.completedLessons }} lecc.
+                        </span>
+                      </span>
+                      <span class="lcol-streak">
+                        @if (entry.streak && entry.streak > 0) {
+                          <span class="streak-pill-active">
+                            <app-icon name="flame" [size]="12" color="#f97316" />
+                            {{ entry.streak }}d
+                          </span>
+                        } @else {
+                          <span class="streak-pill-zero">0d</span>
+                        }
+                      </span>
+                      <span class="lcol-xp">
+                        <span class="xp-badge-pill">{{ entry.xp }} XP</span>
+                      </span>
                     </div>
                   }
                 </div>
