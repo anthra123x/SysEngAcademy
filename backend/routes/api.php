@@ -49,6 +49,10 @@ Route::post('/user/streak/recover', [StreakController::class, 'recover']);
 Route::get('/languages', [CodeExecutionController::class, 'languages']);
 Route::post('/code/execute', [CodeExecutionController::class, 'execute']);
 
+// Evaluación asistida por IA (híbrido: público con guardado automático para estudiantes autenticados)
+Route::post('/ai/evaluate-challenge', [AiChatController::class, 'evaluateChallenge']);
+Route::post('/ai/quiz-feedback', [AiChatController::class, 'quizFeedback']);
+
 // Protected routes: JWT stateless primero (sin consulta a BD), con
 // fallback a Sanctum para tokens legados / tests.
 Route::middleware('auth:jwt,sanctum')->group(function () {
@@ -76,8 +80,6 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
 
     Route::post('/ai/ask', [AiChatController::class, 'ask']);
     Route::post('/ai/practice', [AiChatController::class, 'practice']);
-    Route::post('/ai/evaluate-challenge', [AiChatController::class, 'evaluateChallenge']);
-    Route::post('/ai/quiz-feedback', [AiChatController::class, 'quizFeedback']);
 
     Route::get('/ai/conversations', [AiChatController::class, 'conversations']);
     Route::post('/ai/conversations', [AiChatController::class, 'store']);
