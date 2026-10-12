@@ -140,4 +140,40 @@ class AuthWorkflowTest extends TestCase
 
         $failResponse->assertStatus(422);
     }
+
+    public function test_user_can_request_and_confirm_email_delivery_check(): void
+    {
+        $testEmail = 'test_deliverability_' . uniqid() . '@example.com';
+
+        // 1. Solicitar prueba de entrega de correo
+        $response = $this->postJson('/api/auth/test-email', [
+            'email' => $testEmail,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('email', strtolower($testEmail))
+            ->assertJsonStructure(['success', 'email', 'check_code', 'message']);
+
+        $checkCode = $response->json('check_code');
+        $this->assertNotEmpty($checkCode);
+        $this->assertEquals(6, strlen($checkCode));
+
+        // 2. Confirmar código incorrecto
+        $failConfirm = $this->postJson('/api/auth/confirm-test-email', [
+            'email' => $testEmail,
+            'code'  => '000000',
+        ]);
+        $failConfirm->assertStatus(422);
+
+        // 3. Confirmar con el código generado
+        $confirmResponse = $this->postJson('/api/auth/confirm-test-email', [
+            'email' => $testEmail,
+            'code'  => $checkCode,
+        ]);
+
+        $confirmResponse->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('verified', true);
+    }
 }

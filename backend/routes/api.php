@@ -24,6 +24,8 @@ Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail'])->middl
 Route::post('/auth/resend-verification', [AuthController::class, 'resendVerification'])->middleware('throttle:6,1');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:6,1');
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
+Route::post('/auth/test-email', [AuthController::class, 'testEmail'])->middleware('throttle:6,1');
+Route::post('/auth/confirm-test-email', [AuthController::class, 'confirmTestEmail'])->middleware('throttle:10,1');
 
 Route::get('/home', [HomeController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']);

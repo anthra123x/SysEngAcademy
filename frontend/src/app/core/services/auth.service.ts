@@ -131,6 +131,30 @@ export class AuthService {
     );
   }
 
+  testEmail(email?: string) {
+    return this.api.post<{ success: boolean; message: string; sent: boolean; email: string; check_code?: string }>(
+      '/auth/test-email',
+      { email }
+    ).pipe(
+      catchError(err => {
+        const message = err?.error?.message || 'No se pudo enviar el correo de prueba. Por favor intenta de nuevo.';
+        return throwError(() => ({ error: { message } }));
+      })
+    );
+  }
+
+  confirmTestEmail(data: { email?: string; code: string }) {
+    return this.api.post<{ success: boolean; verified: boolean; message: string }>(
+      '/auth/confirm-test-email',
+      data
+    ).pipe(
+      catchError(err => {
+        const message = err?.error?.message || 'Código de comprobación incorrecto o expirado.';
+        return throwError(() => ({ error: { message } }));
+      })
+    );
+  }
+
   logout() {
     this.api.post('/auth/logout').subscribe({
       complete: () => this.clearSession(true),

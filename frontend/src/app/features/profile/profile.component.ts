@@ -104,6 +104,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
   passwordSuccess = signal('');
   passwordError = signal('');
 
+  // Diagnóstico & Comprobación de Recepción de Correo
+  testEmailLoading = signal(false);
+  testEmailSuccess = signal('');
+  testEmailError = signal('');
+  testEmailCode = signal('');
+  testEmailSent = signal(false);
+  testEmailInputCode = signal('');
+  testEmailVerified = signal(false);
+
   constructor() {
     effect(() => {
       const tab = this.activeTab();
@@ -1768,4 +1777,61 @@ readonly currentStudentEmail = computed(() => {
       });
     }
   }
+
+  runEmailDeliveryCheck() {
+    const user = this.auth.user();
+    const email = user?.email;
+    if (!email) {
+      this.testEmailError.set('No se encontró el correo electrónico de tu cuenta.');
+      return;
+    }
+
+    this.testEmailLoading.set(true);
+    this.testEmailError.set('');
+    this.testEmailSuccess.set('');
+    this.testEmailVerified.set(false);
+
+    this.auth.testEmail(email).subscribe({
+      next: (res) => {
+        this.testEmailLoading.set(false);
+        this.testEmailSent.set(true);
+        if (res.check_code) {
+          this.testEmailCode.set(res.check_code);
+        }
+        this.testEmailSuccess.set(res.message || `Prueba enviada a ${email}. Revisa tu buzón o carpeta de spam.`);
+      },
+      error: (err) => {
+        this.testEmailLoading.set(false);
+        this.testEmailError.set(err.error?.message || 'Error al solicitar el diagnóstico de correo.');
+      }
+    });
+  }
+
+  confirmEmailDeliveryCode() {
+    const user = this.auth.user();
+    const email = user?.email;
+    const code = this.testEmailInputCode().trim();
+    if (!code) {
+      this.testEmailError.set('Ingresa el código de comprobación de 6 dígitos recibido en tu correo.');
+      return;
+    }
+
+    this.testEmailLoading.set(true);
+    this.testEmailError.set('');
+    this.testEmailSuccess.set('');
+
+    this.auth.confirmTestEmail({ email, code }).subscribe({
+      next: (res) => {
+        this.testEmailLoading.set(false);
+        this.testEmailVerified.set(true);
+        this.testEmailSuccess.set(res.message || '¡Buzón verificado exitosamente!');
+        this.auth.fetchMe().subscribe();
+      },
+      error: (err) => {
+        this.testEmailLoading.set(false);
+        this.testEmailError.set(err.error?.message || 'Código de comprobación incorrecto o expirado.');
+      }
+    });
+  }
 }
+

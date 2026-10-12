@@ -171,4 +171,59 @@ class AuthController extends Controller
 
         return response()->json($result);
     }
+
+    public function testEmail(Request $request): JsonResponse
+    {
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+
+        $email = $request->input('email');
+        if (empty($email) && $user) {
+            $email = $user->email;
+        }
+
+        $request->merge(['email' => strtolower(trim((string) $email))]);
+
+        $validated = $request->validate([
+            'email' => 'required|email',
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio para realizar la prueba.',
+            'email.email'    => 'Por favor ingresa un correo electrónico válido.',
+        ]);
+
+        $result = $this->authService->testEmailDelivery(
+            email: $validated['email'],
+            user: $user
+        );
+
+        return response()->json($result);
+    }
+
+    public function confirmTestEmail(Request $request): JsonResponse
+    {
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+
+        $email = $request->input('email');
+        if (empty($email) && $user) {
+            $email = $user->email;
+        }
+
+        $request->merge(['email' => strtolower(trim((string) $email))]);
+
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'code'  => 'required|string',
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email'    => 'Correo electrónico no válido.',
+            'code.required'  => 'El código de comprobación es obligatorio.',
+        ]);
+
+        $result = $this->authService->confirmTestEmail(
+            email: $validated['email'],
+            code: $validated['code'],
+            user: $user
+        );
+
+        return response()->json($result);
+    }
 }

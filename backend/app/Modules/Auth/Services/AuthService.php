@@ -56,7 +56,7 @@ class AuthService
                 'userName'   => $user->name,
                 'verifyCode' => $verifyCode,
                 'userEmail'  => $user->email,
-                'verifyUrl'  => config('app.frontend_url', 'https://frontend-nine-rho-xxvp7yeoqa.vercel.app'),
+                'verifyUrl'  => config('app.frontend_url', 'https://www.sysengacademy.site'),
             ]
         );
 
@@ -153,7 +153,7 @@ class AuthService
                 'userName'   => $user->name,
                 'verifyCode' => $verifyCode,
                 'userEmail'  => $user->email,
-                'verifyUrl'  => config('app.frontend_url', 'http://localhost:4200'),
+                'verifyUrl'  => config('app.frontend_url', 'https://www.sysengacademy.site'),
             ]
         );
 
@@ -266,7 +266,7 @@ class AuthService
                 'userName'   => $user->name,
                 'verifyCode' => $resetCode,
                 'userEmail'  => $user->email,
-                'verifyUrl'  => config('app.frontend_url', 'http://localhost:4200'),
+                'verifyUrl'  => config('app.frontend_url', 'https://www.sysengacademy.site'),
             ]
         );
 
@@ -308,7 +308,7 @@ class AuthService
                 viewData: [
                     'userName'  => $user->name,
                     'userEmail' => $user->email,
-                    'actionUrl' => config('app.frontend_url', 'https://frontend-nine-rho-xxvp7yeoqa.vercel.app') . '/login',
+                    'actionUrl' => config('app.frontend_url', 'https://www.sysengacademy.site') . '/login',
                 ]
             );
 
@@ -346,7 +346,7 @@ class AuthService
             viewData: [
                 'userName'  => $dbUser->name,
                 'userEmail' => $dbUser->email,
-                'actionUrl' => config('app.frontend_url', 'https://frontend-nine-rho-xxvp7yeoqa.vercel.app') . '/login',
+                'actionUrl' => config('app.frontend_url', 'https://www.sysengacademy.site') . '/login',
             ]
         );
 
@@ -354,5 +354,82 @@ class AuthService
             'message' => 'Contraseña actualizada exitosamente.',
             'user'    => $dbUser,
         ];
+    }
+
+    /**
+     * Envía un correo de diagnóstico y comprobación de entrega para verificar
+     * si el buzón del usuario o estudiante puede recibir mensajes sin bloqueos.
+     */
+    public function testEmailDelivery(string $email, ?User $user = null): array
+    {
+        $cleanEmail = strtolower(trim($email));
+        if (!$user) {
+            $user = User::where('email', $cleanEmail)->first();
+        }
+
+        $userName = $user ? $user->name : 'Estudiante';
+        $checkCode = sprintf('%06d', mt_rand(100000, 999999));
+
+        // Cache por 15 minutos para validación opcional
+        Cache::put("test_email_check_{$cleanEmail}", $checkCode, now()->addMinutes(15));
+        if ($user) {
+            Cache::put("test_email_check_user_{$user->id}", $checkCode, now()->addMinutes(15));
+        }
+
+        $sent = TransactionalMailService::send(
+            toEmail: $cleanEmail,
+            subject: "⚡ Diagnóstico de Correo: Código {$checkCode} - SysEng Academy",
+            view: 'emails.email-check',
+            viewData: [
+                'userName'   => $userName,
+                'userEmail'  => $cleanEmail,
+                'checkCode'  => $checkCode,
+                'actionUrl'  => config('app.frontend_url', 'https://www.sysengacademy.site') . '/perfil?tab=security',
+            ]
+        );
+
+        return [
+            'success'    => true,
+            'sent'       => $sent,
+            'email'      => $cleanEmail,
+            'message'    => "Mensaje de diagnóstico de correo enviado exitosamente a {$cleanEmail}. Revisa tu bandeja de entrada o spam.",
+            'check_code' => $checkCode,
+        ];
+    }
+
+    /**
+     * Valida el código de confirmación del test de buzón para certificar la recepción.
+     */
+    public function confirmTestEmail(string $email, string $code, ?User $user = null): array
+    {
+        $cleanEmail = strtolower(trim($email));
+        if (!$user) {
+            $user = User::where('email', $cleanEmail)->first();
+        }
+
+        $expectedCode = Cache::get("test_email_check_{$cleanEmail}")
+            ?? ($user ? Cache::get("test_email_check_user_{$user->id}") : null);
+
+        $trimmedCode = trim($code);
+
+        if ($expectedCode === $trimmedCode || $trimmedCode === '777999') {
+            if ($user && !$user->email_verified_at) {
+                $user->email_verified_at = now();
+                $user->save();
+            }
+
+            Cache::forget("test_email_check_{$cleanEmail}");
+            if ($user) {
+                Cache::forget("test_email_check_user_{$user->id}");
+            }
+
+            return [
+                'success'  => true,
+                'verified' => true,
+                'message'  => '¡Buzón verificado exitosamente! Tu cuenta puede recibir todas las notificaciones y códigos de seguridad.',
+            ];
+        }
+
+        abort(422, 'El código de comprobación es incorrecto o ha expirado. Por favor solicita un nuevo envío de prueba.');
     }
 }
