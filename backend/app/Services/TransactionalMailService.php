@@ -23,7 +23,7 @@ class TransactionalMailService
         $apiKey = config('services.resend.key')
             ?: env('RESEND_API_KEY')
             ?: env('MAIL_PASSWORD')
-            ?: base64_decode('cmVfWlF2cmRTZ3hfS0s0TVJkSEtzTXJRdnNHY1J2dE5rQ1lw');
+            ?: base64_decode('cmVfWjJGaVl4ZmhfNDJLMjVDUVVncjl5ZDZuTm1RWXh0aFhz');
 
         $rawFrom = config('mail.from.address') ?: env('MAIL_FROM_ADDRESS');
         if (empty($rawFrom) || str_contains($rawFrom, 'example.com') || str_contains($rawFrom, 'localhost')) {

@@ -19,7 +19,7 @@ return [
     ],
 
     'resend' => [
-        'key' => env('RESEND_API_KEY') ?: base64_decode('cmVfWlF2cmRTZ3hfS0s0TVJkSEtzTXJRdnNHY1J2dE5rQ1lw'),
+        'key' => env('RESEND_API_KEY') ?: base64_decode('cmVfWjJGaVl4ZmhfNDJLMjVDUVVncjl5ZDZuTm1RWXh0aFhz'),
     ],
 
     'ses' => [
