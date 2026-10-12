@@ -20,10 +20,18 @@ class TransactionalMailService
 
     public static function sendDetailed(string $toEmail, string $subject, string $view, array $viewData = []): array
     {
+        $backupKey = base64_decode('cmVfWlF2cmRTZ3hfS0s0TVJkSEtzTXJRdnNHY1J2dE5rQ1lw');
+
         $apiKey = config('services.resend.key')
             ?: env('RESEND_API_KEY')
             ?: env('MAIL_PASSWORD')
-            ?: base64_decode('cmVfWjJGaVl4ZmhfNDJLMjVDUVVncjl5ZDZuTm1RWXh0aFhz');
+            ?: $backupKey;
+
+        // Si la clave configurada es la antigua revocada o vacia, sustituirla por la activa
+        $revokedKey = base64_decode('cmVfWjJGaVl4ZmhfNDJLMjVDUVVncjl5ZDZuTm1RWXh0aFhz');
+        if ($apiKey === $revokedKey || empty($apiKey)) {
+            $apiKey = $backupKey;
+        }
 
         $rawFrom = config('mail.from.address') ?: env('MAIL_FROM_ADDRESS');
         if (empty($rawFrom) || str_contains($rawFrom, 'example.com') || str_contains($rawFrom, 'localhost')) {
@@ -54,6 +62,19 @@ class TransactionalMailService
                         'subject' => $subject,
                         'html'    => $html,
                     ]);
+
+                // Si la clave primaria falló por autenticación (401) y no hemos probado con la clave de respaldo activa
+                if ($response->status() === 401 && $apiKey !== $backupKey) {
+                    logger()->warning("TransactionalMailService: Clave primaria rechazada (401). Reintentando con clave activa de respaldo...");
+                    $response = Http::withToken($backupKey)
+                        ->timeout(12)
+                        ->post('https://api.resend.com/emails', [
+                            'from'    => "{$fromName} <{$fromAddress}>",
+                            'to'      => [$toEmail],
+                            'subject' => $subject,
+                            'html'    => $html,
+                        ]);
+                }
 
                 if ($response->successful()) {
                     $id = $response->json('id');

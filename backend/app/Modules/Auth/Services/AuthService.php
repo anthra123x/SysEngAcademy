@@ -352,7 +352,7 @@ class AuthService
             . '/auth/login?mode=reset&email=' . urlencode($cleanEmail)
             . '&code=' . urlencode($resetCode);
 
-        TransactionalMailService::send(
+        $mailResult = TransactionalMailService::sendDetailed(
             toEmail: $user->email,
             subject: "Código de Recuperación: {$resetCode} - SysEng Academy",
             view: 'emails.verify-code',
@@ -365,9 +365,16 @@ class AuthService
             ]
         );
 
+        $sent = $mailResult['success'] ?? false;
+        if (!$sent) {
+            logger()->error("AuthService: Fallo al enviar código de recuperación a {$user->email}. Error: " . ($mailResult['error'] ?? 'desconocido'));
+        } else {
+            logger()->info("AuthService: Código de recuperación enviado con éxito a {$user->email}. ID: " . ($mailResult['id'] ?? 'n/a'));
+        }
+
         return [
             'message' => 'Código de recuperación enviado a tu correo. Por favor revisa tu bandeja de entrada o spam.',
-            'sent'    => true,
+            'sent'    => $sent,
         ];
     }
 
