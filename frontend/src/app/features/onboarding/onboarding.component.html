@@ -1,11 +1,6 @@
 <div class="onboarding-container">
-  <!-- TOP STEPPER NAVEGACIÓN -->
-  <nav class="onboarding-stepper" aria-label="Progreso de inducción">
-    <div class="stepper-brand">
-      <span class="brand-badge">&lt;/&gt;</span>
-      <span class="brand-text">SysEng<strong>Academy</strong></span>
-    </div>
-
+  <!-- INDICADOR DE PROGRESO INTEGRADO (SIN DUPLICAR NAVBAR) -->
+  <nav class="onboarding-progress-bar" aria-label="Progreso del proceso">
     <div class="stepper-steps">
       <button
         type="button"
@@ -14,7 +9,13 @@
         [class.is-completed]="stage() !== 'welcome'"
         (click)="stage.set('welcome')"
       >
-        <span class="step-dot">1</span>
+        <span class="step-dot">
+          @if (stage() !== 'welcome') {
+            <app-icon name="check" [size]="11"/>
+          } @else {
+            1
+          }
+        </span>
         <span class="step-label">Bienvenida</span>
       </button>
 
@@ -27,7 +28,13 @@
         [class.is-completed]="stage() === 'mission' || stage() === 'assessment' || stage() === 'analyzing' || stage() === 'results'"
         (click)="startTour()"
       >
-        <span class="step-dot">2</span>
+        <span class="step-dot">
+          @if (stage() === 'mission' || stage() === 'assessment' || stage() === 'analyzing' || stage() === 'results') {
+            <app-icon name="check" [size]="11"/>
+          } @else {
+            2
+          }
+        </span>
         <span class="step-label">Tour de Componentes</span>
         @if (stage() === 'tour') {
           <span class="step-pill">{{ tourStep() }}/{{ totalTourSteps }}</span>
@@ -43,7 +50,13 @@
         [class.is-completed]="stage() === 'assessment' || stage() === 'analyzing' || stage() === 'results'"
         (click)="stage.set('mission')"
       >
-        <span class="step-dot">3</span>
+        <span class="step-dot">
+          @if (stage() === 'assessment' || stage() === 'analyzing' || stage() === 'results') {
+            <app-icon name="check" [size]="11"/>
+          } @else {
+            3
+          }
+        </span>
         <span class="step-label">Misión Inicial</span>
       </button>
 
@@ -56,7 +69,13 @@
         [class.is-completed]="stage() === 'results'"
         (click)="goToAssessment()"
       >
-        <span class="step-dot">4</span>
+        <span class="step-dot">
+          @if (stage() === 'results') {
+            <app-icon name="check" [size]="11"/>
+          } @else {
+            4
+          }
+        </span>
         <span class="step-label">Diagnóstico</span>
         @if (stage() === 'assessment') {
           <span class="step-pill">{{ currentQuestionIndex() + 1 }}/{{ questions.length }}</span>
@@ -75,10 +94,6 @@
         <span class="step-dot">5</span>
         <span class="step-label">Tu Ruta</span>
       </button>
-    </div>
-
-    <div class="stepper-user">
-      <span class="user-greeting">Hola, <strong>{{ studentFirstName() }}</strong></span>
     </div>
   </nav>
 
