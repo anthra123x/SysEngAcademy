@@ -454,7 +454,7 @@ class AuthService
             Cache::put("test_email_check_user_{$user->id}", $checkCode, now()->addMinutes(15));
         }
 
-        $sent = TransactionalMailService::send(
+        $sentResult = TransactionalMailService::sendDetailed(
             toEmail: $cleanEmail,
             subject: "⚡ Diagnóstico de Correo: Código {$checkCode} - SysEng Academy",
             view: 'emails.email-check',
@@ -467,10 +467,12 @@ class AuthService
         );
 
         return [
-            'success' => true,
-            'sent'    => $sent,
-            'email'   => $cleanEmail,
-            'message' => "Mensaje de confirmación enviado exitosamente a {$cleanEmail}. Revisa tu bandeja de entrada o spam.",
+            'success'   => $sentResult['success'] ?? false,
+            'sent'      => $sentResult['success'] ?? false,
+            'provider'  => $sentResult['provider'] ?? 'unknown',
+            'resend_id' => $sentResult['id'] ?? null,
+            'email'     => $cleanEmail,
+            'message'   => "Mensaje de confirmación enviado exitosamente a {$cleanEmail}. Revisa tu bandeja de entrada o spam.",
         ];
     }
 
