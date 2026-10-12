@@ -50,20 +50,18 @@ export interface DiagnosticAnalysisResult {
 export interface TourHighlightItem {
   icon: string;
   title: string;
-  hint: string;
+  desc: string;
 }
 
 export interface TourStepDefinition {
   step: number;
-  tag: string;
-  tagColor: 'cyan' | 'green' | 'amber' | 'purple';
+  badge: string;
   title: string;
   subtitle: string;
-  headline: string;
+  description: string;
   routeLocation: string;
   routeLink: string;
   highlights: TourHighlightItem[];
-  proTip: string;
   ctaText: string;
 }
 
@@ -86,158 +84,80 @@ export class OnboardingComponent implements OnInit {
   readonly tourStep = signal<number>(1);
   readonly totalTourSteps = 5;
 
-  // --- SIMULADORES INTERACTIVOS DEL TOUR ---
-  readonly activeHotspot = signal<number | null>(null);
-
-  // Paso 1: Byte IA
-  readonly byteDemoStatus = signal<'idle' | 'typing' | 'replied'>('idle');
-  triggerByteDemo(): void {
-    if (this.byteDemoStatus() === 'typing') return;
-    this.byteDemoStatus.set('typing');
-    setTimeout(() => {
-      this.byteDemoStatus.set('replied');
-    }, 700);
-  }
-  resetByteDemo(): void {
-    this.byteDemoStatus.set('idle');
-  }
-
-  // Paso 2: Roadmap
-  readonly roadmapTrack = signal<'fundamentos' | 'backend' | 'devops'>('fundamentos');
-  readonly roadmapNodeSelected = signal<number>(2);
-  setRoadmapTrack(track: 'fundamentos' | 'backend' | 'devops'): void {
-    this.roadmapTrack.set(track);
-    this.roadmapNodeSelected.set(1);
-  }
-  selectRoadmapNode(node: number): void {
-    this.roadmapNodeSelected.set(node);
-  }
-
-  // Paso 3: Cursos
-  readonly catalogLang = signal<'todos' | 'cpp' | 'python' | 'pseint'>('todos');
-  readonly showSyllabusQuick = signal<boolean>(false);
-  setCatalogLang(lang: 'todos' | 'cpp' | 'python' | 'pseint'): void {
-    this.catalogLang.set(lang);
-  }
-  toggleSyllabusQuick(): void {
-    this.showSyllabusQuick.update(v => !v);
-  }
-
-  // Paso 4: Editor IDE
-  readonly ideExecutionState = signal<'idle' | 'running' | 'success'>('idle');
-  readonly ideSelectedLang = signal<'cpp' | 'python'>('cpp');
-  setIdeLang(lang: 'cpp' | 'python'): void {
-    this.ideSelectedLang.set(lang);
-    this.ideExecutionState.set('idle');
-  }
-  runIdeSimulation(): void {
-    if (this.ideExecutionState() === 'running') return;
-    this.ideExecutionState.set('running');
-    setTimeout(() => {
-      this.ideExecutionState.set('success');
-    }, 850);
-  }
-  resetIdeSimulation(): void {
-    this.ideExecutionState.set('idle');
-  }
-
-  // Paso 5: Experiencia y Racha
-  readonly demoXp = signal<number>(650);
-  readonly xpGainedNotice = signal<boolean>(false);
-  boostXp(): void {
-    if (this.demoXp() >= 1000) {
-      this.demoXp.set(650);
-    } else {
-      this.demoXp.update(x => Math.min(1000, x + 50));
-    }
-    this.xpGainedNotice.set(true);
-    setTimeout(() => this.xpGainedNotice.set(false), 1200);
-  }
-
   readonly tourSteps: TourStepDefinition[] = [
     {
       step: 1,
-      tag: 'PASO 01 // COCKPIT',
-      tagColor: 'cyan',
-      title: 'Centro de Mando & Byte IA',
-      subtitle: 'Tu base de operaciones diaria y tutor inteligente siempre activo.',
-      headline: 'Retoma tus materias con 1 clic y consulta dudas técnicas en vivo con Byte IA.',
-      routeLocation: 'Barra Superior → Inicio ( / )',
+      badge: 'COMPONENTE 01 // NAVEGACIÓN Y COCKPIT',
+      title: 'Inicio & Cockpit Central',
+      subtitle: 'Tu base de operaciones diaria en SysEng Academy',
+      description: 'Desde aquí tienes acceso inmediato a tu racha de estudio diaria (🔥), notificaciones sin leer, tus métricas de práctica y la última lección activa recomendada.',
+      routeLocation: 'Página de Inicio ( / )',
       routeLink: '/',
       highlights: [
-        { icon: 'layout', title: 'Acceso Rápido', hint: 'Salta a programar tu lección activa sin rodeos.' },
-        { icon: 'sparkles', title: 'Byte IA Integrado', hint: 'Tutor socrático para dudas de código y sintaxis.' },
-        { icon: 'flame', title: 'Racha & Métricas', hint: 'Monitorea tus horas de práctica y días consecutivos.' }
+        { icon: 'home', title: 'Acceso Directo a tu Lección', desc: 'Retoma de inmediato la materia en la que estabas practicando con un solo clic.' },
+        { icon: 'flame', title: 'Racha de Estudio y Notificaciones', desc: 'Protege tu racha diaria y revisa avisos de logros en la campanita superior.' },
+        { icon: 'sparkles', title: 'Asistente Byte IA Siempre Listo', desc: 'Tu tutor pedagógico listo para resolver dudas en el momento.' }
       ],
-      proTip: 'Haz clic en "Probar Byte IA" en el simulador para ver cómo interactúa en vivo.',
-      ctaText: 'Siguiente: Rutas de Especialización →'
+      ctaText: 'Siguiente: Rutas de Aprendizaje →'
     },
     {
       step: 2,
-      tag: 'PASO 02 // ROADMAPS',
-      tagColor: 'green',
-      title: 'Rutas de Especialización',
-      subtitle: 'Mallas curriculares organizadas en orden pedagógico secuencial.',
-      headline: 'Estructura tu carrera técnica paso a paso sin vacíos ni materias aisladas.',
-      routeLocation: 'Barra Superior → Rutas ( /rutas )',
+      badge: 'COMPONENTE 02 // MALLAS CURRICULARES',
+      title: 'Rutas de Aprendizaje Especializadas',
+      subtitle: 'Trayectorias formativas estructuradas de inicio a fin',
+      description: 'Nuestras 9 rutas de aprendizaje organizan los cursos en fases secuenciales para que construyas bases sólidas de ingeniería sin vacíos conceptuales.',
+      routeLocation: 'Rutas de Aprendizaje ( /rutas )',
       routeLink: '/rutas',
       highlights: [
-        { icon: 'compass', title: 'Árbol Conectado', hint: 'Cada nodo se desbloquea tras dominar el anterior.' },
-        { icon: 'target', title: 'Enfoques de Rol', hint: 'Especialízate en Backend, Frontend, Algoritmos o DevOps.' },
-        { icon: 'award', title: 'Acreditación Final', hint: 'Certificación oficial verificada al completar el 100% de la ruta.' }
+        { icon: 'map', title: '9 Especialidades Oficiales', desc: 'Backend, Frontend, Full Stack, POO, DevOps, IA, Git, Requerimientos y Fundamentos.' },
+        { icon: 'git-branch', title: 'Progresión por Fases', desc: 'Avanza secuencialmente desde conceptos base hasta arquitecturas avanzadas.' },
+        { icon: 'award', title: 'Acreditación de Mérito', desc: 'Cada ruta completada valida tus competencias con certificación verificable.' }
       ],
-      proTip: 'Prueba cambiar de ruta en el simulador para ver los árboles de carrera.',
       ctaText: 'Siguiente: Catálogo de Cursos →'
     },
     {
       step: 3,
-      tag: 'PASO 03 // CATÁLOGO',
-      tagColor: 'amber',
-      title: 'Catálogo de Cursos & Temarios',
-      subtitle: 'Biblioteca completa de asignaturas prácticas con desglose temático.',
-      headline: 'Explora materias individuales por tecnología y salta directo a la acción.',
-      routeLocation: 'Barra Superior → Cursos ( /cursos )',
+      badge: 'COMPONENTE 03 // CATÁLOGO FORMATIVO',
+      title: 'Catálogo de Cursos & Módulos',
+      subtitle: '44 asignaturas prácticas con lecciones y retos',
+      description: 'Explora el catálogo completo con filtros por dificultad y tecnología. Cada curso incluye temarios desglosados, tiempo estimado y prácticas en código.',
+      routeLocation: 'Catálogo de Cursos ( /cursos )',
       routeLink: '/cursos',
       highlights: [
-        { icon: 'book-open', title: 'Temarios Claros', hint: 'Conoce los conceptos y retos exactos de cada lección.' },
-        { icon: 'blocks', title: 'Filtros Dinámicos', hint: 'Alterna entre C++, Python, PSeInt, SQL y nivel de reto.' },
-        { icon: 'play', title: 'Inicio Directo', hint: 'Abre el reproductor interactivo en cualquier materia con 1 clic.' }
+        { icon: 'book-open', title: '44 Cursos Disponibles', desc: 'Cursos completos en Python, Laravel, Angular, Docker, SQL, Java y Linux.' },
+        { icon: 'filter', title: 'Filtros por Nivel', desc: 'Clasificados rigurosamente en Principiante, Intermedio y Avanzado.' },
+        { icon: 'layers', title: 'Temarios Claros y Transparentes', desc: 'Consulta el índice detallado de cada módulo antes de inscribirte.' }
       ],
-      proTip: 'Filtra por lenguaje en el simulador o pulsa "Ver Temario" para explorar los módulos.',
-      ctaText: 'Siguiente: Editor de Código & Sandboxes →'
+      ctaText: 'Siguiente: Reproductor e IDE →'
     },
     {
       step: 4,
-      tag: 'PASO 04 // SANDBOX_IDE',
-      tagColor: 'purple',
-      title: 'El Editor Interactivo & Sandboxes',
-      subtitle: 'Escribe, compila y valida código real sobre entornos Linux.',
-      headline: 'CodeMirror 6 adaptado al lenguaje del reto con ejecución nativa y tests automáticos.',
-      routeLocation: 'En cada Lección Práctica ( /cursos/:slug/leccion/:slug )',
+      badge: 'COMPONENTE 04 // ENTORNO DE PRÁCTICA',
+      title: 'Reproductor de Lecciones con Editor & Byte IA',
+      subtitle: 'El corazón práctico: teoría, código en vivo y tutor socrático',
+      description: 'Aprende haciendo. Lee la teoría, escribe código en el editor interactivo y ejecuta pruebas en el sandbox. Si te bloqueas, consulta a Byte IA para recibir pistas socráticas.',
+      routeLocation: 'Reproductor de Lecciones ( /cursos/:slug/leccion/:slug )',
       routeLink: '/cursos',
       highlights: [
-        { icon: 'terminal', title: 'Botón [▶ Run]', hint: 'Compila en tiempo real y muestra la salida estándar en terminal.' },
-        { icon: 'check', title: 'Botón [✓ Tests]', hint: 'Batería de pruebas automáticas con entradas de verificación.' },
-        { icon: 'lock', title: 'Mérito Estricto', hint: 'El siguiente reto se desbloquea solo si superas todos los tests.' }
+        { icon: 'terminal', title: 'Editor de Código con Terminal', desc: 'Escribe, compila y ejecuta directamente en el navegador sin configurar nada.' },
+        { icon: 'check-circle', title: 'Batería de Pruebas Automáticas', desc: 'Valida tu lógica al instante con tests unitarios integrados.' },
+        { icon: 'bot', title: 'Tutor Socrático Byte IA', desc: 'Respuestas pedagógicas que guían tu razonamiento sin darte la solución masticada.' }
       ],
-      proTip: '¡Haz clic en [▶ Run Script] en el simulador para ver la compilación en vivo!',
-      ctaText: 'Siguiente: Racha & Perfil →'
+      ctaText: 'Siguiente: Perfil & Racha →'
     },
     {
       step: 5,
-      tag: 'PASO 05 // PROGRESO',
-      tagColor: 'cyan',
-      title: 'Racha Diaria & Perfil Profesional',
-      subtitle: 'Constancia, fuego diario y acreditación de logros en tu hoja de vida.',
-      headline: 'Gana experiencia (XP), protege tu racha diaria y construye tu historial de ingeniería.',
-      routeLocation: 'Barra Superior → 🔥 Racha Diaria / Perfil ( /perfil )',
+      badge: 'COMPONENTE 05 // HISTORIAL Y MÉTRICAS',
+      title: 'Perfil del Estudiante, Métricas & Logros',
+      subtitle: 'Tu expediente de crecimiento como futuro ingeniero',
+      description: 'Monitorea tus horas acumuladas de estudio, tu racha activa, tu nivel y XP, el dictamen diagnóstico de calibración y tu vitrina de insignias desbloqueadas.',
+      routeLocation: 'Perfil del Estudiante ( /perfil )',
       routeLink: '/perfil',
       highlights: [
-        { icon: 'flame', title: 'Racha de Fuego (🔥)', hint: '1 reto al día mantiene tu racha y bonifica tu XP.' },
-        { icon: 'award', title: 'Nivel y Liga XP', hint: 'Sube de rango técnico a medida que acumulas experiencia.' },
-        { icon: 'user', title: 'Hoja de Vida Técnica', hint: 'Historial de retos, insignias ganadas y credencial digital.' }
+        { icon: 'user', title: 'Expediente y Nivel XP', desc: 'Sigue tu evolución de Cadete hasta Desarrollador Senior mediante puntos de experiencia.' },
+        { icon: 'flame', title: 'Calendario de Rachas', desc: 'Registra tus días consecutivos de práctica y recupera rachas congeladas.' },
+        { icon: 'shield', title: 'Dictamen Diagnóstico Guardado', desc: 'Revisa siempre las recomendaciones personalizadas emitidas por la IA.' }
       ],
-      proTip: 'Pulsa [⚡ Práctica Diaria (+50 XP)] en el simulador para ver subir tu barra.',
       ctaText: 'Finalizar Tour y Elegir mi Misión →'
     }
   ];

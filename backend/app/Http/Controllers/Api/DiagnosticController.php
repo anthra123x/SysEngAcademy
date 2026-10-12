@@ -98,6 +98,28 @@ class DiagnosticController extends Controller
                 4 => ['estructuras-datos-lineales', 'diseno-modular-interfaces', 'patrones-de-diseno'],
             ],
         ],
+        'git-y-control-versiones' => [
+            'slug' => 'git-y-control-versiones',
+            'title' => 'Ruta de Git y Control de Versiones Profesional',
+            'specialty' => 'Control de Versiones & Flujos Colaborativos',
+            'levels' => [
+                1 => ['git-desde-cero', 'linux-y-linea-de-comandos', 'git-colaboracion-y-flujos'],
+                2 => ['git-colaboracion-y-flujos', 'git-avanzado-rebase-conflictos', 'ci-cd-github-actions'],
+                3 => ['git-avanzado-rebase-conflictos', 'ci-cd-github-actions', 'docker-y-contenedores'],
+                4 => ['git-avanzado-rebase-conflictos', 'ci-cd-github-actions', 'despliegue-fullstack'],
+            ],
+        ],
+        'ingenieria-de-requerimientos' => [
+            'slug' => 'ingenieria-de-requerimientos',
+            'title' => 'Ruta de Ingeniería de Requerimientos & Análisis de Software',
+            'specialty' => 'Ingeniería de Requerimientos & Gestión del Alcance',
+            'levels' => [
+                1 => ['fundamentos-requerimientos', 'historias-de-usuario-y-casos-de-uso', 'introduccion-programacion'],
+                2 => ['fundamentos-requerimientos', 'historias-de-usuario-y-casos-de-uso', 'gestion-de-requerimientos'],
+                3 => ['historias-de-usuario-y-casos-de-uso', 'gestion-de-requerimientos', 'especificacion-srs-diagramas'],
+                4 => ['gestion-de-requerimientos', 'especificacion-srs-diagramas', 'diseno-modular-interfaces'],
+            ],
+        ],
     ];
 
     /**
@@ -344,6 +366,30 @@ class DiagnosticController extends Controller
             'hours' => 22,
             'skills' => ['Bases de Datos Vectoriales', 'Arquitecturas RAG', 'Búsqueda Semántica'],
         ],
+        'fundamentos-requerimientos' => [
+            'title' => 'Fundamentos de requerimientos',
+            'desc' => 'Ingeniería de requerimientos, clasificación funcional y no funcional, stakeholders y ciclo de vida.',
+            'hours' => 12,
+            'skills' => ['Requisitos Funcionales', 'Requisitos No Funcionales', 'Levantamiento de Información'],
+        ],
+        'historias-de-usuario-y-casos-de-uso' => [
+            'title' => 'Historias de usuario y casos de uso',
+            'desc' => 'Metodologías ágiles, criterios de aceptación INVEST, especificación de casos de uso y diagramas UML.',
+            'hours' => 13,
+            'skills' => ['Historias de Usuario (INVEST)', 'Criterios de Aceptación', 'Casos de Uso UML'],
+        ],
+        'gestion-de-requerimientos' => [
+            'title' => 'Gestión de requerimientos',
+            'desc' => 'Trazabilidad de requisitos, priorización con MoSCoW/Kano, control de cambios y matrices de trazabilidad.',
+            'hours' => 11,
+            'skills' => ['Matriz de Trazabilidad', 'Priorización MoSCoW', 'Gestión del Alcance'],
+        ],
+        'especificacion-srs-diagramas' => [
+            'title' => 'Especificación Formal (SRS) y Casos de Uso',
+            'desc' => 'Estándar IEEE 830 / ISO 29148 para especificación de requisitos de software (SRS) y modelado formal.',
+            'hours' => 12,
+            'skills' => ['Estándar IEEE 830', 'Documentación SRS', 'Validación Formal'],
+        ],
     ];
 
     /**
@@ -532,6 +578,10 @@ class DiagnosticController extends Controller
             $pathKey = 'devops';
         } elseif (str_contains($normPref, 'ia') || str_contains($normPref, 'intel')) {
             $pathKey = 'desarrollo-con-ia';
+        } elseif (str_contains($normPref, 'git') || str_contains($normPref, 'version')) {
+            $pathKey = 'git-y-control-versiones';
+        } elseif (str_contains($normPref, 'requer') || str_contains($normPref, 'analis') || str_contains($normPref, 'srs')) {
+            $pathKey = 'ingenieria-de-requerimientos';
         } elseif (str_contains($normPref, 'algo') || str_contains($normPref, 'ciencia') || str_contains($normPref, 'fundam')) {
             $pathKey = 'fundamentos-programacion';
         } else {
