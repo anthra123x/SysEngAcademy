@@ -301,18 +301,22 @@ class AuthService
      */
     public function changePassword(User $user, string $newPassword, ?string $currentPassword = null): array
     {
+        $dbUser = User::find($user->id) ?? $user;
+
         if (!empty($currentPassword)) {
-            if (!$this->verifyUserPassword($currentPassword, $user)) {
+            if (!$this->verifyUserPassword($currentPassword, $dbUser)) {
                 abort(422, 'La contraseña actual ingresada es incorrecta.');
             }
         }
 
-        $user->password = Hash::make($newPassword);
-        $user->save();
+        $dbUser->password = Hash::make($newPassword);
+        $dbUser->save();
+
+        Cache::forget("jwt.user.{$dbUser->id}");
 
         return [
             'message' => 'Contraseña actualizada exitosamente.',
-            'user'    => $user,
+            'user'    => $dbUser,
         ];
     }
 }

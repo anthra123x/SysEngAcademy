@@ -59,7 +59,7 @@ class JwtGuard implements Guard
         // El cache por clave sub evita repetir la query dentro del mismo
         // request; la validez del token NO depende de esta caché.
         $data = Cache::remember("jwt.user.{$this->payload->sub}", 300, function () {
-            return User::find($this->payload->sub)?->toArray();
+            return User::find($this->payload->sub)?->getAttributes();
         });
 
         return $this->user = $data
