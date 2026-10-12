@@ -234,6 +234,9 @@ class LessonController extends Controller
         if (!$user && $request->filled('student_email')) {
             $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
         }
+        if (!$user && $request->hasHeader('X-User-Email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->header('X-User-Email'))))->first();
+        }
 
         $courseProgress = null;
 
@@ -296,6 +299,9 @@ class LessonController extends Controller
         $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
         if (!$user && $request->filled('student_email')) {
             $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
+        }
+        if (!$user && $request->hasHeader('X-User-Email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->header('X-User-Email'))))->first();
         }
 
         if (!$user) {
@@ -474,6 +480,9 @@ class LessonController extends Controller
         $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
         if (!$user && $request->filled('student_email')) {
             $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
+        }
+        if (!$user && $request->hasHeader('X-User-Email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->header('X-User-Email'))))->first();
         }
 
         if (!$user) {

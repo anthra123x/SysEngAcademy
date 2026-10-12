@@ -6,9 +6,18 @@ import { AuthService } from '../services/auth.service';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getToken();
+  const user = authService.user();
 
-  const authReq = token
-    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+  const setHeaders: Record<string, string> = {};
+  if (token) {
+    setHeaders['Authorization'] = `Bearer ${token}`;
+  }
+  if (user?.email) {
+    setHeaders['X-User-Email'] = user.email;
+  }
+
+  const authReq = Object.keys(setHeaders).length > 0
+    ? req.clone({ setHeaders })
     : req;
 
   return next(authReq).pipe(
