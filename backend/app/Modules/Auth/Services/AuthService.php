@@ -44,13 +44,30 @@ class AuthService
             throw $e;
         }
 
+        $verifyCode = sprintf('%06d', mt_rand(100000, 999999));
+        Cache::put("email_verify_code_{$user->id}", $verifyCode, now()->addHours(24));
+        Cache::put("email_verify_code_{$user->email}", $verifyCode, now()->addHours(24));
+
+        TransactionalMailService::send(
+            toEmail: $user->email,
+            subject: "¡Bienvenido a SysEng Academy! Código de activación: {$verifyCode}",
+            view: 'emails.verify-code',
+            viewData: [
+                'userName'   => $user->name,
+                'verifyCode' => $verifyCode,
+                'userEmail'  => $user->email,
+                'verifyUrl'  => config('app.frontend_url', 'https://frontend-nine-rho-xxvp7yeoqa.vercel.app'),
+            ]
+        );
+
         $token = AuthTokenService::issue($user);
 
         return [
             'user'                  => $user,
             'token'                 => $token,
             'verification_required' => false,
-            'message'               => 'Cuenta creada exitosamente. Bienvenido a SysEng Academy.',
+            'verification_code'     => $verifyCode,
+            'message'               => 'Cuenta creada exitosamente. Hemos enviado un correo de confirmación a tu bandeja de entrada.',
         ];
     }
 
@@ -284,6 +301,17 @@ class AuthService
             Cache::forget("password_reset_code_{$user->id}");
             Cache::forget("password_reset_code_{$cleanEmail}");
 
+            TransactionalMailService::send(
+                toEmail: $user->email,
+                subject: "Tu contraseña ha sido restablecida - SysEng Academy",
+                view: 'emails.password-changed',
+                viewData: [
+                    'userName'  => $user->name,
+                    'userEmail' => $user->email,
+                    'actionUrl' => config('app.frontend_url', 'https://frontend-nine-rho-xxvp7yeoqa.vercel.app') . '/login',
+                ]
+            );
+
             return [
                 'message' => 'Contraseña restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.',
                 'user'    => $user,
@@ -310,6 +338,17 @@ class AuthService
         $dbUser->save();
 
         Cache::forget("jwt.user.{$dbUser->id}");
+
+        TransactionalMailService::send(
+            toEmail: $dbUser->email,
+            subject: "Tu contraseña ha sido actualizada - SysEng Academy",
+            view: 'emails.password-changed',
+            viewData: [
+                'userName'  => $dbUser->name,
+                'userEmail' => $dbUser->email,
+                'actionUrl' => config('app.frontend_url', 'https://frontend-nine-rho-xxvp7yeoqa.vercel.app') . '/login',
+            ]
+        );
 
         return [
             'message' => 'Contraseña actualizada exitosamente.',

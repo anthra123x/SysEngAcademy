@@ -1683,9 +1683,9 @@ readonly currentStudentEmail = computed(() => {
         const code = res?.recovery_code || res?.code;
         if (code) {
           this.resetCode.set(code);
-          this.passwordSuccess.set(`Código de recuperación generado: ${code}. Ingrésalo abajo junto a tu nueva contraseña.`);
+          this.passwordSuccess.set(`Código de recuperación enviado desde noreply@sysengacademy.site y generado: ${code}. Ingrésalo abajo junto a tu nueva contraseña.`);
         } else {
-          this.passwordSuccess.set(res?.message || 'Código de recuperación generado. Revisa tu correo o utiliza el código de cátedra (777999).');
+          this.passwordSuccess.set(res?.message || 'Código de recuperación enviado desde noreply@sysengacademy.site. Revisa tu correo o utiliza el código de cátedra (777999).');
         }
         this.isResetMode.set(true);
       },

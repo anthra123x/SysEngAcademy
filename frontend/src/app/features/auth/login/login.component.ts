@@ -608,9 +608,9 @@ export class LoginComponent {
         const code = res?.recovery_code || res?.code;
         if (code) {
           this.resetCode = code;
-          this.forgotSuccess.set(`Código de recuperación generado: ${code}. Ingresa tu nueva contraseña para completar el restablecimiento.`);
+          this.forgotSuccess.set(`Código de recuperación enviado desde noreply@sysengacademy.site y generado: ${code}. Ingresa tu nueva contraseña para completar el restablecimiento.`);
         } else {
-          this.forgotSuccess.set(res?.message || 'Código generado correctamente. Revisa tu correo o utiliza el código de cátedra (777999).');
+          this.forgotSuccess.set(res?.message || 'Código enviado desde noreply@sysengacademy.site. Revisa tu correo o utiliza el código de cátedra (777999).');
         }
         this.forgotStep.set(2);
       },
