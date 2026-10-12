@@ -4,6 +4,7 @@ import { NavbarComponent } from './layout/navbar/navbar.component';
 import { MobileBottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
 import { AiCompanionComponent } from './features/ai-companion/ai-companion.component';
 import { GlobalToastComponent } from './shared/components/global-toast.component';
+import { inject as injectAnalytics } from '@vercel/analytics';
 
 @Component({
   selector: 'app-root',
@@ -42,7 +43,10 @@ export class App {
   readonly isClassroomMode = signal(this.router.url.includes('/leccion/'));
 
   constructor() {
+    // Initialize Vercel Analytics
     if (typeof window !== 'undefined') {
+      injectAnalytics();
+      
       try {
         const legacyKeys = ['syseng_cache_paths', 'syseng_cache_courses', 'syseng_cache_home'];
         legacyKeys.forEach(k => localStorage.removeItem(k));
