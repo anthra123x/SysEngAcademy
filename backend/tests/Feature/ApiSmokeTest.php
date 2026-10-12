@@ -71,6 +71,7 @@ class ApiSmokeTest extends TestCase
     {
         $email = 'nuevo'.uniqid().'@sysengacademy.dev';
 
+        // 1. Paso 1: Solicitar código de activación
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Nuevo Estudiante',
             'email' => $email,
@@ -78,7 +79,17 @@ class ApiSmokeTest extends TestCase
             'password_confirmation' => 'secret1234',
         ]);
 
-        $response->assertCreated()
+        $response->assertOk()
+            ->assertJsonPath('requires_verification', true);
+
+        // 2. Paso 2: Confirmar código de activación y emitir token
+        $code = \Illuminate\Support\Facades\Cache::get("email_verify_code_" . strtolower($email));
+        $confirm = $this->postJson('/api/auth/register/confirm', [
+            'email' => $email,
+            'code'  => $code,
+        ]);
+
+        $confirm->assertCreated()
             ->assertJsonStructure(['token', 'user' => ['id', 'email', 'role']])
             ->assertJsonPath('user.role', 'student');
 
