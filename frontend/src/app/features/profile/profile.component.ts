@@ -879,6 +879,40 @@ readonly currentStudentEmail = computed(() => {
       });
     }
 
+    // Sincronizar diagnóstico con el backend oficial
+    this.api.get<{ success: boolean; result: any }>('/ai/diagnostic').subscribe({
+      next: (resp) => {
+        if (resp?.success && resp?.result) {
+          const res = resp.result;
+          this.auth.saveDiagnosticResult(res, this.currentStudentEmail());
+          this.diagnosticCompleted.set(true);
+          this.diagnosticFinished.set(true);
+          const levelTitle = res.levelTitle || res.assignedLevelTitle;
+          const mapped = {
+            ...res,
+            assignedLevelTitle: levelTitle,
+            assignedLevelNumber: res.levelNumber || res.assignedLevelNumber || 1,
+            recommendedSpecialty: res.recommendedSpecialty || 'Ingeniería de Software',
+            recommendedPathTitle: res.recommendedPathTitle || 'Ruta de Fundamentos de Software',
+            suggestedCourseSlug: res.primaryCourseSlug || res.suggestedCourseSlug || 'introduccion-programacion',
+            suggestedCourseTitle: res.primaryCourseTitle || res.suggestedCourseTitle || 'Introducción a la Programación',
+          };
+          this.diagnosticResult.set(mapped);
+          this.currentRecommendation.set({
+            pathTitle: mapped.recommendedPathTitle,
+            pathSlug: mapped.suggestedCourseSlug,
+            targetLevelName: mapped.assignedLevelTitle,
+            milestoneOrder: 1,
+            rationale: res.agentFeedback || `Byte IA ha evaluado tu perfil y estructurado tu temario de ingeniería personalizado.`,
+            topicsToStudy: ['Fundamentos de Programación', 'Algoritmos y Lógica', 'Prácticas en Terminal'],
+            suggestedCourseSlug: mapped.suggestedCourseSlug,
+            suggestedCourseTitle: mapped.suggestedCourseTitle,
+            matchScore: 96,
+          });
+        }
+      },
+      error: () => {}
+    });
   }
 
   readonly currentAsciiAvatar = computed(() => {

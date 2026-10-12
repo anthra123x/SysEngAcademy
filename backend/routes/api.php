@@ -97,6 +97,7 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
     Route::post('/ai/conversations/{conversation}/stream', [AiChatController::class, 'streamMessage']);
 
     // Evaluación diagnóstica con IA
+    Route::get('/ai/diagnostic', [\App\Http\Controllers\Api\DiagnosticController::class, 'getSavedDiagnostic']);
     Route::post('/ai/diagnostic', [\App\Http\Controllers\Api\DiagnosticController::class, 'evaluate']);
 
     Route::get('/profile/feedbacks', [ProfileController::class, 'feedbacks']);

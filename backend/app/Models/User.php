@@ -15,6 +15,7 @@ class User extends Authenticatable
         'name', 'email', 'password', 'avatar', 'role', 'email_verified_at',
         'current_streak', 'previous_streak', 'max_streak', 'last_activity_date',
         'streak_recovered_at', 'today_study_seconds', 'total_study_seconds', 'xp', 'specialization',
+        'diagnostic_result',
     ];
 
     protected $hidden = [
@@ -34,6 +35,7 @@ class User extends Authenticatable
             'today_study_seconds' => 'integer',
             'total_study_seconds' => 'integer',
             'xp' => 'integer',
+            'diagnostic_result' => 'array',
         ];
     }
 
