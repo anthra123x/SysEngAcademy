@@ -33,7 +33,7 @@ class TransactionalMailService
         }
 
         $rawName = config('mail.from.name') ?: env('MAIL_FROM_NAME');
-        if (empty($rawName) || strtolower(trim($rawName)) === 'laravel') {
+        if (empty($rawName) || strtolower(trim($rawName)) === 'laravel' || str_contains($rawName, 'API')) {
             $fromName = 'SysEng Academy';
         } else {
             $fromName = trim($rawName);

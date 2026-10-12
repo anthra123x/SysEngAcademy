@@ -208,8 +208,13 @@
       </div>
 
       <div class="header">
-        <div class="logo-badge">⚡ TELEMETRÍA DE CORREO</div>
+        <img 
+          src="https://www.sysengacademy.site/icons/icon-192x192.png" 
+          alt="SysEng Academy" 
+          style="width: 50px; height: 50px; border-radius: 12px; display: inline-block; margin-bottom: 10px; border: 1px solid rgba(10, 233, 138, 0.35);"
+        />
         <h1 class="logo-title">SysEng<span>Academy</span></h1>
+        <div class="logo-badge" style="margin-top: 8px;">VERIFICACIÓN DE BUZÓN</div>
       </div>
 
       <div class="content">

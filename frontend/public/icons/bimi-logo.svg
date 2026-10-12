@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 512 512" width="512" height="512">
+  <title>SysEng Academy Logo</title>
+  <defs>
+    <linearGradient id="bimiBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0E121E"/>
+      <stop offset="0.5" stop-color="#08090D"/>
+      <stop offset="1" stop-color="#050608"/>
+    </linearGradient>
+    <linearGradient id="bimiBrand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0AE98A"/>
+      <stop offset="1" stop-color="#00D9FF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="16" y="16" width="480" height="480" rx="120" fill="url(#bimiBg)" stroke="url(#bimiBrand)" stroke-width="10"/>
+
+  <!-- Left Bracket < -->
+  <path d="M 180 180 L 110 256 L 180 332" 
+        fill="none" 
+        stroke="url(#bimiBrand)" 
+        stroke-width="32" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+
+  <!-- Slash / -->
+  <line x1="280" y1="160" x2="232" y2="352" 
+        stroke="#00D9FF" 
+        stroke-width="32" 
+        stroke-linecap="round"/>
+
+  <!-- Right Bracket > -->
+  <path d="M 332 180 L 402 256 L 332 332" 
+        fill="none" 
+        stroke="url(#bimiBrand)" 
+        stroke-width="32" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+
+  <!-- Accents -->
+  <circle cx="388" cy="180" r="14" fill="#0AE98A"/>
+  <circle cx="124" cy="332" r="10" fill="#00D9FF"/>
+</svg>

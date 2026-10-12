@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { RouterLink, Router } from '@angular/router';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -525,9 +525,10 @@ import { AuthService } from '../../../core/services/auth.service';
     `,
   ],
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   email = '';
   password = '';
@@ -544,6 +545,20 @@ export class LoginComponent {
   forgotLoading = signal(false);
   forgotError = signal('');
   forgotSuccess = signal('');
+
+  ngOnInit() {
+    const params = this.route.snapshot.queryParamMap;
+    const mode = params.get('mode');
+    const email = params.get('email');
+    const code = params.get('code');
+
+    if (mode === 'reset' || (email && code)) {
+      if (email) this.forgotEmail = email.trim();
+      if (code) this.resetCode = code.trim();
+      this.showForgotModal.set(true);
+      this.forgotStep.set(2);
+    }
+  }
 
   submit() {
     if (this.loading()) return;

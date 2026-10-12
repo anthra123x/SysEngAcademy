@@ -41,6 +41,10 @@ class AuthService
 
         Cache::put("email_verify_code_{$cleanEmail}", $verifyCode, now()->addMinutes(30));
 
+        $verifyUrl = rtrim(config('app.frontend_url', 'https://www.sysengacademy.site'), '/')
+            . '/auth/verificar?email=' . urlencode($cleanEmail)
+            . '&code=' . urlencode($verifyCode);
+
         // Envío obligatorio mediante Resend REST API a la bandeja de entrada
         TransactionalMailService::send(
             toEmail: $cleanEmail,
@@ -50,7 +54,8 @@ class AuthService
                 'userName'   => $dto->name,
                 'verifyCode' => $verifyCode,
                 'userEmail'  => $cleanEmail,
-                'verifyUrl'  => config('app.frontend_url', 'https://www.sysengacademy.site'),
+                'verifyUrl'  => $verifyUrl,
+                'actionText' => 'Verificar y Acceder a mi Perfil →',
             ]
         );
 
@@ -145,6 +150,10 @@ class AuthService
             Cache::put("email_verify_code_{$user->id}", $verifyCode, now()->addMinutes(30));
         }
 
+        $verifyUrl = rtrim(config('app.frontend_url', 'https://www.sysengacademy.site'), '/')
+            . '/auth/verificar?email=' . urlencode($cleanEmail)
+            . '&code=' . urlencode($verifyCode);
+
         TransactionalMailService::send(
             toEmail: $cleanEmail,
             subject: "Nuevo Código de Activación: {$verifyCode} - SysEng Academy",
@@ -153,7 +162,8 @@ class AuthService
                 'userName'   => $userName,
                 'verifyCode' => $verifyCode,
                 'userEmail'  => $cleanEmail,
-                'verifyUrl'  => config('app.frontend_url', 'https://www.sysengacademy.site'),
+                'verifyUrl'  => $verifyUrl,
+                'actionText' => 'Verificar y Acceder a mi Perfil →',
             ]
         );
 
@@ -338,6 +348,10 @@ class AuthService
         Cache::put("password_reset_code_{$user->id}", $resetCode, now()->addMinutes(30));
         Cache::put("password_reset_code_{$cleanEmail}", $resetCode, now()->addMinutes(30));
 
+        $resetUrl = rtrim(config('app.frontend_url', 'https://www.sysengacademy.site'), '/')
+            . '/auth/login?mode=reset&email=' . urlencode($cleanEmail)
+            . '&code=' . urlencode($resetCode);
+
         TransactionalMailService::send(
             toEmail: $user->email,
             subject: "Código de Recuperación: {$resetCode} - SysEng Academy",
@@ -346,7 +360,8 @@ class AuthService
                 'userName'   => $user->name,
                 'verifyCode' => $resetCode,
                 'userEmail'  => $user->email,
-                'verifyUrl'  => config('app.frontend_url', 'https://www.sysengacademy.site'),
+                'verifyUrl'  => $resetUrl,
+                'actionText' => 'Restablecer mi Contraseña →',
             ]
         );
 

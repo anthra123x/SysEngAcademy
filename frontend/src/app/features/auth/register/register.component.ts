@@ -539,11 +539,6 @@ export class RegisterComponent implements OnDestroy {
   }
 
   finishRegistration() {
-    const user = this.auth.user();
-    if (user?.role === 'admin' || user?.role === 'instructor') {
-      this.router.navigate(['/docente']);
-    } else {
-      this.router.navigate(['/onboarding']);
-    }
+    this.router.navigate(['/perfil']);
   }
 }

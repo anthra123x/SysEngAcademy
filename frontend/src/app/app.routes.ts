@@ -67,5 +67,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent),
     canActivate: [guestGuard]
   },
+  {
+    path: 'auth/verificar',
+    loadComponent: () => import('./features/auth/verify/verify.component').then(m => m.VerifyEmailComponent)
+  },
+  {
+    path: 'auth/verify',
+    redirectTo: 'auth/verificar'
+  },
   { path: '**', redirectTo: '' }
 ];
