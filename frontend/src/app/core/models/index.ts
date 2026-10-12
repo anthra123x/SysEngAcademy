@@ -303,14 +303,27 @@ export interface QuizAttemptResult {
   score: number;
   correct: number;
   total: number;
-  /** Backend: true si score >= 60 (aprobado). */
+  /** Backend: true si score >= 90 (aprobado). */
   passed?: boolean;
+  required_score?: number;
   completed?: boolean;
   course_progress_percent?: number;
   results: QuizAttemptQuestionResult[];
 }
 
 // === AI Companion (Byte) ===
+
+export interface AiChallengeEvaluation {
+  passed: boolean;
+  score: number;
+  required_score: number;
+  summary: string;
+  feedback: string;
+  improvements: string[];
+  key_strengths: string[];
+  completed: boolean;
+  course_progress_percent?: number | null;
+}
 
 export interface AiAskReply {
   reply: string;

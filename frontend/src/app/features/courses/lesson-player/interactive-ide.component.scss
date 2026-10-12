@@ -771,6 +771,205 @@
   }
 }
 
+/* ==========================================================================
+   BYTE IA EVALUATION BUTTON & TERMINAL STYLES
+   ========================================================================== */
+
+.mac-btn-ai {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.18), rgba(99, 102, 241, 0.18));
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  color: #e2e8f0;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 5px 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .ai-spark {
+    font-size: 12px;
+    color: #c084fc;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.32), rgba(99, 102, 241, 0.32));
+    border-color: rgba(192, 132, 252, 0.8);
+    color: #ffffff;
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.35);
+
+    .ai-spark {
+      transform: scale(1.2) rotate(10deg);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.term-tab-ai {
+  .tab-ai-icon {
+    margin-right: 3px;
+  }
+
+  &.is-active {
+    color: #c084fc !important;
+    border-bottom-color: #c084fc !important;
+  }
+}
+
+.terminal-ai-view {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 280px;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+}
+
+.ai-eval-card {
+  background: rgba(21, 22, 36, 0.85);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  &.is-pass {
+    border-color: rgba(10, 233, 138, 0.35);
+    background: linear-gradient(180deg, rgba(10, 233, 138, 0.06), rgba(21, 22, 36, 0.9));
+  }
+
+  &.is-fail {
+    border-color: rgba(245, 158, 11, 0.4);
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.06), rgba(21, 22, 36, 0.9));
+  }
+}
+
+.ai-eval-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 10px;
+}
+
+.ai-eval-score-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  .score-number {
+    font-size: 16px;
+    font-weight: 800;
+    font-family: inherit;
+    padding: 2px 8px;
+    border-radius: 5px;
+
+    .is-pass & {
+      background: rgba(10, 233, 138, 0.18);
+      color: #0ae98a;
+    }
+    .is-fail & {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+    }
+  }
+
+  .score-verdict {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+
+    .is-pass & {
+      color: #0ae98a;
+    }
+    .is-fail & {
+      color: #fbbf24;
+    }
+  }
+}
+
+.ai-eval-summary {
+  font-size: 13px;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.ai-eval-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12.5px;
+}
+
+.section-title {
+  margin: 0 0 4px 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.feedback-text {
+  margin: 0;
+  color: #e2e8f0;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.improvements-list,
+.strengths-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  line-height: 1.4;
+
+  li {
+    color: #e2e8f0;
+  }
+}
+
+.improvements-list li::marker {
+  color: #fbbf24;
+}
+
+.strengths-list li::marker {
+  color: #0ae98a;
+}
+
+.ai-retry-notice {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px dashed rgba(245, 158, 11, 0.35);
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #fcd34d;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 /* TOAST */
 .mac-toast {
   position: absolute;
@@ -807,8 +1006,9 @@
     font-size: 12px;
   }
 
-  .mac-btn-run {
+  .mac-btn-run,
+  .mac-btn-ai {
     padding: 4px 8px;
-    font-size: 11.5px;
+    font-size: 11px;
   }
 }

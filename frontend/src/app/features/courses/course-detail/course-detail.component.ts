@@ -1,5 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
-import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { DecimalPipe, DatePipe, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoursesService, isModuleFullyCompleted, isModuleUnlockedForStudent, formatRatingCount } from '../../../core/services/courses.service';
@@ -41,6 +43,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   ratingFeedbackMsg  = signal<string | null>(null);
   ratingFeedbackType = signal<'success' | 'error' | null>(null);
   readonly formatRatingCount = formatRatingCount;
+  private navSub?: Subscription;
 
   private readonly progressListener = () => {
     this.verifyProgressRealtime();
@@ -147,8 +150,16 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
       window.addEventListener('lesson-completed-updated', this.progressListener);
       window.addEventListener('storage', this.progressListener);
       window.addEventListener('focus', this.progressListener);
+      window.addEventListener('popstate', this.progressListener);
+      window.addEventListener('pageshow', this.progressListener);
       window.addEventListener('teacher:students-updated', this.progressListener);
     }
+
+    this.navSub = this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe(() => {
+        this.verifyProgressRealtime();
+      });
 
     this.route.paramMap.subscribe(params => {
       const slug = params.get('slug');
@@ -201,10 +212,13 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.navSub?.unsubscribe();
     if (typeof window !== 'undefined') {
       window.removeEventListener('lesson-completed-updated', this.progressListener);
       window.removeEventListener('storage', this.progressListener);
       window.removeEventListener('focus', this.progressListener);
+      window.removeEventListener('popstate', this.progressListener);
+      window.removeEventListener('pageshow', this.progressListener);
       window.removeEventListener('teacher:students-updated', this.progressListener);
     }
   }
@@ -217,8 +231,8 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     const enriched = this.coursesSvc.enrichCourseWithCompletions(current);
     this.course.set(enriched);
 
-    // 2. Si el usuario está autenticado, sincronizar con el backend en segundo plano
-    if (this.auth.isAuthenticated() && current.slug) {
+    // 2. Si el usuario está autenticado o tiene sesión, sincronizar con el backend en segundo plano
+    if ((this.auth.isAuthenticated() || this.coursesSvc.getUserEmail() !== 'guest') && current.slug) {
       this.coursesSvc.getBySlug(current.slug).subscribe({
         next: (fresh) => {
           if (fresh) {

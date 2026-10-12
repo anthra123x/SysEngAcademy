@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AiConversation;
 use App\Models\AiMessage;
+use App\Models\Enrollment;
 use App\Models\Lesson;
+use App\Models\LessonProgress;
 use App\Services\AiService;
 use Illuminate\Http\Request;
 
@@ -216,5 +218,101 @@ class AiChatController extends Controller
         }
 
         return mb_substr(implode("\n", $parts), 0, 1500);
+    }
+
+    /**
+     * Evalúa un reto de código de estudiante con el agente de IA,
+     * asignando una nota rigurosa (0-100%). Si la nota es >= 90%,
+     * aprueba el ejercicio y registra automáticamente la lección completada.
+     */
+    public function evaluateChallenge(Request $request)
+    {
+        $request->validate([
+            'lesson_id' => 'required|integer|exists:lessons,id',
+            'code'      => 'required|string|max:30000',
+            'language'  => 'nullable|string|max:50',
+        ]);
+
+        $lesson = Lesson::with('module.course')->findOrFail($request->integer('lesson_id'));
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+        if (!$user && $request->filled('student_email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
+        }
+
+        $challengeContext = [
+            'title'       => $lesson->title,
+            'language'    => $request->input('language') ?: $lesson->language ?: 'código',
+            'description' => $this->lessonExcerpt($lesson),
+            'test_cases'  => $lesson->test_cases ?? [],
+            'solution'    => $lesson->solution ?? null,
+        ];
+
+        $aiService = app(AiService::class);
+        $evaluation = $aiService->evaluateCodeChallenge($challengeContext, $request->input('code'));
+
+        $courseProgress = null;
+        $completed = false;
+
+        // Si la nota alcanza el umbral mínimo del 90%, registrar y acreditar progreso
+        if ($evaluation['passed'] && $user) {
+            $courseId = $lesson->module->course_id;
+            $enrollment = Enrollment::firstOrCreate(
+                ['user_id' => $user->id, 'course_id' => $courseId],
+                ['enrolled_at' => now(), 'progress_percent' => 0]
+            );
+
+            $existing = LessonProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
+            LessonProgress::updateOrCreate(
+                ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+                [
+                    'score'        => max($evaluation['score'], (int) ($existing?->score ?? 0)),
+                    'completed_at' => $existing?->completed_at ?? now(),
+                ]
+            );
+
+            $courseProgress = app(LessonController::class)->recalculateCourseProgress($user->id, $courseId, $enrollment);
+            $completed = true;
+        } elseif ($user && !$evaluation['passed']) {
+            $existing = LessonProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
+            if (!$existing || $evaluation['score'] > ($existing->score ?? 0)) {
+                LessonProgress::updateOrCreate(
+                    ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+                    ['score' => $evaluation['score']]
+                );
+            }
+            $completed = (bool) ($existing && ($existing->score ?? 0) >= 90 && $existing->completed_at);
+        }
+
+        return response()->json([
+            'passed'                  => $evaluation['passed'],
+            'score'                   => $evaluation['score'],
+            'required_score'          => 90,
+            'summary'                 => $evaluation['summary'],
+            'feedback'                => $evaluation['feedback'],
+            'improvements'            => $evaluation['improvements'],
+            'key_strengths'           => $evaluation['key_strengths'],
+            'completed'               => $completed,
+            'course_progress_percent' => $courseProgress,
+        ]);
+    }
+
+    /**
+     * Genera retroalimentación puntual sobre las preguntas erróneas de un quiz.
+     */
+    public function quizFeedback(Request $request)
+    {
+        $request->validate([
+            'lesson_id'       => 'required|integer|exists:lessons,id',
+            'wrong_questions' => 'required|array',
+        ]);
+
+        $lesson = Lesson::findOrFail($request->integer('lesson_id'));
+        $aiService = app(AiService::class);
+        $feedback = $aiService->evaluateQuizMistakes(
+            $lesson->title,
+            $request->input('wrong_questions', [])
+        );
+
+        return response()->json(['feedback' => $feedback]);
     }
 }

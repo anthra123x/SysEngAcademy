@@ -115,6 +115,108 @@ class AiService
     }
 
     /**
+     * Evalúa con precisión técnica y criterio académico un reto de código de estudiante.
+     * Retorna veredicto, puntaje numérico (0-100), retroalimentación puntual
+     * y sugerencias específicas. Nota mínima de aprobación: 90%.
+     */
+    public function evaluateCodeChallenge(array $challengeContext, string $studentCode): array
+    {
+        $title = $challengeContext['title'] ?? 'Reto de Programación';
+        $lang = $challengeContext['language'] ?? 'código';
+        $instructions = $challengeContext['description'] ?? 'Implementa la solución requerida.';
+        $tests = json_encode($challengeContext['test_cases'] ?? [], JSON_UNESCAPED_UNICODE);
+        $solutionRef = $challengeContext['solution'] ?? null;
+
+        $system = "Eres el Agente Evaluador Senior y Tutor Inteligente de SysEng Academy. "
+            . "Tu función es evaluar con precisión técnica y rigor académico las soluciones de código enviadas por los estudiantes. "
+            . "Debes responder ÚNICAMENTE con un objeto JSON válido, sin bloques de código markdown externos, sin texto previo ni posterior.";
+
+        $prompt = "EVALUACIÓN DEL RETO DE PROGRAMACIÓN:\n"
+            . "- Reto: {$title}\n"
+            . "- Lenguaje: {$lang}\n"
+            . "- Instrucciones / Requisitos: {$instructions}\n"
+            . ($solutionRef ? "- Solución de referencia esperada: {$solutionRef}\n" : "")
+            . ($tests !== '[]' && $tests !== 'null' ? "- Casos de prueba previstos: {$tests}\n" : "")
+            . "\nCÓDIGO DEL ESTUDIANTE A EVALUAR:\n"
+            . "```{$lang}\n{$studentCode}\n```\n\n"
+            . "Formato JSON estricto:\n"
+            . "{\n"
+            . '  "passed": true,' . "\n"
+            . '  "score": 95,' . "\n"
+            . '  "summary": "Resumen conciso del veredicto en una sola línea",' . "\n"
+            . '  "feedback": "Retroalimentación técnica puntual en español. Analiza el código del estudiante con exactitud, explicando aciertos y fallos concretos.",' . "\n"
+            . '  "improvements": ["Punto de mejora específico 1", "Punto de mejora específico 2"],' . "\n"
+            . '  "key_strengths": ["Buena práctica o acierto 1"]' . "\n"
+            . "}\n\n"
+            . "CRITERIOS ESTRICTOS:\n"
+            . "1. La nota mínima para passed = true es 90. Si el código tiene errores sintácticos, no resuelve el problema o falla casos de borde, califica con menos de 90 y passed = false.\n"
+            . "2. Si el código está completo, correcto y resuelve el problema eficientemente, califica entre 90 y 100 y passed = true.\n"
+            . "3. Sé MUY PUNTUAL: cita variables, condiciones y lógica concreta del código del estudiante, no des respuestas genéricas.";
+
+        $messages = [
+            ['role' => 'system', 'content' => $system],
+            ['role' => 'user', 'content' => $prompt],
+        ];
+
+        $raw = $this->requestCompletion($messages);
+        $data = $this->extractJson($raw);
+
+        if (!$data || !isset($data['score'])) {
+            // Heurística de respaldo si el LLM no envió JSON exacto
+            $cleanRaw = trim(strip_tags($raw));
+            $isPositive = (stripos($cleanRaw, 'aprobado') !== false || stripos($cleanRaw, 'correcto') !== false || stripos($cleanRaw, 'excelente') !== false);
+            $score = $isPositive ? 92 : 65;
+            $passed = $score >= 90;
+
+            return [
+                'passed'        => $passed,
+                'score'         => $score,
+                'summary'       => $passed ? 'Solución validada y conforme a los requisitos.' : 'La solución requiere ajustes antes de alcanzar la nota mínima del 90%.',
+                'feedback'      => $cleanRaw ?: 'Evaluación completada. Revisa los casos de prueba y las condiciones del reto.',
+                'improvements'  => $passed ? [] : ['Ajusta la lógica del ejercicio para cumplir con todos los requerimientos.'],
+                'key_strengths' => ['Estructura base del código implementada.'],
+            ];
+        }
+
+        $score = max(0, min(100, (int) $data['score']));
+        $passed = $score >= 90;
+
+        return [
+            'passed'        => $passed,
+            'score'         => $score,
+            'summary'       => (string) ($data['summary'] ?? ($passed ? 'Reto superado con excelencia.' : 'Reto pendiente de ajustes.')),
+            'feedback'      => (string) ($data['feedback'] ?? ''),
+            'improvements'  => (array) ($data['improvements'] ?? []),
+            'key_strengths' => (array) ($data['key_strengths'] ?? []),
+        ];
+    }
+
+    /**
+     * Genera retroalimentación puntual sobre los errores cometidos en un quiz.
+     */
+    public function evaluateQuizMistakes(string $quizTitle, array $wrongQuestions): string
+    {
+        $system = "Eres el Tutor Pedagógico de SysEng Academy. Tu labor es explicar con claridad y puntualidad los conceptos detrás de las preguntas erradas en un quiz, sin tecnicismos excesivos y orientando al estudiante para que aprenda y logre el 90% en su siguiente intento. Responde en español.";
+
+        $prompt = "El estudiante presentó el quiz '{$quizTitle}' y falló en las siguientes preguntas:\n\n";
+        foreach ($wrongQuestions as $idx => $wq) {
+            $qText = $wq['question'] ?? 'Pregunta';
+            $sel = $wq['selected'] ?? 'Opción incorrecta';
+            $corr = $wq['correct'] ?? 'Respuesta correcta';
+            $expl = $wq['explanation'] ?? '';
+            $prompt .= ($idx + 1) . ". Pregunta: {$qText}\n   - Lo que eligió: {$sel}\n   - Lo correcto: {$corr}\n   - Explicación base: {$expl}\n\n";
+        }
+        $prompt .= "Dame una retroalimentación puntual (máximo 3 párrafos concisos) explicando los principios conceptuales que debe repasar para tener éxito en su siguiente intento y alcanzar el 90%.";
+
+        $messages = [
+            ['role' => 'system', 'content' => $system],
+            ['role' => 'user', 'content' => $prompt],
+        ];
+
+        return $this->requestCompletion($messages);
+    }
+
+    /**
      * Variante en streaming (SSE) del chat con OpenRouter.
      *
      * Lee los eventos del proveedor y llama a $onDelta por cada fragmento

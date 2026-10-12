@@ -76,6 +76,8 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
 
     Route::post('/ai/ask', [AiChatController::class, 'ask']);
     Route::post('/ai/practice', [AiChatController::class, 'practice']);
+    Route::post('/ai/evaluate-challenge', [AiChatController::class, 'evaluateChallenge']);
+    Route::post('/ai/quiz-feedback', [AiChatController::class, 'quizFeedback']);
 
     Route::get('/ai/conversations', [AiChatController::class, 'conversations']);
     Route::post('/ai/conversations', [AiChatController::class, 'store']);

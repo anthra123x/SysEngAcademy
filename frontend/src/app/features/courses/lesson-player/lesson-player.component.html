@@ -279,26 +279,74 @@
                   }
                 } @else {
                   @let result = quizResult()!;
-                  <div class="quiz-result">
+                  @let isPassed = (result.passed ?? result.score >= 90);
+                  <div class="quiz-result" [class.is-passed]="isPassed" [class.is-failed]="!isPassed">
                     <div
                       class="score-ring"
                       [style.--score]="result.score + '%'"
+                      [class.ring-success]="isPassed"
+                      [class.ring-warning]="!isPassed"
                       role="img"
                       [attr.aria-label]="'Puntaje: ' + result.score + ' por ciento'"
                     >
                       <span class="score-ring__inner">{{ result.score }}%</span>
                     </div>
                     <div class="quiz-result__info">
+                      <div class="quiz-result__status-pill">
+                        @if (isPassed) {
+                          <span class="badge-quiz-success">✓ Aprobado (≥90% alcanzado)</span>
+                        } @else {
+                          <span class="badge-quiz-warning">⚠️ Requiere nota mínima de 90% para aprobar</span>
+                        }
+                      </div>
+
                       <h3>{{ scoreTitle(result.score) }}</h3>
                       <p>Acertaste <strong>{{ result.correct }}</strong> de {{ result.total }} preguntas.</p>
                       <p class="quiz-result__msg">{{ scoreMessage(result.score) }}</p>
-                      @if ((result.passed ?? result.score >= 60) && !completed()) {
-                        <button class="btn btn-success-outline" (click)="markComplete(result.score)" [disabled]="completing()">
-                          {{ completing() ? 'Guardando…' : '✓ Marcar lección como completada' }}
+
+                      <div class="quiz-result-buttons">
+                        @if (isPassed && !completed()) {
+                          <button class="btn btn-success-outline" (click)="markComplete(result.score)" [disabled]="completing()">
+                            {{ completing() ? 'Guardando…' : '✓ Guardar Progreso y Continuar' }}
+                          </button>
+                        }
+
+                        <button type="button" class="btn btn-secondary-outline" (click)="resetQuizAttempt()">
+                          🔄 {{ isPassed ? 'Repetir Quiz' : 'Reintentar Quiz (Mínimo 90%)' }}
                         </button>
-                      }
+
+                        @if (!isPassed && result.correct < result.total) {
+                          <button
+                            type="button"
+                            class="btn btn-ai-feedback-btn"
+                            (click)="askAiForQuizFeedback()"
+                            [disabled]="aiQuizLoading()"
+                          >
+                            @if (aiQuizLoading()) {
+                              <span class="quiz-spinner"></span> Analizando con Byte IA...
+                            } @else {
+                              🤖 Explicación de Byte IA
+                            }
+                          </button>
+                        }
+                      </div>
                     </div>
                   </div>
+
+                  @if (aiQuizFeedback(); as fb) {
+                    <div class="quiz-ai-feedback-card">
+                      <div class="feedback-card-header">
+                        <span class="feedback-icon">🤖</span>
+                        <h4>Retroalimentación Pedagógica de Byte IA</h4>
+                      </div>
+                      <div class="feedback-card-body" [innerHTML]="renderAiReply(fb)"></div>
+                      <div class="feedback-card-footer">
+                        <button type="button" class="btn btn-sm btn-primary" (click)="resetQuizAttempt()">
+                          Reintentar Quiz con esta Explicación →
+                        </button>
+                      </div>
+                    </div>
+                  }
                 }
               </section>
             }

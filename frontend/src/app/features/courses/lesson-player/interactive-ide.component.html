@@ -104,6 +104,25 @@
         ↺
       </button>
 
+      <!-- Action: AI Evaluation Button (Strict 90% filter) -->
+      @if (lessonId()) {
+        <button
+          type="button"
+          class="mac-btn-ai font-mono"
+          (click)="evaluateWithAi()"
+          [disabled]="aiEvaluating() || running() || !code().trim()"
+          title="Evaluar código con el agente evaluador Byte IA (Requiere nota mínima del 90% para aprobar)"
+        >
+          @if (aiEvaluating()) {
+            <span class="mac-spinner" aria-hidden="true"></span>
+            <span>Evaluando IA...</span>
+          } @else {
+            <span class="ai-spark" aria-hidden="true">⚡</span>
+            <span>Evaluar con Byte IA</span>
+          }
+        </button>
+      }
+
       <!-- Primary Action: Run Script button -->
       <button
         type="button"
@@ -148,17 +167,17 @@
       <div class="term-header-left">
         <span class="terminal-title">TERMINAL</span>
 
-        <!-- Terminal tabs if tests or AI advice exist -->
-        @if (activeTestCases().length > 0 || (executionResult()?.tests && executionResult()!.tests!.length > 0)) {
-          <div class="term-tab-group">
-            <button
-              type="button"
-              class="term-tab"
-              [class.is-active]="activeTerminalTab() === 'terminal'"
-              (click)="activeTerminalTab.set('terminal')"
-            >
-              Consola
-            </button>
+        <!-- Terminal tabs: Consola, Pruebas, Byte IA -->
+        <div class="term-tab-group">
+          <button
+            type="button"
+            class="term-tab"
+            [class.is-active]="activeTerminalTab() === 'terminal'"
+            (click)="activeTerminalTab.set('terminal')"
+          >
+            Consola
+          </button>
+          @if (activeTestCases().length > 0 || (executionResult()?.tests && executionResult()!.tests!.length > 0)) {
             <button
               type="button"
               class="term-tab"
@@ -176,8 +195,27 @@
                 </span>
               }
             </button>
-          </div>
-        }
+          }
+          @if (lessonId()) {
+            <button
+              type="button"
+              class="term-tab term-tab-ai"
+              [class.is-active]="activeTerminalTab() === 'ai'"
+              (click)="activeTerminalTab.set('ai')"
+            >
+              <span class="tab-ai-icon">🤖</span> Byte IA
+              @if (aiEvaluation(); as ev) {
+                <span
+                  class="term-tab-badge"
+                  [class.is-pass]="ev.passed"
+                  [class.is-fail]="!ev.passed"
+                >
+                  {{ ev.score }}%
+                </span>
+              }
+            </button>
+          }
+        </div>
       </div>
 
       <div class="term-header-right">
@@ -297,6 +335,70 @@
               <p>Aún no has corrido las pruebas del ejercicio.</p>
               <button type="button" class="btn-run-tests-action" (click)="runTests()">
                 Ejecutar Pruebas Automatizadas
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- VIEW 3: BYTE IA EVALUATION -->
+      @if (activeTerminalTab() === 'ai') {
+        <div class="terminal-ai-view">
+          @if (aiEvaluating()) {
+            <div class="term-running-msg">
+              <span class="mac-spinner" aria-hidden="true"></span>
+              <span>[EVALUANDO] Byte IA está examinando tu código, lógica algorítmica y criterios del reto...</span>
+            </div>
+          } @else if (aiEvaluation(); as ev) {
+            <div class="ai-eval-card" [class.is-pass]="ev.passed" [class.is-fail]="!ev.passed">
+              <div class="ai-eval-header">
+                <div class="ai-eval-score-pill">
+                  <span class="score-number">{{ ev.score }}%</span>
+                  <span class="score-verdict">{{ ev.passed ? '✓ APROBADO (≥90%)' : '✗ REQUIERE 90% PARA APROBAR' }}</span>
+                </div>
+                <span class="ai-eval-summary">{{ ev.summary }}</span>
+              </div>
+
+              <div class="ai-eval-body">
+                <div class="ai-feedback-section">
+                  <h5 class="section-title">Análisis Técnico Puntual:</h5>
+                  <p class="feedback-text">{{ ev.feedback }}</p>
+                </div>
+
+                @if (ev.improvements && ev.improvements.length > 0) {
+                  <div class="ai-improvements-section">
+                    <h5 class="section-title">Puntos Clave para Mejorar:</h5>
+                    <ul class="improvements-list">
+                      @for (imp of ev.improvements; track $index) {
+                        <li>{{ imp }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+
+                @if (ev.key_strengths && ev.key_strengths.length > 0) {
+                  <div class="ai-strengths-section">
+                    <h5 class="section-title">Fortalezas Identificadas:</h5>
+                    <ul class="strengths-list">
+                      @for (st of ev.key_strengths; track $index) {
+                        <li>{{ st }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+
+                @if (!ev.passed) {
+                  <div class="ai-retry-notice">
+                    <span>💡 Puedes ajustar tu código en el editor y presionar <strong>Evaluar con Byte IA</strong> nuevamente las veces que necesites hasta alcanzar la nota mínima del 90%.</span>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="tests-empty">
+              <p>El agente evaluador Byte IA analizará tu solución y aplicará el filtro de aprobación (mínimo 90%).</p>
+              <button type="button" class="btn-run-tests-action" (click)="evaluateWithAi()" [disabled]="!code().trim() || !lessonId()">
+                ⚡ Evaluar Código con Byte IA (Mínimo 90%)
               </button>
             </div>
           }

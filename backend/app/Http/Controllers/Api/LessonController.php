@@ -228,9 +228,13 @@ class LessonController extends Controller
         }
 
         $score = $total > 0 ? (int) round(($correct / $total) * 100) : 0;
-        $passed = $score >= 60;
+        $passed = $score >= 90;
 
         $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+        if (!$user && $request->filled('student_email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
+        }
+
         $courseProgress = null;
 
         if ($user) {
@@ -253,12 +257,14 @@ class LessonController extends Controller
                     ]
                 );
             } else {
-                if (!$existing || $score > ($existing->score ?? 0)) {
-                    LessonProgress::updateOrCreate(
-                        ['user_id' => $user->id, 'lesson_id' => $lesson->id],
-                        ['score' => $score]
-                    );
-                }
+                $alreadyPassed = $existing && ($existing->score ?? 0) >= 90 && $existing->completed_at;
+                LessonProgress::updateOrCreate(
+                    ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+                    [
+                        'score' => max($score, (int) ($existing?->score ?? 0)),
+                        'completed_at' => $alreadyPassed ? $existing->completed_at : null,
+                    ]
+                );
             }
 
             $courseProgress = $this->recalculateCourseProgress($user->id, $courseId, $enrollment);
@@ -274,6 +280,7 @@ class LessonController extends Controller
             'correct' => $correct,
             'total' => $total,
             'passed' => $passed,
+            'required_score' => 90,
             'completed' => $isCompleted,
             'course_progress_percent' => $courseProgress,
             'results' => $results,
@@ -287,6 +294,10 @@ class LessonController extends Controller
         $request->validate(['score' => 'nullable|integer|min:0|max:100']);
 
         $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+        if (!$user && $request->filled('student_email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
+        }
+
         if (!$user) {
             return response()->json(['message' => 'Debes iniciar sesión para registrar tu progreso.'], 401);
         }
@@ -300,6 +311,31 @@ class LessonController extends Controller
 
         $existing = LessonProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
         $submittedScore = $request->score !== null ? (int) $request->score : null;
+
+        $isEvaluation = ($lesson->type === 'quiz' || $lesson->type === 'code_challenge' || ($submittedScore !== null && $lesson->quiz()->exists()));
+        if ($isEvaluation) {
+            $effectiveScore = $submittedScore !== null ? $submittedScore : ($existing?->score ?? 0);
+            $alreadyPassed = $existing && ($existing->score ?? 0) >= 90 && $existing->completed_at;
+
+            if ($effectiveScore < 90 && !$alreadyPassed) {
+                LessonProgress::updateOrCreate(
+                    ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+                    ['score' => max($effectiveScore, (int) ($existing?->score ?? 0))]
+                );
+
+                $progress = $this->recalculateCourseProgress($user->id, $courseId, $enrollment);
+
+                return response()->json([
+                    'progress_percent' => $progress,
+                    'completed'        => false,
+                    'passed'           => false,
+                    'score'            => $effectiveScore,
+                    'required_score'   => 90,
+                    'message'          => 'Para aprobar esta evaluación y desbloquear el siguiente módulo se requiere una nota mínima del 90%. Puedes reintentar la actividad.',
+                ], 422);
+            }
+        }
+
         $finalScore = $submittedScore !== null
             ? max($submittedScore, (int) ($existing?->score ?? 0))
             : ($existing?->score ?? 100);
@@ -317,6 +353,8 @@ class LessonController extends Controller
         return response()->json([
             'progress_percent' => $progress,
             'completed' => true,
+            'passed' => true,
+            'score' => $finalScore,
             'message' => 'Lección completada con éxito.',
         ]);
     }
@@ -388,7 +426,7 @@ class LessonController extends Controller
         ]);
     }
 
-    protected function recalculateCourseProgress(int $userId, int $courseId, Enrollment $enrollment): int
+    public function recalculateCourseProgress(int $userId, int $courseId, Enrollment $enrollment): int
     {
         $totalLessons = DB::table('lessons')
             ->join('modules', 'lessons.module_id', '=', 'modules.id')
@@ -433,10 +471,23 @@ class LessonController extends Controller
             return;
         }
 
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+        if (!$user && $request->filled('student_email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
+        }
+
+        if (!$user) {
+            abort(403, 'Debes iniciar sesión para acceder a esta lección.');
+        }
+
         $courseId = $lesson->module->course_id;
 
-        if (! $request->user()->enrollments()->where('course_id', $courseId)->exists()) {
-            abort(403, 'Debes inscribirte en el curso para acceder a esta lección.');
+        $enrolled = $user->enrollments()->where('course_id', $courseId)->exists();
+        if (!$enrolled) {
+            Enrollment::firstOrCreate(
+                ['user_id' => $user->id, 'course_id' => $courseId],
+                ['enrolled_at' => now(), 'progress_percent' => 0]
+            );
         }
     }
 

@@ -30,7 +30,15 @@ class CourseController extends Controller
             return $courses->toArray();
         });
 
-        if ($user = $request->user('jwt') ?: $request->user('sanctum')) {
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+        if (!$user && $request->filled('student_email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
+        }
+        if (!$user && $request->hasHeader('X-User-Email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->header('X-User-Email'))))->first();
+        }
+
+        if ($user) {
             $userEnrollments = $user->enrollments()->pluck('progress_percent', 'course_id')->toArray();
             if (isset($data['data']) && is_array($data['data'])) {
                 foreach ($data['data'] as &$c) {
@@ -67,7 +75,15 @@ class CourseController extends Controller
         });
 
         // Datos específicos del usuario (en vivo, sin cachear)
-        if ($user = $request->user('jwt') ?: $request->user('sanctum')) {
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
+        if (!$user && $request->filled('student_email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
+        }
+        if (!$user && $request->hasHeader('X-User-Email')) {
+            $user = \App\Models\User::where('email', strtolower(trim((string) $request->header('X-User-Email'))))->first();
+        }
+
+        if ($user) {
             $enrollment = $user->enrollments()
                 ->where('course_id', $course['id'])
                 ->first();

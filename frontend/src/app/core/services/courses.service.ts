@@ -13,6 +13,7 @@ import {
   CourseReview,
   CourseReviewsResponse,
   CourseRatingStats,
+  AiChallengeEvaluation,
 } from '../models';
 
 const COURSES_CACHE_KEY = 'syseng_cache_courses_v4';
@@ -112,7 +113,12 @@ export class CoursesService {
   }
 
   getBySlug(slug: string): Observable<Course> {
-    return this.api.get<Course>(`/courses/${slug}`).pipe(
+    const email = this.getUserEmail();
+    const params: Record<string, string> = {};
+    if (email && email !== 'guest') {
+      params['student_email'] = email;
+    }
+    return this.api.get<Course>(`/courses/${slug}`, params).pipe(
       map(course => this.enrichCourseWithCompletions(course))
     );
   }
@@ -358,15 +364,85 @@ export class CoursesService {
   completeLesson(lessonId: number, score?: number, lessonSlug?: string, courseSlug?: string): Observable<{ progress_percent: number }> {
     this.saveCompletedLesson(lessonId, lessonSlug);
     this.syncEnrollmentProgress(courseSlug, lessonId);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(COURSES_CACHE_KEY);
+      } catch {}
+    }
 
-    return this.api.post<{ progress_percent: number }>(`/lessons/${lessonId}/complete`, { score });
+    const email = this.getUserEmail();
+    return this.api.post<{ progress_percent: number }>(`/lessons/${lessonId}/complete`, {
+      score,
+      student_email: email !== 'guest' ? email : undefined,
+    }).pipe(
+      tap(() => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('lesson-completed-updated', {
+            detail: { lessonId, lessonSlug, email }
+          }));
+        }
+      })
+    );
   }
 
   submitQuizAttempt(
     lessonSlug: string,
     answers: Record<string, number[]>
   ): Observable<QuizAttemptResult> {
-    return this.api.post<QuizAttemptResult>(`/lessons/${lessonSlug}/quiz/attempt`, { answers });
+    const email = this.getUserEmail();
+    return this.api.post<QuizAttemptResult>(`/lessons/${lessonSlug}/quiz/attempt`, {
+      answers,
+      student_email: email !== 'guest' ? email : undefined,
+    }).pipe(
+      tap(res => {
+        if (res.passed && typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem(COURSES_CACHE_KEY);
+          } catch {}
+          window.dispatchEvent(new CustomEvent('lesson-completed-updated', {
+            detail: { lessonSlug, email, courseProgress: res.course_progress_percent }
+          }));
+        }
+      })
+    );
+  }
+
+  evaluateChallengeWithAi(
+    lessonId: number,
+    code: string,
+    language?: string
+  ): Observable<AiChallengeEvaluation> {
+    const email = this.getUserEmail();
+    return this.api.post<AiChallengeEvaluation>('/ai/evaluate-challenge', {
+      lesson_id: lessonId,
+      code,
+      language,
+      student_email: email !== 'guest' ? email : undefined,
+    }).pipe(
+      tap(res => {
+        if (res.passed) {
+          this.saveCompletedLesson(lessonId);
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.removeItem(COURSES_CACHE_KEY);
+            } catch {}
+            window.dispatchEvent(new CustomEvent('lesson-completed-updated', {
+              detail: { lessonId, email, courseProgress: res.course_progress_percent }
+            }));
+          }
+        }
+      })
+    );
+  }
+
+  getQuizAiFeedback(
+    lessonId: number,
+    wrongQuestions: Array<{ question: string; selected: string; correct: string; explanation?: string }>
+  ): Observable<{ feedback: string }> {
+    return this.api.post<{ feedback: string }>('/ai/quiz-feedback', {
+      lesson_id: lessonId,
+      wrong_questions: wrongQuestions,
+    });
   }
 
   askAi(lessonId: number, code: string): Observable<{ reply: string }> {

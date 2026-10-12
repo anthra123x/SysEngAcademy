@@ -40,6 +40,8 @@ import {
   SupportedLanguage,
   TestCase,
 } from '../../../core/services/code-execution.service';
+import { CoursesService } from '../../../core/services/courses.service';
+import { AiChallengeEvaluation } from '../../../core/models';
 import { AppIconComponent } from '../../../shared/components/app-icon.component';
 import {
   EDITOR_LANGUAGES,
@@ -269,6 +271,7 @@ const bashLanguage = StreamLanguage.define({
 export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly codeRunner = inject(CodeExecutionService);
+  private readonly coursesSvc = inject(CoursesService);
 
   @ViewChild('editorContainer') editorContainerRef?: ElementRef<HTMLDivElement>;
 
@@ -343,9 +346,11 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
 
   readonly running = signal<boolean>(false);
   readonly testing = signal<boolean>(false);
+  readonly aiEvaluating = signal<boolean>(false);
 
-  readonly activeTerminalTab = signal<'terminal' | 'tests'>('terminal');
+  readonly activeTerminalTab = signal<'terminal' | 'tests' | 'ai'>('terminal');
   readonly executionResult = signal<CodeExecutionResponse | null>(null);
+  readonly aiEvaluation = signal<AiChallengeEvaluation | null>(null);
   readonly toastMessage = signal<string | null>(null);
 
   /**
@@ -686,17 +691,61 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
       });
   }
 
+  evaluateWithAi(): void {
+    const lid = this.lessonId();
+    const code = this.code().trim();
+    if (!lid || !code || this.aiEvaluating() || this.running()) return;
+
+    this.aiEvaluating.set(true);
+    this.activeTerminalTab.set('ai');
+
+    const lang = this.activeLangDef().id;
+    this.coursesSvc.evaluateChallengeWithAi(lid, code, lang).subscribe({
+      next: res => {
+        this.aiEvaluating.set(false);
+        this.aiEvaluation.set(res);
+
+        if (res.passed) {
+          this.markApprovedAutomatically(
+            'ai',
+            res.score,
+            res.summary || `Solución validada y aprobada por Byte IA con ${res.score}%`
+          );
+        } else {
+          this.showToast(`Nota: ${res.score}%. Se requiere mínimo 90% para aprobar.`);
+        }
+      },
+      error: err => {
+        this.aiEvaluating.set(false);
+        const fallbackRes: AiChallengeEvaluation = {
+          passed: false,
+          score: 0,
+          required_score: 90,
+          summary: 'Error al contactar con el agente evaluador.',
+          feedback: err?.error?.message || 'No se pudo completar la evaluación con el agente de IA. Inténtalo de nuevo.',
+          improvements: ['Verifica tu conexión y vuelve a intentar la evaluación.'],
+          key_strengths: [],
+          completed: false,
+        };
+        this.aiEvaluation.set(fallbackRes);
+        this.showToast('Error en la evaluación de IA.');
+      },
+    });
+  }
+
   manualApproveAndComplete(): void {
     this.markApprovedAutomatically('tests', 100, 'Solución validada y reto aprobado.');
   }
 
-  private markApprovedAutomatically(method: 'tests', score: number, message: string): void {
+  private markApprovedAutomatically(method: 'tests' | 'ai', score: number, message: string): void {
     if (this.challengeStatus() === 'passed_tests' || this.isCompleted()) {
       return;
     }
     this.challengeStatus.set('passed_tests');
     this.recordChallengeCompleted();
-    const successMsg = '¡Pruebas superadas con éxito! Ejercicio aprobado por el Sistema.';
+    const successMsg = method === 'ai'
+      ? `¡Aprobado con ${score}% por Byte IA! Reto superado.`
+      : '¡Pruebas superadas con éxito! Ejercicio aprobado por el Sistema.';
     this.showToast(successMsg);
     this.challengeSolved.emit({
       passed: true,

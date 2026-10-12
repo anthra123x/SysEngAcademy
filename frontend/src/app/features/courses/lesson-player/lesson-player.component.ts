@@ -56,6 +56,8 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
   quizAnswers    = signal<Record<number, number[]>>({});
   quizSubmitting = signal(false);
   quizResult     = signal<QuizAttemptResult | null>(null);
+  aiQuizFeedback = signal<string | null>(null);
+  aiQuizLoading  = signal(false);
 
   // --- Code challenge & Interactive Practice ---
   @ViewChild('interactiveIde') ideComponent?: InteractiveIdeComponent;
@@ -487,10 +489,34 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     if (!lesson) return;
     this.exerciseApprovedMethod.set(event.method);
     const score = event.score ?? 100;
+    this.completed.set(true);
+    this.markLessonCompletedInCourse(lesson.id);
+    this.coursesSvc.saveCompletedLesson(lesson.id, lesson.slug);
+    this.coursesSvc.syncEnrollmentProgress(this.courseSlug(), lesson.id);
     this.markComplete(score);
   }
 
-  readonly canComplete = computed(() => this.course()?.enrolled !== false);
+  readonly canComplete = computed(() => {
+    if (this.course()?.enrolled === false) return false;
+    const l = this.lesson();
+    if (!l) return false;
+
+    // Si la lección ya fue completada previamente en la BD con éxito, se mantiene accesible
+    if (this.completed()) return true;
+
+    // Si la lección tiene quiz o es tipo quiz, es obligatorio haber obtenido nota >= 90%
+    if (l.type === 'quiz' || (l.quiz && l.quiz.questions.length > 0)) {
+      const res = this.quizResult();
+      return !!res && (res.score >= 90 || !!res.passed);
+    }
+
+    // Si es reto de código interactivo, debe haber sido aprobado (vía tests o IA con >= 90%)
+    if (l.type === 'code_challenge') {
+      return this.exerciseApprovedMethod() !== null || (this.ideComponent?.isApproved() ?? false);
+    }
+
+    return true;
+  });
 
   readonly totalLessons = computed(() =>
     this.course()?.modules?.reduce((n, m) => n + (m.lessons?.length ?? 0), 0) ?? 0
@@ -845,6 +871,8 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
             enrolled: true,
             progress_percent: result.course_progress_percent ?? c.progress_percent,
           } : c));
+        } else {
+          this.completed.set(false);
         }
       },
       error: (err: HttpErrorResponse) => {
@@ -854,20 +882,67 @@ export class LessonPlayerComponent implements OnInit, OnDestroy {
     });
   }
 
+  resetQuizAttempt(): void {
+    this.quizAnswers.set({});
+    this.quizResult.set(null);
+    this.aiQuizFeedback.set(null);
+    this.quizSubmitting.set(false);
+  }
+
+  askAiForQuizFeedback(): void {
+    const l = this.lesson();
+    const res = this.quizResult();
+    if (!l || !res || this.aiQuizLoading()) return;
+
+    const wrong = res.results
+      .filter(r => !r.correct)
+      .map(r => {
+        const q = l.quiz?.questions.find(item => item.id === r.question_id);
+        const selectedAns = q?.answers
+          .filter(a => r.selected_ids.includes(a.id))
+          .map(a => a.answer_text || a.answer)
+          .join(', ') || 'Sin selección';
+        const correctAns = q?.answers
+          .filter(a => r.correct_answer_ids.includes(a.id))
+          .map(a => a.answer_text || a.answer)
+          .join(', ') || '';
+        return {
+          question: q?.question || 'Pregunta',
+          selected: selectedAns,
+          correct: correctAns,
+          explanation: r.explanation || '',
+        };
+      });
+
+    if (wrong.length === 0) return;
+
+    this.aiQuizLoading.set(true);
+    this.coursesSvc.getQuizAiFeedback(l.id, wrong).subscribe({
+      next: data => {
+        this.aiQuizLoading.set(false);
+        this.aiQuizFeedback.set(data.feedback);
+      },
+      error: () => {
+        this.aiQuizLoading.set(false);
+        this.aiQuizFeedback.set('No se pudo generar la retroalimentación en este momento. Repasa el material y vuelve a intentarlo.');
+      },
+    });
+  }
+
   scoreTitle(score: number): string {
     if (score === 100) return '¡Perfecto!';
-    if (score >= 80) return '¡Excelente trabajo!';
-    if (score >= 60) return '¡Bien hecho!';
-    if (score >= 40) return 'Vas por buen camino';
-    return 'Sigue practicando';
+    if (score >= 90) return '¡Excelente trabajo (Aprobado)!';
+    if (score >= 70) return 'Buen intento (Requiere 90%)';
+    if (score >= 50) return 'Vas por buen camino (Requiere 90%)';
+    return 'Sigue practicando (Requiere 90%)';
   }
 
   scoreMessage(score: number): string {
-    if (score === 100) return 'Dominas este tema por completo.';
-    if (score >= 80) return 'Tienes un dominio sólido del tema.';
-    if (score >= 60) return 'Tienes una buena base; revisa las explicaciones para afianzar.';
-    if (score >= 40) return 'Repasa el contenido y vuelve a intentarlo.';
-    return 'El aprendizaje es un proceso: relee la lección y reintenta cuando estés listo.';
+    if (score === 100) return 'Dominas este tema por completo. Módulo superado con excelencia.';
+    if (score >= 90) return 'Tienes un dominio sólido del tema (aprobado con nota ≥ 90%). Progreso acreditado y siguiente módulo desbloqueado.';
+    if (score >= 70) return 'Tienes una buena base, pero se exige el 90% para desbloquear el siguiente módulo. Revisa los errores y reintenta.';
+    if (score >= 50) return 'Repasa las explicaciones y vuelve a intentar el quiz para alcanzar la meta del 90%.';
+    return 'El aprendizaje es un proceso: consulta a Byte IA para entender tus fallos y reintenta cuando estés listo.';
   }
 
   // ===== Code challenge =====
