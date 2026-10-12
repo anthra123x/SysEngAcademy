@@ -11,7 +11,8 @@ class AiService
 
     public function __construct()
     {
-        $this->provider = config('ai.provider') ?: 'placeholder';
+        $provider = config('ai.provider');
+        $this->provider = (!empty($provider) && $provider !== 'null') ? $provider : 'openrouter';
     }
 
     public function chat(AiConversation $conversation, string $userMessage): string
@@ -164,6 +165,9 @@ class AiService
         if (!$data || !isset($data['score'])) {
             // Heurística de respaldo si el LLM no envió JSON exacto
             $cleanRaw = trim(strip_tags($raw));
+            if ($cleanRaw === $this->placeholder() || stripos($cleanRaw, 'siendo configurado') !== false) {
+                $cleanRaw = 'Tu solución fue registrada para revisión. Verifica la sintaxis, lógica y casos de prueba para garantizar el cumplimiento de todos los requerimientos.';
+            }
             $isPositive = (stripos($cleanRaw, 'aprobado') !== false || stripos($cleanRaw, 'correcto') !== false || stripos($cleanRaw, 'excelente') !== false);
             $score = $isPositive ? 92 : 65;
             $passed = $score >= 90;
@@ -196,6 +200,10 @@ class AiService
      */
     public function evaluateQuizMistakes(string $quizTitle, array $wrongQuestions): string
     {
+        if (empty($wrongQuestions)) {
+            return "¡Excelente trabajo en '{$quizTitle}'! Has respondido todas las preguntas correctamente con una calificación perfecta (100%).";
+        }
+
         $system = "Eres el Tutor Pedagógico de SysEng Academy. Tu labor es explicar con claridad y puntualidad los conceptos detrás de las preguntas erradas en un quiz, sin tecnicismos excesivos y orientando al estudiante para que aprenda y logre el 90% en su siguiente intento. Responde en español.";
 
         $prompt = "El estudiante presentó el quiz '{$quizTitle}' y falló en las siguientes preguntas:\n\n";
@@ -213,7 +221,42 @@ class AiService
             ['role' => 'user', 'content' => $prompt],
         ];
 
-        return $this->requestCompletion($messages);
+        try {
+            $response = $this->requestCompletion($messages);
+            if (!empty($response) && $response !== $this->placeholder() && stripos($response, 'siendo configurado') === false) {
+                return $response;
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Error en evaluateQuizMistakes AI: ' . $e->getMessage());
+        }
+
+        return $this->buildPedagogicalFallback($quizTitle, $wrongQuestions);
+    }
+
+    /**
+     * Respaldo pedagógico estructurado en caso de indisponibilidad temporal del proveedor LLM remoto.
+     */
+    protected function buildPedagogicalFallback(string $quizTitle, array $wrongQuestions): string
+    {
+        $out = "### 📚 Análisis Conceptual del Quiz: {$quizTitle}\n\n";
+        $out .= "Has completado la evaluación. Para alcanzar el 90% en tu próximo intento, revisemos los conceptos clave evaluados en las preguntas donde hubo discrepancia:\n\n";
+
+        foreach ($wrongQuestions as $idx => $wq) {
+            $num = $idx + 1;
+            $qText = $wq['question'] ?? 'Pregunta';
+            $sel = $wq['selected'] ?? 'Opción marcada';
+            $corr = $wq['correct'] ?? 'Respuesta esperada';
+            $expl = !empty($wq['explanation']) ? $wq['explanation'] : 'Recuerda contrastar la definición formal del concepto frente al caso de uso práctico propuesto.';
+
+            $out .= "**{$num}. {$qText}**\n";
+            $out .= "- *Tu respuesta:* {$sel}\n";
+            $out .= "- *Respuesta correcta:* **{$corr}**\n";
+            $out .= "- *Explicación pedagógica:* {$expl}\n\n";
+        }
+
+        $out .= "💡 **Recomendación de Byte IA:** Con estos puntos claros, realiza un nuevo intento para consolidar tu aprendizaje y superar la nota mínima del 90%.";
+
+        return $out;
     }
 
     /**
@@ -309,16 +352,38 @@ class AiService
 
     protected function completeWithOpenRouter(array $messages): string
     {
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer '.config('ai.api_key'),
-            'X-Title' => 'SysEng Academy',
-            'HTTP-Referer' => config('app.url', 'http://localhost:4200'),
-        ])->post('https://openrouter.ai/api/v1/chat/completions', [
-            'model' => config('ai.model', 'openrouter/free'),
-            'messages' => $messages,
-        ]);
+        $apiKey = config('ai.api_key');
+        if (empty($apiKey)) {
+            \Illuminate\Support\Facades\Log::warning('OpenRouter API key is empty');
+            return $this->placeholder();
+        }
 
-        return $response->json('choices.0.message.content', $this->placeholder());
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$apiKey,
+                'X-Title' => 'SysEng Academy',
+                'HTTP-Referer' => config('app.url', 'http://localhost:4200'),
+            ])->timeout(30)->post('https://openrouter.ai/api/v1/chat/completions', [
+                'model' => config('ai.model', 'openrouter/free'),
+                'messages' => $messages,
+            ]);
+
+            if ($response->successful()) {
+                $content = $response->json('choices.0.message.content');
+                if (!empty($content)) {
+                    return $content;
+                }
+            }
+
+            \Illuminate\Support\Facades\Log::warning('OpenRouter completion unsuccessful', [
+                'status' => $response->status(),
+                'body' => substr($response->body(), 0, 300),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('OpenRouter exception: ' . $e->getMessage());
+        }
+
+        return $this->placeholder();
     }
 
     protected function completeWithGemini(array $messages): string

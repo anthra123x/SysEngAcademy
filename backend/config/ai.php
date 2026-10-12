@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'provider'       => env('AI_PROVIDER', 'null'),
+    'provider'       => env('AI_PROVIDER', 'openrouter'),
     'api_key'        => env('AI_API_KEY', ''),
     'model'          => env('AI_MODEL', 'openrouter/free'),
     'system_prompt'  => env('AI_SYSTEM_PROMPT',
