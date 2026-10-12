@@ -64,6 +64,12 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
     Route::post('/auth/confirm-test-email', [AuthController::class, 'confirmTestEmail'])->middleware('throttle:10,1');
     Route::get('/profile/summary', [ProfileController::class, 'show']);
 
+    // Notificaciones de usuario (Bandeja / Campanita)
+    Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::patch('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+    Route::delete('/notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
+
     Route::get('/enrollments', [EnrollmentController::class, 'index']);
     Route::post('/enrollments', [EnrollmentController::class, 'store']);
 

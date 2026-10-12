@@ -3,11 +3,13 @@ import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/ro
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { StreakService } from '../../core/services/streak.service';
+import { NotificationService, InboxNotification } from '../../core/services/notification.service';
+import { AppIconComponent } from '../../shared/components/app-icon.component';
 import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from '../../core/constants/ascii-avatars';
 
 @Component({
   selector: 'app-navbar',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, AppIconComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
@@ -15,8 +17,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   router = inject(Router);
   streakService = inject(StreakService);
+  notificationService = inject(NotificationService);
 
   dropdownOpen = signal(false);
+  notificationsOpen = signal(false);
   readonly currentUrl = signal<string>(this.router.url);
 
   // Estados del avatar ASCII animado
@@ -129,6 +133,62 @@ export class NavbarComponent implements OnInit, OnDestroy {
   });
 
 
+  readonly unreadNotificationsCount = computed(() => this.notificationService.unreadCount());
+  readonly notifications = computed(() => this.notificationService.inboxNotifications());
+
+  toggleNotifications(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.dropdownOpen.set(false);
+    this.notificationsOpen.update(v => !v);
+  }
+
+  markAllNotificationsAsRead() {
+    this.notificationService.markAllAsRead();
+  }
+
+  onNotificationClick(item: InboxNotification) {
+    if (!item.read_at) {
+      this.notificationService.markAsRead(item.id);
+    }
+    this.notificationsOpen.set(false);
+
+    if (item.data?.route) {
+      const qp = item.data.tab ? { tab: item.data.tab } : undefined;
+      this.router.navigate([item.data.route], { queryParams: qp });
+    }
+  }
+
+  getNotificationIcon(item: InboxNotification): string {
+    if (item.data?.icon) return item.data.icon;
+    switch (item.type) {
+      case 'achievement': return 'trophy';
+      case 'course': return 'book-open';
+      case 'quiz': return 'file-text';
+      case 'streak': return 'flame';
+      case 'level': return 'zap';
+      case 'welcome': return 'sparkles';
+      default: return 'bell';
+    }
+  }
+
+  timeAgo(dateStr: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffSec < 60) return 'ahora';
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `hace ${diffMin}m`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `hace ${diffHours}h`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `hace ${diffDays}d`;
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+  }
+
   initials() {
     const name = this.auth.user()?.name ?? '';
     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
@@ -138,7 +198,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (typeof window !== 'undefined' && window.innerWidth <= 768) {
       this.router.navigate(['/perfil']);
       this.dropdownOpen.set(false);
+      this.notificationsOpen.set(false);
     } else {
+      this.notificationsOpen.set(false);
       this.toggleDropdown();
     }
   }
@@ -148,6 +210,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   logout() {
     this.auth.logout();
     this.dropdownOpen.set(false);
+    this.notificationsOpen.set(false);
   }
 
   @HostListener('document:click', ['$event'])
@@ -155,6 +218,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLElement;
     if (!target.closest('.user-chip')) {
       this.dropdownOpen.set(false);
+    }
+    if (!target.closest('.notifications-nav-wrap')) {
+      this.notificationsOpen.set(false);
     }
   }
 }

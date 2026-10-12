@@ -71,4 +71,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(StudentFeedback::class, 'student_id');
     }
+
+    public function appNotifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

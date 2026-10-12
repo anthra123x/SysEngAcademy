@@ -909,6 +909,14 @@
                   >
                     Retos Prácticos
                   </button>
+                  <button
+                    type="button"
+                    class="badge-filter-btn"
+                    [class.is-active]="selectedBadgeFilter() === 'special'"
+                    (click)="selectedBadgeFilter.set('special')"
+                  >
+                    Rachas & Nivel
+                  </button>
                 </div>
 
                 <div class="badges-terminal-grid">

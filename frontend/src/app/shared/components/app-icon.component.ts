@@ -74,6 +74,8 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
+  Bell,
+  BellRing,
 } from 'lucide-angular';
 
 /**
@@ -155,6 +157,8 @@ const LUCIDE_ICONS: Record<string, LucideIconData> = {
   'layers': Layers,
   'chevron-down': ChevronDown,
   'chevron-up': ChevronUp,
+  'bell': Bell,
+  'bell-ring': BellRing,
 };
 
 @Component({
