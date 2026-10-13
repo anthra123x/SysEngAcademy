@@ -126,16 +126,7 @@ export class CodelabComponent implements OnInit, OnDestroy {
 
   voteChallenge(challenge: Challenge, event: Event): void {
     event.stopPropagation();
-    const willVote = !challenge.userVoted;
     this.codelabService.toggleVote(challenge.slug || challenge.id);
-    this.notificationService.show({
-      type: willVote ? 'success' : 'info',
-      title: willVote ? '¡Voto registrado!' : 'Voto retirado',
-      message: willVote
-        ? `Has apoyado el reto "${challenge.title}".`
-        : `Has retirado tu voto de "${challenge.title}".`,
-      duration: 3000,
-    });
   }
 
   openCommentsModal(challenge: Challenge, event: Event): void {
