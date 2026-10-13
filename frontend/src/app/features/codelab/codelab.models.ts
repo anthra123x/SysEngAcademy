@@ -18,6 +18,7 @@ export interface ChallengeAuthor {
   isCurrentUser?: boolean;
   isTopContributor?: boolean;
   isMonitor?: boolean;
+  isAi?: boolean;
 }
 
 export interface Challenge {

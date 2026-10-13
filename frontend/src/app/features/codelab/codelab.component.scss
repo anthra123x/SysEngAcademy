@@ -141,35 +141,6 @@
     flex-direction: column;
     gap: 0.75rem;
 
-    .kernel-version-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      .badge-tag {
-        font-family: var(--font-mono, monospace);
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        background: rgba(10, 233, 138, 0.1);
-        color: #0AE98A;
-        border: 1px solid rgba(10, 233, 138, 0.25);
-      }
-
-      .badge-divider {
-        color: #64748B;
-      }
-
-      .badge-semester {
-        font-family: var(--font-mono, monospace);
-        font-size: 0.75rem;
-        color: #94A3B8;
-      }
-    }
-
     .codelab-hero__title {
       font-family: var(--font-sans, sans-serif);
       font-size: clamp(2rem, 4vw, 3.25rem);
@@ -1225,6 +1196,17 @@
         background: rgba(10, 233, 138, 0.15);
         color: #0AE98A;
       }
+
+      &--ai {
+        background: rgba(0, 217, 255, 0.15);
+        color: #00D9FF;
+        border: 1px solid rgba(0, 217, 255, 0.35);
+
+        .avatar-ai-icon {
+          font-size: 0.85rem;
+          line-height: 1;
+        }
+      }
     }
 
     .author-meta-block {
@@ -1235,12 +1217,24 @@
     .author-header {
       display: flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.35rem;
 
       .author-handle {
         font-size: 0.82rem;
         font-weight: 600;
         color: #F8FAFC;
+      }
+
+      .badge-ai-pill {
+        font-family: var(--font-mono, monospace);
+        font-size: 0.6rem;
+        font-weight: 700;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+        background: rgba(0, 217, 255, 0.15);
+        color: #00D9FF;
+        border: 1px solid rgba(0, 217, 255, 0.35);
+        line-height: 1;
       }
 
       .verified-icon {

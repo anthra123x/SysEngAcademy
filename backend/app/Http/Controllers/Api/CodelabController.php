@@ -25,6 +25,13 @@ class CodelabController extends Controller
         $userId = $user?->id;
         $ip = $request->ip();
 
+        // Garantizar que Byte AI mantenga retos diarios si ningún estudiante ha creado hoy
+        try {
+            app(\App\Services\AiCodelabChallengeService::class)->ensureDailyChallenges(2);
+        } catch (\Throwable) {
+            // Continuar sin bloquear la petición si la IA externa está en reposo
+        }
+
         $query = CodelabChallenge::query()->withCount('testCases');
 
         // Tab filter
@@ -135,6 +142,7 @@ class CodelabController extends Controller
                     'isCurrentUser' => $isCurrentUser,
                     'isTopContributor' => $c->upvotes > 150,
                     'isMonitor' => str_contains(strtolower($c->author_role), 'monitor'),
+                    'isAi' => $c->author_username === 'byte_ai' || str_contains(strtolower($c->author_role), 'ia'),
                 ],
                 'status' => $status,
                 'upvotes' => (int) $c->upvotes,
@@ -662,5 +670,20 @@ class CodelabController extends Controller
             'podium' => $podium,
             'activityFeed' => $activityFeed,
         ];
+    }
+
+    /**
+     * Endpoint API para generar retos bajo demanda con el Agente Byte AI.
+     */
+    public function generateAiChallenge(Request $request, \App\Services\AiCodelabChallengeService $aiService): JsonResponse
+    {
+        $count = min(max((int) $request->input('count', 1), 1), 5);
+        $challenges = $aiService->generateMultipleChallenges($count);
+
+        return response()->json([
+            'message' => 'Desafíos generados exitosamente por Byte AI',
+            'count' => count($challenges),
+            'challenges' => $challenges,
+        ]);
     }
 }

@@ -65,6 +65,7 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
     Route::post('/codelab/challenges/{id}/submit', [\App\Http\Controllers\Api\CodelabController::class, 'submit'])->middleware('throttle:20,1');
     Route::get('/codelab/stats', [\App\Http\Controllers\Api\CodelabController::class, 'stats']);
     Route::get('/codelab/stream', [\App\Http\Controllers\Api\CodelabController::class, 'stream']);
+    Route::post('/codelab/generate-ai-challenge', [\App\Http\Controllers\Api\CodelabController::class, 'generateAiChallenge'])->middleware('throttle:10,1');
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);

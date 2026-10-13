@@ -8,12 +8,6 @@
       <!-- Headline & Call to Action Bar -->
       <div class="codelab-hero__main">
         <div class="codelab-hero__titles">
-          <div class="kernel-version-badge">
-            <span class="badge-tag">v3.4 CodeLab Kernel</span>
-            <span class="badge-divider">|</span>
-            <span class="badge-semester">Semestre 2025-1</span>
-          </div>
-
           <h1 class="codelab-hero__title">
             Arena de Código &amp; <span class="title-highlight">Retos Algorítmicos</span>
           </h1>
@@ -589,8 +583,10 @@
 
             <!-- Author col -->
             <div class="row-col col-author">
-              <div class="author-avatar-sm" [class.author-avatar-sm--official]="item.isOfficial">
-                @if (item.isOfficial) {
+              <div class="author-avatar-sm" [class.author-avatar-sm--official]="item.isOfficial" [class.author-avatar-sm--ai]="item.author.isAi || item.author.username === 'byte_ai'">
+                @if (item.author.isAi || item.author.username === 'byte_ai') {
+                  <span class="avatar-ai-icon">🤖</span>
+                } @else if (item.isOfficial) {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                   </svg>
@@ -601,14 +597,16 @@
               <div class="author-meta-block">
                 <div class="author-header">
                   <span class="author-handle">&#64;{{ item.author.username }}</span>
-                  @if (item.isOfficial || item.author.isTopContributor || item.author.isMonitor) {
+                  @if (item.author.isAi || item.author.username === 'byte_ai') {
+                    <span class="badge-ai-pill">IA</span>
+                  } @else if (item.isOfficial || item.author.isTopContributor || item.author.isMonitor) {
                     <svg class="verified-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                     </svg>
                   }
                 </div>
                 <span class="author-subtext">
-                  {{ item.author.isTopContributor ? 'Top Contribuidor' : item.author.isMonitor ? 'Monitor' : item.isOfficial ? 'Curaduría Oficial' : item.author.role }}
+                  {{ (item.author.isAi || item.author.username === 'byte_ai') ? 'Agente Algorítmico IA' : (item.author.isTopContributor ? 'Top Contribuidor' : item.author.isMonitor ? 'Monitor' : item.isOfficial ? 'Curaduría Oficial' : item.author.role) }}
                 </span>
               </div>
             </div>
