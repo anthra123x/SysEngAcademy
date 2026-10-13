@@ -12,7 +12,10 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   imports: [RouterLink, FormsModule, SlicePipe, DecimalPipe, AppIconComponent],
   template: `
     <div class="courses-page">
-      <div class="container">
+      <!-- Matrix Blueprint Dot Grid Pattern (Pizarra) -->
+      <div class="chalkboard-dots-bg" aria-hidden="true"></div>
+
+      <div class="container courses-container">
         <div class="courses-layout">
           <!-- Mobile Filters Trigger -->
           <div class="mobile-filters-trigger">
@@ -244,8 +247,17 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   `,
   styles: [`
     .courses-page {
+      position: relative;
+      min-height: calc(100vh - var(--header-height, 64px));
+      background: var(--bg-base);
+      overflow-x: hidden;
       padding-top: var(--sp-6);
       padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
+    }
+
+    .courses-container {
+      position: relative;
+      z-index: 1;
     }
 
     .filters-total-chip {
@@ -289,8 +301,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     /* BARRA LATERAL DE FILTROS (ESTÁTICA Y ALINEADA) */
     .filters {
       background: #0E111A;
-      border: 1px solid #202436;
-      border-radius: 12px;
+      border: 1.5px dashed rgba(139, 92, 246, 0.35);
+      border-radius: 14px;
       padding: 1.15rem;
       position: relative;
       height: fit-content;
@@ -607,8 +619,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       display: flex;
       flex-direction: column;
       background: #0E111A;
-      border: 1px solid #202436;
-      border-radius: 12px;
+      border: 1.5px dashed rgba(139, 92, 246, 0.32);
+      border-radius: 14px;
       overflow: hidden;
       text-decoration: none;
       position: relative;
@@ -621,8 +633,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       }
 
       &:hover {
-        border-color: rgba(10, 233, 138, 0.45);
-        box-shadow: 0 10px 24px -4px rgba(0, 0, 0, 0.5), 0 0 16px rgba(10, 233, 138, 0.12);
+        border-color: rgba(139, 92, 246, 0.85);
+        box-shadow: 0 10px 24px -4px rgba(0, 0, 0, 0.5), 0 0 16px rgba(139, 92, 246, 0.15);
         transform: translateY(-2px);
 
         h3 {
@@ -726,10 +738,14 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           text-transform: uppercase;
           letter-spacing: 0.04em;
           color: var(--primary);
+          background: rgba(10, 233, 138, 0.08);
+          border: 1px dashed rgba(10, 233, 138, 0.35);
+          border-radius: 6px;
+          padding: 1px 6px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          max-width: 130px;
+          max-width: 140px;
         }
 
         .badge {

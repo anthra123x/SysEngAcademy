@@ -15,6 +15,9 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       </div>
     } @else if (path()) {
       <div class="path-detail">
+        <!-- Matrix Blueprint Dot Grid Pattern (Pizarra) -->
+        <div class="chalkboard-dots-bg" aria-hidden="true"></div>
+
         <!-- Hero Section -->
         <div class="path-hero">
           <div class="container path-hero__inner">
@@ -374,6 +377,10 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
   `,
   styles: [`
     .path-detail {
+      position: relative;
+      min-height: calc(100vh - var(--header-height, 64px));
+      background: var(--bg-base);
+      overflow-x: hidden;
       padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
     }
 
@@ -722,10 +729,15 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
     .station-card {
       background: var(--bg-surface);
-      border: 1px solid var(--border);
+      border: 1.5px dashed rgba(139, 92, 246, 0.35);
       border-radius: var(--radius-xl);
       overflow: hidden;
       box-shadow: var(--shadow-md);
+      transition: border-color var(--transition-base);
+
+      &:hover {
+        border-color: rgba(139, 92, 246, 0.75);
+      }
 
       @media (max-width: 768px) {
         border-radius: var(--radius-lg);
@@ -836,7 +848,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       display: flex;
       flex-direction: column;
       background: var(--bg-surface-2);
-      border: 1px solid var(--border);
+      border: 1.5px dashed rgba(139, 92, 246, 0.35);
       border-radius: var(--radius-lg);
       padding: var(--sp-5);
       text-decoration: none;
@@ -844,8 +856,8 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       transition: all var(--transition-base);
 
       &:hover {
-        border-color: var(--primary);
-        box-shadow: var(--shadow-primary);
+        border-color: rgba(139, 92, 246, 0.85);
+        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
         transform: translateY(-2px);
       }
 
@@ -861,17 +873,17 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
     .path-course-card--primary {
       background: linear-gradient(135deg, rgba(10, 233, 138, 0.05) 0%, var(--bg-surface-2) 100%);
-      border: 1px solid rgba(10, 233, 138, 0.28);
+      border: 1.5px dashed rgba(10, 233, 138, 0.45);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 
       &:hover {
         border-color: var(--primary);
-        box-shadow: 0 8px 30px rgba(10, 233, 138, 0.16);
+        box-shadow: 0 8px 30px rgba(10, 233, 138, 0.2);
 
         .pcc-cta--primary {
-          background: var(--primary);
+          background: var(--primary-hover);
           color: #08090D !important;
-          border-color: var(--primary);
+          border-color: var(--primary-hover);
           box-shadow: 0 0 16px rgba(10, 233, 138, 0.45);
 
           .pcc-cta-arrow {
@@ -907,7 +919,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       height: 38px;
       border-radius: var(--radius-md);
       background: var(--bg-surface-3);
-      border: 1px solid var(--border);
+      border: 1.5px dashed rgba(139, 92, 246, 0.45);
       display: grid;
       place-items: center;
       font-size: 1.25rem;

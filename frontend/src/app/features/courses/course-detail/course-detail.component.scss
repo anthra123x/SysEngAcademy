@@ -1,10 +1,16 @@
 .course-detail {
-      padding-top: var(--sp-6);
-      padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
-    }
+  position: relative;
+  min-height: calc(100vh - var(--header-height, 64px));
+  background: var(--bg-base);
+  overflow-x: hidden;
+  padding-top: var(--sp-6);
+  padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
+}
 
-    .course-layout {
-      display: grid;
+.course-layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
       grid-template-columns: minmax(0, 1fr) 360px;
       gap: var(--sp-10);
       align-items: start;
@@ -383,7 +389,7 @@
     /* Methodology Card */
     .methodology-card {
       background: var(--bg-surface);
-      border: 1px solid var(--border);
+      border: 1.5px dashed rgba(139, 92, 246, 0.35);
       border-radius: var(--radius-xl);
       padding: var(--sp-5) var(--sp-5);
 
@@ -606,7 +612,7 @@
     /* Highlights Card */
     .highlights-card {
       background: var(--bg-surface);
-      border: 1px solid var(--border);
+      border: 1.5px dashed rgba(139, 92, 246, 0.35);
       border-radius: var(--radius-xl);
       padding: var(--sp-6);
       margin-bottom: var(--sp-10);
@@ -697,17 +703,17 @@
 
     .syllabus-module {
       background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border: 1.5px dashed rgba(139, 92, 246, 0.35);
+      border-radius: var(--radius-xl);
       overflow: hidden;
       transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 
       &:hover {
-        border-color: rgba(255, 255, 255, 0.15);
+        border-color: rgba(139, 92, 246, 0.75);
       }
 
       &.is-open {
-        border-color: rgba(10, 233, 138, 0.35);
+        border-color: rgba(10, 233, 138, 0.45);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
       }
 
@@ -739,9 +745,9 @@
       font-family: var(--font-mono);
       color: var(--primary);
       background: var(--primary-dim);
-      border: 1px solid rgba(10, 233, 138, 0.25);
+      border: 1.5px dashed rgba(10, 233, 138, 0.45);
       padding: 4px 10px;
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-md);
       white-space: nowrap;
     }
 

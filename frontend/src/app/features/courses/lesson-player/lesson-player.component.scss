@@ -336,11 +336,17 @@
     }
 
     .lesson-player-page {
+      position: relative;
+      min-height: calc(100vh - 60px);
+      background: var(--bg-base);
+      overflow-x: hidden;
       padding-top: var(--sp-6);
       padding-bottom: var(--sp-20);
     }
 
     .player-body-wrap {
+      position: relative;
+      z-index: 1;
       padding-bottom: var(--sp-16);
     }
 

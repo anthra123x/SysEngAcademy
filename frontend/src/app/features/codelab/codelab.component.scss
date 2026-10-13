@@ -13,15 +13,24 @@
   overflow-x: hidden;
 }
 
-// Matrix Blueprint Dot Grid Pattern
+// Matrix Blueprint Dot Grid Pattern (Puntitos tipo pizarra)
 .codelab-blueprint-bg {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.035;
-  background-image: radial-gradient(#0AE98A 1px, transparent 1px);
+  opacity: 0.085;
+  background-image: radial-gradient(#0AE98A 1.2px, transparent 1.2px);
   background-size: 24px 24px;
   z-index: 0;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle 900px at 50% 0%, rgba(10, 233, 138, 0.05), transparent 75%),
+                radial-gradient(circle 700px at 90% 30%, rgba(0, 217, 255, 0.04), transparent 60%);
+    pointer-events: none;
+  }
 }
 
 .codelab-container {
@@ -243,20 +252,34 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.25rem;
-    border-radius: 12px;
+    border-radius: 14px;
     background: #10121C;
-    border: 1px solid #1E2235;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 1.5px dashed rgba(139, 92, 246, 0.4);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: rgba(139, 92, 246, 0.85);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+
+      .kpi-card__icon {
+        border-color: rgba(139, 92, 246, 0.85);
+        transform: scale(1.05);
+      }
+    }
 
     &__icon {
       width: 48px;
       height: 48px;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #161926;
+      border: 1.5px dashed rgba(139, 92, 246, 0.45);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      transition: all 0.2s ease;
 
       &--primary { color: #0AE98A; }
       &--cyan { color: #00D9FF; }
@@ -357,13 +380,18 @@
 
   .spotlight-card {
     position: relative;
-    border-radius: 14px;
+    border-radius: 16px;
     background: #10121C;
-    border: 1px solid #1E2235;
+    border: 1.5px dashed rgba(139, 92, 246, 0.45);
     overflow: hidden;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
     display: grid;
     grid-template-columns: 1fr;
+    transition: border-color 0.25s ease;
+
+    &:hover {
+      border-color: rgba(139, 92, 246, 0.75);
+    }
 
     @media (min-width: 1024px) {
       grid-template-columns: 7fr 5fr;
@@ -491,10 +519,10 @@
         align-items: center;
         gap: 0.4rem;
         padding: 0.55rem 0.9rem;
-        border-radius: 6px;
+        border-radius: 8px;
         background: #161926;
         color: #94A3B8;
-        border: 1px solid #1E2235;
+        border: 1.5px dashed rgba(139, 92, 246, 0.4);
         font-family: var(--font-mono, monospace);
         font-size: 0.8rem;
         cursor: pointer;
@@ -502,7 +530,7 @@
 
         &:hover {
           color: #0AE98A;
-          border-color: rgba(10, 233, 138, 0.4);
+          border-color: rgba(10, 233, 138, 0.6);
         }
       }
 
@@ -531,14 +559,14 @@
     // Right Column: Terminal Preview
     &__right {
       background: #0D1117;
-      border-top: 1px solid #1E2235;
+      border-top: 1.5px dashed rgba(139, 92, 246, 0.35);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
 
       @media (min-width: 1024px) {
         border-top: none;
-        border-left: 1px solid #1E2235;
+        border-left: 1.5px dashed rgba(139, 92, 246, 0.35);
       }
     }
 
@@ -654,8 +682,8 @@
         justify-content: space-between;
         gap: 0.75rem;
         background: #090B10;
-        border: 1px solid #1E2235;
-        border-radius: 8px;
+        border: 1.5px dashed rgba(139, 92, 246, 0.4);
+        border-radius: 10px;
         padding: 0.6rem 0.85rem;
 
         .dist-metric-col {
@@ -756,8 +784,8 @@
     gap: 0.75rem;
     background: #0D1117;
     padding: 0.35rem 0.5rem;
-    border-radius: 10px;
-    border: 1px solid #1E2235;
+    border-radius: 12px;
+    border: 1.5px dashed rgba(139, 92, 246, 0.32);
 
     .tabs-group {
       display: flex;
@@ -855,8 +883,8 @@
     .search-input {
       width: 100%;
       background: #10121C;
-      border: 1px solid #1E2235;
-      border-radius: 8px;
+      border: 1.5px dashed rgba(139, 92, 246, 0.35);
+      border-radius: 10px;
       padding: 0.65rem 4rem 0.65rem 2.4rem;
       color: #F8FAFC;
       font-size: 0.88rem;
@@ -869,6 +897,7 @@
 
       &:focus {
         border-color: #0AE98A;
+        border-style: dashed;
         box-shadow: 0 0 0 2px rgba(10, 233, 138, 0.15);
       }
     }
@@ -877,9 +906,9 @@
       position: absolute;
       right: 0.75rem;
       padding: 0.15rem 0.4rem;
-      border-radius: 4px;
+      border-radius: 6px;
       background: #161926;
-      border: 1px solid #1E2235;
+      border: 1px dashed rgba(139, 92, 246, 0.45);
       font-family: var(--font-mono, monospace);
       font-size: 0.68rem;
       color: #94A3B8;
@@ -924,7 +953,10 @@
     align-items: center;
     gap: 0.5rem;
     overflow-x: auto;
-    padding: 0.25rem 0.25rem 0.5rem 0.25rem;
+    padding: 0.35rem 0.6rem;
+    background: #0D1117;
+    border-radius: 12px;
+    border: 1.5px dashed rgba(139, 92, 246, 0.25);
     scrollbar-width: thin;
     scrollbar-color: #1E2235 transparent;
 
@@ -961,7 +993,7 @@
       padding: 0.45rem 0.9rem;
       border-radius: 8px;
       background: #10121C;
-      border: 1px solid #1E2235;
+      border: 1px dashed rgba(139, 92, 246, 0.3);
       color: #94A3B8;
       font-size: 0.8rem;
       font-weight: 500;
@@ -971,13 +1003,13 @@
 
       &:hover {
         background: #141724;
-        border-color: #2E344E;
+        border-color: rgba(139, 92, 246, 0.6);
         color: #F8FAFC;
       }
 
       &.is-active {
         background: rgba(10, 233, 138, 0.12);
-        border-color: #0AE98A;
+        border: 1.5px dashed #0AE98A;
         color: #0AE98A;
         font-weight: 700;
       }
@@ -1046,19 +1078,26 @@
     gap: 1rem;
     align-items: center;
     background: #10121C;
-    border: 1px solid #1E2235;
-    border-radius: 12px;
+    border: 1.5px dashed rgba(139, 92, 246, 0.32);
+    border-radius: 14px;
     padding: 1rem 1.25rem;
     transition: all 0.2s ease;
 
     &:hover {
       background: #141724;
-      border-color: #2E344E;
-      transform: translateY(-1px);
+      border-color: rgba(139, 92, 246, 0.85);
+      border-style: dashed;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+
+      .status-icon {
+        border-color: rgba(139, 92, 246, 0.85);
+        transform: scale(1.05);
+      }
     }
 
     &.is-solved {
-      border-color: rgba(10, 233, 138, 0.25);
+      border-color: rgba(10, 233, 138, 0.45);
     }
 
     @media (max-width: 1024px) {
@@ -1075,12 +1114,14 @@
     gap: 0.5rem;
 
     .status-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 9999px;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1.5px dashed rgba(139, 92, 246, 0.45);
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: all 0.2s ease;
 
       &--pending {
         background: #161926;
@@ -1090,11 +1131,13 @@
       &--solved {
         background: rgba(10, 233, 138, 0.15);
         color: #0AE98A;
+        border-color: rgba(10, 233, 138, 0.5);
       }
 
       &--creation {
         background: rgba(245, 158, 11, 0.15);
         color: #F59E0B;
+        border-color: rgba(245, 158, 11, 0.5);
       }
     }
 
@@ -1339,8 +1382,8 @@
     padding: 3.5rem 1.5rem;
     text-align: center;
     background: #10121C;
-    border-radius: 12px;
-    border: 1px dashed #1E2235;
+    border-radius: 16px;
+    border: 1.5px dashed rgba(139, 92, 246, 0.4);
     color: #94A3B8;
 
     svg {
@@ -1388,13 +1431,18 @@
 
     .sidebar-card {
       background: #10121C;
-      border: 1px solid #1E2235;
-      border-radius: 12px;
+      border: 1.5px dashed rgba(139, 92, 246, 0.35);
+      border-radius: 14px;
       padding: 1.25rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      transition: border-color 0.2s ease;
+
+      &:hover {
+        border-color: rgba(139, 92, 246, 0.7);
+      }
 
       &__header {
         display: flex;
@@ -1463,18 +1511,19 @@
       justify-content: space-between;
       gap: 0.75rem;
       padding: 0.65rem 0.85rem;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #0D1117;
-      border: 1px solid #1E2235;
-      transition: background 0.15s ease;
+      border: 1.5px dashed rgba(139, 92, 246, 0.3);
+      transition: all 0.15s ease;
 
       &:hover {
         background: #141724;
+        border-color: rgba(139, 92, 246, 0.65);
       }
 
       &--current {
         background: rgba(10, 233, 138, 0.06);
-        border-color: rgba(10, 233, 138, 0.35);
+        border-color: rgba(10, 233, 138, 0.45);
       }
 
       &__left {
@@ -1497,10 +1546,11 @@
       }
 
       .podium-avatar {
-        width: 30px;
-        height: 30px;
-        border-radius: 9999px;
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
         background: #1E2235;
+        border: 1.5px dashed rgba(139, 92, 246, 0.4);
         color: #00D9FF;
         font-size: 0.75rem;
         font-weight: 700;
@@ -1512,6 +1562,7 @@
         &.avatar-current {
           background: #0AE98A;
           color: #08090D;
+          border-color: #0AE98A;
         }
       }
 
@@ -1566,16 +1617,16 @@
       align-items: center;
       text-align: center;
       padding: 1.25rem 1rem;
-      border-radius: 8px;
+      border-radius: 12px;
       background: rgba(13, 17, 23, 0.7);
-      border: 1px dashed rgba(245, 158, 11, 0.3);
+      border: 1.5px dashed rgba(245, 158, 11, 0.45);
 
       .podium-empty-icon {
         width: 44px;
         height: 44px;
-        border-radius: 50%;
+        border-radius: 10px;
         background: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.25);
+        border: 1.5px dashed rgba(245, 158, 11, 0.5);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1695,9 +1746,9 @@
     .activity-empty-box {
       padding: 1rem;
       text-align: center;
-      border-radius: 6px;
+      border-radius: 10px;
       background: rgba(13, 17, 23, 0.5);
-      border: 1px dashed rgba(30, 34, 53, 0.9);
+      border: 1.5px dashed rgba(139, 92, 246, 0.35);
 
       .activity-empty-text {
         font-size: 0.75rem;
@@ -1717,8 +1768,8 @@
   align-items: center;
   gap: 1.5rem;
   background: #10121C;
-  border: 1px solid #1E2235;
-  border-radius: 12px;
+  border: 1.5px dashed rgba(139, 92, 246, 0.4);
+  border-radius: 14px;
   padding: 1.25rem 1.75rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 
@@ -1791,7 +1842,7 @@
 .codelab-creator-banner {
   border-radius: 16px;
   background: #0D1117;
-  border: 1px solid #1E2235;
+  border: 1.5px dashed rgba(139, 92, 246, 0.45);
   overflow: hidden;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
 
@@ -1886,7 +1937,7 @@
 
     .pipeline-card {
       background: linear-gradient(180deg, #10141F 0%, #0A0D14 100%);
-      border: 1px solid #1E2235;
+      border: 1.5px dashed rgba(139, 92, 246, 0.35);
       border-radius: 10px;
       padding: 0.85rem;
       display: flex;
@@ -1895,7 +1946,7 @@
       transition: all 0.2s ease;
 
       &:hover {
-        border-color: #2E3650;
+        border-color: rgba(139, 92, 246, 0.7);
         transform: translateY(-2px);
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
       }
@@ -2350,7 +2401,7 @@
   max-height: 90vh;
   overflow-y: auto;
   background: #10121C;
-  border: 1px solid #1E2235;
+  border: 1.5px dashed rgba(139, 92, 246, 0.45);
   border-radius: 16px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8);
   display: flex;
@@ -2566,10 +2617,10 @@
 
 .badge-challenge-id {
   padding: 0.2rem 0.55rem;
-  border-radius: 4px;
+  border-radius: 6px;
   background: rgba(168, 85, 247, 0.1);
   color: #A855F7;
-  border: 1px solid rgba(168, 85, 247, 0.2);
+  border: 1.5px dashed rgba(168, 85, 247, 0.45);
   font-family: var(--font-mono, monospace);
   font-size: 0.7rem;
   text-transform: uppercase;

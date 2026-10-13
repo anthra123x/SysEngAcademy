@@ -9,6 +9,9 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   imports: [RouterLink, AppIconComponent],
   template: `
     <div class="paths-page">
+      <!-- Matrix Blueprint Dot Grid Pattern (Pizarra) -->
+      <div class="chalkboard-dots-bg" aria-hidden="true"></div>
+
       <!-- Main Paths Content -->
       <div class="container paths-container">
         @if (loading()) {
@@ -77,11 +80,15 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   `,
   styles: [`
     .paths-page {
+      position: relative;
       min-height: calc(100vh - var(--header-height, 64px));
       background: var(--bg-base);
+      overflow-x: hidden;
     }
 
     .paths-container {
+      position: relative;
+      z-index: 1;
       padding-top: var(--sp-8);
       padding-bottom: var(--sp-20);
 
