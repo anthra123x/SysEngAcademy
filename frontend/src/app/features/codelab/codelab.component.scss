@@ -2431,11 +2431,12 @@
 // -----------------------------------------------------------------------------
 // 7. MODAL / CREATOR DRAWER
 // -----------------------------------------------------------------------------
-.codelab-modal-backdrop {
+.codelab-modal-backdrop,
+.modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.75);
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;

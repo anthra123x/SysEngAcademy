@@ -1115,7 +1115,7 @@
 
   <!-- MODAL DE DISCUSIÓN Y COMENTARIOS DEL RETO -->
   @if (activeCommentsChallenge(); as activeChallenge) {
-    <div class="modal-backdrop" (click)="closeCommentsModal()">
+    <div class="codelab-modal-backdrop" (click)="closeCommentsModal()">
       <div class="codelab-modal codelab-modal--comments" (click)="$event.stopPropagation()">
         <div class="codelab-modal__header">
           <div class="modal-title-wrap">

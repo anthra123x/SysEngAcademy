@@ -26,8 +26,8 @@ const INITIAL_CHALLENGES: Challenge[] = [
       isTopContributor: false,
     },
     status: 'pending',
-    upvotes: 248,
-    commentsCount: 39,
+    upvotes: 0,
+    commentsCount: 0,
     isOfficial: false,
     isCommunity: true,
     testCasesCount: 14,
@@ -119,8 +119,8 @@ public:
       isTopContributor: true,
     },
     status: 'pending',
-    upvotes: 184,
-    commentsCount: 31,
+    upvotes: 0,
+    commentsCount: 0,
     isOfficial: false,
     isCommunity: true,
     testCasesCount: 28,
@@ -175,9 +175,9 @@ func (r *RaftNode) RequestVote(candidateID int, term int) bool {
       isOfficial: true,
       avatarInitial: 'FAC',
     },
-    status: 'solved',
-    upvotes: 412,
-    commentsCount: 56,
+    status: 'pending',
+    upvotes: 0,
+    commentsCount: 0,
     isOfficial: true,
     isCommunity: false,
     testCasesCount: 18,
@@ -220,9 +220,9 @@ func (r *RaftNode) RequestVote(candidateID int, term int) bool {
       avatarInitial: 'C',
       isCurrentUser: true,
     },
-    status: 'my_creation',
-    upvotes: 98,
-    commentsCount: 19,
+    status: 'pending',
+    upvotes: 0,
+    commentsCount: 0,
     isOfficial: false,
     isCommunity: true,
     testCasesCount: 20,
@@ -268,8 +268,8 @@ void roundRobin(vector<Process>& procs, int quantum) {
       avatarInitial: 'DB',
     },
     status: 'pending',
-    upvotes: 215,
-    commentsCount: 44,
+    upvotes: 0,
+    commentsCount: 0,
     isOfficial: true,
     isCommunity: false,
     testCasesCount: 15,
@@ -309,8 +309,8 @@ GROUP BY u.country;
       isMonitor: true,
     },
     status: 'pending',
-    upvotes: 167,
-    commentsCount: 28,
+    upvotes: 0,
+    commentsCount: 0,
     isOfficial: false,
     isCommunity: true,
     testCasesCount: 32,
@@ -341,7 +341,7 @@ fn tokenize(source: &str) -> Vec<Token> {
 export class CodelabService {
   private readonly api = inject(ApiService);
   private readonly notificationSvc = inject(NotificationService);
-  private readonly STORAGE_KEY = 'syseng_codelab_challenges_v1';
+  private readonly STORAGE_KEY = 'syseng_codelab_challenges_v4';
 
   // Signals for state
   readonly allChallenges = signal<Challenge[]>(this.loadChallenges());
@@ -512,18 +512,29 @@ export class CodelabService {
   private loadChallenges(): Challenge[] {
     if (typeof window !== 'undefined') {
       try {
+        localStorage.removeItem('syseng_codelab_challenges_v1');
+        localStorage.removeItem('syseng_codelab_challenges_v2');
+        localStorage.removeItem('syseng_codelab_challenges_v3');
         const stored = localStorage.getItem(this.STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+            return parsed.map((c: any) => ({
+              ...c,
+              upvotes: c.userVoted ? (c.upvotes || 0) : 0,
+              commentsCount: c.commentsCount || 0,
+            }));
           }
         }
       } catch (err) {
         console.warn('No se pudo cargar retos desde localStorage:', err);
       }
     }
-    return INITIAL_CHALLENGES;
+    return INITIAL_CHALLENGES.map(c => ({
+      ...c,
+      upvotes: 0,
+      commentsCount: 0,
+    }));
   }
 
   private saveChallenges(challenges: Challenge[]): void {
@@ -613,50 +624,7 @@ export class CodelabService {
             if (raw) return of(JSON.parse(raw));
           } catch {}
         }
-        const defaultComments: CodelabComment[] = [
-          {
-            id: 'c-1',
-            challengeId: targetKey,
-            author: {
-              name: 'Mateo',
-              username: 'mateo_dev',
-              role: 'Estudiante Sem. 6',
-              avatarInitial: 'M',
-            },
-            content: 'Para no violar O(1) de memoria auxiliar, no uses recursión simple ya que el call stack toma O(h) de espacio. Recomiendo usar punteros in-situ inspirados en el recorrido de Morris.',
-            codeSnippet: 'curr.left, curr.right = curr.right, curr.left',
-            upvotes: 14,
-            createdAt: 'Hace 2 horas',
-          },
-          {
-            id: 'c-2',
-            challengeId: targetKey,
-            author: {
-              name: 'Byte IA',
-              username: 'byte_ai',
-              role: 'Agente Algorítmico IA',
-              avatarInitial: 'IA',
-              isAi: true,
-            },
-            content: 'Nota pedagógica: La inversión de árbol binario O(1) auxiliar exige manipular los punteros sin recursión profunda. Muy formativo para pruebas técnicas de ingeniería de sistemas.',
-            upvotes: 28,
-            createdAt: 'Hace 4 horas',
-          },
-          {
-            id: 'c-3',
-            challengeId: targetKey,
-            author: {
-              name: 'Sofía',
-              username: 'sofia_sys',
-              role: 'Top Contribuidor',
-              avatarInitial: 'S',
-            },
-            content: 'Pasé los casos de prueba en Rust. Clave cuidar el caso borde de nodo raíz nulo o árbol de 1 solo nodo.',
-            upvotes: 8,
-            createdAt: 'Ayer',
-          }
-        ];
-        return of(defaultComments);
+        return of([]);
       })
     );
   }

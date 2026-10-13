@@ -29,8 +29,8 @@ class CodelabSeeder extends Seeder
                 'is_official' => false,
                 'is_community' => true,
                 'is_spotlight' => true,
-                'upvotes' => 248,
-                'comments_count' => 39,
+                'upvotes' => 0,
+                'comments_count' => 0,
                 'starter_code' => [
                     'python' => "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def invertTree(self, root: TreeNode) -> TreeNode:\n        # Tu implementación con memoria O(1) auxiliar aquí\n        pass\n",
                     'javascript' => "function invertTree(root) {\n  // Escribe tu solución aquí\n  return root;\n}\n",
@@ -60,31 +60,6 @@ class CodelabSeeder extends Seeder
             ['input' => '[]', 'expected_output' => '[]', 'is_hidden' => true, 'label' => 'Caso 3 (Borde: Vacío)']
         );
 
-        \App\Models\CodelabComment::updateOrCreate(
-            ['challenge_id' => $c1->id, 'author_username' => 'mateo_dev'],
-            [
-                'author_name' => 'Mateo',
-                'author_role' => 'Estudiante Semestre 6',
-                'author_avatar' => 'M',
-                'is_ai' => false,
-                'content' => 'Para no violar O(1) de memoria auxiliar, no uses recursión simple ya que el call stack toma O(h) de espacio. Recomiendo usar punteros in-situ inspirados en el recorrido de Morris.',
-                'code_snippet' => 'curr.left, curr.right = curr.right, curr.left',
-                'upvotes' => 14,
-            ]
-        );
-
-        \App\Models\CodelabComment::updateOrCreate(
-            ['challenge_id' => $c1->id, 'author_username' => 'byte_ai'],
-            [
-                'author_name' => 'Byte IA',
-                'author_role' => 'Agente Algorítmico IA',
-                'author_avatar' => 'IA',
-                'is_ai' => true,
-                'content' => 'Nota pedagógica: La inversión de árbol binario O(1) auxiliar exige manipular los punteros sin recursión profunda. Muy formativo para pruebas técnicas de ingeniería de sistemas.',
-                'upvotes' => 28,
-            ]
-        );
-
         // 2. Raft Algorithm
         $c2 = CodelabChallenge::updateOrCreate(
             ['slug' => 'implementacion-algoritmo-raft-consenso'],
@@ -104,8 +79,8 @@ class CodelabSeeder extends Seeder
                 'is_official' => false,
                 'is_community' => true,
                 'is_spotlight' => false,
-                'upvotes' => 184,
-                'comments_count' => 31,
+                'upvotes' => 0,
+                'comments_count' => 0,
                 'starter_code' => [
                     'go' => "package main\n\ntype RaftNode struct {\n    ID int\n    CurrentTerm int\n    IsLeader bool\n}\n\nfunc (r *RaftNode) RequestVote(candidateID, term int) bool {\n    return false\n}\n",
                 ],
@@ -137,8 +112,8 @@ class CodelabSeeder extends Seeder
                 'is_official' => true,
                 'is_community' => false,
                 'is_spotlight' => false,
-                'upvotes' => 412,
-                'comments_count' => 56,
+                'upvotes' => 0,
+                'comments_count' => 0,
                 'starter_code' => [
                     'python' => "def isValid(s: str) -> bool:\n    # Escribe tu solución aquí\n    return True\n",
                     'javascript' => "function isValid(s) {\n    return true;\n}\n",
@@ -175,8 +150,8 @@ class CodelabSeeder extends Seeder
                 'is_official' => false,
                 'is_community' => true,
                 'is_spotlight' => false,
-                'upvotes' => 98,
-                'comments_count' => 19,
+                'upvotes' => 0,
+                'comments_count' => 0,
                 'starter_code' => [
                     'cpp' => "#include <vector>\nusing namespace std;\n\nvoid roundRobin(vector<int> burst, int quantum) {\n    // Tu implementación\n}\n",
                 ],
@@ -208,8 +183,8 @@ class CodelabSeeder extends Seeder
                 'is_official' => true,
                 'is_community' => false,
                 'is_spotlight' => false,
-                'upvotes' => 215,
-                'comments_count' => 44,
+                'upvotes' => 0,
+                'comments_count' => 0,
                 'starter_code' => [
                     'sql' => "EXPLAIN ANALYZE\nSELECT u.country, count(o.id)\nFROM users u\nINNER JOIN orders o ON o.user_id = u.id\nGROUP BY u.country;\n",
                 ],
@@ -241,8 +216,8 @@ class CodelabSeeder extends Seeder
                 'is_official' => false,
                 'is_community' => true,
                 'is_spotlight' => false,
-                'upvotes' => 167,
-                'comments_count' => 28,
+                'upvotes' => 0,
+                'comments_count' => 0,
                 'starter_code' => [
                     'rust' => "fn tokenize(source: &str) -> Vec<String> {\n    // AFD\n    Vec::new()\n}\n",
                 ],
