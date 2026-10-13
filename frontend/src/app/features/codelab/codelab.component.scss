@@ -1043,12 +1043,20 @@
     display: grid;
     grid-template-columns: 60px 5fr 2fr 2fr 2fr;
     gap: 1rem;
-    padding: 0 1rem;
+    padding: 0 1.25rem;
+    height: 1.5rem;
+    align-items: center;
     font-family: var(--font-mono, monospace);
     font-size: 0.72rem;
     font-weight: 700;
     color: #64748B;
     letter-spacing: 0.05em;
+
+    .col-actions {
+      display: flex;
+      justify-content: flex-end;
+      text-align: right;
+    }
 
     @media (max-width: 1024px) {
       display: none;
@@ -1379,6 +1387,10 @@
     flex-direction: column;
     gap: 1.5rem;
     min-width: 0;
+
+    @media (min-width: 1024px) {
+      margin-top: calc(1.5rem + 0.75rem);
+    }
 
     .sidebar-card {
       background: #10121C;

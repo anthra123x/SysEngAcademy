@@ -60,7 +60,6 @@ export class CodelabComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    this.startCountdown();
   }
 
   ngOnDestroy(): void {
@@ -76,19 +75,6 @@ export class CodelabComponent implements OnInit, OnDestroy {
       event.preventDefault();
       this.searchInputRef?.nativeElement.focus();
     }
-  }
-
-  private startCountdown(): void {
-    let totalSeconds = 7 * 3600 + 42 * 60 + 19;
-    this.timerInterval = setInterval(() => {
-      if (totalSeconds > 0) {
-        totalSeconds--;
-        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-        const seconds = String(totalSeconds % 60).padStart(2, '0');
-        this.countdownTimer.set(`${hours}h ${minutes}m ${seconds}s`);
-      }
-    }, 1000);
   }
 
   setTab(tab: 'todos' | 'oficiales' | 'comunidad' | 'mis_retos' | 'mis_soluciones'): void {
