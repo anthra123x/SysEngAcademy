@@ -71,4 +71,9 @@ class CodelabChallenge extends Model
     {
         return $this->hasMany(CodelabVote::class, 'challenge_id');
     }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(CodelabComment::class, 'challenge_id')->orderBy('created_at', 'desc');
+    }
 }

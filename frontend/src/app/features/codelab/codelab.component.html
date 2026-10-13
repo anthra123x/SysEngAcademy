@@ -158,7 +158,21 @@
             <!-- Contributor info & Action -->
             <div class="spotlight-footer">
               <div class="spotlight-author">
-                <div class="author-avatar">{{ spotlight.author.avatarInitial || 'M' }}</div>
+                <div class="author-avatar" [class.author-avatar--ai]="spotlight.author.isAi || spotlight.author.username === 'byte_ai'">
+                  @if (spotlight.author.isAi || spotlight.author.username === 'byte_ai') {
+                    <svg class="ai-bot-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect width="18" height="14" x="3" y="7" rx="3"/>
+                      <circle cx="9" cy="13" r="1.5" fill="currentColor"/>
+                      <circle cx="15" cy="13" r="1.5" fill="currentColor"/>
+                      <path d="M12 7V3"/>
+                      <circle cx="12" cy="3" r="1" fill="currentColor"/>
+                      <path d="M7 17v2"/>
+                      <path d="M17 17v2"/>
+                    </svg>
+                  } @else {
+                    {{ spotlight.author.avatarInitial || 'M' }}
+                  }
+                </div>
                 <div class="author-details">
                   <div class="author-name-group">
                     <span class="author-name">&#64;{{ spotlight.author.username }}</span>
@@ -545,7 +559,7 @@
             <!-- Title & tags col -->
             <div class="row-col col-title">
               <div class="challenge-title-group">
-                <h3 class="challenge-title" (click)="openSolver(item)">
+                <h3 class="challenge-title" (click)="openSolver(item)" [title]="item.title">
                   {{ item.title }}
                 </h3>
                 @if (item.isOfficial) {
@@ -559,11 +573,14 @@
               <p class="challenge-desc-snippet">{{ item.description }}</p>
 
               <div class="challenge-tags-row">
-                @for (t of item.tags; track t) {
+                @for (t of item.tags.slice(0, 2); track t) {
                   <span class="tag-pill tag-pill--accent">{{ t }}</span>
                 }
-                @for (l of item.languages; track l) {
-                  <span class="tag-pill tag-pill--lang">{{ l }}</span>
+                @if (item.languages && item.languages.length > 0) {
+                  <span class="tag-pill tag-pill--lang">{{ item.languages[0] }}</span>
+                  @if (item.languages.length > 1) {
+                    <span class="tag-pill tag-pill--lang-more">+{{ item.languages.length - 1 }}</span>
+                  }
                 }
               </div>
             </div>
@@ -577,7 +594,7 @@
                 </span>
               </div>
               <span class="success-rate-text">
-                Éxito: <strong>{{ item.acceptanceRate }}%</strong> ({{ item.testCasesCount }} Test Cases)
+                Éxito: <strong>{{ item.acceptanceRate }}%</strong>
               </span>
             </div>
 
@@ -585,7 +602,17 @@
             <div class="row-col col-author">
               <div class="author-avatar-sm" [class.author-avatar-sm--official]="item.isOfficial" [class.author-avatar-sm--ai]="item.author.isAi || item.author.username === 'byte_ai'">
                 @if (item.author.isAi || item.author.username === 'byte_ai') {
-                  <span class="avatar-ai-icon">🤖</span>
+                  <span class="avatar-ai-icon">
+                    <svg class="ai-bot-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect width="18" height="14" x="3" y="7" rx="3"/>
+                      <circle cx="9" cy="13" r="1.5" fill="currentColor"/>
+                      <circle cx="15" cy="13" r="1.5" fill="currentColor"/>
+                      <path d="M12 7V3"/>
+                      <circle cx="12" cy="3" r="1" fill="currentColor"/>
+                      <path d="M7 17v2"/>
+                      <path d="M17 17v2"/>
+                    </svg>
+                  </span>
                 } @else if (item.isOfficial) {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -606,7 +633,7 @@
                   }
                 </div>
                 <span class="author-subtext">
-                  {{ (item.author.isAi || item.author.username === 'byte_ai') ? 'Agente Algorítmico IA' : (item.author.isTopContributor ? 'Top Contribuidor' : item.author.isMonitor ? 'Monitor' : item.isOfficial ? 'Curaduría Oficial' : item.author.role) }}
+                  {{ (item.author.isAi || item.author.username === 'byte_ai') ? 'Agente IA' : (item.author.isTopContributor ? 'Top Contribuidor' : item.author.isMonitor ? 'Monitor' : item.isOfficial ? 'Curaduría Oficial' : item.author.role) }}
                 </span>
               </div>
             </div>
@@ -615,24 +642,29 @@
             <div class="row-col col-actions">
               <div class="metrics-counter-group">
                 <button
-                  class="upvote-btn"
+                  class="btn-reaction btn-reaction--upvote"
                   [class.is-voted]="item.userVoted"
                   (click)="voteChallenge(item, $event)"
-                  title="Votar desafío"
+                  [title]="item.userVoted ? 'Retirar voto' : 'Apoyar este reto (+1 Voto)'"
                   type="button"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="15" height="15" viewBox="0 0 24 24" [attr.fill]="item.userVoted ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="18 15 12 9 6 15"></polyline>
                   </svg>
                   <span>{{ item.upvotes }}</span>
                 </button>
 
-                <div class="comments-counter">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button
+                  class="btn-reaction btn-reaction--comments"
+                  (click)="openCommentsModal(item, $event)"
+                  [title]="'Discusión y comentarios (' + item.commentsCount + ')'"
+                  type="button"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                   </svg>
                   <span>{{ item.commentsCount }}</span>
-                </div>
+                </button>
               </div>
 
               <button
@@ -1077,6 +1109,154 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL DE DISCUSIÓN Y COMENTARIOS DEL RETO -->
+  @if (activeCommentsChallenge(); as activeChallenge) {
+    <div class="modal-backdrop" (click)="closeCommentsModal()">
+      <div class="codelab-modal codelab-modal--comments" (click)="$event.stopPropagation()">
+        <div class="codelab-modal__header">
+          <div class="modal-title-wrap">
+            <div class="comments-modal-badge">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Discusión &amp; Análisis Comunitario</span>
+            </div>
+            <h2 class="modal-challenge-title">{{ activeChallenge.title }}</h2>
+            <div class="modal-meta-pills">
+              <span class="badge-difficulty" [ngClass]="'badge-difficulty--' + activeChallenge.difficulty">
+                <span class="dot"></span>
+                {{ activeChallenge.difficulty === 'facil' ? 'Fácil' : activeChallenge.difficulty === 'media' ? 'Media' : activeChallenge.difficulty === 'dificil' ? 'Difícil' : 'Hardcore' }}
+              </span>
+              <span class="meta-pill-rate">Tasa Éxito: {{ activeChallenge.acceptanceRate }}%</span>
+              <span class="meta-pill-xp">+{{ activeChallenge.xp }} XP</span>
+            </div>
+          </div>
+
+          <button class="btn-close-modal" (click)="closeCommentsModal()" type="button" aria-label="Cerrar modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="codelab-modal__body comments-modal-body">
+          <!-- Input Form para publicar comentario -->
+          <div class="new-comment-box">
+            <div class="new-comment-header">
+              <span class="new-comment-title">Publicar aporte o análisis</span>
+              <span class="new-comment-hint">Comparte tu estrategia, intuición algorítmica o pistas</span>
+            </div>
+
+            <textarea
+              class="comment-textarea"
+              [(ngModel)]="newCommentContent"
+              rows="3"
+              placeholder="Escribe tu reflexión, técnica usada o pregunta sobre este reto..."
+            ></textarea>
+
+            <div class="snippet-toggle-area">
+              <input
+                type="text"
+                class="comment-snippet-input"
+                [(ngModel)]="newCommentSnippet"
+                placeholder="Línea o snippet clave (opcional, ej: curr.left, curr.right = curr.right, curr.left)"
+              />
+            </div>
+
+            <div class="new-comment-actions">
+              <span class="char-count">{{ newCommentContent().length }}/2000 car.</span>
+              <button
+                class="btn-publish-comment"
+                (click)="submitComment()"
+                [disabled]="newCommentContent().trim().length < 3 || isSubmittingComment()"
+                type="button"
+              >
+                @if (isSubmittingComment()) {
+                  <span class="spinner-sm"></span>
+                  <span>Publicando...</span>
+                } @else {
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                  <span>Publicar Comentario (+15 XP)</span>
+                }
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista de Comentarios -->
+          <div class="comments-feed-section">
+            <div class="feed-header">
+              <h3>Aportes de la Comunidad ({{ commentsList().length }})</h3>
+            </div>
+
+            @if (isLoadingComments()) {
+              <div class="comments-loading">
+                <div class="comments-skeleton"></div>
+                <div class="comments-skeleton"></div>
+              </div>
+            } @else if (commentsList().length === 0) {
+              <div class="comments-empty">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <p>Aún no hay comentarios en este reto. ¡Sé el primero en compartir tu enfoque!</p>
+              </div>
+            } @else {
+              <div class="comments-list">
+                @for (comment of commentsList(); track comment.id) {
+                  <div class="comment-item">
+                    <div class="comment-item__header">
+                      <div class="comment-author-badge">
+                        <div class="comment-avatar" [class.comment-avatar--ai]="comment.author.isAi">
+                          @if (comment.author.isAi) {
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <rect width="18" height="14" x="3" y="7" rx="3"/>
+                              <circle cx="9" cy="13" r="1.5" fill="currentColor"/>
+                              <circle cx="15" cy="13" r="1.5" fill="currentColor"/>
+                              <path d="M12 7V3"/>
+                            </svg>
+                          } @else {
+                            {{ comment.author.avatarInitial || comment.author.name[0] }}
+                          }
+                        </div>
+                        <div class="comment-author-meta">
+                          <span class="comment-author-name">&#64;{{ comment.author.username }}</span>
+                          <span class="comment-author-role">{{ comment.author.isAi ? 'Agente Algorítmico IA' : comment.author.role }}</span>
+                        </div>
+                      </div>
+                      <span class="comment-time">{{ comment.createdAt }}</span>
+                    </div>
+
+                    <p class="comment-content">{{ comment.content }}</p>
+
+                    @if (comment.codeSnippet) {
+                      <div class="comment-code-snippet">
+                        <code>{{ comment.codeSnippet }}</code>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="codelab-modal__footer comments-modal-footer">
+          <button class="btn-cancel" (click)="closeCommentsModal()" type="button">Cerrar</button>
+          <button class="btn-solve-now" (click)="openSolver(activeChallenge); closeCommentsModal()" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            <span>Abrir Reto en el Editor</span>
+          </button>
+        </div>
       </div>
     </div>
   }

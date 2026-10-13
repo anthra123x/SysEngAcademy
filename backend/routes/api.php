@@ -62,6 +62,8 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
     Route::get('/codelab/challenges/{slug}', [\App\Http\Controllers\Api\CodelabController::class, 'show']);
     Route::post('/codelab/challenges', [\App\Http\Controllers\Api\CodelabController::class, 'store'])->middleware('throttle:15,1');
     Route::post('/codelab/challenges/{id}/vote', [\App\Http\Controllers\Api\CodelabController::class, 'vote'])->middleware('throttle:30,1');
+    Route::get('/codelab/challenges/{id}/comments', [\App\Http\Controllers\Api\CodelabController::class, 'getComments']);
+    Route::post('/codelab/challenges/{id}/comments', [\App\Http\Controllers\Api\CodelabController::class, 'storeComment'])->middleware('throttle:30,1');
     Route::post('/codelab/challenges/{id}/submit', [\App\Http\Controllers\Api\CodelabController::class, 'submit'])->middleware('throttle:20,1');
     Route::get('/codelab/stats', [\App\Http\Controllers\Api\CodelabController::class, 'stats']);
     Route::get('/codelab/stream', [\App\Http\Controllers\Api\CodelabController::class, 'stream']);

@@ -13,7 +13,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CodelabService } from './codelab.service';
-import { Challenge } from './codelab.models';
+import { Challenge, CodelabComment } from './codelab.models';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-codelab',
@@ -25,6 +26,7 @@ import { Challenge } from './codelab.models';
 export class CodelabComponent implements OnInit, OnDestroy {
   readonly codelabService = inject(CodelabService);
   private readonly router = inject(Router);
+  private readonly notificationService = inject(NotificationService);
 
   @ViewChild('searchInput') searchInputRef?: ElementRef<HTMLInputElement>;
 
@@ -33,6 +35,14 @@ export class CodelabComponent implements OnInit, OnDestroy {
   readonly challenges = this.codelabService.filteredChallenges;
   readonly stats = this.codelabService.stats;
   readonly tabCounts = this.codelabService.tabCounts;
+
+  // Comments modal state
+  readonly activeCommentsChallenge = signal<Challenge | null>(null);
+  readonly commentsList = signal<CodelabComment[]>([]);
+  readonly isLoadingComments = signal<boolean>(false);
+  readonly newCommentContent = signal<string>('');
+  readonly newCommentSnippet = signal<string>('');
+  readonly isSubmittingComment = signal<boolean>(false);
 
   // Countdown timer for daily challenge
   readonly countdownTimer = signal<string>('07h 42m 19s');
@@ -116,7 +126,66 @@ export class CodelabComponent implements OnInit, OnDestroy {
 
   voteChallenge(challenge: Challenge, event: Event): void {
     event.stopPropagation();
-    this.codelabService.toggleVote(challenge.id);
+    const willVote = !challenge.userVoted;
+    this.codelabService.toggleVote(challenge.slug || challenge.id);
+    this.notificationService.show({
+      type: willVote ? 'success' : 'info',
+      title: willVote ? '¡Voto registrado!' : 'Voto retirado',
+      message: willVote
+        ? `Has apoyado el reto "${challenge.title}".`
+        : `Has retirado tu voto de "${challenge.title}".`,
+      duration: 3000,
+    });
+  }
+
+  openCommentsModal(challenge: Challenge, event: Event): void {
+    event.stopPropagation();
+    this.activeCommentsChallenge.set(challenge);
+    this.isLoadingComments.set(true);
+    this.newCommentContent.set('');
+    this.newCommentSnippet.set('');
+
+    this.codelabService.getComments(challenge.slug || challenge.id).subscribe({
+      next: (comments) => {
+        this.commentsList.set(comments);
+        this.isLoadingComments.set(false);
+      },
+      error: () => {
+        this.commentsList.set([]);
+        this.isLoadingComments.set(false);
+      }
+    });
+  }
+
+  closeCommentsModal(): void {
+    this.activeCommentsChallenge.set(null);
+  }
+
+  submitComment(): void {
+    const challenge = this.activeCommentsChallenge();
+    const content = this.newCommentContent().trim();
+    if (!challenge || !content || this.isSubmittingComment()) return;
+
+    this.isSubmittingComment.set(true);
+    const snippet = this.newCommentSnippet().trim();
+
+    this.codelabService.addComment(challenge.slug || challenge.id, content, snippet).subscribe({
+      next: (createdComment) => {
+        this.commentsList.update(list => [createdComment, ...list]);
+        this.newCommentContent.set('');
+        this.newCommentSnippet.set('');
+        this.isSubmittingComment.set(false);
+        this.notificationService.show({
+          type: 'success',
+          title: '¡Comentario publicado!',
+          message: 'Tu aporte ha sido compartido en la discusión del reto (+15 XP).',
+          duration: 3500,
+        });
+      },
+      error: () => {
+        this.isSubmittingComment.set(false);
+      }
+    });
   }
 
   toggleBookmark(challenge: Challenge): void {

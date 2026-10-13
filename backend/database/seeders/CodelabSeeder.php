@@ -60,6 +60,31 @@ class CodelabSeeder extends Seeder
             ['input' => '[]', 'expected_output' => '[]', 'is_hidden' => true, 'label' => 'Caso 3 (Borde: Vacío)']
         );
 
+        \App\Models\CodelabComment::updateOrCreate(
+            ['challenge_id' => $c1->id, 'author_username' => 'mateo_dev'],
+            [
+                'author_name' => 'Mateo',
+                'author_role' => 'Estudiante Semestre 6',
+                'author_avatar' => 'M',
+                'is_ai' => false,
+                'content' => 'Para no violar O(1) de memoria auxiliar, no uses recursión simple ya que el call stack toma O(h) de espacio. Recomiendo usar punteros in-situ inspirados en el recorrido de Morris.',
+                'code_snippet' => 'curr.left, curr.right = curr.right, curr.left',
+                'upvotes' => 14,
+            ]
+        );
+
+        \App\Models\CodelabComment::updateOrCreate(
+            ['challenge_id' => $c1->id, 'author_username' => 'byte_ai'],
+            [
+                'author_name' => 'Byte IA',
+                'author_role' => 'Agente Algorítmico IA',
+                'author_avatar' => 'IA',
+                'is_ai' => true,
+                'content' => 'Nota pedagógica: La inversión de árbol binario O(1) auxiliar exige manipular los punteros sin recursión profunda. Muy formativo para pruebas técnicas de ingeniería de sistemas.',
+                'upvotes' => 28,
+            ]
+        );
+
         // 2. Raft Algorithm
         $c2 = CodelabChallenge::updateOrCreate(
             ['slug' => 'implementacion-algoritmo-raft-consenso'],

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\CodelabChallenge;
+use App\Models\CodelabComment;
 use App\Models\CodelabSubmission;
 use App\Models\CodelabTestCase;
 use App\Models\CodelabVote;
@@ -410,6 +411,99 @@ class CodelabController extends Controller
                 'userVoted' => $voted,
             ]);
         });
+    }
+
+    /**
+     * Get comments for a challenge.
+     */
+    public function getComments(string|int $id): JsonResponse
+    {
+        $challenge = $this->resolveChallenge($id);
+        $comments = CodelabComment::where('challenge_id', $challenge->id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn ($c) => [
+                'id' => (string) $c->id,
+                'challengeId' => (string) $challenge->id,
+                'author' => [
+                    'name' => $c->author_name,
+                    'username' => $c->author_username,
+                    'role' => $c->author_role,
+                    'avatarInitial' => $c->author_avatar ?? strtoupper(substr($c->author_name, 0, 1)),
+                    'isAi' => (bool) $c->is_ai,
+                ],
+                'content' => $c->content,
+                'codeSnippet' => $c->code_snippet,
+                'upvotes' => (int) $c->upvotes,
+                'createdAt' => $c->created_at->diffForHumans(),
+            ]);
+
+        return response()->json([
+            'comments' => $comments,
+            'total' => $comments->count(),
+        ]);
+    }
+
+    /**
+     * Store a new comment on a challenge.
+     */
+    public function storeComment(string|int $id, Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'content' => 'required|string|min:3|max:2000',
+            'codeSnippet' => 'nullable|string|max:5000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $challenge = $this->resolveChallenge($id);
+        $user = $request->user('jwt') ?? $request->user('sanctum') ?? $request->user();
+
+        $authorName = $user ? $user->name : 'Estudiante SysEng';
+        $authorUsername = $user ? ($user->username ?? explode('@', $user->email)[0]) : 'estudiante_'.rand(100, 999);
+        $authorRole = $user ? ($user->role ?? 'Estudiante') : 'Estudiante';
+        $authorAvatar = $user ? strtoupper(substr($user->name, 0, 1)) : 'E';
+
+        $comment = CodelabComment::create([
+            'challenge_id' => $challenge->id,
+            'user_id' => $user?->id,
+            'author_name' => $authorName,
+            'author_username' => $authorUsername,
+            'author_role' => $authorRole,
+            'author_avatar' => $authorAvatar,
+            'is_ai' => false,
+            'content' => $request->input('content'),
+            'code_snippet' => $request->input('codeSnippet'),
+            'upvotes' => 0,
+        ]);
+
+        $challenge->increment('comments_count');
+
+        if ($user) {
+            $user->increment('xp', 15);
+        }
+
+        return response()->json([
+            'message' => 'Comentario publicado exitosamente',
+            'comment' => [
+                'id' => (string) $comment->id,
+                'challengeId' => (string) $challenge->id,
+                'author' => [
+                    'name' => $comment->author_name,
+                    'username' => $comment->author_username,
+                    'role' => $comment->author_role,
+                    'avatarInitial' => $comment->author_avatar,
+                    'isAi' => false,
+                ],
+                'content' => $comment->content,
+                'codeSnippet' => $comment->code_snippet,
+                'upvotes' => 0,
+                'createdAt' => 'Hace un momento',
+            ],
+            'commentsCount' => $challenge->fresh()->comments_count,
+        ], 201);
     }
 
     /**

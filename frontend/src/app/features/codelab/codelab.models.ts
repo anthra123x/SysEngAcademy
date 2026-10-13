@@ -86,3 +86,22 @@ export interface CodelabStats {
   podium?: PodiumMember[];
   activityFeed?: ActivityFeedItem[];
 }
+
+export interface CodelabComment {
+  id: string;
+  challengeId: string;
+  author: {
+    name: string;
+    username: string;
+    role: string;
+    avatarInitial?: string;
+    isAi?: boolean;
+    isOfficial?: boolean;
+    isCurrentUser?: boolean;
+  };
+  content: string;
+  codeSnippet?: string;
+  upvotes: number;
+  userVoted?: boolean;
+  createdAt: string;
+}

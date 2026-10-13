@@ -1,9 +1,9 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { ApiService } from '../../core/services/api.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { Challenge, CodelabStats, TestCaseModel } from './codelab.models';
+import { Observable, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+import { Challenge, CodelabComment, CodelabStats, TestCaseModel } from './codelab.models';
 
 const INITIAL_CHALLENGES: Challenge[] = [
   // 1. Featured Spotlight Challenge
@@ -558,8 +558,11 @@ export class CodelabService {
 
   toggleVote(challengeId: string): void {
     const previous = this.allChallenges();
+    const target = previous.find(c => c.id === challengeId || c.slug === challengeId || String(c.id) === String(challengeId));
+    const targetKey = target ? target.slug : challengeId;
+
     const updated = previous.map(c => {
-      if (c.id === challengeId) {
+      if (c.id === challengeId || c.slug === challengeId || String(c.id) === String(challengeId)) {
         const voted = !c.userVoted;
         return {
           ...c,
@@ -573,12 +576,12 @@ export class CodelabService {
     this.saveChallenges(updated);
 
     // Persist in backend PostgreSQL database
-    this.api.post<{ upvotes: number; userVoted: boolean }>(`/codelab/challenges/${challengeId}/vote`, {})
+    this.api.post<{ upvotes: number; userVoted: boolean }>(`/codelab/challenges/${targetKey}/vote`, {})
       .subscribe({
         next: res => {
           if (res) {
             const confirmed = this.allChallenges().map(c => {
-              if (c.id === challengeId) {
+              if (c.id === challengeId || c.slug === challengeId || String(c.id) === String(challengeId)) {
                 return {
                   ...c,
                   upvotes: res.upvotes,
@@ -595,6 +598,114 @@ export class CodelabService {
           console.warn('[CodeLab] Error sincronizando voto en backend:', err?.message);
         }
       });
+  }
+
+  getComments(challengeIdOrSlug: string): Observable<CodelabComment[]> {
+    const target = this.allChallenges().find(c => c.id === challengeIdOrSlug || c.slug === challengeIdOrSlug || String(c.id) === String(challengeIdOrSlug));
+    const targetKey = target ? target.slug : challengeIdOrSlug;
+
+    return this.api.get<{ comments: CodelabComment[]; total: number }>(`/codelab/challenges/${targetKey}/comments`).pipe(
+      map(res => res?.comments || []),
+      catchError(() => {
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem(`syseng_comments_${targetKey}`);
+            if (raw) return of(JSON.parse(raw));
+          } catch {}
+        }
+        const defaultComments: CodelabComment[] = [
+          {
+            id: 'c-1',
+            challengeId: targetKey,
+            author: {
+              name: 'Mateo',
+              username: 'mateo_dev',
+              role: 'Estudiante Sem. 6',
+              avatarInitial: 'M',
+            },
+            content: 'Para no violar O(1) de memoria auxiliar, no uses recursión simple ya que el call stack toma O(h) de espacio. Recomiendo usar punteros in-situ inspirados en el recorrido de Morris.',
+            codeSnippet: 'curr.left, curr.right = curr.right, curr.left',
+            upvotes: 14,
+            createdAt: 'Hace 2 horas',
+          },
+          {
+            id: 'c-2',
+            challengeId: targetKey,
+            author: {
+              name: 'Byte IA',
+              username: 'byte_ai',
+              role: 'Agente Algorítmico IA',
+              avatarInitial: 'IA',
+              isAi: true,
+            },
+            content: 'Nota pedagógica: La inversión de árbol binario O(1) auxiliar exige manipular los punteros sin recursión profunda. Muy formativo para pruebas técnicas de ingeniería de sistemas.',
+            upvotes: 28,
+            createdAt: 'Hace 4 horas',
+          },
+          {
+            id: 'c-3',
+            challengeId: targetKey,
+            author: {
+              name: 'Sofía',
+              username: 'sofia_sys',
+              role: 'Top Contribuidor',
+              avatarInitial: 'S',
+            },
+            content: 'Pasé los casos de prueba en Rust. Clave cuidar el caso borde de nodo raíz nulo o árbol de 1 solo nodo.',
+            upvotes: 8,
+            createdAt: 'Ayer',
+          }
+        ];
+        return of(defaultComments);
+      })
+    );
+  }
+
+  addComment(challengeIdOrSlug: string, content: string, codeSnippet?: string): Observable<CodelabComment> {
+    const target = this.allChallenges().find(c => c.id === challengeIdOrSlug || c.slug === challengeIdOrSlug || String(c.id) === String(challengeIdOrSlug));
+    const targetKey = target ? target.slug : challengeIdOrSlug;
+
+    // Optimistically update commentsCount on challenge
+    const updated = this.allChallenges().map(c => {
+      if (c.id === challengeIdOrSlug || c.slug === challengeIdOrSlug || String(c.id) === String(challengeIdOrSlug)) {
+        return { ...c, commentsCount: (c.commentsCount || 0) + 1 };
+      }
+      return c;
+    });
+    this.allChallenges.set(updated);
+    this.saveChallenges(updated);
+
+    const newComment: CodelabComment = {
+      id: `c-${Date.now()}`,
+      challengeId: targetKey,
+      author: {
+        name: 'Tú (Estudiante)',
+        username: 'estudiante_actual',
+        role: 'Estudiante SysEng',
+        avatarInitial: 'T',
+        isCurrentUser: true,
+      },
+      content,
+      codeSnippet: codeSnippet || undefined,
+      upvotes: 0,
+      createdAt: 'Hace un momento',
+    };
+
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = JSON.parse(localStorage.getItem(`syseng_comments_${targetKey}`) || '[]');
+        stored.unshift(newComment);
+        localStorage.setItem(`syseng_comments_${targetKey}`, JSON.stringify(stored));
+      } catch {}
+    }
+
+    return this.api.post<{ message: string; comment: CodelabComment; commentsCount: number }>(`/codelab/challenges/${targetKey}/comments`, {
+      content,
+      codeSnippet,
+    }).pipe(
+      map(res => res.comment || newComment),
+      catchError(() => of(newComment))
+    );
   }
 
   markAsSolved(challengeId: string): void {
