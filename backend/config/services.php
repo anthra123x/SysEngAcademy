@@ -36,13 +36,13 @@ return [
     ],
 
     'github' => [
-        'client_id' => env('GITHUB_CLIENT_ID'),
+        'client_id' => env('GITHUB_CLIENT_ID') ?: 'Ov23liaGFMbw7ABOai7u',
         'client_secret' => env('GITHUB_CLIENT_SECRET'),
         'redirect' => env('GITHUB_REDIRECT_URI') ?: (rtrim(env('APP_URL', 'https://www.sysengacademy.site'), '/') . '/api/auth/github/callback'),
     ],
 
     'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_id' => env('GOOGLE_CLIENT_ID') ?: '314182861423-0bodo7ijvgl1eno6h6ff8mnn0t4rfi4t.apps.googleusercontent.com',
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI') ?: (rtrim(env('APP_URL', 'https://www.sysengacademy.site'), '/') . '/api/auth/google/callback'),
     ],

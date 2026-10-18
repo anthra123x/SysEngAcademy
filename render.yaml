@@ -32,3 +32,16 @@ services:
         value: openrouter
       - key: AI_API_KEY
         sync: false
+      - key: GITHUB_CLIENT_ID
+        value: Ov23liaGFMbw7ABOai7u
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_REDIRECT_URI
+        value: https://www.sysengacademy.site/api/auth/github/callback
+      - key: GOOGLE_CLIENT_ID
+        value: 314182861423-0bodo7ijvgl1eno6h6ff8mnn0t4rfi4t.apps.googleusercontent.com
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://www.sysengacademy.site/api/auth/google/callback
+
