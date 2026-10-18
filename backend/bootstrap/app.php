@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Modules\Performance\Commands\SimulateTrafficCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
+        // Confía en proxies inversos (Render / Cloudflare / Vercel) para headers X-Forwarded-* (HTTPS, host, IP)
+        $middleware->trustProxies(at: '*');
+
         // API pura: sin ruta web "login". Los invitados no autenticados
         // lanzan AuthenticationException en vez de redirigir a una ruta
         // inexistente (evita 500 "Route [login] not defined" → 401 JSON).
