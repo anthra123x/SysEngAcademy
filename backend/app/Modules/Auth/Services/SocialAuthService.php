@@ -65,6 +65,12 @@ class SocialAuthService
         $linkingUserId = $cachedState['user_id'] ?? null;
         $scopeType = $cachedState['scope_type'] ?? null;
 
+        $clientSecret = config("services.{$provider}.client_secret");
+        if (empty($clientSecret)) {
+            $upper = strtoupper($provider);
+            throw new \RuntimeException("Falta configurar la variable de entorno {$upper}_CLIENT_SECRET en el panel de Render.");
+        }
+
         /** @var \Laravel\Socialite\Two\User $socialiteUser */
         $socialiteUser = Socialite::driver($provider)->stateless()->user();
 
