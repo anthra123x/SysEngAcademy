@@ -1677,6 +1677,139 @@
                     </form>
                   </div>
                 </div>
+
+                <!-- CUENTAS VINCULADAS (GOOGLE & GITHUB) -->
+                <div class="feedback-section-box" style="margin-top: 20px;">
+                  <div class="terminal-subhead" style="background: #090c12;">
+                    <span class="term-dot" style="background: #38bdf8; box-shadow: 0 0 6px #38bdf8;"></span>
+                    <span class="term-subhead-title" style="color: #38bdf8;">
+                      CUENTAS VINCULADAS &amp; GITHUB SYNC (OAUTH 2.0)
+                    </span>
+                    <span class="term-badge" style="margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: #64748b;">
+                      SysEng OAuth Gateway
+                    </span>
+                  </div>
+
+                  <div style="padding: 24px; max-width: 640px; margin: 0 auto;">
+                    <p style="font-size: 13px; color: #94a3b8; margin-bottom: 20px; line-height: 1.6;">
+                      Vincula tus cuentas para iniciar sesión sin contraseña en 1 clic y permitir que la plataforma cree y actualice tus soluciones directamente en tus repositorios personales de GitHub.
+                    </p>
+
+                    @if (socialMsg()) {
+                      <div class="feedback-alert-box feedback-alert-box--resolved" style="margin-bottom: 16px;">
+                        {{ socialMsg() }}
+                      </div>
+                    }
+                    @if (socialError()) {
+                      <div class="feedback-alert-box feedback-alert-box--failed" style="margin-bottom: 16px;">
+                        {{ socialError() }}
+                      </div>
+                    }
+
+                    <div style="display: flex; flex-direction: column; gap: 14px;">
+                      <!-- GOOGLE ROW -->
+                      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: #0d1117; border: 1px solid #1e293b; border-radius: 8px; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                          <svg width="22" height="22" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+                            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                          </svg>
+                          <div>
+                            <div style="font-size: 14px; font-weight: 600; color: #f8fafc;">Google</div>
+                            <div style="font-size: 12px; color: #64748b; font-family: var(--font-mono);">
+                              {{ socialStatus()?.google?.connected ? 'Vinculado exitosamente' : 'No vinculado' }}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          @if (socialStatus()?.google?.connected) {
+                            <button
+                              type="button"
+                              class="btn-term-run"
+                              style="background: transparent; color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer;"
+                              (click)="disconnectSocial('google')"
+                              [disabled]="socialLoading() !== null"
+                            >
+                              {{ socialLoading() === 'google' ? 'Desvinculando...' : 'Desvincular' }}
+                            </button>
+                          } @else {
+                            <button
+                              type="button"
+                              class="btn-term-run"
+                              style="background: #141c2a; color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
+                              (click)="connectSocial('google')"
+                              [disabled]="socialLoading() !== null"
+                            >
+                              {{ socialLoading() === 'google' ? 'Conectando...' : 'Conectar Google' }}
+                            </button>
+                          }
+                        </div>
+                      </div>
+
+                      <!-- GITHUB ROW -->
+                      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: #0d1117; border: 1px solid #1e293b; border-radius: 8px; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff">
+                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                          </svg>
+                          <div>
+                            <div style="font-size: 14px; font-weight: 600; color: #f8fafc;">
+                              GitHub &amp; Portafolio de Proyectos
+                            </div>
+                            <div style="font-size: 12px; font-family: var(--font-mono);">
+                              @if (socialStatus()?.github?.connected && socialStatus()?.github?.has_repo_scope) {
+                                <span style="color: #4ade80;">✓ Conectado como &#64;{{ socialStatus()?.github?.nickname }} (Permisos de Repositorio Activos)</span>
+                              } @else if (socialStatus()?.github?.connected && !socialStatus()?.github?.has_repo_scope) {
+                                <span style="color: #fbbf24;">⚠ Conectado como &#64;{{ socialStatus()?.github?.nickname }} (Falta permiso para exportar repos)</span>
+                              } @else {
+                                <span style="color: #64748b;">No vinculado</span>
+                              }
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style="display: flex; gap: 8px;">
+                          @if (socialStatus()?.github?.connected && !socialStatus()?.github?.has_repo_scope) {
+                            <button
+                              type="button"
+                              class="btn-term-run"
+                              style="background: #141c2a; color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
+                              (click)="connectSocial('github', 'public_repo')"
+                              [disabled]="socialLoading() !== null"
+                            >
+                              {{ socialLoading() === 'github' ? 'Actualizando...' : 'Habilitar Repos' }}
+                            </button>
+                          }
+
+                          @if (socialStatus()?.github?.connected) {
+                            <button
+                              type="button"
+                              class="btn-term-run"
+                              style="background: transparent; color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer;"
+                              (click)="disconnectSocial('github')"
+                              [disabled]="socialLoading() !== null"
+                            >
+                              {{ socialLoading() === 'github' ? 'Desvinculando...' : 'Desvincular' }}
+                            </button>
+                          } @else {
+                            <button
+                              type="button"
+                              class="btn-term-run"
+                              style="background: #141c2a; color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
+                              (click)="connectSocial('github', 'public_repo')"
+                              [disabled]="socialLoading() !== null"
+                            >
+                              {{ socialLoading() === 'github' ? 'Conectando...' : 'Conectar GitHub' }}
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             }
 

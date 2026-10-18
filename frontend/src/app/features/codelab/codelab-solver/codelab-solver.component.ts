@@ -33,6 +33,12 @@ import {
   CodeExecutionService,
   TestCase,
 } from '../../../core/services/code-execution.service';
+import {
+  GitHubSyncPayload,
+  GitHubSyncResult,
+  GitHubSyncService,
+  GitHubSyncStatus,
+} from '../../../core/services/github-sync.service';
 
 @Component({
   selector: 'app-codelab-solver',
@@ -46,6 +52,7 @@ export class CodelabSolverComponent implements OnInit, AfterViewInit, OnDestroy 
   private readonly router = inject(Router);
   private readonly codelabService = inject(CodelabService);
   private readonly codeExecService = inject(CodeExecutionService);
+  private readonly gitHubSyncService = inject(GitHubSyncService);
   private readonly platformId = inject(PLATFORM_ID);
 
   @ViewChild('editorContainer') editorContainer?: ElementRef<HTMLDivElement>;
@@ -59,6 +66,18 @@ export class CodelabSolverComponent implements OnInit, AfterViewInit, OnDestroy 
   readonly executionResult = signal<CodeExecutionResponse | undefined>(undefined);
   readonly isSolvedCelebrationOpen = signal<boolean>(false);
   readonly mobileViewMode = signal<'statement' | 'workbench'>('workbench');
+
+  // GitHub Project Sync State
+  readonly isGitHubModalOpen = signal<boolean>(false);
+  readonly isCheckingGitHub = signal<boolean>(false);
+  readonly isSyncingGitHub = signal<boolean>(false);
+  readonly isConnectingGitHub = signal<boolean>(false);
+  readonly gitHubStatus = signal<GitHubSyncStatus | null>(null);
+  readonly gitHubRepoName = signal<string>('syseng-codelab-soluciones');
+  readonly gitHubFilePath = signal<string>('');
+  readonly gitHubCommitMsg = signal<string>('');
+  readonly gitHubSyncResult = signal<GitHubSyncResult | null>(null);
+  readonly gitHubError = signal<string>('');
 
   private editorView?: EditorView;
 
@@ -287,5 +306,104 @@ export class CodelabSolverComponent implements OnInit, AfterViewInit, OnDestroy 
     if (nextItem) {
       this.router.navigate(['/codelab', nextItem.slug]);
     }
+  }
+
+  private getFileExtension(lang: string): string {
+    switch (lang) {
+      case 'python': return 'py';
+      case 'javascript': return 'js';
+      case 'typescript': return 'ts';
+      case 'cpp': return 'cpp';
+      case 'c': return 'c';
+      case 'java': return 'java';
+      case 'go': return 'go';
+      case 'rust': return 'rs';
+      case 'php': return 'php';
+      case 'sql': return 'sql';
+      default: return 'txt';
+    }
+  }
+
+  openGitHubModal(): void {
+    const c = this.challenge();
+    const lang = this.selectedLang();
+    const ext = this.getFileExtension(lang);
+    const slug = c?.slug || 'solucion';
+
+    this.gitHubFilePath.set(`retos/${slug}.${ext}`);
+    this.gitHubCommitMsg.set(`feat(codelab): solucion a ${c?.title || slug}`);
+    this.gitHubError.set('');
+    this.gitHubSyncResult.set(null);
+    this.isGitHubModalOpen.set(true);
+
+    this.checkGitHubStatus();
+  }
+
+  checkGitHubStatus(): void {
+    this.isCheckingGitHub.set(true);
+    this.gitHubSyncService.getStatus().subscribe({
+      next: status => {
+        this.gitHubStatus.set(status);
+        this.isCheckingGitHub.set(false);
+      },
+      error: () => {
+        this.gitHubStatus.set({ connected: false, has_repo_scope: false });
+        this.isCheckingGitHub.set(false);
+      }
+    });
+  }
+
+  connectGitHubRepoScope(): void {
+    this.isConnectingGitHub.set(true);
+    this.gitHubError.set('');
+
+    this.gitHubSyncService.connectRepoScope().subscribe({
+      next: () => {
+        this.isConnectingGitHub.set(false);
+        this.checkGitHubStatus();
+      },
+      error: err => {
+        this.isConnectingGitHub.set(false);
+        const msg = err?.message || 'No se pudo conectar con GitHub.';
+        if (!msg.includes('cancelada')) {
+          this.gitHubError.set(msg);
+        }
+      }
+    });
+  }
+
+  executeGitHubSync(): void {
+    if (this.isSyncingGitHub()) return;
+
+    const code = this.getCurrentCode();
+    if (!code.trim()) {
+      this.gitHubError.set('No hay código en el editor para sincronizar.');
+      return;
+    }
+
+    this.isSyncingGitHub.set(true);
+    this.gitHubError.set('');
+
+    this.gitHubSyncService.syncProject({
+      repo_name: this.gitHubRepoName(),
+      file_path: this.gitHubFilePath(),
+      content: code,
+      commit_message: this.gitHubCommitMsg(),
+      description: `Soluciones a retos de CodeLab en SysEng Academy (${this.challenge()?.title || ''})`,
+    }).subscribe({
+      next: res => {
+        this.isSyncingGitHub.set(false);
+        this.gitHubSyncResult.set(res);
+      },
+      error: err => {
+        this.isSyncingGitHub.set(false);
+        const msg = err?.error?.message || err?.message || 'Error al sincronizar con GitHub.';
+        this.gitHubError.set(msg);
+      }
+    });
+  }
+
+  closeGitHubModal(): void {
+    this.isGitHubModalOpen.set(false);
   }
 }

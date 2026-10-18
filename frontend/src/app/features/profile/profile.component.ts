@@ -111,6 +111,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
   passwordSuccess = signal('');
   passwordError = signal('');
 
+  // Social OAuth & GitHub Accounts
+  socialStatus = signal<{
+    google: { connected: boolean; nickname?: string; avatar_url?: string };
+    github: { connected: boolean; nickname?: string; avatar_url?: string; has_repo_scope: boolean };
+  } | null>(null);
+  socialLoading = signal<string | null>(null);
+  socialMsg = signal<string>('');
+  socialError = signal<string>('');
+
   constructor() {
     effect(() => {
       const tab = this.activeTab();
@@ -647,6 +656,7 @@ readonly currentStudentEmail = computed(() => {
 
     this.initLocalData();
     this.loadTeacherFeedbacks();
+    this.loadSocialStatus();
 
     // Start animated ASCII frame cycler y telemetría de estudio en vivo
     if (typeof window !== 'undefined') {
@@ -2182,6 +2192,53 @@ readonly currentStudentEmail = computed(() => {
         }
       });
     }
+  }
+
+  loadSocialStatus() {
+    this.auth.getSocialStatus().subscribe({
+      next: (status: any) => this.socialStatus.set(status),
+      error: () => {}
+    });
+  }
+
+  connectSocial(provider: 'google' | 'github', scope?: 'public_repo') {
+    this.socialLoading.set(provider);
+    this.socialError.set('');
+    this.socialMsg.set('');
+
+    this.auth.loginWithSocial(provider, scope).subscribe({
+      next: () => {
+        this.socialLoading.set(null);
+        this.socialMsg.set(`¡Cuenta de ${provider === 'github' ? 'GitHub' : 'Google'} conectada exitosamente!`);
+        this.loadSocialStatus();
+      },
+      error: (err: any) => {
+        this.socialLoading.set(null);
+        if (!err?.message?.includes('cancelada')) {
+          this.socialError.set(err?.message || `Error al conectar con ${provider}.`);
+        }
+      }
+    });
+  }
+
+  disconnectSocial(provider: 'google' | 'github') {
+    if (!confirm(`¿Estás seguro de que deseas desvincular tu cuenta de ${provider === 'github' ? 'GitHub' : 'Google'}?`)) return;
+
+    this.socialLoading.set(provider);
+    this.socialError.set('');
+    this.socialMsg.set('');
+
+    this.auth.disconnectSocial(provider).subscribe({
+      next: (res: any) => {
+        this.socialLoading.set(null);
+        this.socialMsg.set(res.message);
+        this.loadSocialStatus();
+      },
+      error: (err: any) => {
+        this.socialLoading.set(null);
+        this.socialError.set(err?.error?.message || `No se pudo desvincular ${provider}.`);
+      }
+    });
   }
 }
 

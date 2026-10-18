@@ -88,4 +88,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(CodelabChallenge::class);
     }
+
+    public function socialAccounts()
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
+
+    public function getGithubAccount()
+    {
+        return $this->socialAccounts()->where('provider', 'github')->first();
+    }
 }

@@ -466,6 +466,34 @@
         align-items: center;
         gap: 0.5rem;
 
+        .btn-github-export {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0.45rem 0.95rem;
+          border-radius: 6px;
+          background: rgba(255, 255, 255, 0.05);
+          color: #F8FAFC;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          font-family: var(--font-mono, monospace);
+          font-size: 0.78rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+
+          &:hover:not(:disabled) {
+            background: #24292e;
+            border-color: #58a6ff;
+            color: #58a6ff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+
         .btn-run {
           display: inline-flex;
           align-items: center;
@@ -906,3 +934,247 @@
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
+
+// GitHub Sync Modal
+.github-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 8, 0.82);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.github-modal-card {
+  width: 100%;
+  max-width: 540px;
+  background: #0E111A;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  .github-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: #121622;
+    border-bottom: 1px solid #1E2235;
+
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      .github-icon-badge {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #24292e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #F8FAFC;
+      }
+    }
+
+    .btn-close {
+      background: transparent;
+      border: none;
+      color: #94A3B8;
+      font-size: 1.25rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+
+      &:hover {
+        color: #ffffff;
+      }
+    }
+  }
+
+  .github-modal-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+
+    .lead-text {
+      font-size: 0.88rem;
+      color: #94A3B8;
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .status-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      font-size: 0.84rem;
+
+      &--connected {
+        background: rgba(10, 233, 138, 0.08);
+        border: 1px solid rgba(10, 233, 138, 0.25);
+        color: #0AE98A;
+      }
+
+      &--unconnected {
+        background: rgba(251, 191, 36, 0.08);
+        border: 1px solid rgba(251, 191, 36, 0.25);
+        color: #FBBF24;
+      }
+
+      .btn-connect-gh {
+        background: #24292e;
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+
+        &:hover {
+          background: #2f363d;
+          border-color: #58a6ff;
+        }
+      }
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+
+      label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #CBD5E1;
+      }
+
+      input {
+        background: #08090D;
+        border: 1px solid #1E2235;
+        border-radius: 6px;
+        padding: 0.55rem 0.75rem;
+        color: #F8FAFC;
+        font-size: 0.85rem;
+        font-family: var(--font-mono, monospace);
+        outline: none;
+
+        &:focus {
+          border-color: #58A6FF;
+        }
+      }
+    }
+
+    .sync-success-box {
+      background: rgba(10, 233, 138, 0.08);
+      border: 1px solid rgba(10, 233, 138, 0.25);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+
+      p {
+        color: #0AE98A;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0 0 0.75rem 0;
+      }
+
+      .links-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+
+        a {
+          color: #38BDF8;
+          font-size: 0.82rem;
+          text-decoration: underline;
+
+          &:hover {
+            color: #7DD3FC;
+          }
+        }
+      }
+    }
+
+    .sync-error-box {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #F87171;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+    }
+  }
+
+  .github-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: #121622;
+    border-top: 1px solid #1E2235;
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid #1E2235;
+      color: #94A3B8;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+
+      &:hover {
+        color: #ffffff;
+      }
+    }
+
+    .btn-sync-submit {
+      background: #238636;
+      border: 1px solid rgba(240, 246, 252, 0.1);
+      color: #ffffff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+
+      &:hover:not(:disabled) {
+        background: #2ea043;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+

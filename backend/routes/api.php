@@ -8,16 +8,20 @@ use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\CourseReviewController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\ForumController;
+use App\Http\Controllers\Api\GitHubSyncController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\LearningPathController;
 use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\StreakController;
 use App\Http\Controllers\Api\TeacherController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes (Rate limited para prevenir abusos y ataques DoS / fuerza bruta)
+Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->whereIn('provider', ['google', 'github']);
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', ['google', 'github']);
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:15,1');
 Route::post('/auth/register/request-code', [AuthController::class, 'requestRegistrationCode'])->middleware('throttle:15,1');
 Route::post('/auth/register/confirm', [AuthController::class, 'confirmRegistration'])->middleware('throttle:15,1');
@@ -74,6 +78,10 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/test-email', [AuthController::class, 'testEmail'])->middleware('throttle:6,1');
     Route::post('/auth/confirm-test-email', [AuthController::class, 'confirmTestEmail'])->middleware('throttle:10,1');
+    Route::get('/auth/social/status', [SocialAuthController::class, 'status']);
+    Route::delete('/auth/social/{provider}', [SocialAuthController::class, 'disconnect'])->whereIn('provider', ['google', 'github']);
+    Route::get('/github/status', [GitHubSyncController::class, 'status']);
+    Route::post('/github/sync', [GitHubSyncController::class, 'sync'])->middleware('throttle:20,1');
     Route::get('/profile/summary', [ProfileController::class, 'show']);
 
     // Notificaciones de usuario (Bandeja / Campanita)

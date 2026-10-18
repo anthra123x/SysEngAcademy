@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
-import { throwError } from 'rxjs';
+import { Observable, Observer, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { User } from '../models';
@@ -217,6 +217,80 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('syseng-auth-login', { detail: res }));
     }
+  }
+
+  handleSocialCallback(res: { user: User; token: string }) {
+    this.setSession(res);
+  }
+
+  loginWithSocial(provider: 'google' | 'github', scopeType?: 'repo' | 'public_repo'): Observable<{ user: User; token: string; has_repo_scope?: boolean }> {
+    return new Observable((observer: Observer<{ user: User; token: string; has_repo_scope?: boolean }>) => {
+      if (typeof window === 'undefined') {
+        observer.error(new Error('Entorno no disponible.'));
+        return;
+      }
+
+      const params = scopeType ? `?scope_type=${scopeType}` : '';
+      const redirectEndpoint = `${this.api.baseUrl}/auth/${provider}/redirect${params}`;
+
+      // Configurar dimensiones de la ventana centrada
+      const width = 540;
+      const height = 680;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+      const windowFeatures = `toolbar=no, menubar=no, width=${width}, height=${height}, top=${top}, left=${left}`;
+
+      let popup: Window | null = null;
+      try {
+        popup = window.open(redirectEndpoint, `syseng_oauth_${provider}`, windowFeatures);
+      } catch {
+        popup = null;
+      }
+
+      // Si el navegador bloqueó la ventana emergente, redirigir navegación completa
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        window.location.href = redirectEndpoint;
+        return;
+      }
+
+      const messageListener = (event: MessageEvent) => {
+        if (event.data?.type === 'SYSENG_OAUTH_SUCCESS') {
+          cleanup();
+          const { user, token, has_repo_scope } = event.data;
+          this.setSession({ user, token });
+          observer.next({ user, token, has_repo_scope });
+          observer.complete();
+        } else if (event.data?.type === 'SYSENG_OAUTH_ERROR') {
+          cleanup();
+          observer.error(new Error(event.data.message || 'Error durante la autenticación social.'));
+        }
+      };
+
+      const checkInterval = setInterval(() => {
+        if (popup && popup.closed) {
+          cleanup();
+          // No emitir error si ya completó
+        }
+      }, 800);
+
+      const cleanup = () => {
+        window.removeEventListener('message', messageListener);
+        clearInterval(checkInterval);
+      };
+
+      window.addEventListener('message', messageListener);
+    });
+  }
+
+  getSocialStatus(): Observable<{
+    google: { connected: boolean; nickname?: string; avatar_url?: string };
+    github: { connected: boolean; nickname?: string; avatar_url?: string; has_repo_scope: boolean };
+  }> {
+    return this.api.get('/auth/social/status');
+  }
+
+  disconnectSocial(provider: 'google' | 'github'): Observable<{ success: boolean; message: string }> {
+    return this.api.delete(`/auth/social/${provider}`);
   }
 
   clearSession(redirect = false) {

@@ -91,6 +91,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/verify/verify.component').then(m => m.VerifyEmailComponent)
   },
   {
+    path: 'auth/callback',
+    loadComponent: () => import('./features/auth/callback/oauth-callback.component').then(m => m.OAuthCallbackComponent)
+  },
+  {
     path: 'auth/verify',
     redirectTo: 'auth/verificar'
   },

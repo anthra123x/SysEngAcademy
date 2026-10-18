@@ -25,6 +25,39 @@ import { AuthService } from '../../../core/services/auth.service';
             <div class="alert-error">{{ error() }}</div>
           }
 
+          <div class="social-auth-grid">
+            <button
+              type="button"
+              class="btn-social btn-google"
+              (click)="registerWithSocial('google')"
+              [disabled]="socialLoading() !== null"
+            >
+              <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+              <span>{{ socialLoading() === 'google' ? 'Registrando...' : 'Google' }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-social btn-github"
+              (click)="registerWithSocial('github')"
+              [disabled]="socialLoading() !== null"
+            >
+              <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              <span>{{ socialLoading() === 'github' ? 'Registrando...' : 'GitHub' }}</span>
+            </button>
+          </div>
+
+          <div class="auth-divider">
+            <span>o regístrate con correo</span>
+          </div>
+
           <form (ngSubmit)="submitStep1()" #form="ngForm">
             <div class="form-group">
               <label>Nombre completo</label>
@@ -238,6 +271,73 @@ import { AuthService } from '../../../core/services/auth.service';
         margin-bottom: var(--sp-4, 1rem);
       }
 
+      .social-auth-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .btn-social {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        color: #f1f5f9;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.25);
+          transform: translateY(-1px);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .social-icon {
+          flex-shrink: 0;
+        }
+      }
+
+      .btn-github {
+        color: #ffffff;
+      }
+
+      .btn-google {
+        color: #ffffff;
+      }
+
+      .auth-divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 1.25rem;
+
+        &::before, &::after {
+          content: '';
+          flex: 1;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        span {
+          padding: 0 0.75rem;
+          color: #64748b;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+      }
+
       form {
         display: flex;
         flex-direction: column;
@@ -398,6 +498,27 @@ export class RegisterComponent implements OnDestroy {
   resendCooldown = signal(0);
   error = signal('');
   successMsg = signal('');
+  socialLoading = signal<'google' | 'github' | null>(null);
+
+  registerWithSocial(provider: 'google' | 'github') {
+    if (this.socialLoading()) return;
+    this.socialLoading.set(provider);
+    this.error.set('');
+
+    this.auth.loginWithSocial(provider).subscribe({
+      next: (res: any) => {
+        this.socialLoading.set(null);
+        this.router.navigate(['/']);
+      },
+      error: (err: any) => {
+        this.socialLoading.set(null);
+        const msg = err?.message || 'Error durante el registro social.';
+        if (!msg.includes('cancelada')) {
+          this.error.set(msg);
+        }
+      }
+    });
+  }
 
   private cooldownTimer: any = null;
 
