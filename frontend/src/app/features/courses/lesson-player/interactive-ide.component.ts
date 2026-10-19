@@ -41,6 +41,11 @@ import {
   TestCase,
 } from '../../../core/services/code-execution.service';
 import { CoursesService } from '../../../core/services/courses.service';
+import {
+  GitHubSyncResult,
+  GitHubSyncService,
+  GitHubSyncStatus,
+} from '../../../core/services/github-sync.service';
 import { AiChallengeEvaluation } from '../../../core/models';
 import { AppIconComponent } from '../../../shared/components/app-icon.component';
 import {
@@ -272,6 +277,7 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly codeRunner = inject(CodeExecutionService);
   private readonly coursesSvc = inject(CoursesService);
+  private readonly gitHubSyncService = inject(GitHubSyncService);
 
   @ViewChild('editorContainer') editorContainerRef?: ElementRef<HTMLDivElement>;
 
@@ -352,6 +358,18 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
   readonly executionResult = signal<CodeExecutionResponse | null>(null);
   readonly aiEvaluation = signal<AiChallengeEvaluation | null>(null);
   readonly toastMessage = signal<string | null>(null);
+
+  // GitHub Project Sync & Gamification (+25 XP)
+  readonly isGitHubModalOpen = signal<boolean>(false);
+  readonly isCheckingGitHub = signal<boolean>(false);
+  readonly isSyncingGitHub = signal<boolean>(false);
+  readonly isConnectingGitHub = signal<boolean>(false);
+  readonly gitHubStatus = signal<GitHubSyncStatus | null>(null);
+  readonly gitHubRepoName = signal<string>('practica-git-desde-cero');
+  readonly gitHubFilePath = signal<string>('');
+  readonly gitHubCommitMsg = signal<string>('');
+  readonly gitHubSyncResult = signal<GitHubSyncResult | null>(null);
+  readonly gitHubError = signal<string>('');
 
   /**
    * Adapta automáticamente el editor al lenguaje activo:
@@ -789,5 +807,108 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
         this.toastMessage.set(null);
       }
     }, 2500);
+  }
+
+  // =========================================================================
+  // GITHUB EXPORT & GAMIFICATION (+25 XP)
+  // =========================================================================
+
+  openGitHubModal(): void {
+    const course = (this.courseTitle() || '').toLowerCase();
+    const lesson = (this.lessonTitle() || '').toLowerCase();
+    const isGitCourse = course.includes('git') || lesson.includes('git');
+
+    // Repositorio adaptativo según contexto académico
+    if (isGitCourse) {
+      this.gitHubRepoName.set('practica-git-desde-cero');
+    } else {
+      const sanitizedCourse = course.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'practicas';
+      this.gitHubRepoName.set(`syseng-${sanitizedCourse}`);
+    }
+
+    // Ruta de archivo y commit
+    const ext = this.langMeta().extension.replace(/^\./, '') || 'py';
+    const sanitizedLesson = (this.lessonTitle() || 'ejercicio')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    const folder = isGitCourse ? 'ejercicios-git' : 'practicas';
+    this.gitHubFilePath.set(`${folder}/${sanitizedLesson}.${ext}`);
+    this.gitHubCommitMsg.set(`feat(practica): ejercicio ${this.lessonTitle() || sanitizedLesson}`);
+    this.gitHubError.set('');
+    this.gitHubSyncResult.set(null);
+    this.isGitHubModalOpen.set(true);
+
+    this.checkGitHubStatus();
+  }
+
+  checkGitHubStatus(): void {
+    this.isCheckingGitHub.set(true);
+    this.gitHubSyncService.getStatus().subscribe({
+      next: status => {
+        this.gitHubStatus.set(status);
+        this.isCheckingGitHub.set(false);
+      },
+      error: () => {
+        this.gitHubStatus.set({ connected: false, has_repo_scope: false });
+        this.isCheckingGitHub.set(false);
+      }
+    });
+  }
+
+  connectGitHubRepoScope(): void {
+    this.isConnectingGitHub.set(true);
+    this.gitHubError.set('');
+
+    this.gitHubSyncService.connectRepoScope().subscribe({
+      next: () => {
+        this.isConnectingGitHub.set(false);
+        this.checkGitHubStatus();
+      },
+      error: err => {
+        this.isConnectingGitHub.set(false);
+        const msg = err?.message || 'No se pudo conectar con GitHub.';
+        if (!msg.includes('cancelada')) {
+          this.gitHubError.set(msg);
+        }
+      }
+    });
+  }
+
+  executeGitHubSync(): void {
+    if (this.isSyncingGitHub()) return;
+
+    const code = this.code();
+    if (!code.trim()) {
+      this.gitHubError.set('No hay código en el editor para sincronizar.');
+      return;
+    }
+
+    this.isSyncingGitHub.set(true);
+    this.gitHubError.set('');
+
+    this.gitHubSyncService.syncProject({
+      repo_name: this.gitHubRepoName(),
+      file_path: this.gitHubFilePath(),
+      content: code,
+      commit_message: this.gitHubCommitMsg(),
+      description: `Práctica SysEng Academy: ${this.lessonTitle()} (${this.courseTitle() || 'Ingeniería de Software'})`,
+    }).subscribe({
+      next: res => {
+        this.isSyncingGitHub.set(false);
+        this.gitHubSyncResult.set(res);
+        this.showToast('🚀 ¡Práctica subida a GitHub! Ganaste +25 XP');
+      },
+      error: err => {
+        this.isSyncingGitHub.set(false);
+        const msg = err?.error?.message || err?.message || 'Error al sincronizar con GitHub.';
+        this.gitHubError.set(msg);
+      }
+    });
+  }
+
+  closeGitHubModal(): void {
+    this.isGitHubModalOpen.set(false);
   }
 }

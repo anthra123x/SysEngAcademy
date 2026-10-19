@@ -22,11 +22,29 @@ class GitHubSyncController extends Controller
         $account = $this->githubSyncService->getConnectedAccount($user);
         $hasRepoScope = $this->githubSyncService->hasRepoScope($user);
 
+        $syncsCount = $user->appNotifications()->where('type', 'github_sync')->count();
+        $recentSyncs = $user->appNotifications()
+            ->where('type', 'github_sync')
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(fn ($n) => [
+                'title'      => $n->title,
+                'created_at' => $n->created_at?->diffForHumans(),
+                'repo_url'   => $n->data['repo_url'] ?? null,
+                'commit_url' => $n->data['commit_url'] ?? null,
+                'file_url'   => $n->data['file_url'] ?? null,
+                'repo_name'  => $n->data['repo_name'] ?? null,
+            ]);
+
         return response()->json([
-            'connected' => $account !== null,
-            'username' => $account?->nickname,
-            'avatar_url' => $account?->avatar_url,
+            'connected'      => $account !== null,
+            'username'       => $account?->nickname,
+            'avatar_url'     => $account?->avatar_url,
             'has_repo_scope' => $hasRepoScope,
+            'syncs_count'    => $syncsCount,
+            'xp_earned'      => $syncsCount * 25,
+            'recent_syncs'   => $recentSyncs,
         ]);
     }
 

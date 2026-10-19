@@ -166,6 +166,21 @@ HTML;
         $github = $accounts->firstWhere('provider', 'github');
         $google = $accounts->firstWhere('provider', 'google');
 
+        $githubSyncsCount = $user->appNotifications()->where('type', 'github_sync')->count();
+        $recentSyncs = $user->appNotifications()
+            ->where('type', 'github_sync')
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(fn ($n) => [
+                'title'      => $n->title,
+                'created_at' => $n->created_at?->diffForHumans(),
+                'repo_url'   => $n->data['repo_url'] ?? null,
+                'commit_url' => $n->data['commit_url'] ?? null,
+                'file_url'   => $n->data['file_url'] ?? null,
+                'repo_name'  => $n->data['repo_name'] ?? null,
+            ]);
+
         return response()->json([
             'google' => [
                 'connected' => $google !== null,
@@ -177,6 +192,9 @@ HTML;
                 'nickname' => $github?->nickname,
                 'avatar_url' => $github?->avatar_url,
                 'has_repo_scope' => in_array('public_repo', $github?->scopes ?? [], true) || in_array('repo', $github?->scopes ?? [], true),
+                'syncs_count' => $githubSyncsCount,
+                'xp_earned' => $githubSyncsCount * 25,
+                'recent_syncs' => $recentSyncs,
             ],
         ]);
     }

@@ -123,6 +123,21 @@
         </button>
       }
 
+      <!-- Action: Export to GitHub (+25 XP) -->
+      <button
+        type="button"
+        class="mac-btn-github font-mono"
+        (click)="openGitHubModal()"
+        [disabled]="running() || !code().trim()"
+        title="Sincronizar código a tu GitHub y ganar +25 XP"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        <span class="btn-text">GitHub</span>
+        <span class="badge-xp-chip">+25 XP</span>
+      </button>
+
       <!-- Primary Action: Run Script button -->
       <button
         type="button"
@@ -410,5 +425,125 @@
   <!-- Toast Notification -->
   @if (toastMessage()) {
     <div class="mac-toast font-mono">{{ toastMessage() }}</div>
+  }
+
+  <!-- GitHub Project Sync Modal -->
+  @if (isGitHubModalOpen()) {
+    <div class="github-modal-backdrop" (click)="closeGitHubModal()">
+      <div class="github-modal-card" (click)="$event.stopPropagation()">
+        <div class="github-modal-header">
+          <div class="header-title-row">
+            <div class="github-icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+            </div>
+            <div>
+              <h3>Sincronizar Práctica con GitHub</h3>
+              <span class="sub-badge-xp">⚡ +25 XP para tu ranking</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close" (click)="closeGitHubModal()">✕</button>
+        </div>
+
+        <div class="github-modal-body">
+          <p class="lead-text">
+            Sube el código de esta lección directamente a tu perfil personal de GitHub para construir tu portafolio y desbloquear insignias Git en la academia.
+          </p>
+
+          @if (isCheckingGitHub()) {
+            <div class="status-banner status-banner--unconnected">
+              <span>Verificando conexión con GitHub...</span>
+            </div>
+          } @else if (gitHubStatus()?.connected && gitHubStatus()?.has_repo_scope) {
+            <div class="status-banner status-banner--connected">
+              <span>Conectado como <strong>&#64;{{ gitHubStatus()?.username }}</strong> con permisos de repositorio</span>
+            </div>
+          } @else if (gitHubStatus()?.connected && !gitHubStatus()?.has_repo_scope) {
+            <div class="status-banner status-banner--unconnected">
+              <span>Tu cuenta <strong>&#64;{{ gitHubStatus()?.username }}</strong> requiere permisos para crear repositorios</span>
+              <button type="button" class="btn-connect-gh" (click)="connectGitHubRepoScope()" [disabled]="isConnectingGitHub()">
+                {{ isConnectingGitHub() ? 'Conectando...' : 'Habilitar Permiso' }}
+              </button>
+            </div>
+          } @else {
+            <div class="status-banner status-banner--unconnected">
+              <span>No has vinculado tu cuenta de GitHub</span>
+              <button type="button" class="btn-connect-gh" (click)="connectGitHubRepoScope()" [disabled]="isConnectingGitHub()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                <span>{{ isConnectingGitHub() ? 'Conectando...' : 'Conectar GitHub' }}</span>
+              </button>
+            </div>
+          }
+
+          <div class="form-field">
+            <label>Nombre del Repositorio en GitHub</label>
+            <input
+              type="text"
+              [ngModel]="gitHubRepoName()"
+              (ngModelChange)="gitHubRepoName.set($event)"
+              placeholder="practica-git-desde-cero"
+            />
+          </div>
+
+          <div class="form-field">
+            <label>Ruta del archivo en el repositorio</label>
+            <input
+              type="text"
+              [ngModel]="gitHubFilePath()"
+              (ngModelChange)="gitHubFilePath.set($event)"
+              placeholder="ejercicios-git/mi-codigo.py"
+            />
+          </div>
+
+          <div class="form-field">
+            <label>Mensaje de Commit</label>
+            <input
+              type="text"
+              [ngModel]="gitHubCommitMsg()"
+              (ngModelChange)="gitHubCommitMsg.set($event)"
+              placeholder="feat(practica): ejercicio resuelto"
+            />
+          </div>
+
+          @if (gitHubError()) {
+            <div class="sync-error-box">
+              {{ gitHubError() }}
+            </div>
+          }
+
+          @if (gitHubSyncResult(); as syncRes) {
+            <div class="sync-success-box">
+              <div class="success-top-badge">
+                🎉 <strong>¡+{{ syncRes.xp_earned }} XP Ganados!</strong> Total XP: {{ syncRes.total_xp }} | Nivel {{ syncRes.level }}
+              </div>
+              <p>{{ syncRes.message }}</p>
+              <div class="links-row">
+                <a [href]="syncRes.file_url" target="_blank" rel="noopener noreferrer">Ver Archivo en GitHub ↗</a>
+                <span>•</span>
+                <a [href]="syncRes.commit_url" target="_blank" rel="noopener noreferrer">Ver Commit ↗</a>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="github-modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeGitHubModal()">Cerrar</button>
+          <button
+            type="button"
+            class="btn-sync-submit"
+            [disabled]="isSyncingGitHub() || !gitHubStatus()?.connected || !gitHubStatus()?.has_repo_scope"
+            (click)="executeGitHubSync()"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <span>{{ isSyncingGitHub() ? 'Subiendo a GitHub...' : 'Hacer Commit y Subir (+25 XP)' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>

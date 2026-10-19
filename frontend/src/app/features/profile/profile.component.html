@@ -1750,62 +1750,123 @@
                       </div>
 
                       <!-- GITHUB ROW -->
-                      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: #0d1117; border: 1px solid #1e293b; border-radius: 8px; flex-wrap: wrap; gap: 12px;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff">
-                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                          </svg>
-                          <div>
-                            <div style="font-size: 14px; font-weight: 600; color: #f8fafc;">
-                              GitHub &amp; Portafolio de Proyectos
+                      <div style="padding: 16px 18px; background: #0d1117; border: 1px solid #1e293b; border-radius: 8px; display: flex; flex-direction: column; gap: 14px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                          <div style="display: flex; align-items: center; gap: 12px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff">
+                              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                            </svg>
+                            <div>
+                              <div style="font-size: 14px; font-weight: 600; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+                                <span>GitHub &amp; Portafolio de Proyectos</span>
+                                @if (socialStatus()?.github?.connected) {
+                                  <span style="font-size: 11px; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); padding: 2px 8px; border-radius: 9999px; font-weight: 500;">
+                                    +{{ socialStatus()?.github?.xp_earned || 0 }} XP Ganado
+                                  </span>
+                                }
+                              </div>
+                              <div style="font-size: 12px; font-family: var(--font-mono);">
+                                @if (socialStatus()?.github?.connected && socialStatus()?.github?.has_repo_scope) {
+                                  <span style="color: #4ade80;">✓ Conectado como &#64;{{ socialStatus()?.github?.nickname }} (Permisos de Repositorio Activos)</span>
+                                } @else if (socialStatus()?.github?.connected && !socialStatus()?.github?.has_repo_scope) {
+                                  <span style="color: #fbbf24;">⚠ Conectado como &#64;{{ socialStatus()?.github?.nickname }} (Falta permiso para exportar repos)</span>
+                                } @else {
+                                  <span style="color: #64748b;">No vinculado</span>
+                                }
+                              </div>
                             </div>
-                            <div style="font-size: 12px; font-family: var(--font-mono);">
-                              @if (socialStatus()?.github?.connected && socialStatus()?.github?.has_repo_scope) {
-                                <span style="color: #4ade80;">✓ Conectado como &#64;{{ socialStatus()?.github?.nickname }} (Permisos de Repositorio Activos)</span>
-                              } @else if (socialStatus()?.github?.connected && !socialStatus()?.github?.has_repo_scope) {
-                                <span style="color: #fbbf24;">⚠ Conectado como &#64;{{ socialStatus()?.github?.nickname }} (Falta permiso para exportar repos)</span>
-                              } @else {
-                                <span style="color: #64748b;">No vinculado</span>
-                              }
-                            </div>
+                          </div>
+
+                          <div style="display: flex; gap: 8px;">
+                            @if (socialStatus()?.github?.connected && !socialStatus()?.github?.has_repo_scope) {
+                              <button
+                                type="button"
+                                class="btn-term-run"
+                                style="background: #141c2a; color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
+                                (click)="connectSocial('github', 'public_repo')"
+                                [disabled]="socialLoading() !== null"
+                              >
+                                {{ socialLoading() === 'github' ? 'Actualizando...' : 'Habilitar Repos' }}
+                              </button>
+                            }
+
+                            @if (socialStatus()?.github?.connected) {
+                              <button
+                                type="button"
+                                class="btn-term-run"
+                                style="background: transparent; color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer;"
+                                (click)="disconnectSocial('github')"
+                                [disabled]="socialLoading() !== null"
+                              >
+                                {{ socialLoading() === 'github' ? 'Desvinculando...' : 'Desvincular' }}
+                              </button>
+                            } @else {
+                              <button
+                                type="button"
+                                class="btn-term-run"
+                                style="background: #141c2a; color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
+                                (click)="connectSocial('github', 'public_repo')"
+                                [disabled]="socialLoading() !== null"
+                              >
+                                {{ socialLoading() === 'github' ? 'Conectando...' : 'Conectar GitHub' }}
+                              </button>
+                            }
                           </div>
                         </div>
 
-                        <div style="display: flex; gap: 8px;">
-                          @if (socialStatus()?.github?.connected && !socialStatus()?.github?.has_repo_scope) {
-                            <button
-                              type="button"
-                              class="btn-term-run"
-                              style="background: #141c2a; color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
-                              (click)="connectSocial('github', 'public_repo')"
-                              [disabled]="socialLoading() !== null"
-                            >
-                              {{ socialLoading() === 'github' ? 'Actualizando...' : 'Habilitar Repos' }}
-                            </button>
-                          }
+                        <!-- Gamification Metrics & Recent Commits -->
+                        @if (socialStatus()?.github?.connected) {
+                          <div style="background: #090d16; border: 1px solid #1e293b; border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                              <div style="display: flex; gap: 14px; font-size: 12px;">
+                                <span style="color: #94a3b8;">
+                                  Sincronizaciones: <strong style="color: #f1f5f9;">{{ socialStatus()?.github?.syncs_count || 0 }}</strong>
+                                </span>
+                                <span style="color: #94a3b8;">
+                                  Recompensa: <strong style="color: #38bdf8;">+25 XP por commit</strong>
+                                </span>
+                              </div>
+                              <span style="font-size: 11px; color: #64748b; font-family: var(--font-mono);">
+                                Disponibles en CodeLab y lecciones prácticas
+                              </span>
+                            </div>
 
-                          @if (socialStatus()?.github?.connected) {
-                            <button
-                              type="button"
-                              class="btn-term-run"
-                              style="background: transparent; color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer;"
-                              (click)="disconnectSocial('github')"
-                              [disabled]="socialLoading() !== null"
-                            >
-                              {{ socialLoading() === 'github' ? 'Desvinculando...' : 'Desvincular' }}
-                            </button>
-                          } @else {
-                            <button
-                              type="button"
-                              class="btn-term-run"
-                              style="background: #141c2a; color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
-                              (click)="connectSocial('github', 'public_repo')"
-                              [disabled]="socialLoading() !== null"
-                            >
-                              {{ socialLoading() === 'github' ? 'Conectando...' : 'Conectar GitHub' }}
-                            </button>
-                          }
-                        </div>
+                            @if ((socialStatus()?.github?.recent_syncs?.length || 0) > 0) {
+                              <div style="border-top: 1px solid #1e293b; padding-top: 8px;">
+                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 600; margin-bottom: 6px;">
+                                  Commits Recientes
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                  @for (sync of socialStatus()?.github?.recent_syncs; track sync.created_at) {
+                                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; background: rgba(255, 255, 255, 0.02); padding: 6px 10px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.03);">
+                                      <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <span style="color: #38bdf8; font-family: var(--font-mono);">⚡</span>
+                                        <span style="color: #e2e8f0; font-weight: 500;">{{ sync.title }}</span>
+                                        <span style="color: #64748b; font-size: 11px;">({{ sync.created_at }})</span>
+                                      </div>
+                                      <div style="display: flex; gap: 10px; font-size: 11px; font-family: var(--font-mono);">
+                                        @if (sync.commit_url) {
+                                          <a [href]="sync.commit_url" target="_blank" rel="noopener noreferrer" style="color: #00f0ff; text-decoration: none;">
+                                            Commit ↗
+                                          </a>
+                                        }
+                                        @if (sync.repo_url) {
+                                          <a [href]="sync.repo_url" target="_blank" rel="noopener noreferrer" style="color: #94a3b8; text-decoration: none;">
+                                            Repo ↗
+                                          </a>
+                                        }
+                                      </div>
+                                    </div>
+                                  }
+                                </div>
+                              </div>
+                            } @else {
+                              <div style="font-size: 12px; color: #64748b; font-style: italic; border-top: 1px solid #1e293b; padding-top: 8px;">
+                                💡 Aún no has sincronizado proyectos. ¡Entra a CodeLab o al curso "Git desde cero" y presiona "Subir a GitHub" en el editor para ganar tus primeros +25 XP!
+                              </div>
+                            }
+                          </div>
+                        }
                       </div>
                     </div>
                   </div>

@@ -284,7 +284,22 @@ export class AuthService {
 
   getSocialStatus(): Observable<{
     google: { connected: boolean; nickname?: string; avatar_url?: string };
-    github: { connected: boolean; nickname?: string; avatar_url?: string; has_repo_scope: boolean };
+    github: {
+      connected: boolean;
+      nickname?: string;
+      avatar_url?: string;
+      has_repo_scope: boolean;
+      syncs_count?: number;
+      xp_earned?: number;
+      recent_syncs?: {
+        title: string;
+        created_at: string;
+        repo_url?: string;
+        commit_url?: string;
+        file_url?: string;
+        repo_name?: string;
+      }[];
+    };
   }> {
     return this.api.get('/auth/social/status');
   }

@@ -73,6 +73,10 @@ class NotificationService
         $studyMins = (int) round(($user->today_study_seconds ?? 0) / 60);
         $totalStudyMins = (int) round(($user->total_study_seconds ?? 0) / 60);
 
+        // Métricas de GitHub & Gamificación Git
+        $hasGitHub = $user->socialAccounts()->where('provider', 'github')->exists();
+        $githubSyncCount = $user->appNotifications()->where('type', 'github_sync')->count();
+
         $levelProg = XpService::getLevelProgress($xp);
         $userLevel = $levelProg['level'];
 
@@ -308,6 +312,36 @@ class NotificationService
                 'description' => 'Acumulaste más de 60 minutos de estudio efectivo y terminal.',
                 'icon'        => 'clock',
                 'unlocked'    => ($studyMins >= 60 || $totalStudyMins >= 60),
+            ],
+
+            // Gamificación Git & Portafolio Open Source
+            [
+                'id'          => 'github_connected',
+                'title'       => 'Identidad Git',
+                'description' => 'Vinculaste tu cuenta de GitHub a tu perfil oficial de SysEng Academy.',
+                'icon'        => 'github',
+                'unlocked'    => $hasGitHub,
+            ],
+            [
+                'id'          => 'github_first_sync',
+                'title'       => 'Primer Commit Remoto',
+                'description' => 'Sincronizaste tu primer reto o proyecto directamente a tu repositorio de GitHub.',
+                'icon'        => 'git-commit',
+                'unlocked'    => $githubSyncCount >= 1,
+            ],
+            [
+                'id'          => 'github_open_source',
+                'title'       => 'Desarrollador Open Source',
+                'description' => 'Construiste portafolio sincronizando 3 o más proyectos técnicos a GitHub.',
+                'icon'        => 'git-branch',
+                'unlocked'    => $githubSyncCount >= 3,
+            ],
+            [
+                'id'          => 'git_master',
+                'title'       => 'Arquitecto Git',
+                'description' => 'Alcanzaste 5 o más commits remotos automáticos desde la plataforma a GitHub.',
+                'icon'        => 'award',
+                'unlocked'    => $githubSyncCount >= 5,
             ],
         ];
 

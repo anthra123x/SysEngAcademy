@@ -114,7 +114,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
   // Social OAuth & GitHub Accounts
   socialStatus = signal<{
     google: { connected: boolean; nickname?: string; avatar_url?: string };
-    github: { connected: boolean; nickname?: string; avatar_url?: string; has_repo_scope: boolean };
+    github: {
+      connected: boolean;
+      nickname?: string;
+      avatar_url?: string;
+      has_repo_scope: boolean;
+      syncs_count?: number;
+      xp_earned?: number;
+      recent_syncs?: any[];
+    };
   } | null>(null);
   socialLoading = signal<string | null>(null);
   socialMsg = signal<string>('');
@@ -1427,6 +1435,9 @@ readonly currentStudentEmail = computed(() => {
     const totalXp = this.totalXp();
     const userLevel = this.userLevel();
 
+    const hasGitHub = this.socialStatus()?.github?.connected ?? false;
+    const githubSyncs = this.socialStatus()?.github?.syncs_count ?? 0;
+
     const meInLeaderboard = this.remoteLeaderboard().find(e => e.isCurrentUser);
     const completedLessons = meInLeaderboard?.completedLessons ?? Math.max(challenges, completedCourses * 5);
     const quizzesCount = meInLeaderboard?.completedLessons ?? (hasDiag ? 1 : 0);
@@ -1860,6 +1871,64 @@ readonly currentStudentEmail = computed(() => {
         unlocked: studyMins >= 60,
         level: 'silver',
         shaFingerprint: 'sha256:60minutedeepworksession',
+      },
+
+      // 4. Ecosistema Git & Gamificación de Repositorios (GitHub)
+      {
+        id: 'github_connected',
+        title: 'Identidad Git',
+        category: 'special',
+        icon: 'github',
+        description: 'Vinculaste tu cuenta de GitHub a tu perfil oficial de SysEng Academy.',
+        requirement: 'Conecta GitHub',
+        targetCount: 1,
+        currentCount: hasGitHub ? 1 : 0,
+        progressPercent: hasGitHub ? 100 : 0,
+        unlocked: hasGitHub,
+        level: 'bronze',
+        shaFingerprint: 'sha256:gitid01connected',
+      },
+      {
+        id: 'github_first_sync',
+        title: 'Primer Commit Remoto',
+        category: 'challenges',
+        icon: 'git-commit',
+        description: 'Sincronizaste tu primer reto o proyecto directamente a tu repositorio de GitHub.',
+        requirement: '1 commit en GitHub',
+        targetCount: 1,
+        currentCount: Math.min(1, githubSyncs),
+        progressPercent: githubSyncs >= 1 ? 100 : 0,
+        unlocked: githubSyncs >= 1,
+        level: 'bronze',
+        shaFingerprint: 'sha256:gitfirstcommitremote',
+      },
+      {
+        id: 'github_open_source',
+        title: 'Desarrollador Open Source',
+        category: 'challenges',
+        icon: 'git-branch',
+        description: 'Construiste portafolio sincronizando 3 o más proyectos técnicos a GitHub.',
+        requirement: '3 proyectos en GitHub',
+        targetCount: 3,
+        currentCount: Math.min(3, githubSyncs),
+        progressPercent: Math.min(100, Math.round((githubSyncs / 3) * 100)),
+        unlocked: githubSyncs >= 3,
+        level: 'silver',
+        shaFingerprint: 'sha256:gitdevopensource3',
+      },
+      {
+        id: 'git_master',
+        title: 'Arquitecto Git',
+        category: 'special',
+        icon: 'award',
+        description: 'Alcanzaste 5 o más commits remotos automáticos desde la plataforma a GitHub.',
+        requirement: '5 proyectos en GitHub',
+        targetCount: 5,
+        currentCount: Math.min(5, githubSyncs),
+        progressPercent: Math.min(100, Math.round((githubSyncs / 5) * 100)),
+        unlocked: githubSyncs >= 5,
+        level: 'diamond',
+        shaFingerprint: 'sha256:gitarchmastercommit5',
       },
     ];
   });

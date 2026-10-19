@@ -3,11 +3,23 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 
+export interface GitHubRecentSync {
+  title: string;
+  created_at: string;
+  repo_url?: string;
+  commit_url?: string;
+  file_url?: string;
+  repo_name?: string;
+}
+
 export interface GitHubSyncStatus {
   connected: boolean;
   username?: string;
   avatar_url?: string;
   has_repo_scope: boolean;
+  syncs_count?: number;
+  xp_earned?: number;
+  recent_syncs?: GitHubRecentSync[];
 }
 
 export interface GitHubSyncPayload {
@@ -28,6 +40,9 @@ export interface GitHubSyncResult {
   commit_url: string;
   commit_sha?: string;
   xp_earned: number;
+  total_xp?: number;
+  level?: number;
+  streak?: number;
   message: string;
 }
 
