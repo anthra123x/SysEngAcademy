@@ -415,7 +415,28 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
       const activeDef = this.recommendedLangDef();
       const lid = this.lessonId();
       const savedCode = lid ? this.coursesSvc.getSavedStudentCode(lid) : null;
-      const initCode = savedCode || this.initialCode() || activeDef.defaultTemplate;
+
+      const isGit = (this.courseTitle() || '').toLowerCase().includes('git') || (this.lessonTitle() || '').toLowerCase().includes('git');
+      const gitTemplate = `#!/usr/bin/env bash
+# SysEng Academy - Terminal Git & Control de Versiones
+# Practica tus comandos Git y súbelos a tu portafolio en GitHub (+25 XP)
+
+# 1. Configurar identidad local y repositorio
+git init
+git config user.name "Estudiante SysEng"
+git config user.email "estudiante@sysengacademy.dev"
+
+# 2. Preparar archivo y sellar primer commit
+echo "Práctica de Git: ${this.lessonTitle() || 'Control de Versiones'}" > README.md
+git status
+git add README.md
+git commit -m "feat: inicializar proyecto y primer commit"
+
+# 3. Consultar la historia del repositorio
+git log --oneline
+`;
+      const template = (isGit && activeDef.id === 'bash') ? gitTemplate : activeDef.defaultTemplate;
+      const initCode = savedCode || this.initialCode() || template;
       this.code.set(initCode);
       this.isModified.set(false);
 

@@ -172,6 +172,9 @@ class GitHubSyncService
                     'file_url'   => $fileUrl,
                     'repo_name'  => $repoName,
                     'xp'         => 25,
+                    'route'      => '/perfil',
+                    'tab'        => 'achievements',
+                    'icon'       => 'git-commit',
                 ]
             );
 

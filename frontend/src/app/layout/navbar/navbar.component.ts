@@ -157,6 +157,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (item.data?.route) {
       const qp = item.data.tab ? { tab: item.data.tab } : undefined;
       this.router.navigate([item.data.route], { queryParams: qp });
+    } else if (item.type === 'github_sync') {
+      this.router.navigate(['/perfil'], { queryParams: { tab: 'achievements' } });
     }
   }
 
@@ -164,6 +166,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (item.data?.icon) return item.data.icon;
     switch (item.type) {
       case 'achievement': return 'trophy';
+      case 'github_sync': return 'git-commit';
       case 'course': return 'book-open';
       case 'quiz': return 'file-text';
       case 'streak': return 'flame';

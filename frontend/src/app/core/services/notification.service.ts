@@ -14,7 +14,7 @@ export interface AppToastNotification {
 
 export interface InboxNotification {
   id: number;
-  type: 'achievement' | 'course' | 'quiz' | 'streak' | 'level' | 'welcome' | 'system';
+  type: 'achievement' | 'github_sync' | 'course' | 'quiz' | 'streak' | 'level' | 'welcome' | 'system';
   title: string;
   message: string;
   data?: {

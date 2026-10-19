@@ -288,6 +288,33 @@ export class CodeExecutionService {
     const echoPrints = Array.from(code.matchAll(/echo\s+["']([^"']+)["']/g));
     echoPrints.forEach(m => { if (m[1]) outputMatches.push(m[1]); });
 
+    // Git CLI simulation in Bash
+    if (code.includes('git ')) {
+      if (code.includes('git init')) {
+        outputMatches.push('Initialized empty Git repository in /home/syseng/project/.git/');
+      }
+      if (code.includes('git commit')) {
+        const commitMsgMatch = code.match(/git commit\s+(?:-m\s+["']([^"']+)["']|-[a-zA-Z]*m\s+["']([^"']+)["'])/);
+        const commitMsg = commitMsgMatch ? (commitMsgMatch[1] || commitMsgMatch[2]) : 'feat: inicializar proyecto y primer commit';
+        outputMatches.push(`[main (root-commit) 7a8f91c] ${commitMsg}\n 1 file changed, 1 insertion(+)\n create mode 100644 README.md`);
+      }
+      if (code.includes('git status')) {
+        outputMatches.push('On branch main\nnothing to commit, working tree clean');
+      }
+      if (code.includes('git log')) {
+        outputMatches.push('7a8f91c (HEAD -> main) feat: inicializar proyecto y primer commit\n3d1944c docs: documentacion del repositorio');
+      }
+      if (code.includes('git branch')) {
+        outputMatches.push('* main\n  feature/practica');
+      }
+      if (code.includes('git checkout') || code.includes('git switch')) {
+        outputMatches.push("Switched to a new branch 'feature/practica'");
+      }
+      if (code.includes('git merge')) {
+        outputMatches.push('Updating 7a8f91c..9b2e4d1\nFast-forward\n README.md | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)');
+      }
+    }
+
     const likelyValid = hasContent && (!code.includes('pass') || cleanCode.length > 25);
 
     const testResults: TestResult[] = tests.map(t => {

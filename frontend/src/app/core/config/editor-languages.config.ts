@@ -439,7 +439,7 @@ export function detectLanguageFromContext(context: {
   if (bag.includes('javascript') || bag.includes('frontend') || bag.includes('web') || bag.includes('react') || bag.includes('node')) {
     return EDITOR_LANGUAGES['javascript'];
   }
-  if (bag.includes('bash') || bag.includes('linux') || bag.includes('terminal') || bag.includes('shell')) {
+  if (bag.includes('bash') || bag.includes('linux') || bag.includes('terminal') || bag.includes('shell') || bag.includes('git')) {
     return EDITOR_LANGUAGES['bash'];
   }
   if (bag.includes('python') || bag.includes('ia') || bag.includes('machine learning')) {
