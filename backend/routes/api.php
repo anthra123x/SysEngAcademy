@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\TeacherController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes (Rate limited para prevenir abusos y ataques DoS / fuerza bruta)
+Route::get('/health', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->timestamp]));
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->whereIn('provider', ['google', 'github']);
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', ['google', 'github']);
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:15,1');

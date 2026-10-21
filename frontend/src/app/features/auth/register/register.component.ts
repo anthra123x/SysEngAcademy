@@ -485,6 +485,10 @@ export class RegisterComponent implements OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
+  constructor() {
+    this.auth.warmupBackend();
+  }
+
   step = signal<1 | 2>(1);
 
   name = '';

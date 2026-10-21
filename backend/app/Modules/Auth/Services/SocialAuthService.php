@@ -60,8 +60,24 @@ class SocialAuthService
     {
         $this->ensureSupportedProvider($provider);
 
-        // Validar el state anti-CSRF
+        // Validar el state anti-CSRF (desde caché o desde payload base64url)
         $cachedState = $state ? Cache::pull("oauth_state_{$state}") : null;
+        if (! $cachedState && $state) {
+            try {
+                $b64 = strtr($state, '-_', '+/');
+                $b64 .= str_repeat('=', (4 - strlen($b64) % 4) % 4);
+                $decoded = json_decode(base64_decode($b64), true);
+                if (is_array($decoded) && isset($decoded['provider'])) {
+                    $cachedState = [
+                        'provider' => $decoded['provider'],
+                        'user_id' => $decoded['user_id'] ?? null,
+                        'scope_type' => $decoded['scope_type'] ?? null,
+                    ];
+                }
+            } catch (\Throwable) {
+                // Ignore decoding error
+            }
+        }
         $linkingUserId = $cachedState['user_id'] ?? null;
         $scopeType = $cachedState['scope_type'] ?? null;
 

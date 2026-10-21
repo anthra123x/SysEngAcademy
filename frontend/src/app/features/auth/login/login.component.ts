@@ -668,6 +668,7 @@ export class LoginComponent implements OnInit {
   forgotSuccess = signal('');
 
   ngOnInit() {
+    this.auth.warmupBackend();
     const params = this.route.snapshot.queryParamMap;
     const mode = params.get('mode');
     const email = params.get('email');

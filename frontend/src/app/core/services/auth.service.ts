@@ -223,6 +223,14 @@ export class AuthService {
     this.setSession(res);
   }
 
+  warmupBackend(): void {
+    if (typeof window !== 'undefined') {
+      try {
+        fetch(`${this.api.baseUrl}/health`).catch(() => {});
+      } catch {}
+    }
+  }
+
   loginWithSocial(provider: 'google' | 'github', scopeType?: 'repo' | 'public_repo'): Observable<{ user: User; token: string; has_repo_scope?: boolean }> {
     return new Observable((observer: Observer<{ user: User; token: string; has_repo_scope?: boolean }>) => {
       if (typeof window === 'undefined') {
@@ -230,8 +238,52 @@ export class AuthService {
         return;
       }
 
-      const params = scopeType ? `?scope_type=${scopeType}` : '';
-      const redirectEndpoint = `${this.api.baseUrl}/auth/${provider}/redirect${params}`;
+      // Despertar el backend en Render silenciosamente en segundo plano
+      this.warmupBackend();
+
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const callbackUrl = isLocal
+        ? 'http://localhost:8000/api/auth/' + provider + '/callback'
+        : 'https://www.sysengacademy.site/api/auth/' + provider + '/callback';
+
+      // Empaquetar estado para no depender del arranque síncrono del backend en Render
+      const statePayload = {
+        provider,
+        user_id: this._user()?.id || null,
+        scope_type: scopeType || null,
+        ts: Date.now(),
+        nonce: Math.random().toString(36).substring(2, 12),
+      };
+      const state = btoa(JSON.stringify(statePayload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+      let directAuthUrl = '';
+      if (provider === 'google') {
+        const googleClientId = '314182861423-0bodo7ijvgl1eno6h6ff8mnn0t4rfi4t.apps.googleusercontent.com';
+        const params = new URLSearchParams({
+          client_id: googleClientId,
+          redirect_uri: callbackUrl,
+          scope: 'openid profile email',
+          response_type: 'code',
+          state: state,
+        });
+        directAuthUrl = `https://accounts.google.com/o/oauth2/auth?${params.toString()}`;
+      } else if (provider === 'github') {
+        const githubClientId = 'Ov23liaGFMbw7ABOai7u';
+        const scopes = scopeType === 'repo' || scopeType === 'public_repo'
+          ? 'read:user user:email public_repo'
+          : 'read:user user:email';
+        const params = new URLSearchParams({
+          client_id: githubClientId,
+          redirect_uri: callbackUrl,
+          scope: scopes,
+          response_type: 'code',
+          state: state,
+        });
+        directAuthUrl = `https://github.com/login/oauth/authorize?${params.toString()}`;
+      } else {
+        const params = scopeType ? `?scope_type=${scopeType}` : '';
+        directAuthUrl = `${this.api.baseUrl}/auth/${provider}/redirect${params}`;
+      }
 
       // Configurar dimensiones de la ventana centrada
       const width = 540;
@@ -242,14 +294,14 @@ export class AuthService {
 
       let popup: Window | null = null;
       try {
-        popup = window.open(redirectEndpoint, `syseng_oauth_${provider}`, windowFeatures);
+        popup = window.open(directAuthUrl, `syseng_oauth_${provider}`, windowFeatures);
       } catch {
         popup = null;
       }
 
       // Si el navegador bloqueó la ventana emergente, redirigir navegación completa
       if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-        window.location.href = redirectEndpoint;
+        window.location.href = directAuthUrl;
         return;
       }
 
