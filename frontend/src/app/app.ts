@@ -52,6 +52,29 @@ export class App implements OnInit {
   );
 
   ngOnInit(): void {
+    // Ingestar sesión OAuth de inmediato si proviene de redirección directa (Google / GitHub)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      if (token) {
+        localStorage.setItem('syseng_token', token);
+        urlParams.delete('token');
+        urlParams.delete('provider');
+        const remaining = urlParams.toString();
+        const cleanUrl = window.location.pathname + (remaining ? `?${remaining}` : '') + window.location.hash;
+        window.history.replaceState({}, document.title, cleanUrl);
+
+        this.auth.fetchMe().subscribe({
+          next: (user) => {
+            window.dispatchEvent(new CustomEvent('syseng-auth-login', { detail: { user, token } }));
+            if (window.location.pathname.startsWith('/auth/login') || window.location.pathname.startsWith('/auth/registro')) {
+              this.router.navigate(['/']);
+            }
+          }
+        });
+      }
+    }
+
     // Calentamiento asíncrono y silencioso del backend (aprovecha la carga inicial para evitar arranques en frío)
     this.auth.warmupBackend();
   }

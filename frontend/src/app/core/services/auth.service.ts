@@ -320,7 +320,13 @@ export class AuthService {
         directAuthUrl = `${this.api.baseUrl}/auth/${provider}/redirect${params}`;
       }
 
-      // Configurar dimensiones de la ventana centrada
+      // En móviles (< 768px), redirigir directamente sin popup para máxima velocidad
+      if (window.innerWidth < 768) {
+        window.location.href = directAuthUrl;
+        return;
+      }
+
+      // Configurar dimensiones de la ventana centrada para desktop
       const width = 540;
       const height = 680;
       const left = window.screenX + (window.outerWidth - width) / 2;
@@ -329,59 +335,13 @@ export class AuthService {
 
       let popup: Window | null = null;
       try {
-        // Abrir inmediatamente la ventana en 'about:blank' para respuesta instantánea (0ms de latencia de click)
-        popup = window.open('about:blank', `syseng_oauth_${provider}`, windowFeatures);
-        if (popup && !popup.closed) {
-          const providerName = provider === 'google' ? 'Google' : 'GitHub';
-          const brandColor = provider === 'google' ? '#4285F4' : '#00E599';
-          try {
-            popup.document.write(`<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Conectando con ${providerName} — SysEng Academy</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #08090D;
-      color: #F8FAFC;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-    .spinner {
-      width: 36px;
-      height: 36px;
-      border: 3px solid rgba(255, 255, 255, 0.08);
-      border-top-color: ${brandColor};
-      border-radius: 50%;
-      animation: spin 0.65s linear infinite;
-      margin-bottom: 16px;
-    }
-    .title { font-size: 14px; font-weight: 600; color: #F8FAFC; margin-bottom: 6px; }
-    .subtitle { font-size: 12px; color: #94A3B8; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
-</head>
-<body>
-  <div class="spinner"></div>
-  <div class="title">Conectando con ${providerName}...</div>
-  <div class="subtitle">Abriendo autenticación segura</div>
-</body>
-</html>`);
-            popup.document.close();
-          } catch {}
-          // Redirigir de inmediato al endpoint de OAuth
-          popup.location.replace(directAuthUrl);
-        }
+        // Abrir directamente la URL del proveedor sin intermediarios ni about:blank
+        popup = window.open(directAuthUrl, `syseng_oauth_${provider}`, windowFeatures);
       } catch {
         popup = null;
       }
 
-      // Si el navegador bloqueó la ventana emergente, redirigir navegación completa
+      // Si el navegador bloqueó la ventana emergente (ej. Brave Shields), redirigir en la misma pestaña
       if (!popup || popup.closed || typeof popup.closed === 'undefined') {
         window.location.href = directAuthUrl;
         return;

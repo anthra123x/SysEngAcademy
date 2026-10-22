@@ -3,12 +3,13 @@
   "framework": null,
   "buildCommand": "cd frontend && npm install && npm run build && mkdir -p ../browser && cp -r dist/frontend/browser/* ../browser/ 2>/dev/null || true",
   "outputDirectory": "frontend/dist/frontend/browser",
-  "routes": [
+  "crons": [
     {
-      "src": "^/api/auth/(google|github)/callback.*$",
-      "methods": ["GET"],
-      "dest": "/index.html"
-    },
+      "path": "/api/health",
+      "schedule": "*/10 * * * *"
+    }
+  ],
+  "routes": [
     {
       "src": "/api/(.*)",
       "dest": "https://sysengacademy.onrender.com/api/$1"

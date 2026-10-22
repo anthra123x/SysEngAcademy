@@ -92,11 +92,8 @@ export const routes: Routes = [
   },
   {
     path: 'auth/callback',
-    loadComponent: () => import('./features/auth/callback/oauth-callback.component').then(m => m.OAuthCallbackComponent)
-  },
-  {
-    path: 'api/auth/:provider/callback',
-    loadComponent: () => import('./features/auth/callback/oauth-callback.component').then(m => m.OAuthCallbackComponent)
+    redirectTo: '',
+    pathMatch: 'full'
   },
   {
     path: 'auth/verify',

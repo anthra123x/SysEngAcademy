@@ -1,0 +1,20 @@
+name: Keep Render Backend Warm
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free instance spin-down
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Keep Render Backend Alive
+        run: |
+          echo "Pinging SysEng Academy Backend API..."
+          curl -s -f --max-time 30 https://sysengacademy.onrender.com/api/health || true
+          curl -s -f --max-time 30 https://www.sysengacademy.site/api/health || true
+          echo "Ping complete."

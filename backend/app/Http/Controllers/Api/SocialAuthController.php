@@ -91,62 +91,31 @@ class SocialAuthController extends Controller
                 'has_repo_scope' => $result['has_repo_scope'] ?? false,
             ]);
 
-            $redirectUrl = "{$frontendUrl}/auth/callback?token=" . urlencode($result['token']) . "&provider={$provider}";
+            $redirectUrl = "{$frontendUrl}/?token=" . urlencode($result['token']) . "&provider={$provider}";
 
-            // Página HTML puente: comunica vía window.opener.postMessage (si es popup)
-            // o redirige automáticamente a la URL del frontend (si fue redirección directa).
+            // Despacho transparente sin interfaz intermedia visible (0ms delay)
             $html = <<<HTML
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>SysEng Academy - Autenticación</title>
-    <style>
-        body {
-            background-color: #08090d;
-            color: #f1f5f9;
-            font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .card {
-            background: #11121d;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 32px 40px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid rgba(168, 85, 247, 0.2);
-            border-top-color: #a855f7;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px auto;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
+    <title>SysEng Academy</title>
 </head>
-<body>
-    <div class="card">
-        <div class="spinner"></div>
-        <p>Autenticando con {$provider} en SysEng Academy...</p>
-    </div>
+<body style="background:#08090d;margin:0;">
     <script>
-        const payload = {$payloadJson};
-        const redirectUrl = "{$redirectUrl}";
+        (function() {
+            var payload = {$payloadJson};
+            var redirectUrl = "{$redirectUrl}";
 
-        if (window.opener && !window.opener.closed) {
-            window.opener.postMessage(payload, "*");
-            setTimeout(() => window.close(), 300);
-        } else {
-            window.location.replace(redirectUrl);
-        }
+            if (window.opener && !window.opener.closed) {
+                try {
+                    window.opener.postMessage(payload, "*");
+                } catch(e) {}
+                window.close();
+            } else {
+                window.location.replace(redirectUrl);
+            }
+        })();
     </script>
 </body>
 </html>
@@ -154,37 +123,36 @@ HTML;
 
             return response($html, 200, ['Content-Type' => 'text/html']);
         } catch (\Throwable $e) {
-            $errorMessage = $e->getMessage();
+            $errorMessage = $e->getMessage() ?: 'No se pudo completar la autenticación.';
             $errorJson = json_encode([
                 'type' => 'SYSENG_OAUTH_ERROR',
                 'provider' => $provider,
                 'message' => $errorMessage,
             ]);
+            $loginErrorUrl = "{$frontendUrl}/auth/login?error=" . urlencode($errorMessage);
 
             $html = <<<HTML
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
     <title>Error de Autenticación</title>
-    <style>
-        body { background: #08090d; color: #f87171; font-family: system-ui; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .card { background: #11121d; border: 1px solid #f8717140; border-radius: 12px; padding: 24px; text-align: center; }
-    </style>
 </head>
-<body>
-    <div class="card">
-        <h3>No se pudo completar la autenticación</h3>
-        <p>{$errorMessage}</p>
-    </div>
+<body style="background:#08090d;margin:0;">
     <script>
-        const errorData = {$errorJson};
-        if (window.opener && !window.opener.closed) {
-            window.opener.postMessage(errorData, "*");
-            setTimeout(() => window.close(), 1500);
-        } else {
-            setTimeout(() => window.location.replace("{$frontendUrl}/auth/login?error=" + encodeURIComponent(errorData.message)), 1500);
-        }
+        (function() {
+            var errorData = {$errorJson};
+            var loginErrorUrl = "{$loginErrorUrl}";
+
+            if (window.opener && !window.opener.closed) {
+                try {
+                    window.opener.postMessage(errorData, "*");
+                } catch(e) {}
+                window.close();
+            } else {
+                window.location.replace(loginErrorUrl);
+            }
+        })();
     </script>
 </body>
 </html>
