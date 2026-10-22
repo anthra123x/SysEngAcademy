@@ -2,274 +2,373 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
+import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, HalftoneVisualComponent],
   template: `
     <div class="auth-page">
-      <div class="auth-card">
-        <div class="auth-logo">
-          <a routerLink="/" class="logo-link">
-            <span class="logo-icon">&lt;/&gt;</span>
-            <span>SysEng<span>Academy</span></span>
-          </a>
-        </div>
+      <!-- Background Ambient Glows -->
+      <div class="bg-glow bg-glow--cyan"></div>
+      <div class="bg-glow bg-glow--emerald"></div>
+      <div class="bg-grid-overlay"></div>
 
-        <h1>Bienvenido de vuelta</h1>
-        <p class="auth-subtitle">Ingresa tus credenciales para acceder a la plataforma</p>
+      <div class="auth-split-card">
+        <!-- Left: Form Column -->
+        <div class="auth-form-side">
+          <div class="auth-header">
+            <a routerLink="/" class="brand-capsule" aria-label="SysEng Academy - Inicio">
+              <span class="brand-capsule__icon">&lt;/&gt;</span>
+              <span class="brand-capsule__name">SysEng<strong>Academy</strong></span>
+            </a>
 
-        @if (error()) {
-          <div class="alert-error">{{ error() }}</div>
-        }
-
-        <div class="social-auth-grid">
-          <button
-            type="button"
-            class="btn-social btn-google"
-            (click)="loginWithSocial('google')"
-            [disabled]="socialLoading() !== null"
-          >
-            <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18">
-              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
-              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
-              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-            </svg>
-            <span>{{ socialLoading() === 'google' ? 'Conectando...' : 'Google' }}</span>
-          </button>
-
-          <button
-            type="button"
-            class="btn-social btn-github"
-            (click)="loginWithSocial('github')"
-            [disabled]="socialLoading() !== null"
-          >
-            <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            <span>{{ socialLoading() === 'github' ? 'Conectando...' : 'GitHub' }}</span>
-          </button>
-        </div>
-
-        <div class="auth-divider">
-          <span>o continúa con correo</span>
-        </div>
-
-        <form (ngSubmit)="submit()" #form="ngForm">
-          <div class="form-group">
-            <label>Correo electrónico</label>
-            <input
-              class="input"
-              type="email"
-              name="email"
-              [(ngModel)]="email"
-              placeholder="tu@email.com"
-              required
-              autocomplete="email"
-            />
+            <h1 class="auth-title">Iniciar Sesión</h1>
+            <p class="auth-subtitle">Accede a tu panel para continuar tus retos y rutas</p>
           </div>
 
-          <div class="form-group">
-            <div class="password-label-row">
-              <label>Contraseña</label>
-              <button type="button" class="btn-forgot-link" (click)="openForgotModal()">
-                ¿Olvidaste tu contraseña?
-              </button>
+          @if (error()) {
+            <div class="alert-error" role="alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="alert-icon">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{{ error() }}</span>
             </div>
-            <input
-              class="input"
-              type="password"
-              name="password"
-              [(ngModel)]="password"
-              placeholder="••••••••"
-              required
-              autocomplete="current-password"
-            />
+          }
+
+          <div class="social-auth-stack">
+            <button
+              type="button"
+              class="btn-social"
+              (click)="loginWithSocial('google')"
+              [disabled]="socialLoading() !== null"
+            >
+              <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+              <span>{{ socialLoading() === 'google' ? 'Conectando con Google...' : 'Continuar con Google' }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-social"
+              (click)="loginWithSocial('github')"
+              [disabled]="socialLoading() !== null"
+            >
+              <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              <span>{{ socialLoading() === 'github' ? 'Conectando con GitHub...' : 'Continuar con GitHub' }}</span>
+            </button>
           </div>
 
-          <button
-            type="submit"
-            class="btn btn-primary btn-submit"
-            [disabled]="loading()"
-          >
-            {{ loading() ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
-          </button>
-        </form>
+          <div class="auth-divider">
+            <span>o continúa con correo</span>
+          </div>
 
-        <p class="auth-link">
-          ¿No tienes cuenta?
-          <a routerLink="/auth/registro">Regístrate aquí</a>
-        </p>
-
-        @if (showForgotModal()) {
-          <div class="modal-backdrop" (click)="closeForgotModal()">
-            <div class="modal-card" (click)="$event.stopPropagation()">
-              <div class="modal-header">
-                <h3>Recuperar Contraseña</h3>
-                <button type="button" class="btn-close" (click)="closeForgotModal()">✕</button>
+          <form (ngSubmit)="submit()" #form="ngForm" class="auth-form">
+            <div class="form-group">
+              <label for="login-email">Correo electrónico</label>
+              <div class="input-wrapper">
+                <input
+                  id="login-email"
+                  class="input-field"
+                  type="email"
+                  name="email"
+                  [(ngModel)]="email"
+                  placeholder="tu@email.com"
+                  required
+                  autocomplete="email"
+                />
               </div>
+            </div>
 
-              @if (forgotSuccess()) {
-                <div class="alert-success">{{ forgotSuccess() }}</div>
-              }
-              @if (forgotError()) {
-                <div class="alert-error">{{ forgotError() }}</div>
-              }
+            <div class="form-group">
+              <div class="password-label-row">
+                <label for="login-password">Contraseña</label>
+                <button type="button" class="btn-forgot-link" (click)="openForgotModal()">
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+              <div class="input-wrapper">
+                <input
+                  id="login-password"
+                  class="input-field"
+                  type="password"
+                  name="password"
+                  [(ngModel)]="password"
+                  placeholder="••••••••"
+                  required
+                  autocomplete="current-password"
+                />
+              </div>
+            </div>
 
-              @if (forgotStep() === 1) {
-                <p class="modal-desc">Ingresa tu correo registrado para recibir un código de restablecimiento de contraseña.</p>
-                <div class="form-group">
-                  <label>Correo electrónico</label>
-                  <input
-                    class="input"
-                    type="email"
-                    [(ngModel)]="forgotEmail"
-                    placeholder="tu@email.com"
-                    required
-                  />
-                </div>
+            <button
+              type="submit"
+              class="btn-primary-action"
+              [disabled]="loading()"
+            >
+              @if (loading()) {
+                <span class="btn-spinner"></span>
+                <span>Iniciando sesión...</span>
+              } @else {
+                <span>Iniciar Sesión</span>
+                <span class="btn-arrow">→</span>
+              }
+            </button>
+          </form>
+
+          <div class="auth-footer">
+            <span>¿No tienes una cuenta?</span>
+            <a routerLink="/auth/registro" class="auth-switch-link">Crear una cuenta</a>
+          </div>
+        </div>
+
+        <!-- Right: Dynamic Halftone Visual Column -->
+        <div class="auth-visual-side">
+          <app-halftone-visual></app-halftone-visual>
+        </div>
+      </div>
+
+      <!-- Forgot Password Modal -->
+      @if (showForgotModal()) {
+        <div class="modal-backdrop" (click)="closeForgotModal()">
+          <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <div class="modal-title-group">
+                <span class="modal-icon">🔐</span>
+                <h3>Recuperar Contraseña</h3>
+              </div>
+              <button type="button" class="btn-close" (click)="closeForgotModal()" aria-label="Cerrar modal">✕</button>
+            </div>
+
+            @if (forgotSuccess()) {
+              <div class="alert-success">{{ forgotSuccess() }}</div>
+            }
+            @if (forgotError()) {
+              <div class="alert-error">{{ forgotError() }}</div>
+            }
+
+            @if (forgotStep() === 1) {
+              <p class="modal-desc">
+                Ingresa tu correo registrado para recibir un código de restablecimiento de 6 dígitos.
+              </p>
+              <div class="form-group">
+                <label>Correo electrónico</label>
+                <input
+                  class="input-field"
+                  type="email"
+                  [(ngModel)]="forgotEmail"
+                  placeholder="tu@email.com"
+                  required
+                />
+              </div>
+              <button
+                type="button"
+                class="btn-primary-action"
+                style="margin-top: 1rem;"
+                [disabled]="forgotLoading()"
+                (click)="sendForgotCode()"
+              >
+                {{ forgotLoading() ? 'Enviando código...' : 'Continuar / Enviar Código' }}
+              </button>
+            } @else {
+              <p class="modal-desc">
+                Hemos enviado un código de 6 dígitos desde <strong>noreply&#64;sysengacademy.site</strong> a tu correo electrónico. Ingrésalo a continuación junto con tu nueva contraseña.
+              </p>
+              <div class="form-group">
+                <label>Código de recuperación (6 dígitos)</label>
+                <input
+                  class="input-field code-input"
+                  type="text"
+                  [(ngModel)]="resetCode"
+                  placeholder="000000"
+                  maxlength="6"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Nueva contraseña</label>
+                <input
+                  class="input-field"
+                  type="password"
+                  [(ngModel)]="newPassword"
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Confirmar nueva contraseña</label>
+                <input
+                  class="input-field"
+                  type="password"
+                  [(ngModel)]="confirmNewPassword"
+                  placeholder="Repite tu contraseña"
+                  required
+                />
+              </div>
+              <div class="modal-action-row">
                 <button
                   type="button"
-                  class="btn btn-primary"
-                  style="width: 100%; margin-top: 1rem;"
-                  [disabled]="forgotLoading()"
-                  (click)="sendForgotCode()"
+                  class="btn-secondary"
+                  (click)="forgotStep.set(1)"
                 >
-                  {{ forgotLoading() ? 'Enviando código...' : 'Continuar' }}
+                  Atrás
                 </button>
-              } @else {
-                <p class="modal-desc">Hemos enviado un código de 6 dígitos desde <strong>noreply&#64;sysengacademy.site</strong> a tu correo electrónico. Ingrésalo a continuación junto con tu nueva contraseña.</p>
-                <div class="form-group">
-                  <label>Código de recuperación (6 dígitos)</label>
-                  <input
-                    class="input"
-                    type="text"
-                    [(ngModel)]="resetCode"
-                    placeholder="000000"
-                    maxlength="6"
-                    required
-                  />
-                </div>
-                <div class="form-group">
-                  <label>Nueva contraseña</label>
-                  <input
-                    class="input"
-                    type="password"
-                    [(ngModel)]="newPassword"
-                    placeholder="Mínimo 6 caracteres"
-                    required
-                  />
-                </div>
-                <div class="form-group">
-                  <label>Confirmar nueva contraseña</label>
-                  <input
-                    class="input"
-                    type="password"
-                    [(ngModel)]="confirmNewPassword"
-                    placeholder="Repite tu contraseña"
-                    required
-                  />
-                </div>
-                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                  <button
-                    type="button"
-                    class="btn btn-secondary"
-                    style="flex: 1;"
-                    (click)="forgotStep.set(1)"
-                  >
-                    Atrás
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-primary"
-                    style="flex: 2;"
-                    [disabled]="forgotLoading()"
-                    (click)="executeResetPassword()"
-                  >
-                    {{ forgotLoading() ? 'Actualizando...' : 'Restablecer' }}
-                  </button>
-                </div>
-              }
-            </div>
+                <button
+                  type="button"
+                  class="btn-primary-action"
+                  style="flex: 2;"
+                  [disabled]="forgotLoading()"
+                  (click)="executeResetPassword()"
+                >
+                  {{ forgotLoading() ? 'Actualizando...' : 'Restablecer Contraseña' }}
+                </button>
+              </div>
+            }
           </div>
-        }
-      </div>
+        </div>
+      }
     </div>
   `,
   styles: [
     `
       .auth-page {
-        min-height: calc(100vh - var(--header-height, 65px));
+        min-height: calc(100vh - var(--header-height, 64px));
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: var(--sp-8, 2rem) var(--sp-4, 1rem);
-        background: radial-gradient(ellipse at center, rgba(0, 217, 255, 0.05) 0%, transparent 70%);
+        padding: 2.5rem 1.5rem;
+        background: #08090d;
+        overflow: hidden;
       }
 
-      .auth-card {
+      /* Ambient Glows */
+      .bg-glow {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        filter: blur(140px);
+        pointer-events: none;
+        opacity: 0.12;
+
+        &--cyan {
+          top: 10%;
+          left: 15%;
+          background: #00d9ff;
+        }
+
+        &--emerald {
+          bottom: 10%;
+          right: 15%;
+          background: #0ae98a;
+        }
+      }
+
+      .bg-grid-overlay {
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 48px 48px;
+        pointer-events: none;
+      }
+
+      /* Floating Split Card */
+      .auth-split-card {
+        position: relative;
+        z-index: 10;
         width: 100%;
-        max-width: 440px;
-        background: var(--bg-surface, #0f172a);
-        border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-        border-radius: var(--radius-xl, 16px);
-        padding: var(--sp-8, 2rem);
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
-
-        h1 {
-          font-size: var(--text-2xl, 1.5rem);
-          font-weight: var(--font-bold, 700);
-          color: var(--text-primary, #ffffff);
-          margin: var(--sp-6, 1.5rem) 0 var(--sp-2, 0.5rem);
-        }
+        max-width: 960px;
+        min-height: 580px;
+        display: grid;
+        grid-template-columns: 1.05fr 1fr;
+        background: rgba(14, 18, 28, 0.82);
+        backdrop-filter: blur(24px) saturate(160%);
+        -webkit-backdrop-filter: blur(24px) saturate(160%);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 24px;
+        box-shadow: 0 24px 70px -15px rgba(0, 0, 0, 0.7),
+                    0 0 0 1px rgba(255, 255, 255, 0.03),
+                    0 0 40px rgba(0, 217, 255, 0.05);
+        overflow: hidden;
       }
 
-      .auth-logo .logo-link {
+      /* Left Form Column */
+      .auth-form-side {
+        padding: clamp(2rem, 3.5vw, 3rem);
         display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .brand-capsule {
+        display: inline-flex;
         align-items: center;
-        gap: var(--sp-2, 0.5rem);
+        gap: 8px;
+        padding: 5px 12px 5px 6px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 9999px;
         text-decoration: none;
-        font-size: var(--text-base, 1rem);
-        font-weight: var(--font-bold, 700);
-        color: var(--text-primary, #ffffff);
-        span:last-child span {
-          color: var(--primary, #00d9ff);
+        margin-bottom: 1.5rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.07);
+          border-color: rgba(0, 217, 255, 0.3);
+        }
+
+        &__icon {
+          font-family: var(--font-mono, monospace);
+          font-size: 11px;
+          font-weight: 700;
+          color: #08090d;
+          background: #0ae98a;
+          padding: 3px 6px;
+          border-radius: 9999px;
+        }
+
+        &__name {
+          font-size: 12px;
+          font-weight: 600;
+          color: #e2e8f0;
+
+          strong {
+            color: #00d9ff;
+          }
         }
       }
 
-      .logo-icon {
-        font-family: var(--font-mono, monospace);
-        font-weight: var(--font-bold, 700);
-        color: #030712;
-        background: #00d9ff;
-        padding: 3px 7px;
-        border-radius: var(--radius-sm, 4px);
-        font-size: var(--text-sm, 0.875rem);
+      .auth-title {
+        font-size: clamp(1.5rem, 2.2vw, 1.85rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #f8fafc;
+        margin: 0 0 0.4rem 0;
       }
 
       .auth-subtitle {
-        color: var(--text-secondary, #94a3b8);
-        font-size: var(--text-sm, 0.875rem);
-        margin-bottom: var(--sp-6, 1.5rem);
+        font-size: 0.88rem;
+        color: #94a3b8;
+        margin: 0 0 1.5rem 0;
+        line-height: 1.5;
       }
 
-      .alert-error {
-        background: rgba(239, 68, 68, 0.15);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        color: #f87171;
-        padding: var(--sp-3, 0.75rem) var(--sp-4, 1rem);
-        border-radius: var(--radius-md, 8px);
-        font-size: var(--text-sm, 0.875rem);
-        margin-bottom: var(--sp-5, 1.25rem);
-        line-height: 1.45;
-      }
-
-      .social-auth-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
+      /* Social Buttons */
+      .social-auth-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
         margin-bottom: 1.25rem;
       }
 
@@ -277,20 +376,21 @@ import { AuthService } from '../../../core/services/auth.service';
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
-        padding: 0.65rem 1rem;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 8px;
+        gap: 0.75rem;
+        width: 100%;
+        padding: 0.72rem 1.2rem;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
         color: #f1f5f9;
-        font-size: 0.875rem;
+        font-size: 0.88rem;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
         &:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(255, 255, 255, 0.25);
+          background: rgba(255, 255, 255, 0.07);
+          border-color: rgba(255, 255, 255, 0.22);
           transform: translateY(-1px);
         }
 
@@ -304,14 +404,7 @@ import { AuthService } from '../../../core/services/auth.service';
         }
       }
 
-      .btn-github {
-        color: #ffffff;
-      }
-
-      .btn-google {
-        color: #ffffff;
-      }
-
+      /* Divider */
       .auth-divider {
         display: flex;
         align-items: center;
@@ -321,195 +414,35 @@ import { AuthService } from '../../../core/services/auth.service';
         &::before, &::after {
           content: '';
           flex: 1;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.07);
         }
 
         span {
-          padding: 0 0.75rem;
+          padding: 0 0.85rem;
           color: #64748b;
           font-size: 0.75rem;
+          font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.06em;
         }
       }
 
-      /* UNVERIFIED BLOCK */
-      .unverified-card {
-        background: rgba(255, 136, 0, 0.08);
-        border: 1px solid rgba(255, 136, 0, 0.3);
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1.25rem;
-      }
-
-      .unverified-header {
-        display: flex;
-        gap: 10px;
-        align-items: flex-start;
-        margin-bottom: 0.75rem;
-
-        .unverified-icon {
-          font-size: 1.25rem;
-          line-height: 1;
-        }
-
-        strong {
-          color: #ff9d33;
-          font-size: 0.875rem;
-          display: block;
-        }
-
-        p {
-          margin: 0.2rem 0 0;
-          font-size: 0.775rem;
-          color: #cbd5e1;
-          line-height: 1.4;
-        }
-      }
-
-      .dev-hint-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(0, 217, 255, 0.1);
-        border: 1px dashed rgba(0, 217, 255, 0.3);
-        padding: 3px 8px;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        color: #94a3b8;
-        margin-bottom: 0.75rem;
-
-        code {
-          color: #00d9ff;
-          font-family: monospace;
-          font-weight: 700;
-          font-size: 0.85rem;
-        }
-      }
-
-      .unverified-input-group {
-        display: flex;
-        gap: 8px;
-      }
-
-      .code-inline-input {
-        flex: 1;
-        font-family: monospace;
-        letter-spacing: 0.15em;
-        text-align: center;
-        font-weight: 700;
-      }
-
-      .btn-sm {
-        padding: 0.5rem 0.9rem;
-        font-size: 0.8rem;
-        white-space: nowrap;
-      }
-
-      .unverified-err-msg {
-        display: block;
-        color: #f87171;
-        font-size: 0.75rem;
-        margin-top: 0.4rem;
-      }
-
-      .unverified-actions {
-        margin-top: 0.65rem;
-        text-align: right;
-      }
-
-      .btn-link {
-        background: transparent;
-        border: none;
-        color: #00d9ff;
-        font-size: 0.75rem;
-        cursor: pointer;
-        text-decoration: underline;
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-      }
-
-      form {
+      /* Form Fields */
+      .auth-form {
         display: flex;
         flex-direction: column;
-        gap: var(--sp-4, 1rem);
+        gap: 1.1rem;
       }
 
       .form-group {
         display: flex;
         flex-direction: column;
-        gap: 0.35rem;
+        gap: 0.4rem;
 
         label {
-          font-size: 0.8125rem;
+          font-size: 0.82rem;
           font-weight: 600;
-          color: var(--text-secondary, #cbd5e1);
-        }
-      }
-
-      .input {
-        background: rgba(3, 7, 18, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 8px;
-        padding: 0.65rem 0.85rem;
-        color: #ffffff;
-        font-size: 0.875rem;
-        outline: none;
-        transition: border-color 0.15s;
-
-        &:focus {
-          border-color: #00d9ff;
-        }
-      }
-
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.15s;
-        border: none;
-      }
-
-      .btn-primary {
-        background: #00d9ff;
-        color: #030712;
-
-        &:hover:not(:disabled) {
-          background: #0ae98a;
-          transform: translateY(-1px);
-        }
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-      }
-
-      .btn-submit {
-        width: 100%;
-        margin-top: var(--sp-2, 0.5rem);
-        padding: 0.75rem 1.25rem;
-        font-size: 0.875rem;
-      }
-
-      .auth-link {
-        text-align: center;
-        margin-top: var(--sp-5, 1.25rem);
-        font-size: var(--text-sm, 0.875rem);
-        color: var(--text-secondary, #94a3b8);
-        a {
-          color: #00d9ff;
-          text-decoration: none;
-          font-weight: 600;
-          &:hover {
-            text-decoration: underline;
-          }
+          color: #cbd5e1;
         }
       }
 
@@ -517,22 +450,18 @@ import { AuthService } from '../../../core/services/auth.service';
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: var(--sp-1, 0.25rem);
-
-        label {
-          margin-bottom: 0 !important;
-        }
 
         .btn-forgot-link {
           background: none;
           border: none;
-          color: var(--primary, #00d9ff);
-          font-size: var(--text-xs, 0.75rem);
+          color: #00d9ff;
+          font-size: 0.76rem;
+          font-weight: 500;
           cursor: pointer;
           padding: 0;
           text-decoration: underline;
-          text-underline-offset: 2px;
-          transition: color 0.2s ease;
+          text-underline-offset: 3px;
+          transition: color 0.15s ease;
 
           &:hover {
             color: #38bdf8;
@@ -540,95 +469,283 @@ import { AuthService } from '../../../core/services/auth.service';
         }
       }
 
-      .modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(4px);
+      .input-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      .input-field {
+        width: 100%;
+        background: rgba(6, 9, 15, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        color: #ffffff;
+        font-size: 0.88rem;
+        outline: none;
+        box-sizing: border-box;
+        transition: all 0.2s ease;
+
+        &::placeholder {
+          color: #475569;
+        }
+
+        &:focus {
+          border-color: #00d9ff;
+          box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.14);
+          background: rgba(6, 9, 15, 0.95);
+        }
+
+        &.code-input {
+          font-family: var(--font-mono, monospace);
+          font-size: 1.25rem;
+          letter-spacing: 0.35em;
+          text-align: center;
+          font-weight: 700;
+        }
+      }
+
+      /* Primary Action Button */
+      .btn-primary-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.8rem 1.4rem;
+        margin-top: 0.35rem;
+        background: #0ae98a;
+        color: #08090d;
+        border: none;
+        border-radius: 12px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 18px rgba(10, 233, 138, 0.32);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+        &:hover:not(:disabled) {
+          background: #08d37c;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 22px rgba(10, 233, 138, 0.42);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .btn-arrow {
+          font-size: 1.1rem;
+          transition: transform 0.2s ease;
+        }
+
+        &:hover .btn-arrow {
+          transform: translateX(3px);
+        }
+
+        .btn-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(8, 9, 13, 0.3);
+          border-top-color: #08090d;
+          border-radius: 50%;
+          animation: spin 0.7s infinite linear;
+        }
+      }
+
+      /* Footer Link */
+      .auth-footer {
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 1000;
-        padding: 1rem;
-        animation: fadeIn 0.2s ease-out;
-      }
+        gap: 0.4rem;
+        margin-top: 1.5rem;
+        font-size: 0.84rem;
+        color: #94a3b8;
 
-      .modal-card {
-        width: 100%;
-        max-width: 420px;
-        background: var(--bg-surface, #0f172a);
-        border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
-        border-radius: var(--radius-xl, 16px);
-        padding: 1.75rem;
-        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+        .auth-switch-link {
+          color: #00d9ff;
+          font-weight: 600;
+          text-decoration: none;
 
-        .modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-
-          h3 {
-            margin: 0;
-            font-size: 1.25rem;
-            color: #ffffff;
-            font-weight: 700;
-          }
-
-          .btn-close {
-            background: none;
-            border: none;
-            color: var(--text-muted, #94a3b8);
-            font-size: 1.25rem;
-            cursor: pointer;
-            padding: 0.25rem;
-            line-height: 1;
-
-            &:hover {
-              color: #ffffff;
-            }
+          &:hover {
+            text-decoration: underline;
           }
         }
+      }
 
-        .modal-desc {
-          font-size: 0.875rem;
-          color: var(--text-muted, #94a3b8);
-          margin-bottom: 1.25rem;
-          line-height: 1.5;
+      /* Right Visual Side */
+      .auth-visual-side {
+        position: relative;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+        background: #06080e;
+      }
+
+      /* Alerts */
+      .alert-error {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #f87171;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        margin-bottom: 1.25rem;
+        line-height: 1.45;
+
+        .alert-icon {
+          flex-shrink: 0;
         }
       }
 
       .alert-success {
-        background: rgba(34, 197, 94, 0.12);
-        border: 1px solid rgba(34, 197, 94, 0.35);
-        color: #4ade80;
-        padding: 0.75rem;
-        border-radius: var(--radius-md, 8px);
-        font-size: 0.875rem;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #34d399;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        text-align: center;
         margin-bottom: 1rem;
       }
 
-      .animate-fade-in {
-        animation: fadeIn 0.25s ease-out;
+      /* Modal */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        z-index: 2000;
+        animation: fadeIn 0.2s ease;
+      }
+
+      .modal-card {
+        background: #0f1523;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        padding: 2rem;
+        width: 100%;
+        max-width: 440px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 217, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .modal-title-group {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            color: #f8fafc;
+            font-weight: 700;
+          }
+        }
+
+        .btn-close {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: #94a3b8;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.8rem;
+          transition: all 0.15s ease;
+
+          &:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.12);
+          }
+        }
+      }
+
+      .modal-desc {
+        margin: 0;
+        font-size: 0.84rem;
+        color: #94a3b8;
+        line-height: 1.5;
+
+        strong {
+          color: #f1f5f9;
+        }
+      }
+
+      .modal-action-row {
+        display: flex;
+        gap: 0.65rem;
+        margin-top: 0.5rem;
+      }
+
+      .btn-secondary {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #e2e8f0;
+        font-weight: 600;
+        font-size: 0.88rem;
+        cursor: pointer;
+        padding: 0.75rem 1rem;
+        transition: all 0.15s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
       }
 
       @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(-4px);
+        from { opacity: 0; transform: scale(0.97); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
+      /* Responsive Breakpoint */
+      @media (max-width: 960px) {
+        .auth-split-card {
+          grid-template-columns: 1fr;
+          max-width: 480px;
+          min-height: auto;
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+
+        .auth-visual-side {
+          display: none;
+        }
+
+        .auth-form-side {
+          padding: 2rem 1.5rem;
         }
       }
-    `,
-  ],
+    `
+  ]
 })
 export class LoginComponent implements OnInit {
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
+  private auth = inject(AuthService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   email = '';
   password = '';
@@ -779,7 +896,7 @@ export class LoginComponent implements OnInit {
       password: this.newPassword,
       password_confirmation: this.confirmNewPassword,
     }).subscribe({
-      next: (res: any) => {
+      next: (_res: any) => {
         this.forgotLoading.set(false);
         this.email = email;
         this.password = this.newPassword;

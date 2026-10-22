@@ -2,279 +2,380 @@ import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
+import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, HalftoneVisualComponent],
   template: `
     <div class="auth-page">
-      <div class="auth-card">
-        <div class="auth-logo">
-          <a routerLink="/" class="logo-link">
-            <span class="logo-icon">&lt;/&gt;</span>
-            <span>SysEng<span>Academy</span></span>
-          </a>
-        </div>
+      <!-- Background Ambient Glows -->
+      <div class="bg-glow bg-glow--cyan"></div>
+      <div class="bg-glow bg-glow--emerald"></div>
+      <div class="bg-grid-overlay"></div>
 
-        @if (step() === 1) {
-          <h1>Crea tu cuenta</h1>
-          <p class="auth-subtitle">Únete a SysEng Academy y aprende ingeniería práctica.</p>
+      <div class="auth-split-card">
+        <!-- Left: Form Column -->
+        <div class="auth-form-side">
+          <div class="auth-header">
+            <a routerLink="/" class="brand-capsule" aria-label="SysEng Academy - Inicio">
+              <span class="brand-capsule__icon">&lt;/&gt;</span>
+              <span class="brand-capsule__name">SysEng<strong>Academy</strong></span>
+            </a>
+
+            @if (step() === 1) {
+              <h1 class="auth-title">Crea tu cuenta</h1>
+              <p class="auth-subtitle">Únete a SysEng Academy y aprende ingeniería práctica</p>
+            } @else {
+              <h1 class="auth-title">Verifica tu correo</h1>
+              <p class="auth-subtitle">
+                Hemos enviado un código de 6 dígitos desde <strong>noreply&#64;sysengacademy.site</strong> a <strong>{{ email }}</strong>
+              </p>
+            }
+          </div>
 
           @if (error()) {
-            <div class="alert-error">{{ error() }}</div>
+            <div class="alert-error" role="alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="alert-icon">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{{ error() }}</span>
+            </div>
           }
 
-          <div class="social-auth-grid">
-            <button
-              type="button"
-              class="btn-social btn-google"
-              (click)="registerWithSocial('google')"
-              [disabled]="socialLoading() !== null"
-            >
-              <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18">
-                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
-                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
-                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          @if (successMsg()) {
+            <div class="alert-success" role="status">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="alert-icon">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
-              <span>{{ socialLoading() === 'google' ? 'Registrando...' : 'Google' }}</span>
-            </button>
+              <span>{{ successMsg() }}</span>
+            </div>
+          }
 
-            <button
-              type="button"
-              class="btn-social btn-github"
-              (click)="registerWithSocial('github')"
-              [disabled]="socialLoading() !== null"
-            >
-              <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-              </svg>
-              <span>{{ socialLoading() === 'github' ? 'Registrando...' : 'GitHub' }}</span>
-            </button>
-          </div>
+          @if (step() === 1) {
+            <!-- Social Register Options -->
+            <div class="social-auth-stack">
+              <button
+                type="button"
+                class="btn-social"
+                (click)="registerWithSocial('google')"
+                [disabled]="socialLoading() !== null"
+              >
+                <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                </svg>
+                <span>{{ socialLoading() === 'google' ? 'Registrando con Google...' : 'Continuar con Google' }}</span>
+              </button>
 
-          <div class="auth-divider">
-            <span>o regístrate con correo</span>
-          </div>
-
-          <form (ngSubmit)="submitStep1()" #form="ngForm">
-            <div class="form-group">
-              <label>Nombre completo</label>
-              <input
-                class="input"
-                type="text"
-                name="name"
-                [(ngModel)]="name"
-                placeholder="Tu nombre y apellido"
-                required
-                autocomplete="name"
-              />
+              <button
+                type="button"
+                class="btn-social"
+                (click)="registerWithSocial('github')"
+                [disabled]="socialLoading() !== null"
+              >
+                <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                <span>{{ socialLoading() === 'github' ? 'Registrando con GitHub...' : 'Continuar con GitHub' }}</span>
+              </button>
             </div>
 
-            <div class="form-group">
-              <label>Correo electrónico</label>
-              <input
-                class="input"
-                type="email"
-                name="email"
-                [(ngModel)]="email"
-                placeholder="tu@email.com"
-                required
-                autocomplete="email"
-              />
+            <div class="auth-divider">
+              <span>o regístrate con correo</span>
             </div>
 
-            <div class="form-group">
-              <label>Contraseña</label>
-              <input
-                class="input"
-                type="password"
-                name="password"
-                [(ngModel)]="password"
-                placeholder="Mínimo 8 caracteres (letras y números)"
-                required
-                minlength="8"
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Confirmar contraseña</label>
-              <input
-                class="input"
-                type="password"
-                name="password_confirmation"
-                [(ngModel)]="passwordConfirm"
-                placeholder="Repite tu contraseña"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              class="btn btn-primary"
-              style="width: 100%; margin-top: var(--sp-2, 0.5rem);"
-              [disabled]="loading()"
-            >
-              {{ loading() ? 'Enviando código de verificación...' : 'Continuar / Enviar Código' }}
-            </button>
-          </form>
-
-          <p class="auth-link">
-            ¿Ya tienes cuenta?
-            <a routerLink="/auth/login">Inicia sesión</a>
-          </p>
-        } @else {
-          <div class="verify-step">
-            <div class="verify-icon">✉️</div>
-            <h1>Verifica tu correo</h1>
-            <p class="auth-subtitle">
-              Hemos enviado un código de 6 dígitos desde <strong>noreply&#64;sysengacademy.site</strong> a <strong>{{ email }}</strong>.
-            </p>
-
-            @if (successMsg()) {
-              <div class="alert-success">{{ successMsg() }}</div>
-            }
-
-            @if (error()) {
-              <div class="alert-error">{{ error() }}</div>
-            }
-
-            <form (ngSubmit)="submitStep2()">
+            <form (ngSubmit)="submitStep1()" #form="ngForm" class="auth-form">
               <div class="form-group">
-                <label style="text-align: center; display: block; margin-bottom: 4px;">Código de verificación recibido</label>
-                <input
-                  class="input code-input"
-                  type="text"
-                  name="code"
-                  [(ngModel)]="verificationCode"
-                  placeholder="000000"
-                  maxlength="6"
-                  required
-                  autocomplete="one-time-code"
-                />
+                <label for="reg-name">Nombre completo</label>
+                <div class="input-wrapper">
+                  <input
+                    id="reg-name"
+                    class="input-field"
+                    type="text"
+                    name="name"
+                    [(ngModel)]="name"
+                    placeholder="Tu nombre y apellido"
+                    required
+                    autocomplete="name"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="reg-email">Correo electrónico</label>
+                <div class="input-wrapper">
+                  <input
+                    id="reg-email"
+                    class="input-field"
+                    type="email"
+                    name="email"
+                    [(ngModel)]="email"
+                    placeholder="tu@email.com"
+                    required
+                    autocomplete="email"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="reg-password">Contraseña</label>
+                  <div class="input-wrapper">
+                    <input
+                      id="reg-password"
+                      class="input-field"
+                      type="password"
+                      name="password"
+                      [(ngModel)]="password"
+                      placeholder="Mín. 8 caracteres"
+                      required
+                      minlength="8"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="reg-password-confirm">Confirmar</label>
+                  <div class="input-wrapper">
+                    <input
+                      id="reg-password-confirm"
+                      class="input-field"
+                      type="password"
+                      name="password_confirmation"
+                      [(ngModel)]="passwordConfirm"
+                      placeholder="Repite tu contraseña"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
 
               <button
                 type="submit"
-                class="btn btn-primary"
-                style="width: 100%; margin-top: 1rem;"
-                [disabled]="loading() || verificationCode.trim().length !== 6"
+                class="btn-primary-action"
+                [disabled]="loading()"
               >
-                {{ loading() ? 'Verificando y creando cuenta...' : 'Verificar y Crear Cuenta' }}
+                @if (loading()) {
+                  <span class="btn-spinner"></span>
+                  <span>Enviando código de verificación...</span>
+                } @else {
+                  <span>Continuar / Enviar Código</span>
+                  <span class="btn-arrow">→</span>
+                }
               </button>
             </form>
 
-            <div class="verify-secondary-actions">
-              <button
-                type="button"
-                class="btn-resend"
-                [disabled]="resendLoading() || resendCooldown() > 0"
-                (click)="resendCode()"
-              >
-                {{ resendCooldown() > 0 ? ('Reenviar código en ' + resendCooldown() + 's') : (resendLoading() ? 'Reenviando...' : '¿No recibiste el correo? Reenviar código') }}
-              </button>
-
-              <button
-                type="button"
-                class="btn-back"
-                (click)="backToStep1()"
-              >
-                ← Corregir correo o datos
-              </button>
+            <div class="auth-footer">
+              <span>¿Ya tienes una cuenta?</span>
+              <a routerLink="/auth/login" class="auth-switch-link">Inicia sesión</a>
             </div>
-          </div>
-        }
+          } @else {
+            <!-- Step 2: Verification Code -->
+            <div class="verify-step-container">
+              <form (ngSubmit)="submitStep2()" class="auth-form">
+                <div class="form-group">
+                  <label for="reg-code" class="text-center">Código de activación de 6 dígitos</label>
+                  <div class="input-wrapper">
+                    <input
+                      id="reg-code"
+                      class="input-field code-input"
+                      type="text"
+                      name="code"
+                      [(ngModel)]="verificationCode"
+                      placeholder="000000"
+                      maxlength="6"
+                      required
+                      autocomplete="one-time-code"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  class="btn-primary-action"
+                  [disabled]="loading() || verificationCode.trim().length !== 6"
+                >
+                  @if (loading()) {
+                    <span class="btn-spinner"></span>
+                    <span>Verificando y creando cuenta...</span>
+                  } @else {
+                    <span>Verificar y Crear Cuenta</span>
+                    <span class="btn-arrow">✓</span>
+                  }
+                </button>
+              </form>
+
+              <div class="verify-actions">
+                <button
+                  type="button"
+                  class="btn-resend-link"
+                  [disabled]="resendLoading() || resendCooldown() > 0"
+                  (click)="resendCode()"
+                >
+                  {{ resendCooldown() > 0 ? ('Reenviar código en ' + resendCooldown() + 's') : (resendLoading() ? 'Reenviando...' : '¿No recibiste el correo? Reenviar código') }}
+                </button>
+
+                <button
+                  type="button"
+                  class="btn-back-link"
+                  (click)="backToStep1()"
+                >
+                  ← Corregir correo o datos
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Right: Dynamic Halftone Visual Column -->
+        <div class="auth-visual-side">
+          <app-halftone-visual></app-halftone-visual>
+        </div>
       </div>
     </div>
   `,
   styles: [
     `
       .auth-page {
-        min-height: calc(100vh - var(--header-height, 65px));
+        min-height: calc(100vh - var(--header-height, 64px));
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: var(--sp-8, 2rem) var(--sp-4, 1rem);
-        background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.06) 0%, transparent 70%);
+        padding: 2.5rem 1.5rem;
+        background: #08090d;
+        overflow: hidden;
       }
 
-      .auth-card {
+      /* Ambient Glows */
+      .bg-glow {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        filter: blur(140px);
+        pointer-events: none;
+        opacity: 0.12;
+
+        &--cyan {
+          top: 10%;
+          left: 15%;
+          background: #00d9ff;
+        }
+
+        &--emerald {
+          bottom: 10%;
+          right: 15%;
+          background: #0ae98a;
+        }
+      }
+
+      .bg-grid-overlay {
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 48px 48px;
+        pointer-events: none;
+      }
+
+      /* Floating Split Card */
+      .auth-split-card {
+        position: relative;
+        z-index: 10;
         width: 100%;
-        max-width: 440px;
-        background: var(--bg-surface, #0f172a);
-        border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-        border-radius: var(--radius-xl, 16px);
-        padding: var(--sp-8, 2rem);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-
-        h1 {
-          font-size: var(--text-2xl, 1.5rem);
-          font-weight: var(--font-bold, 700);
-          color: var(--text-primary, #ffffff);
-          margin: var(--sp-6, 1.5rem) 0 var(--sp-2, 0.5rem);
-        }
+        max-width: 980px;
+        min-height: 600px;
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        background: rgba(14, 18, 28, 0.82);
+        backdrop-filter: blur(24px) saturate(160%);
+        -webkit-backdrop-filter: blur(24px) saturate(160%);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 24px;
+        box-shadow: 0 24px 70px -15px rgba(0, 0, 0, 0.7),
+                    0 0 0 1px rgba(255, 255, 255, 0.03),
+                    0 0 40px rgba(0, 217, 255, 0.05);
+        overflow: hidden;
       }
 
-      .auth-logo .logo-link {
+      /* Left Form Column */
+      .auth-form-side {
+        padding: clamp(2rem, 3.5vw, 3rem);
         display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .brand-capsule {
+        display: inline-flex;
         align-items: center;
-        gap: var(--sp-2, 0.5rem);
+        gap: 8px;
+        padding: 5px 12px 5px 6px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 9999px;
         text-decoration: none;
-        font-size: var(--text-base, 1rem);
-        font-weight: var(--font-bold, 700);
-        color: var(--text-primary, #ffffff);
-        span:last-child span {
-          color: var(--primary, #00d9ff);
+        margin-bottom: 1.4rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.07);
+          border-color: rgba(0, 217, 255, 0.3);
+        }
+
+        &__icon {
+          font-family: var(--font-mono, monospace);
+          font-size: 11px;
+          font-weight: 700;
+          color: #08090d;
+          background: #0ae98a;
+          padding: 3px 6px;
+          border-radius: 9999px;
+        }
+
+        &__name {
+          font-size: 12px;
+          font-weight: 600;
+          color: #e2e8f0;
+
+          strong {
+            color: #00d9ff;
+          }
         }
       }
 
-      .logo-icon {
-        font-family: var(--font-mono, monospace);
-        font-weight: var(--font-bold, 700);
-        color: #030712;
-        background: #00d9ff;
-        padding: 3px 7px;
-        border-radius: var(--radius-sm, 4px);
-        font-size: var(--text-sm, 0.875rem);
+      .auth-title {
+        font-size: clamp(1.5rem, 2.2vw, 1.85rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #f8fafc;
+        margin: 0 0 0.4rem 0;
       }
 
       .auth-subtitle {
-        color: var(--text-secondary, #94a3b8);
-        font-size: var(--text-sm, 0.875rem);
-        margin-bottom: var(--sp-6, 1.5rem);
+        font-size: 0.88rem;
+        color: #94a3b8;
+        margin: 0 0 1.4rem 0;
         line-height: 1.5;
 
         strong {
-          color: #f8fafc;
+          color: #f1f5f9;
         }
       }
 
-      .alert-error {
-        background: rgba(239, 68, 68, 0.15);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        color: #f87171;
-        padding: var(--sp-3, 0.75rem) var(--sp-4, 1rem);
-        border-radius: var(--radius-md, 8px);
-        font-size: var(--text-sm, 0.875rem);
-        margin-bottom: var(--sp-5, 1.25rem);
-      }
-
-      .alert-success {
-        background: rgba(16, 185, 129, 0.15);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        color: #34d399;
-        padding: var(--sp-4, 1rem);
-        border-radius: var(--radius-md, 8px);
-        font-size: var(--text-sm, 0.875rem);
-        text-align: center;
-        margin-bottom: var(--sp-4, 1rem);
-      }
-
-      .social-auth-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
+      /* Social Buttons */
+      .social-auth-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
         margin-bottom: 1.25rem;
       }
 
@@ -282,20 +383,21 @@ import { AuthService } from '../../../core/services/auth.service';
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
-        padding: 0.65rem 1rem;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 8px;
+        gap: 0.75rem;
+        width: 100%;
+        padding: 0.72rem 1.2rem;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
         color: #f1f5f9;
-        font-size: 0.875rem;
+        font-size: 0.88rem;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
         &:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(255, 255, 255, 0.25);
+          background: rgba(255, 255, 255, 0.07);
+          border-color: rgba(255, 255, 255, 0.22);
           transform: translateY(-1px);
         }
 
@@ -309,14 +411,7 @@ import { AuthService } from '../../../core/services/auth.service';
         }
       }
 
-      .btn-github {
-        color: #ffffff;
-      }
-
-      .btn-google {
-        color: #ffffff;
-      }
-
+      /* Divider */
       .auth-divider {
         display: flex;
         align-items: center;
@@ -326,170 +421,279 @@ import { AuthService } from '../../../core/services/auth.service';
         &::before, &::after {
           content: '';
           flex: 1;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.07);
         }
 
         span {
-          padding: 0 0.75rem;
+          padding: 0 0.85rem;
           color: #64748b;
           font-size: 0.75rem;
+          font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.06em;
         }
       }
 
-      form {
+      /* Form Fields */
+      .auth-form {
         display: flex;
         flex-direction: column;
-        gap: var(--sp-4, 1rem);
+        gap: 1.05rem;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.85rem;
       }
 
       .form-group {
         display: flex;
         flex-direction: column;
-        gap: 0.35rem;
+        gap: 0.4rem;
 
         label {
-          font-size: 0.8125rem;
+          font-size: 0.82rem;
           font-weight: 600;
-          color: var(--text-secondary, #cbd5e1);
+          color: #cbd5e1;
+
+          &.text-center {
+            text-align: center;
+            display: block;
+          }
         }
       }
 
-      .input {
-        background: rgba(3, 7, 18, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 8px;
-        padding: 0.65rem 0.85rem;
+      .input-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      .input-field {
+        width: 100%;
+        background: rgba(6, 9, 15, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
         color: #ffffff;
-        font-size: 0.875rem;
+        font-size: 0.88rem;
         outline: none;
-        transition: border-color 0.15s;
+        box-sizing: border-box;
+        transition: all 0.2s ease;
+
+        &::placeholder {
+          color: #475569;
+        }
 
         &:focus {
           border-color: #00d9ff;
+          box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.14);
+          background: rgba(6, 9, 15, 0.95);
+        }
+
+        &.code-input {
+          font-family: var(--font-mono, monospace);
+          font-size: 1.35rem;
+          letter-spacing: 0.35em;
+          text-align: center;
+          font-weight: 700;
+          padding: 0.85rem;
         }
       }
 
-      .btn {
+      /* Primary Action Button */
+      .btn-primary-action {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0.7rem 1.25rem;
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.15s;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.8rem 1.4rem;
+        margin-top: 0.35rem;
+        background: #0ae98a;
+        color: #08090d;
         border: none;
-        text-decoration: none;
-      }
-
-      .btn-primary {
-        background: #00d9ff;
-        color: #030712;
+        border-radius: 12px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 18px rgba(10, 233, 138, 0.32);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
         &:hover:not(:disabled) {
-          background: #0ae98a;
+          background: #08d37c;
           transform: translateY(-1px);
+          box-shadow: 0 6px 22px rgba(10, 233, 138, 0.42);
         }
 
         &:disabled {
-          opacity: 0.5;
+          opacity: 0.6;
           cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .btn-arrow {
+          font-size: 1.1rem;
+          transition: transform 0.2s ease;
+        }
+
+        &:hover .btn-arrow {
+          transform: translateX(3px);
+        }
+
+        .btn-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(8, 9, 13, 0.3);
+          border-top-color: #08090d;
+          border-radius: 50%;
+          animation: spin 0.7s infinite linear;
         }
       }
 
-      .auth-link {
-        text-align: center;
-        margin-top: var(--sp-5, 1.25rem);
-        font-size: var(--text-sm, 0.875rem);
-        color: var(--text-secondary, #94a3b8);
-        a {
+      /* Footer Link */
+      .auth-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        margin-top: 1.4rem;
+        font-size: 0.84rem;
+        color: #94a3b8;
+
+        .auth-switch-link {
           color: #00d9ff;
-          text-decoration: none;
           font-weight: 600;
+          text-decoration: none;
+
           &:hover {
             text-decoration: underline;
           }
         }
       }
 
-      /* VERIFY STEP */
-      .verify-step {
-        text-align: center;
+      /* Step 2 Verification Actions */
+      .verify-step-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
       }
 
-      .verify-icon {
-        font-size: 2.8rem;
-        margin-bottom: 0.25rem;
-      }
-
-      .code-input {
-        text-align: center;
-        font-size: 1.8rem !important;
-        letter-spacing: 0.35em;
-        font-family: monospace;
-        font-weight: 800;
-        color: #0ae98a !important;
-        background: #06080e !important;
-        border: 2px dashed #00d9ff !important;
-        padding: 12px 16px !important;
-      }
-
-      .verify-secondary-actions {
+      .verify-actions {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 0.75rem;
-        margin-top: 1.5rem;
+        margin-top: 0.5rem;
       }
 
-      .btn-resend {
-        background: transparent;
+      .btn-resend-link {
+        background: none;
         border: none;
         color: #00d9ff;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         font-weight: 600;
         cursor: pointer;
+        padding: 4px;
         text-decoration: underline;
-        transition: opacity 0.15s;
+        text-underline-offset: 3px;
+        transition: color 0.15s ease;
+
+        &:hover:not(:disabled) {
+          color: #38bdf8;
+        }
 
         &:disabled {
-          opacity: 0.5;
+          color: #64748b;
           cursor: not-allowed;
           text-decoration: none;
         }
-
-        &:hover:not(:disabled) {
-          color: #0ae98a;
-        }
       }
 
-      .btn-back {
-        background: transparent;
+      .btn-back-link {
+        background: none;
         border: none;
         color: #94a3b8;
-        font-size: 0.8125rem;
+        font-size: 0.8rem;
         cursor: pointer;
-        transition: color 0.15s;
+        padding: 4px;
+        transition: color 0.15s ease;
 
         &:hover {
-          color: #ffffff;
+          color: #f1f5f9;
         }
       }
-    `,
-  ],
+
+      /* Right Visual Side */
+      .auth-visual-side {
+        position: relative;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+        background: #06080e;
+      }
+
+      /* Alerts */
+      .alert-error {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #f87171;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        margin-bottom: 1.25rem;
+        line-height: 1.45;
+
+        .alert-icon {
+          flex-shrink: 0;
+        }
+      }
+
+      .alert-success {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #34d399;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        margin-bottom: 1.25rem;
+
+        .alert-icon {
+          flex-shrink: 0;
+        }
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* Responsive Breakpoint */
+      @media (max-width: 960px) {
+        .auth-split-card {
+          grid-template-columns: 1fr;
+          max-width: 480px;
+          min-height: auto;
+        }
+
+        .auth-visual-side {
+          display: none;
+        }
+
+        .auth-form-side {
+          padding: 2rem 1.5rem;
+        }
+      }
+    `
+  ]
 })
 export class RegisterComponent implements OnDestroy {
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
-
-  constructor() {
-    this.auth.warmupBackend();
-  }
-
-  step = signal<1 | 2>(1);
+  private auth = inject(AuthService);
+  private router = inject(Router);
 
   name = '';
   email = '';
@@ -497,6 +701,7 @@ export class RegisterComponent implements OnDestroy {
   passwordConfirm = '';
   verificationCode = '';
 
+  step = signal<1 | 2>(1);
   loading = signal(false);
   resendLoading = signal(false);
   resendCooldown = signal(0);
@@ -510,7 +715,7 @@ export class RegisterComponent implements OnDestroy {
     this.error.set('');
 
     this.auth.loginWithSocial(provider).subscribe({
-      next: (res: any) => {
+      next: (_res: any) => {
         this.socialLoading.set(null);
         this.router.navigate(['/']);
       },
