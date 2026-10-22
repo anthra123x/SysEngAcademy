@@ -9,95 +9,75 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
   standalone: true,
   imports: [RouterLink, FormsModule, HalftoneVisualComponent],
   template: `
-    <div class="auth-page">
-      <!-- Background Ambient Glows -->
-      <div class="bg-glow bg-glow--cyan"></div>
-      <div class="bg-glow bg-glow--emerald"></div>
-      <div class="bg-grid-overlay"></div>
-
-      <div class="auth-split-card">
+    <div class="auth-viewport-wrapper">
+      <div class="auth-portal-card">
         <!-- Left: Form Column -->
-        <div class="auth-form-side">
-          <div class="auth-header">
-            <a routerLink="/" class="auth-brand-link" aria-label="SysEng Academy - Inicio">
-              <span class="auth-brand-link__icon">&lt;/&gt;</span>
-              <span class="auth-brand-link__name">SysEng<strong>Academy</strong></span>
+        <div class="form-column">
+          <div class="form-content">
+            <!-- Brand Badge -->
+            <a routerLink="/" class="brand-badge" aria-label="SysEng Academy - Inicio">
+              <span class="badge-icon">&lt;/&gt;</span>
+              <span class="badge-title">SYSENG<span class="badge-accent">ACADEMY</span></span>
             </a>
 
             @if (step() === 1) {
-              <h1 class="auth-title">Crea tu cuenta</h1>
-              <p class="auth-subtitle">Únete a SysEng Academy y aprende ingeniería práctica</p>
-            } @else {
-              <h1 class="auth-title">Verifica tu correo</h1>
-              <p class="auth-subtitle">
-                Hemos enviado un código de 6 dígitos desde <strong>noreply&#64;sysengacademy.site</strong> a <strong>{{ email }}</strong>
-              </p>
-            }
-          </div>
+              <!-- Step 1 Header -->
+              <h1 class="portal-title">Crea tu cuenta</h1>
+              <p class="portal-subtitle">Únete a SysEng Academy y aprende ingeniería práctica</p>
 
-          @if (error()) {
-            <div class="alert-error" role="alert">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="alert-icon">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-              <span>{{ error() }}</span>
-            </div>
-          }
+              @if (error()) {
+                <div class="alert-error" role="alert">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  <span>{{ error() }}</span>
+                </div>
+              }
 
-          @if (successMsg()) {
-            <div class="alert-success" role="status">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="alert-icon">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-              <span>{{ successMsg() }}</span>
-            </div>
-          }
+              <!-- Social Stack -->
+              <div class="social-stack">
+                <button
+                  type="button"
+                  class="btn-social"
+                  (click)="registerWithSocial('google')"
+                  [disabled]="socialLoading() !== null"
+                >
+                  <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                  </svg>
+                  <span>{{ socialLoading() === 'google' ? 'Registrando con Google...' : 'Continuar con Google' }}</span>
+                </button>
 
-          @if (step() === 1) {
-            <!-- Social Register Options -->
-            <div class="social-auth-stack">
-              <button
-                type="button"
-                class="btn-social"
-                (click)="registerWithSocial('google')"
-                [disabled]="socialLoading() !== null"
-              >
-                <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                </svg>
-                <span>{{ socialLoading() === 'google' ? 'Registrando con Google...' : 'Continuar con Google' }}</span>
-              </button>
+                <button
+                  type="button"
+                  class="btn-social"
+                  (click)="registerWithSocial('github')"
+                  [disabled]="socialLoading() !== null"
+                >
+                  <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                  </svg>
+                  <span>{{ socialLoading() === 'github' ? 'Registrando con GitHub...' : 'Continuar con GitHub' }}</span>
+                </button>
+              </div>
 
-              <button
-                type="button"
-                class="btn-social"
-                (click)="registerWithSocial('github')"
-                [disabled]="socialLoading() !== null"
-              >
-                <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                </svg>
-                <span>{{ socialLoading() === 'github' ? 'Registrando con GitHub...' : 'Continuar con GitHub' }}</span>
-              </button>
-            </div>
+              <!-- Divider -->
+              <div class="auth-divider">
+                <span>O regístrate con correo</span>
+              </div>
 
-            <div class="auth-divider">
-              <span>o regístrate con correo</span>
-            </div>
-
-            <form (ngSubmit)="submitStep1()" #form="ngForm" class="auth-form">
-              <div class="form-group">
-                <label for="reg-name">Nombre completo</label>
-                <div class="input-wrapper">
+              <!-- Registration Form -->
+              <form (ngSubmit)="submitStep1()" #form="ngForm" class="portal-form">
+                <div class="form-group">
+                  <label for="reg-name">Nombre completo</label>
                   <input
                     id="reg-name"
-                    class="input-field"
+                    class="form-input"
                     type="text"
                     name="name"
                     [(ngModel)]="name"
@@ -106,31 +86,27 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                     autocomplete="name"
                   />
                 </div>
-              </div>
 
-              <div class="form-group">
-                <label for="reg-email">Correo electrónico</label>
-                <div class="input-wrapper">
+                <div class="form-group">
+                  <label for="reg-email">Correo electrónico</label>
                   <input
                     id="reg-email"
-                    class="input-field"
+                    class="form-input"
                     type="email"
                     name="email"
                     [(ngModel)]="email"
-                    placeholder="tu@email.com"
+                    placeholder="tu@syseng.io"
                     required
                     autocomplete="email"
                   />
                 </div>
-              </div>
 
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="reg-password">Contraseña</label>
-                  <div class="input-wrapper">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="reg-password">Contraseña</label>
                     <input
                       id="reg-password"
-                      class="input-field"
+                      class="form-input"
                       type="password"
                       name="password"
                       [(ngModel)]="password"
@@ -139,67 +115,88 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                       minlength="8"
                     />
                   </div>
-                </div>
 
-                <div class="form-group">
-                  <label for="reg-password-confirm">Confirmar</label>
-                  <div class="input-wrapper">
+                  <div class="form-group">
+                    <label for="reg-password-confirm">Confirmar</label>
                     <input
                       id="reg-password-confirm"
-                      class="input-field"
+                      class="form-input"
                       type="password"
                       name="password_confirmation"
                       [(ngModel)]="passwordConfirm"
-                      placeholder="Repite tu contraseña"
+                      placeholder="Repite clave"
                       required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                class="btn-primary-action"
-                [disabled]="loading()"
-              >
-                @if (loading()) {
-                  <span class="btn-spinner"></span>
-                  <span>Enviando código de verificación...</span>
-                } @else {
-                  <span>Continuar / Enviar Código</span>
-                  <span class="btn-arrow">→</span>
-                }
-              </button>
-            </form>
-
-            <div class="auth-footer">
-              <span>¿Ya tienes una cuenta?</span>
-              <a routerLink="/auth/login" class="auth-switch-link">Inicia sesión</a>
-            </div>
-          } @else {
-            <!-- Step 2: Verification Code -->
-            <div class="verify-step-container">
-              <form (ngSubmit)="submitStep2()" class="auth-form">
-                <div class="form-group">
-                  <label for="reg-code" class="text-center">Código de activación de 6 dígitos</label>
-                  <div class="input-wrapper">
-                    <input
-                      id="reg-code"
-                      class="input-field code-input"
-                      type="text"
-                      name="code"
-                      [(ngModel)]="verificationCode"
-                      placeholder="000000"
-                      maxlength="6"
-                      required
-                      autocomplete="one-time-code"
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  class="btn-primary-action"
+                  class="btn-portal-submit"
+                  [disabled]="loading()"
+                >
+                  @if (loading()) {
+                    <span class="btn-spinner"></span>
+                    <span>Enviando código...</span>
+                  } @else {
+                    <span>Continuar / Enviar Código</span>
+                    <span class="btn-arrow">→</span>
+                  }
+                </button>
+              </form>
+
+              <!-- Footer -->
+              <div class="portal-footer">
+                <span>¿Ya tienes una cuenta?</span>
+                <a routerLink="/auth/login" class="switch-link">Iniciar sesión</a>
+              </div>
+            } @else {
+              <!-- Step 2: Verification Flow -->
+              <h1 class="portal-title">Verifica tu correo</h1>
+              <p class="portal-subtitle">
+                Hemos enviado un código de 6 dígitos a <strong>{{ email }}</strong>
+              </p>
+
+              @if (successMsg()) {
+                <div class="alert-success" role="status">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>{{ successMsg() }}</span>
+                </div>
+              }
+
+              @if (error()) {
+                <div class="alert-error" role="alert">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  <span>{{ error() }}</span>
+                </div>
+              }
+
+              <form (ngSubmit)="submitStep2()" class="portal-form">
+                <div class="form-group">
+                  <label for="reg-code" class="text-center">Código de activación recibido</label>
+                  <input
+                    id="reg-code"
+                    class="form-input code-input"
+                    type="text"
+                    name="code"
+                    [(ngModel)]="verificationCode"
+                    placeholder="000000"
+                    maxlength="6"
+                    required
+                    autocomplete="one-time-code"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  class="btn-portal-submit"
                   [disabled]="loading() || verificationCode.trim().length !== 6"
                 >
                   @if (loading()) {
@@ -230,12 +227,12 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                   ← Corregir correo o datos
                 </button>
               </div>
-            </div>
-          }
+            }
+          </div>
         </div>
 
-        <!-- Right: Dynamic Halftone Visual Column -->
-        <div class="auth-visual-side">
+        <!-- Right: Dynamic Particle & Wave Field -->
+        <div class="visual-column">
           <app-halftone-visual></app-halftone-visual>
         </div>
       </div>
@@ -243,138 +240,122 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
   `,
   styles: [
     `
-      .auth-page {
-        min-height: calc(100vh - var(--header-height, 64px));
-        position: relative;
+      :host {
+        display: block;
+        width: 100%;
+        min-height: 100vh;
+        background: #02040a;
+      }
+
+      .auth-viewport-wrapper {
+        min-height: 100vh;
+        min-height: 100dvh;
         display: flex;
         align-items: stretch;
-        justify-content: center;
-        padding: clamp(10px, 1.5vw, 24px);
-        background: #08090d;
-        overflow: hidden;
-      }
-
-      /* Ambient Glows */
-      .bg-glow {
-        position: absolute;
-        width: 700px;
-        height: 700px;
-        border-radius: 50%;
-        filter: blur(150px);
-        pointer-events: none;
-        opacity: 0.12;
-
-        &--cyan {
-          top: 5%;
-          left: 10%;
-          background: #00d9ff;
-        }
-
-        &--emerald {
-          bottom: 5%;
-          right: 10%;
-          background: #0ae98a;
-        }
-      }
-
-      .bg-grid-overlay {
-        position: absolute;
-        inset: 0;
-        background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 56px 56px;
-        pointer-events: none;
-      }
-
-      /* Expansive Full-Page Split Card */
-      .auth-split-card {
-        position: relative;
-        z-index: 10;
-        width: 100%;
-        max-width: 1600px;
-        min-height: calc(100vh - 100px);
-        display: grid;
-        grid-template-columns: minmax(440px, 520px) 1fr;
-        background: rgba(14, 18, 28, 0.88);
-        backdrop-filter: blur(28px) saturate(180%);
-        -webkit-backdrop-filter: blur(28px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 24px;
-        box-shadow: 0 24px 80px -20px rgba(0, 0, 0, 0.8),
-                    0 0 0 1px rgba(255, 255, 255, 0.04),
-                    0 0 50px rgba(0, 217, 255, 0.05);
-        overflow: hidden;
-      }
-
-      /* Left Form Column */
-      .auth-form-side {
-        padding: clamp(2.5rem, 5vw, 4.5rem);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        width: 100%;
+        padding: 12px;
+        background: #02040a;
         box-sizing: border-box;
       }
 
-      .auth-brand-link {
+      /* Full Viewport Card with glowing violet border */
+      .auth-portal-card {
+        position: relative;
+        width: 100%;
+        min-height: calc(100vh - 24px);
+        display: grid;
+        grid-template-columns: minmax(420px, 490px) 1fr;
+        background: #030712;
+        border: 2px solid #6366f1;
+        border-radius: 18px;
+        box-shadow: 0 0 24px rgba(99, 102, 241, 0.16),
+                    inset 0 0 20px rgba(99, 102, 241, 0.04);
+        overflow: hidden;
+
+        /* Subtle grid background */
+        background-image: linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+
+      /* Left Form Column */
+      .form-column {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(2rem, 5vw, 4rem) clamp(2rem, 4vw, 3.5rem);
+        z-index: 2;
+      }
+
+      .form-content {
+        width: 100%;
+        max-width: 380px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Brand Badge */
+      .brand-badge {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         text-decoration: none;
         margin-bottom: 2rem;
-        transition: opacity 0.2s ease;
+        width: fit-content;
 
-        &:hover {
-          opacity: 0.85;
-        }
-
-        &__icon {
-          font-family: var(--font-mono, monospace);
-          font-size: 13px;
-          font-weight: 800;
-          color: #08090d;
+        .badge-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           background: #0ae98a;
-          padding: 4px 8px;
-          border-radius: 8px;
+          color: #030712;
+          font-family: var(--font-mono, monospace);
+          font-size: 11px;
+          font-weight: 900;
+          padding: 3px 6px;
+          border-radius: 6px;
+          letter-spacing: -0.05em;
         }
 
-        &__name {
-          font-size: 1.1rem;
+        .badge-title {
+          font-family: var(--font-mono, monospace);
+          font-size: 11px;
           font-weight: 700;
-          color: #f8fafc;
-          letter-spacing: -0.01em;
+          letter-spacing: 0.14em;
+          color: #e2e8f0;
 
-          strong {
-            color: #00d9ff;
+          .badge-accent {
+            color: #0ae98a;
           }
         }
       }
 
-      .auth-title {
-        font-size: clamp(1.5rem, 2.2vw, 1.85rem);
+      /* Title & Subtitle */
+      .portal-title {
+        font-size: clamp(2rem, 2.6vw, 2.35rem);
         font-weight: 800;
-        letter-spacing: -0.02em;
-        color: #f8fafc;
-        margin: 0 0 0.4rem 0;
+        color: #ffffff;
+        letter-spacing: -0.025em;
+        margin: 0 0 0.5rem 0;
+        line-height: 1.15;
       }
 
-      .auth-subtitle {
+      .portal-subtitle {
         font-size: 0.88rem;
         color: #94a3b8;
-        margin: 0 0 1.4rem 0;
-        line-height: 1.5;
+        margin: 0 0 1.85rem 0;
+        line-height: 1.45;
 
         strong {
           color: #f1f5f9;
         }
       }
 
-      /* Social Buttons */
-      .social-auth-stack {
+      /* Social Stack */
+      .social-stack {
         display: flex;
         flex-direction: column;
-        gap: 0.65rem;
-        margin-bottom: 1.25rem;
+        gap: 0.7rem;
+        margin-bottom: 1.5rem;
       }
 
       .btn-social {
@@ -383,8 +364,8 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         justify-content: center;
         gap: 0.75rem;
         width: 100%;
-        padding: 0.72rem 1.2rem;
-        background: rgba(255, 255, 255, 0.035);
+        padding: 0.78rem 1.2rem;
+        background: rgba(255, 255, 255, 0.025);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
         color: #f1f5f9;
@@ -394,7 +375,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
         &:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.07);
+          background: rgba(255, 255, 255, 0.06);
           border-color: rgba(255, 255, 255, 0.22);
           transform: translateY(-1px);
         }
@@ -414,7 +395,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         display: flex;
         align-items: center;
         text-align: center;
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.5rem;
 
         &::before, &::after {
           content: '';
@@ -425,35 +406,38 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         span {
           padding: 0 0.85rem;
           color: #64748b;
-          font-size: 0.75rem;
+          font-family: var(--font-mono, monospace);
+          font-size: 0.72rem;
           font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.1em;
         }
       }
 
-      /* Form Fields */
-      .auth-form {
+      /* Form Controls */
+      .portal-form {
         display: flex;
         flex-direction: column;
-        gap: 1.05rem;
+        gap: 1.15rem;
       }
 
       .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 0.85rem;
+        gap: 0.75rem;
       }
 
       .form-group {
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 0.45rem;
 
         label {
-          font-size: 0.82rem;
+          font-family: var(--font-mono, monospace);
+          font-size: 0.76rem;
           font-weight: 600;
-          color: #cbd5e1;
+          color: #94a3b8;
+          letter-spacing: 0.03em;
 
           &.text-center {
             text-align: center;
@@ -462,31 +446,26 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
       }
 
-      .input-wrapper {
-        position: relative;
+      .form-input {
         width: 100%;
-      }
-
-      .input-field {
-        width: 100%;
-        background: rgba(6, 9, 15, 0.75);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 0.75rem 1rem;
+        background: #080c16;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 10px;
+        padding: 0.82rem 1rem;
         color: #ffffff;
-        font-size: 0.88rem;
+        font-size: 0.9rem;
         outline: none;
         box-sizing: border-box;
         transition: all 0.2s ease;
 
         &::placeholder {
-          color: #475569;
+          color: #334155;
         }
 
         &:focus {
           border-color: #00d9ff;
-          box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.14);
-          background: rgba(6, 9, 15, 0.95);
+          box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.16);
+          background: #0a0f1c;
         }
 
         &.code-input {
@@ -495,33 +474,32 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           letter-spacing: 0.35em;
           text-align: center;
           font-weight: 700;
-          padding: 0.85rem;
         }
       }
 
-      /* Primary Action Button */
-      .btn-primary-action {
+      /* Submit Button */
+      .btn-portal-submit {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
+        gap: 0.55rem;
         width: 100%;
-        padding: 0.8rem 1.4rem;
+        padding: 0.85rem 1.4rem;
         margin-top: 0.35rem;
         background: #0ae98a;
-        color: #08090d;
+        color: #030712;
         border: none;
         border-radius: 12px;
-        font-size: 0.92rem;
-        font-weight: 700;
+        font-size: 0.95rem;
+        font-weight: 800;
         cursor: pointer;
-        box-shadow: 0 4px 18px rgba(10, 233, 138, 0.32);
+        box-shadow: 0 4px 22px rgba(10, 233, 138, 0.4);
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
         &:hover:not(:disabled) {
-          background: #08d37c;
+          background: #00f59b;
           transform: translateY(-1px);
-          box-shadow: 0 6px 22px rgba(10, 233, 138, 0.42);
+          box-shadow: 0 6px 28px rgba(10, 233, 138, 0.52);
         }
 
         &:disabled {
@@ -531,12 +509,12 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
 
         .btn-arrow {
-          font-size: 1.1rem;
+          font-size: 1.15rem;
           transition: transform 0.2s ease;
         }
 
         &:hover .btn-arrow {
-          transform: translateX(3px);
+          transform: translateX(4px);
         }
 
         .btn-spinner {
@@ -549,19 +527,19 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
       }
 
-      /* Footer Link */
-      .auth-footer {
+      /* Footer */
+      .portal-footer {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.4rem;
-        margin-top: 1.4rem;
-        font-size: 0.84rem;
+        margin-top: 1.85rem;
+        font-size: 0.85rem;
         color: #94a3b8;
 
-        .auth-switch-link {
-          color: #00d9ff;
-          font-weight: 600;
+        .switch-link {
+          color: #0ae98a;
+          font-weight: 700;
           text-decoration: none;
 
           &:hover {
@@ -570,26 +548,21 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
       }
 
-      /* Step 2 Verification Actions */
-      .verify-step-container {
-        display: flex;
-        flex-direction: column;
-        gap: 1.25rem;
-      }
-
+      /* Step 2 Actions */
       .verify-actions {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 0.75rem;
-        margin-top: 0.5rem;
+        margin-top: 0.75rem;
       }
 
       .btn-resend-link {
         background: none;
         border: none;
         color: #00d9ff;
-        font-size: 0.82rem;
+        font-family: var(--font-mono, monospace);
+        font-size: 0.78rem;
         font-weight: 600;
         cursor: pointer;
         padding: 4px;
@@ -612,7 +585,8 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         background: none;
         border: none;
         color: #94a3b8;
-        font-size: 0.8rem;
+        font-family: var(--font-mono, monospace);
+        font-size: 0.76rem;
         cursor: pointer;
         padding: 4px;
         transition: color 0.15s ease;
@@ -622,12 +596,12 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
       }
 
-      /* Right Visual Side */
-      .auth-visual-side {
+      /* Right Visual Column */
+      .visual-column {
         position: relative;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
         overflow: hidden;
-        background: #06080e;
+        background: #030712;
+        border-left: 1px solid rgba(255, 255, 255, 0.05);
       }
 
       /* Alerts */
@@ -643,10 +617,6 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         font-size: 0.82rem;
         margin-bottom: 1.25rem;
         line-height: 1.45;
-
-        .alert-icon {
-          flex-shrink: 0;
-        }
       }
 
       .alert-success {
@@ -660,30 +630,34 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         border-radius: 10px;
         font-size: 0.82rem;
         margin-bottom: 1.25rem;
-
-        .alert-icon {
-          flex-shrink: 0;
-        }
       }
 
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
 
-      /* Responsive Breakpoint */
+      /* Mobile Breakpoint */
       @media (max-width: 960px) {
-        .auth-split-card {
-          grid-template-columns: 1fr;
-          max-width: 480px;
-          min-height: auto;
+        .auth-viewport-wrapper {
+          padding: 6px;
         }
 
-        .auth-visual-side {
+        .auth-portal-card {
+          grid-template-columns: 1fr;
+          min-height: calc(100vh - 12px);
+          border-radius: 14px;
+        }
+
+        .visual-column {
           display: none;
         }
 
-        .auth-form-side {
+        .form-column {
           padding: 2rem 1.5rem;
+        }
+
+        .form-content {
+          max-width: 100%;
         }
       }
     `
@@ -832,17 +806,19 @@ export class RegisterComponent implements OnDestroy {
     this.error.set('');
     this.successMsg.set('');
 
-    this.auth.resendRegisterCode(this.email.trim().toLowerCase()).subscribe({
-      next: (res: any) => {
-        this.resendLoading.set(false);
-        this.successMsg.set(res?.message || 'Hemos reenviado el código a tu correo electrónico.');
-        this.startCooldown(45);
-      },
-      error: err => {
-        this.resendLoading.set(false);
-        this.error.set(err.error?.message || 'No se pudo reenviar el código. Intenta de nuevo más tarde.');
-      },
-    });
+    this.auth
+      .resendRegisterCode(this.email.trim().toLowerCase())
+      .subscribe({
+        next: (res: any) => {
+          this.resendLoading.set(false);
+          this.successMsg.set(res?.message || 'Hemos reenviado el código a tu correo electrónico.');
+          this.startCooldown(45);
+        },
+        error: err => {
+          this.resendLoading.set(false);
+          this.error.set(err.error?.message || 'No se pudo reenviar el código. Intenta de nuevo más tarde.');
+        },
+      });
   }
 
   backToStep1() {

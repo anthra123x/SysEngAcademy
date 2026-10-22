@@ -12,9 +12,12 @@ import {
   selector: 'app-halftone-visual',
   standalone: true,
   template: `
-    <div class="halftone-container" (pointermove)="onPointerMove($event)" (pointerleave)="onPointerLeave()">
-      <canvas #canvas class="halftone-canvas"></canvas>
-      <div class="halftone-vignette"></div>
+    <div class="visual-container" (pointermove)="onPointerMove($event)" (pointerleave)="onPointerLeave()">
+      <canvas #canvas class="particle-canvas"></canvas>
+      <div class="glow-backdrop"></div>
+      <div class="watermark-tag">
+        SYSENG // REVOLUTIONIZING SYSTEM LEARNING
+      </div>
     </div>
   `,
   styles: [
@@ -27,29 +30,49 @@ import {
         overflow: hidden;
       }
 
-      .halftone-container {
+      .visual-container {
         position: relative;
         width: 100%;
         height: 100%;
-        background: radial-gradient(circle at 70% 30%, #0d1322 0%, #06080e 100%);
+        background: #030712;
         overflow: hidden;
         user-select: none;
       }
 
-      .halftone-canvas {
+      .particle-canvas {
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
         display: block;
+        z-index: 1;
       }
 
-      .halftone-vignette {
+      .glow-backdrop {
         position: absolute;
         inset: 0;
         pointer-events: none;
-        background: radial-gradient(ellipse at center, transparent 40%, rgba(6, 8, 14, 0.75) 100%),
-                    linear-gradient(to right, rgba(6, 8, 14, 0.4) 0%, transparent 15%, transparent 85%, rgba(6, 8, 14, 0.4) 100%);
+        z-index: 0;
+        background: radial-gradient(
+          ellipse 70% 60% at 85% 50%,
+          rgba(0, 217, 255, 0.15) 0%,
+          rgba(10, 233, 138, 0.08) 40%,
+          transparent 80%
+        );
+      }
+
+      .watermark-tag {
+        position: absolute;
+        bottom: 24px;
+        right: 32px;
+        z-index: 2;
+        font-family: var(--font-mono, monospace);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        color: rgba(148, 163, 184, 0.35);
+        pointer-events: none;
+        text-transform: uppercase;
       }
     `
   ]
@@ -70,7 +93,7 @@ export class HalftoneVisualComponent implements AfterViewInit, OnDestroy {
   private startTime = performance.now();
 
   ngAfterViewInit(): void {
-    this.initCanvasAndLoop();
+    this.initCanvas();
   }
 
   ngOnDestroy(): void {
@@ -96,7 +119,7 @@ export class HalftoneVisualComponent implements AfterViewInit, OnDestroy {
     this.isHovered = false;
   }
 
-  private initCanvasAndLoop(): void {
+  private initCanvas(): void {
     const canvas = this.canvasRef.nativeElement;
     const container = canvas.parentElement;
     if (!container) return;
@@ -152,21 +175,20 @@ export class HalftoneVisualComponent implements AfterViewInit, OnDestroy {
       this.mouseX += (this.targetMouseX - this.mouseX) * 0.12;
       this.mouseY += (this.targetMouseY - this.mouseY) * 0.12;
     } else {
-      // Idle organic floating motion across the field
-      const autoX = width * (0.65 + 0.2 * Math.sin(time * 0.7));
-      const autoY = height * (0.5 + 0.25 * Math.cos(time * 0.5));
+      const autoX = width * (0.7 + 0.15 * Math.sin(time * 0.6));
+      const autoY = height * (0.5 + 0.2 * Math.cos(time * 0.45));
       this.mouseX += (autoX - this.mouseX) * 0.03;
       this.mouseY += (autoY - this.mouseY) * 0.03;
     }
 
     ctx.clearRect(0, 0, width, height);
 
-    // Spacing between halftone dots
+    // Grid spacing matching reference image
     const step = 14;
     const cols = Math.ceil(width / step) + 2;
     const rows = Math.ceil(height / step) + 2;
 
-    const mouseRadius = 200;
+    const mouseRadius = 180;
 
     for (let c = 0; c < cols; c++) {
       const gx = c * step;
@@ -176,67 +198,75 @@ export class HalftoneVisualComponent implements AfterViewInit, OnDestroy {
         const gy = r * step;
         const ny = gy / height;
 
-        // Multi-frequency harmonic 3D waves creating an expansive organic landscape
-        const w1 = Math.sin(nx * 3.8 + time * 1.1);
-        const w2 = Math.cos(ny * 4.6 - time * 0.9);
-        const w3 = Math.sin((nx * 2.8 + ny * 3.4) + time * 0.7);
-        const w4 = Math.cos(Math.sqrt((nx - 0.75) ** 2 + (ny - 0.45) ** 2) * 6.5 - time * 1.5);
+        // Curved organic wavefront boundary (arcs from top-center through middle to bottom-center)
+        // Parabolic / elliptical boundary curve matching the screenshot
+        const curveOffset = 0.22 + Math.pow(Math.abs(ny - 0.5), 1.6) * 0.25;
+        if (nx < curveOffset) {
+          // Outside the wavefront, completely clean/empty on the left
+          continue;
+        }
 
-        let elevation = (w1 + w2 + w3 * 0.75 + w4 * 0.85) / 3.6; // ~ -1 to +1
+        // Distance from wavefront edge (0 at boundary, increases toward right)
+        const depthFromEdge = (nx - curveOffset) / (1 - curveOffset);
 
-        // Organic density gradient sweeping from the right side inward (like the reference image)
-        const densityField = Math.pow(Math.max(0, nx - 0.08), 0.85) * (1.15 - Math.abs(ny - 0.45) * 0.65);
-        elevation = elevation * 0.55 + densityField * 0.9;
+        // 3D undulating wave equation
+        const w1 = Math.sin(nx * 4.2 + time * 1.15);
+        const w2 = Math.cos(ny * 5.0 - time * 0.9);
+        const w3 = Math.sin((nx * 3.0 + ny * 3.5) + time * 0.7);
+        const w4 = Math.cos(Math.sqrt((nx - 0.8) ** 2 + (ny - 0.5) ** 2) * 6.0 - time * 1.6);
 
-        // Interactive mouse gravity ripple
+        let elevation = (w1 + w2 + w3 * 0.7 + w4 * 0.8) / 3.5; // ~ -1 to +1
+
+        // Modulation based on depth from the curved edge
+        const edgeFade = Math.min(1, depthFromEdge * 3.5);
+        elevation = (elevation * 0.6 + 0.4) * edgeFade;
+
+        // Interactive mouse ripple
         const dx = gx - this.mouseX;
         const dy = gy - this.mouseY;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        let mouseGlow = 0;
+        let mouseLuminescence = 0;
         if (dist < mouseRadius) {
           const mFactor = 1 - dist / mouseRadius;
-          const ripple = Math.sin(dist * 0.07 - time * 5.5);
-          elevation += mFactor * ripple * 0.9;
-          mouseGlow = mFactor;
+          const ripple = Math.sin(dist * 0.08 - time * 6.0);
+          elevation += mFactor * ripple * 0.7;
+          mouseLuminescence = mFactor;
         }
 
-        // Halftone dot radius modulation (0.75px fine star up to 5.2px dense halftone dot)
-        const normalizedElev = Math.max(0, Math.min(1, (elevation + 0.65) / 1.6));
-        const radius = 0.75 + Math.pow(normalizedElev, 1.7) * 4.5;
+        const normalized = Math.max(0, Math.min(1, elevation));
+        const radius = 0.85 + normalized * 3.6;
 
-        if (radius < 0.7) continue;
+        if (radius < 0.8) continue;
 
-        // Color interpolation: clean, sophisticated dark tech palette
+        // Color palette exactly like the screenshot:
+        // Glowing cyan-emerald gradient in core, subtle teal/blue at perimeter
         let color: string;
-        if (mouseGlow > 0.4) {
-          color = `rgba(255, 255, 255, ${0.45 + mouseGlow * 0.5})`;
-        } else if (normalizedElev > 0.75) {
-          // Emerald crest
-          const alpha = 0.7 + normalizedElev * 0.28;
-          color = `rgba(10, 233, 138, ${alpha})`;
-        } else if (normalizedElev > 0.45) {
-          // Cyber Cyan mid
-          const alpha = 0.45 + normalizedElev * 0.45;
-          color = `rgba(0, 217, 255, ${alpha})`;
-        } else if (normalizedElev > 0.22) {
-          // Subtle violet transition
-          const alpha = 0.2 + normalizedElev * 0.35;
-          color = `rgba(139, 92, 246, ${alpha})`;
+        if (mouseLuminescence > 0.4) {
+          color = `rgba(255, 255, 255, ${0.5 + mouseLuminescence * 0.5})`;
+        } else if (normalized > 0.75) {
+          // Core bright emerald/cyan
+          color = `rgba(10, 233, 138, ${0.75 + normalized * 0.25})`;
+        } else if (normalized > 0.45) {
+          // Mid vibrant cyan
+          color = `rgba(0, 217, 255, ${0.55 + normalized * 0.35})`;
+        } else if (normalized > 0.2) {
+          // Subtle teal / dark cyan
+          color = `rgba(0, 180, 216, ${0.3 + normalized * 0.3})`;
         } else {
-          // Background delicate points
-          color = 'rgba(148, 163, 184, 0.16)';
+          // Faint perimeter dots
+          color = `rgba(148, 163, 184, ${0.12 * edgeFade})`;
         }
 
         ctx.fillStyle = color;
 
-        // Halftone diamonds in higher density zones, circles in outer zones
-        if (normalizedElev > 0.6) {
+        // Render diamond or circle based on density
+        if (normalized > 0.58) {
           ctx.beginPath();
-          ctx.moveTo(gx, gy - radius * 1.15);
-          ctx.lineTo(gx + radius * 1.15, gy);
-          ctx.lineTo(gx, gy + radius * 1.15);
-          ctx.lineTo(gx - radius * 1.15, gy);
+          ctx.moveTo(gx, gy - radius);
+          ctx.lineTo(gx + radius, gy);
+          ctx.lineTo(gx, gy + radius);
+          ctx.lineTo(gx - radius, gy);
           ctx.closePath();
           ctx.fill();
         } else {
