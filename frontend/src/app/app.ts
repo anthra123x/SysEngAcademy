@@ -23,8 +23,8 @@ import { GlobalToastComponent } from './shared/components/global-toast.component
   `,
   styles: [`
     main {
-      min-height: calc(100vh - 64px);
-      min-height: calc(100dvh - 64px);
+      min-height: 100vh;
+      min-height: 100dvh;
       &.classroom-mode,
       &.auth-mode {
         min-height: 100vh;

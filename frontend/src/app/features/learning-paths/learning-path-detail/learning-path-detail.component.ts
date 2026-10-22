@@ -9,7 +9,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
   imports: [RouterLink, AppIconComponent],
   template: `
     @if (loading()) {
-      <div class="container" style="padding-top: var(--sp-16); padding-bottom: var(--sp-16);">
+      <div class="container" style="padding-top: calc(var(--header-height, 64px) + var(--sp-8)); padding-bottom: var(--sp-16);">
         <div class="skeleton" style="height: 320px; border-radius: var(--radius-xl); margin-bottom: var(--sp-8);"></div>
         <div class="skeleton" style="height: 500px; border-radius: var(--radius-xl);"></div>
       </div>
@@ -378,7 +378,8 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
   styles: [`
     .path-detail {
       position: relative;
-      min-height: calc(100vh - var(--header-height, 64px));
+      min-height: 100vh;
+      min-height: 100dvh;
       background: var(--bg-base);
       overflow-x: hidden;
       padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
@@ -386,9 +387,13 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
     /* ---------- HERO SECTION ---------- */
     .path-hero {
-      padding: var(--sp-6) 0 var(--sp-4);
+      padding: calc(var(--header-height, 64px) + var(--sp-6)) 0 var(--sp-4);
       position: relative;
       background: transparent;
+
+      @media (max-width: 768px) {
+        padding: var(--sp-4) 0 var(--sp-4);
+      }
 
       &__inner {
         display: block;

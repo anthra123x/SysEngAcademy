@@ -81,7 +81,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   styles: [`
     .paths-page {
       position: relative;
-      min-height: calc(100vh - var(--header-height, 64px));
+      min-height: 100vh;
+      min-height: 100dvh;
       background: var(--bg-base);
       overflow-x: hidden;
     }
@@ -89,10 +90,10 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     .paths-container {
       position: relative;
       z-index: 1;
-      padding-top: var(--sp-8);
+      padding-top: calc(var(--header-height, 64px) + var(--sp-8));
       padding-bottom: var(--sp-20);
 
-      @media (max-width: 640px) {
+      @media (max-width: 768px) {
         padding-top: var(--sp-4);
         padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);
       }

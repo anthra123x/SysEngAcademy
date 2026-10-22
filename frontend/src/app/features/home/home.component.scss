@@ -1,7 +1,6 @@
 /* HERO VANGUARDISTA & TERMINAL EXCLUSIVO (STITCH) */
 .hero {
   position: relative;
-  margin-top: calc(-1 * var(--header-height, 64px));
   padding-top: calc(var(--header-height, 64px) + clamp(36px, 5vw, 68px));
   padding-bottom: clamp(44px, 6vw, 84px);
   overflow: hidden;
