@@ -13,7 +13,10 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
       <!-- Background Subtle Grid -->
       <div class="grid-lines" aria-hidden="true"></div>
 
-      <!-- Main Fullscreen Split Layout -->
+      <!-- Unified Dynamic Halftone & Particle Field spanning the entire page -->
+      <app-halftone-visual></app-halftone-visual>
+
+      <!-- Main Fullscreen Layout -->
       <main class="auth-main-layout">
         <!-- LEFT SIDE: Clean, Minimalist Registration Form -->
         <div class="auth-form-column">
@@ -247,9 +250,11 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           </div>
         </div>
 
-        <!-- RIGHT SIDE: Fluid Organic Halftone Art Field -->
-        <div class="auth-visual-column">
-          <app-halftone-visual></app-halftone-visual>
+        <!-- RIGHT SIDE: Fluid Organic Showcase area -->
+        <div class="auth-showcase-column">
+          <div class="watermark-tag">
+            SYSENG // REVOLUTIONIZING SYSTEM LEARNING
+          </div>
         </div>
       </main>
     </div>
@@ -295,7 +300,6 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         display: flex;
         flex-direction: row;
         align-items: stretch;
-        justify-content: space-between;
       }
 
       /* LEFT COLUMN: Clean Minimal Form */
@@ -304,7 +308,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 5rem);
+        padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.5rem, 4vw, 5rem);
         z-index: 20;
         box-sizing: border-box;
       }
@@ -633,13 +637,26 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
       }
 
-      /* RIGHT COLUMN: Particle Canvas Field */
-      .auth-visual-column {
+      /* RIGHT SHOWCASE COLUMN */
+      .auth-showcase-column {
         width: 50%;
         min-height: 100vh;
-        min-height: 100dvh;
         position: relative;
-        overflow: hidden;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        padding: 24px 32px;
+        pointer-events: none;
+      }
+
+      .watermark-tag {
+        font-family: var(--font-mono, 'JetBrains Mono', monospace);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        color: rgba(148, 163, 184, 0.35);
+        text-transform: uppercase;
+        user-select: none;
       }
 
       /* Alert Badges */
@@ -690,8 +707,11 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           grid-template-columns: 1fr;
         }
 
-        .auth-visual-column {
-          display: none;
+        .auth-showcase-column {
+          width: 100%;
+          min-height: auto;
+          padding: 16px 20px;
+          justify-content: center;
         }
       }
     `

@@ -13,9 +13,12 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
       <!-- Background Subtle Grid -->
       <div class="grid-lines" aria-hidden="true"></div>
 
-      <!-- Main Fullscreen Split Layout -->
+      <!-- Unified Dynamic Halftone & Particle Field spanning the entire page -->
+      <app-halftone-visual></app-halftone-visual>
+
+      <!-- Main Fullscreen Layout -->
       <main class="auth-main-layout">
-        <!-- LEFT SIDE: Clean, Minimalist Login Form (Matches Stitch reference) -->
+        <!-- LEFT SIDE: Clean, Minimalist Login Form -->
         <div class="auth-form-column">
           <div class="auth-form-container">
             <!-- Brand Badge -->
@@ -52,7 +55,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
               >
                 <svg class="social-icon" viewBox="0 0 24 24" width="16" height="16">
                   <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/>
-                  <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+                  <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
                   <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8 0-1.2.2-2 .4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
                   <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/>
                 </svg>
@@ -145,9 +148,11 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           </div>
         </div>
 
-        <!-- RIGHT SIDE: Fluid Organic Halftone Art Field -->
-        <div class="auth-visual-column">
-          <app-halftone-visual></app-halftone-visual>
+        <!-- RIGHT SIDE: Fluid Organic Showcase area -->
+        <div class="auth-showcase-column">
+          <div class="watermark-tag">
+            SYSENG // REVOLUTIONIZING SYSTEM LEARNING
+          </div>
         </div>
       </main>
 
@@ -293,7 +298,6 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         display: flex;
         flex-direction: row;
         align-items: stretch;
-        justify-content: space-between;
       }
 
       /* LEFT COLUMN: Clean Minimal Form */
@@ -302,7 +306,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 5rem);
+        padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.5rem, 4vw, 5rem);
         z-index: 20;
         box-sizing: border-box;
       }
@@ -601,13 +605,26 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
       }
 
-      /* RIGHT COLUMN: Particle Canvas Field */
-      .auth-visual-column {
+      /* RIGHT SHOWCASE COLUMN */
+      .auth-showcase-column {
         width: 50%;
         min-height: 100vh;
-        min-height: 100dvh;
         position: relative;
-        overflow: hidden;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        padding: 24px 32px;
+        pointer-events: none;
+      }
+
+      .watermark-tag {
+        font-family: var(--font-mono, 'JetBrains Mono', monospace);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        color: rgba(148, 163, 184, 0.35);
+        text-transform: uppercase;
+        user-select: none;
       }
 
       /* Alert Badges */
@@ -740,8 +757,11 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           padding: 2.5rem 1.5rem;
         }
 
-        .auth-visual-column {
-          display: none;
+        .auth-showcase-column {
+          width: 100%;
+          min-height: auto;
+          padding: 16px 20px;
+          justify-content: center;
         }
       }
     `
