@@ -9,21 +9,27 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
   standalone: true,
   imports: [RouterLink, FormsModule, HalftoneVisualComponent],
   template: `
-    <div class="auth-viewport-wrapper">
-      <div class="auth-portal-card">
-        <!-- Left: Form Column -->
-        <div class="form-column">
-          <div class="form-content">
+    <div class="auth-page">
+      <!-- Background Subtle Grid -->
+      <div class="grid-lines" aria-hidden="true"></div>
+
+      <!-- Main Fullscreen Split Layout -->
+      <main class="auth-main-layout">
+        <!-- LEFT SIDE: Clean, Minimalist Registration Form -->
+        <div class="auth-form-column">
+          <div class="auth-form-container">
             <!-- Brand Badge -->
-            <a routerLink="/" class="brand-badge" aria-label="SysEng Academy - Inicio">
-              <span class="badge-icon">&lt;/&gt;</span>
-              <span class="badge-title">SYSENG<span class="badge-accent">ACADEMY</span></span>
+            <a routerLink="/" class="brand-header" aria-label="SysEng Academy - Inicio">
+              <div class="brand-icon">&lt;/&gt;</div>
+              <span class="brand-text">SysEng<span class="text-brand">Academy</span></span>
             </a>
 
             @if (step() === 1) {
               <!-- Step 1 Header -->
-              <h1 class="portal-title">Crea tu cuenta</h1>
-              <p class="portal-subtitle">Únete a SysEng Academy y aprende ingeniería práctica</p>
+              <div class="auth-header-group">
+                <h1 class="auth-title">Crea tu cuenta</h1>
+                <p class="auth-subtitle">Únete a SysEng Academy y aprende ingeniería práctica</p>
+              </div>
 
               @if (error()) {
                 <div class="alert-error" role="alert">
@@ -44,11 +50,11 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                   (click)="registerWithSocial('google')"
                   [disabled]="socialLoading() !== null"
                 >
-                  <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18">
-                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
-                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
-                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                  <svg class="social-icon" viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/>
+                    <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                    <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8 0-1.2.2-2 .4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
+                    <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/>
                   </svg>
                   <span>{{ socialLoading() === 'google' ? 'Registrando con Google...' : 'Continuar con Google' }}</span>
                 </button>
@@ -59,25 +65,27 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                   (click)="registerWithSocial('github')"
                   [disabled]="socialLoading() !== null"
                 >
-                  <svg class="social-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                  <svg class="social-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
                   </svg>
                   <span>{{ socialLoading() === 'github' ? 'Registrando con GitHub...' : 'Continuar con GitHub' }}</span>
                 </button>
               </div>
 
               <!-- Divider -->
-              <div class="auth-divider">
-                <span>O regístrate con correo</span>
+              <div class="clean-divider">
+                <div class="divider-line"></div>
+                <span class="divider-text">o regístrate con correo</span>
+                <div class="divider-line"></div>
               </div>
 
               <!-- Registration Form -->
-              <form (ngSubmit)="submitStep1()" #form="ngForm" class="portal-form">
-                <div class="form-group">
-                  <label for="reg-name">Nombre completo</label>
+              <form (ngSubmit)="submitStep1()" #form="ngForm" class="credentials-form">
+                <div class="input-group">
+                  <label for="reg-name" class="input-label">Nombre completo</label>
                   <input
                     id="reg-name"
-                    class="form-input"
+                    class="field-input"
                     type="text"
                     name="name"
                     [(ngModel)]="name"
@@ -87,11 +95,11 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                   />
                 </div>
 
-                <div class="form-group">
-                  <label for="reg-email">Correo electrónico</label>
+                <div class="input-group">
+                  <label for="reg-email" class="input-label">Correo electrónico</label>
                   <input
                     id="reg-email"
-                    class="form-input"
+                    class="field-input"
                     type="email"
                     name="email"
                     [(ngModel)]="email"
@@ -101,12 +109,12 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                   />
                 </div>
 
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="reg-password">Contraseña</label>
+                <div class="inputs-row">
+                  <div class="input-group">
+                    <label for="reg-password" class="input-label">Contraseña</label>
                     <input
                       id="reg-password"
-                      class="form-input"
+                      class="field-input input-mono"
                       type="password"
                       name="password"
                       [(ngModel)]="password"
@@ -116,11 +124,11 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                     />
                   </div>
 
-                  <div class="form-group">
-                    <label for="reg-password-confirm">Confirmar</label>
+                  <div class="input-group">
+                    <label for="reg-password-confirm" class="input-label">Confirmar</label>
                     <input
                       id="reg-password-confirm"
-                      class="form-input"
+                      class="field-input input-mono"
                       type="password"
                       name="password_confirmation"
                       [(ngModel)]="passwordConfirm"
@@ -130,32 +138,38 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  class="btn-portal-submit"
-                  [disabled]="loading()"
-                >
-                  @if (loading()) {
-                    <span class="btn-spinner"></span>
-                    <span>Enviando código...</span>
-                  } @else {
-                    <span>Continuar / Enviar Código</span>
-                    <span class="btn-arrow">→</span>
-                  }
-                </button>
+                <div class="submit-wrap">
+                  <button
+                    type="submit"
+                    class="btn-stitch-primary"
+                    [disabled]="loading()"
+                  >
+                    @if (loading()) {
+                      <span class="btn-spinner"></span>
+                      <span>Enviando código...</span>
+                    } @else {
+                      <span>Continuar / Enviar Código</span>
+                      <svg class="arrow-svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    }
+                  </button>
+                </div>
               </form>
 
               <!-- Footer -->
-              <div class="portal-footer">
+              <div class="auth-switch-footer">
                 <span>¿Ya tienes una cuenta?</span>
-                <a routerLink="/auth/login" class="switch-link">Iniciar sesión</a>
+                <a routerLink="/auth/login" class="link-brand">Iniciar sesión</a>
               </div>
             } @else {
               <!-- Step 2: Verification Flow -->
-              <h1 class="portal-title">Verifica tu correo</h1>
-              <p class="portal-subtitle">
-                Hemos enviado un código de 6 dígitos a <strong>{{ email }}</strong>
-              </p>
+              <div class="auth-header-group">
+                <h1 class="auth-title">Verifica tu correo</h1>
+                <p class="auth-subtitle">
+                  Hemos enviado un código de 6 dígitos a <strong>{{ email }}</strong>
+                </p>
+              </div>
 
               @if (successMsg()) {
                 <div class="alert-success" role="status">
@@ -178,12 +192,12 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                 </div>
               }
 
-              <form (ngSubmit)="submitStep2()" class="portal-form">
-                <div class="form-group">
-                  <label for="reg-code" class="text-center">Código de activación recibido</label>
+              <form (ngSubmit)="submitStep2()" class="credentials-form">
+                <div class="input-group">
+                  <label for="reg-code" class="input-label" style="text-align: center;">Código de activación recibido</label>
                   <input
                     id="reg-code"
-                    class="form-input code-input"
+                    class="field-input input-code"
                     type="text"
                     name="code"
                     [(ngModel)]="verificationCode"
@@ -194,25 +208,27 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  class="btn-portal-submit"
-                  [disabled]="loading() || verificationCode.trim().length !== 6"
-                >
-                  @if (loading()) {
-                    <span class="btn-spinner"></span>
-                    <span>Verificando y creando cuenta...</span>
-                  } @else {
-                    <span>Verificar y Crear Cuenta</span>
-                    <span class="btn-arrow">✓</span>
-                  }
-                </button>
+                <div class="submit-wrap">
+                  <button
+                    type="submit"
+                    class="btn-stitch-primary"
+                    [disabled]="loading() || verificationCode.trim().length !== 6"
+                  >
+                    @if (loading()) {
+                      <span class="btn-spinner"></span>
+                      <span>Verificando y creando cuenta...</span>
+                    } @else {
+                      <span>Verificar y Crear Cuenta</span>
+                      <span class="btn-check">✓</span>
+                    }
+                  </button>
+                </div>
               </form>
 
-              <div class="verify-actions">
+              <div class="verify-action-stack">
                 <button
                   type="button"
-                  class="btn-resend-link"
+                  class="btn-resend-inline"
                   [disabled]="resendLoading() || resendCooldown() > 0"
                   (click)="resendCode()"
                 >
@@ -221,7 +237,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
 
                 <button
                   type="button"
-                  class="btn-back-link"
+                  class="btn-back-inline"
                   (click)="backToStep1()"
                 >
                   ← Corregir correo o datos
@@ -231,11 +247,11 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           </div>
         </div>
 
-        <!-- Right: Dynamic Particle & Wave Field -->
-        <div class="visual-column">
+        <!-- RIGHT SIDE: Fluid Organic Halftone Art Field -->
+        <div class="auth-visual-column">
           <app-halftone-visual></app-halftone-visual>
         </div>
-      </div>
+      </main>
     </div>
   `,
   styles: [
@@ -244,140 +260,155 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         display: block;
         width: 100%;
         min-height: 100vh;
-        background: #02040a;
+        background: #050911;
       }
 
-      .auth-viewport-wrapper {
+      .auth-page {
+        min-height: 100vh;
+        min-height: 100dvh;
+        width: 100%;
+        background: #050911;
+        color: #f8fafc;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      /* Subtle grid background covering entire screen */
+      .grid-lines {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background-size: 48px 48px;
+        background-image: 
+          linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      }
+
+      /* Fullscreen Split Layout: 50% left, 50% right */
+      .auth-main-layout {
+        position: relative;
+        z-index: 10;
+        width: 100%;
         min-height: 100vh;
         min-height: 100dvh;
         display: flex;
+        flex-direction: row;
         align-items: stretch;
-        padding: 12px;
-        background: #02040a;
-        box-sizing: border-box;
+        justify-content: space-between;
       }
 
-      /* Full Viewport Card with glowing violet border */
-      .auth-portal-card {
-        position: relative;
-        width: 100%;
-        min-height: calc(100vh - 24px);
-        display: grid;
-        grid-template-columns: minmax(420px, 490px) 1fr;
-        background: #030712;
-        border: 2px solid #6366f1;
-        border-radius: 18px;
-        box-shadow: 0 0 24px rgba(99, 102, 241, 0.16),
-                    inset 0 0 20px rgba(99, 102, 241, 0.04);
-        overflow: hidden;
-
-        /* Subtle grid background */
-        background-image: linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
-        background-size: 40px 40px;
-      }
-
-      /* Left Form Column */
-      .form-column {
+      /* LEFT COLUMN: Clean Minimal Form */
+      .auth-form-column {
+        width: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: clamp(2rem, 5vw, 4rem) clamp(2rem, 4vw, 3.5rem);
-        z-index: 2;
+        padding: clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 5rem);
+        z-index: 20;
+        box-sizing: border-box;
       }
 
-      .form-content {
+      .auth-form-container {
         width: 100%;
-        max-width: 380px;
+        max-width: 420px;
         display: flex;
         flex-direction: column;
       }
 
-      /* Brand Badge */
-      .brand-badge {
+      /* Brand Header */
+      .brand-header {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 0.65rem;
         text-decoration: none;
         margin-bottom: 2rem;
         width: fit-content;
 
-        .badge-icon {
-          display: inline-flex;
+        .brand-icon {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: linear-gradient(135deg, #00E599 0%, #14b8a6 100%);
+          color: #050911;
+          font-family: var(--font-mono, 'JetBrains Mono', monospace);
+          font-size: 12px;
+          font-weight: 800;
+          display: flex;
           align-items: center;
           justify-content: center;
-          background: #0ae98a;
-          color: #030712;
-          font-family: var(--font-mono, monospace);
-          font-size: 11px;
-          font-weight: 900;
-          padding: 3px 6px;
-          border-radius: 6px;
-          letter-spacing: -0.05em;
+          box-shadow: 0 4px 14px rgba(0, 229, 153, 0.25);
+          transition: transform 0.2s ease;
         }
 
-        .badge-title {
-          font-family: var(--font-mono, monospace);
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.14em;
-          color: #e2e8f0;
+        &:hover .brand-icon {
+          transform: scale(1.05);
+        }
 
-          .badge-accent {
-            color: #0ae98a;
+        .brand-text {
+          font-family: var(--font-mono, 'JetBrains Mono', monospace);
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: #94a3b8;
+
+          .text-brand {
+            color: #00E599;
           }
         }
       }
 
-      /* Title & Subtitle */
-      .portal-title {
-        font-size: clamp(2rem, 2.6vw, 2.35rem);
-        font-weight: 800;
-        color: #ffffff;
-        letter-spacing: -0.025em;
-        margin: 0 0 0.5rem 0;
-        line-height: 1.15;
-      }
+      /* Header Titles */
+      .auth-header-group {
+        margin-bottom: 2rem;
 
-      .portal-subtitle {
-        font-size: 0.88rem;
-        color: #94a3b8;
-        margin: 0 0 1.85rem 0;
-        line-height: 1.45;
+        .auth-title {
+          font-size: clamp(2rem, 3.2vw, 2.45rem);
+          font-weight: 700;
+          letter-spacing: -0.03em;
+          color: #ffffff;
+          margin: 0 0 0.5rem 0;
+          line-height: 1.15;
+        }
 
-        strong {
-          color: #f1f5f9;
+        .auth-subtitle {
+          font-size: 0.88rem;
+          color: #94a3b8;
+          margin: 0;
+          line-height: 1.45;
         }
       }
 
-      /* Social Stack */
+      /* Social SSO Buttons Stack */
       .social-stack {
         display: flex;
         flex-direction: column;
-        gap: 0.7rem;
+        gap: 0.75rem;
         margin-bottom: 1.5rem;
       }
 
       .btn-social {
-        display: inline-flex;
+        width: 100%;
+        height: 44px;
+        padding: 0 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        color: #e2e8f0;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.75rem;
-        width: 100%;
-        padding: 0.78rem 1.2rem;
-        background: rgba(255, 255, 255, 0.025);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        color: #f1f5f9;
-        font-size: 0.88rem;
-        font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: all 0.15s ease;
 
         &:hover:not(:disabled) {
+          border-color: rgba(255, 255, 255, 0.25);
           background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.22);
-          transform: translateY(-1px);
+          color: #ffffff;
         }
 
         &:disabled {
@@ -390,86 +421,87 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
       }
 
-      /* Divider */
-      .auth-divider {
+      /* Clean Horizontal Divider */
+      .clean-divider {
         display: flex;
         align-items: center;
-        text-align: center;
-        margin-bottom: 1.5rem;
+        justify-content: center;
+        margin: 1.5rem 0;
+        position: relative;
 
-        &::before, &::after {
-          content: '';
+        .divider-line {
           flex: 1;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+          height: 1px;
+          background: rgba(255, 255, 255, 0.1);
         }
 
-        span {
+        .divider-text {
           padding: 0 0.85rem;
-          color: #64748b;
-          font-family: var(--font-mono, monospace);
-          font-size: 0.72rem;
-          font-weight: 600;
+          font-family: var(--font-mono, 'JetBrains Mono', monospace);
+          font-size: 11px;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
+          color: #94a3b8;
+          background: #050911;
+          flex-shrink: 0;
         }
       }
 
-      /* Form Controls */
-      .portal-form {
+      /* Credentials Form */
+      .credentials-form {
         display: flex;
         flex-direction: column;
         gap: 1.15rem;
       }
 
-      .form-row {
+      .inputs-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 0.75rem;
       }
 
-      .form-group {
+      .input-group {
         display: flex;
         flex-direction: column;
-        gap: 0.45rem;
-
-        label {
-          font-family: var(--font-mono, monospace);
-          font-size: 0.76rem;
-          font-weight: 600;
-          color: #94a3b8;
-          letter-spacing: 0.03em;
-
-          &.text-center {
-            text-align: center;
-            display: block;
-          }
-        }
+        gap: 0.4rem;
       }
 
-      .form-input {
+      .input-label {
+        font-family: var(--font-mono, 'JetBrains Mono', monospace);
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #cbd5e1;
+      }
+
+      .field-input {
         width: 100%;
-        background: #080c16;
-        border: 1px solid rgba(255, 255, 255, 0.09);
-        border-radius: 10px;
-        padding: 0.82rem 1rem;
-        color: #ffffff;
-        font-size: 0.9rem;
+        height: 42px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 0 0.9rem;
+        font-size: 0.88rem;
+        color: #f8fafc;
         outline: none;
         box-sizing: border-box;
-        transition: all 0.2s ease;
+        transition: all 0.15s ease;
 
         &::placeholder {
-          color: #334155;
+          color: #64748b;
         }
 
         &:focus {
-          border-color: #00d9ff;
-          box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.16);
-          background: #0a0f1c;
+          border-color: #00E599;
+          box-shadow: 0 0 0 1px #00E599;
+          background: rgba(255, 255, 255, 0.05);
         }
 
-        &.code-input {
-          font-family: var(--font-mono, monospace);
+        &.input-mono {
+          font-family: var(--font-mono, 'JetBrains Mono', monospace);
+        }
+
+        &.input-code {
+          font-family: var(--font-mono, 'JetBrains Mono', monospace);
           font-size: 1.35rem;
           letter-spacing: 0.35em;
           text-align: center;
@@ -478,28 +510,40 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
       }
 
       /* Submit Button */
-      .btn-portal-submit {
-        display: inline-flex;
+      .submit-wrap {
+        padding-top: 0.5rem;
+      }
+
+      .btn-stitch-primary {
+        width: 100%;
+        height: 46px;
+        padding: 0 1.25rem;
+        border-radius: 12px;
+        border: none;
+        background: #00E599;
+        color: #030712;
+        font-size: 0.95rem;
+        font-weight: 700;
+        display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.55rem;
-        width: 100%;
-        padding: 0.85rem 1.4rem;
-        margin-top: 0.35rem;
-        background: #0ae98a;
-        color: #030712;
-        border: none;
-        border-radius: 12px;
-        font-size: 0.95rem;
-        font-weight: 800;
+        gap: 0.5rem;
         cursor: pointer;
-        box-shadow: 0 4px 22px rgba(10, 233, 138, 0.4);
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 4px 20px rgba(0, 229, 153, 0.25);
+        transition: all 0.15s ease;
 
         &:hover:not(:disabled) {
-          background: #00f59b;
+          background: #00c985;
+          box-shadow: 0 6px 26px rgba(0, 229, 153, 0.38);
           transform: translateY(-1px);
-          box-shadow: 0 6px 28px rgba(10, 233, 138, 0.52);
+
+          .arrow-svg {
+            transform: translateX(3px);
+          }
+        }
+
+        &:active:not(:disabled) {
+          transform: translateY(0);
         }
 
         &:disabled {
@@ -508,39 +552,39 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           box-shadow: none;
         }
 
-        .btn-arrow {
-          font-size: 1.15rem;
-          transition: transform 0.2s ease;
+        .arrow-svg {
+          width: 16px;
+          height: 16px;
+          transition: transform 0.15s ease;
         }
 
-        &:hover .btn-arrow {
-          transform: translateX(4px);
+        .btn-check {
+          font-weight: 900;
+          font-size: 1.1rem;
         }
 
         .btn-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(8, 9, 13, 0.3);
-          border-top-color: #08090d;
+          border: 2px solid rgba(5, 9, 17, 0.3);
+          border-top-color: #050911;
           border-radius: 50%;
           animation: spin 0.7s infinite linear;
         }
       }
 
-      /* Footer */
-      .portal-footer {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.4rem;
-        margin-top: 1.85rem;
+      /* Switch Footer */
+      .auth-switch-footer {
+        margin-top: 2rem;
+        text-align: center;
         font-size: 0.85rem;
         color: #94a3b8;
 
-        .switch-link {
-          color: #0ae98a;
-          font-weight: 700;
+        .link-brand {
+          color: #00E599;
+          font-weight: 600;
           text-decoration: none;
+          margin-left: 0.35rem;
 
           &:hover {
             text-decoration: underline;
@@ -548,63 +592,57 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
       }
 
-      /* Step 2 Actions */
-      .verify-actions {
+      /* Verification actions */
+      .verify-action-stack {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.75rem;
-        margin-top: 0.75rem;
-      }
+        gap: 0.85rem;
+        margin-top: 1.5rem;
 
-      .btn-resend-link {
-        background: none;
-        border: none;
-        color: #00d9ff;
-        font-family: var(--font-mono, monospace);
-        font-size: 0.78rem;
-        font-weight: 600;
-        cursor: pointer;
-        padding: 4px;
-        text-decoration: underline;
-        text-underline-offset: 3px;
-        transition: color 0.15s ease;
-
-        &:hover:not(:disabled) {
-          color: #38bdf8;
-        }
-
-        &:disabled {
-          color: #64748b;
-          cursor: not-allowed;
+        .btn-resend-inline {
+          background: none;
+          border: none;
+          color: #00E599;
+          font-size: 0.85rem;
+          font-weight: 500;
+          cursor: pointer;
           text-decoration: none;
+
+          &:hover:not(:disabled) {
+            text-decoration: underline;
+          }
+
+          &:disabled {
+            color: #64748b;
+            cursor: not-allowed;
+          }
+        }
+
+        .btn-back-inline {
+          background: none;
+          border: none;
+          color: #94a3b8;
+          font-size: 0.8rem;
+          cursor: pointer;
+
+          &:hover {
+            color: #ffffff;
+            text-decoration: underline;
+          }
         }
       }
 
-      .btn-back-link {
-        background: none;
-        border: none;
-        color: #94a3b8;
-        font-family: var(--font-mono, monospace);
-        font-size: 0.76rem;
-        cursor: pointer;
-        padding: 4px;
-        transition: color 0.15s ease;
-
-        &:hover {
-          color: #f1f5f9;
-        }
-      }
-
-      /* Right Visual Column */
-      .visual-column {
+      /* RIGHT COLUMN: Particle Canvas Field */
+      .auth-visual-column {
+        width: 50%;
+        min-height: 100vh;
+        min-height: 100dvh;
         position: relative;
         overflow: hidden;
-        background: #030712;
-        border-left: 1px solid rgba(255, 255, 255, 0.05);
       }
 
-      /* Alerts */
+      /* Alert Badges */
       .alert-error {
         display: flex;
         align-items: center;
@@ -620,44 +658,40 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
       }
 
       .alert-success {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
         background: rgba(16, 185, 129, 0.15);
         border: 1px solid rgba(16, 185, 129, 0.3);
         color: #34d399;
         padding: 0.75rem 1rem;
         border-radius: 10px;
         font-size: 0.82rem;
-        margin-bottom: 1.25rem;
+        text-align: center;
+        margin-bottom: 1rem;
       }
 
       @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+          transform: rotate(360deg);
+        }
       }
 
-      /* Mobile Breakpoint */
-      @media (max-width: 960px) {
-        .auth-viewport-wrapper {
-          padding: 6px;
+      /* Responsive layout for tablet and mobile */
+      @media (max-width: 1024px) {
+        .auth-main-layout {
+          flex-direction: column;
         }
 
-        .auth-portal-card {
+        .auth-form-column {
+          width: 100%;
+          min-height: 100vh;
+          padding: 2.5rem 1.5rem;
+        }
+
+        .inputs-row {
           grid-template-columns: 1fr;
-          min-height: calc(100vh - 12px);
-          border-radius: 14px;
         }
 
-        .visual-column {
+        .auth-visual-column {
           display: none;
-        }
-
-        .form-column {
-          padding: 2rem 1.5rem;
-        }
-
-        .form-content {
-          max-width: 100%;
         }
       }
     `
@@ -667,36 +701,32 @@ export class RegisterComponent implements OnDestroy {
   private auth = inject(AuthService);
   private router = inject(Router);
 
+  step = signal<1 | 2>(1);
   name = '';
   email = '';
   password = '';
   passwordConfirm = '';
   verificationCode = '';
 
-  step = signal<1 | 2>(1);
   loading = signal(false);
+  socialLoading = signal<'google' | 'github' | null>(null);
   resendLoading = signal(false);
   resendCooldown = signal(0);
-  error = signal('');
-  successMsg = signal('');
-  socialLoading = signal<'google' | 'github' | null>(null);
+  error = signal<string>('');
+  successMsg = signal<string>('');
 
   registerWithSocial(provider: 'google' | 'github') {
-    if (this.socialLoading()) return;
     this.socialLoading.set(provider);
     this.error.set('');
 
     this.auth.loginWithSocial(provider).subscribe({
-      next: (_res: any) => {
+      next: () => {
         this.socialLoading.set(null);
-        this.router.navigate(['/']);
+        this.router.navigate(['/perfil']);
       },
       error: (err: any) => {
         this.socialLoading.set(null);
-        const msg = err?.message || 'Error durante el registro social.';
-        if (!msg.includes('cancelada')) {
-          this.error.set(msg);
-        }
+        this.error.set(err?.message || 'Error durante la autenticación social.');
       }
     });
   }

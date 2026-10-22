@@ -13,8 +13,9 @@ import {
   standalone: true,
   template: `
     <div class="visual-container" (pointermove)="onPointerMove($event)" (pointerleave)="onPointerLeave()">
-      <canvas #canvas class="particle-canvas"></canvas>
       <div class="glow-backdrop"></div>
+      <canvas #canvas class="particle-canvas"></canvas>
+      <div class="left-fade-overlay"></div>
       <div class="watermark-tag">
         SYSENG // REVOLUTIONIZING SYSTEM LEARNING
       </div>
@@ -34,9 +35,23 @@ import {
         position: relative;
         width: 100%;
         height: 100%;
-        background: #030712;
+        min-height: 100vh;
+        background: #050911;
         overflow: hidden;
         user-select: none;
+      }
+
+      .glow-backdrop {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background: radial-gradient(
+          circle at 75% 45%,
+          rgba(0, 229, 153, 0.22) 0%,
+          rgba(14, 165, 233, 0.14) 35%,
+          rgba(5, 9, 17, 0) 70%
+        );
       }
 
       .particle-canvas {
@@ -48,31 +63,39 @@ import {
         z-index: 1;
       }
 
-      .glow-backdrop {
+      .left-fade-overlay {
         position: absolute;
-        inset: 0;
+        inset-y: 0;
+        left: 0;
+        width: 90px;
+        background: linear-gradient(to right, #050911 0%, transparent 100%);
         pointer-events: none;
-        z-index: 0;
-        background: radial-gradient(
-          ellipse 70% 60% at 85% 50%,
-          rgba(0, 217, 255, 0.15) 0%,
-          rgba(10, 233, 138, 0.08) 40%,
-          transparent 80%
-        );
+        z-index: 2;
       }
 
       .watermark-tag {
         position: absolute;
         bottom: 24px;
         right: 32px;
-        z-index: 2;
-        font-family: var(--font-mono, monospace);
+        z-index: 3;
+        font-family: var(--font-mono, 'JetBrains Mono', monospace);
         font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.16em;
-        color: rgba(148, 163, 184, 0.35);
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        color: rgba(148, 163, 184, 0.4);
         pointer-events: none;
         text-transform: uppercase;
+      }
+
+      @media (max-width: 1024px) {
+        .visual-container {
+          min-height: 420px;
+        }
+        .watermark-tag {
+          bottom: 16px;
+          right: 20px;
+          font-size: 9px;
+        }
       }
     `
   ]
@@ -175,20 +198,19 @@ export class HalftoneVisualComponent implements AfterViewInit, OnDestroy {
       this.mouseX += (this.targetMouseX - this.mouseX) * 0.12;
       this.mouseY += (this.targetMouseY - this.mouseY) * 0.12;
     } else {
-      const autoX = width * (0.7 + 0.15 * Math.sin(time * 0.6));
-      const autoY = height * (0.5 + 0.2 * Math.cos(time * 0.45));
+      const autoX = width * (0.7 + 0.12 * Math.sin(time * 0.5));
+      const autoY = height * (0.45 + 0.15 * Math.cos(time * 0.4));
       this.mouseX += (autoX - this.mouseX) * 0.03;
       this.mouseY += (autoY - this.mouseY) * 0.03;
     }
 
     ctx.clearRect(0, 0, width, height);
 
-    // Grid spacing matching reference image
+    // Matrix spacing matching Stitch mockup (14px grid)
     const step = 14;
     const cols = Math.ceil(width / step) + 2;
     const rows = Math.ceil(height / step) + 2;
-
-    const mouseRadius = 180;
+    const mouseRadius = 170;
 
     for (let c = 0; c < cols; c++) {
       const gx = c * step;
@@ -198,30 +220,27 @@ export class HalftoneVisualComponent implements AfterViewInit, OnDestroy {
         const gy = r * step;
         const ny = gy / height;
 
-        // Curved organic wavefront boundary (arcs from top-center through middle to bottom-center)
-        // Parabolic / elliptical boundary curve matching the screenshot
-        const curveOffset = 0.22 + Math.pow(Math.abs(ny - 0.5), 1.6) * 0.25;
+        // Organic curve boundary matching Stitch screenshot 7c1e:
+        // Top starts around nx = 0.18, dips to nx = 0.10 near ny = 0.42, then sweeps out to nx = 0.45 at bottom
+        const curveOffset = 0.10 + 0.38 * Math.pow(ny - 0.42, 2) + 0.14 * ny;
         if (nx < curveOffset) {
-          // Outside the wavefront, completely clean/empty on the left
           continue;
         }
 
-        // Distance from wavefront edge (0 at boundary, increases toward right)
-        const depthFromEdge = (nx - curveOffset) / (1 - curveOffset);
+        // Depth into the particle field
+        const depthFromEdge = (nx - curveOffset) / Math.max(0.01, 1 - curveOffset);
+        const edgeFade = Math.min(1, depthFromEdge * 4.5);
 
-        // 3D undulating wave equation
-        const w1 = Math.sin(nx * 4.2 + time * 1.15);
-        const w2 = Math.cos(ny * 5.0 - time * 0.9);
-        const w3 = Math.sin((nx * 3.0 + ny * 3.5) + time * 0.7);
-        const w4 = Math.cos(Math.sqrt((nx - 0.8) ** 2 + (ny - 0.5) ** 2) * 6.0 - time * 1.6);
+        // Undulating wave equation
+        const w1 = Math.sin(nx * 3.8 + time * 1.1);
+        const w2 = Math.cos(ny * 4.6 - time * 0.85);
+        const w3 = Math.sin((nx * 2.8 + ny * 3.2) + time * 0.65);
+        const w4 = Math.cos(Math.sqrt(Math.pow(nx - 0.75, 2) + Math.pow(ny - 0.45, 2)) * 5.8 - time * 1.5);
 
-        let elevation = (w1 + w2 + w3 * 0.7 + w4 * 0.8) / 3.5; // ~ -1 to +1
+        let elevation = (w1 + w2 + w3 * 0.7 + w4 * 0.8) / 3.5;
+        elevation = (elevation * 0.65 + 0.35) * edgeFade;
 
-        // Modulation based on depth from the curved edge
-        const edgeFade = Math.min(1, depthFromEdge * 3.5);
-        elevation = (elevation * 0.6 + 0.4) * edgeFade;
-
-        // Interactive mouse ripple
+        // Interactive mouse luminescence
         const dx = gx - this.mouseX;
         const dy = gy - this.mouseY;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -229,39 +248,35 @@ export class HalftoneVisualComponent implements AfterViewInit, OnDestroy {
         let mouseLuminescence = 0;
         if (dist < mouseRadius) {
           const mFactor = 1 - dist / mouseRadius;
-          const ripple = Math.sin(dist * 0.08 - time * 6.0);
-          elevation += mFactor * ripple * 0.7;
+          const ripple = Math.sin(dist * 0.09 - time * 5.5);
+          elevation += mFactor * ripple * 0.6;
           mouseLuminescence = mFactor;
         }
 
         const normalized = Math.max(0, Math.min(1, elevation));
-        const radius = 0.85 + normalized * 3.6;
+        const radius = 0.8 + normalized * 3.4;
 
-        if (radius < 0.8) continue;
+        if (radius < 0.75) continue;
 
-        // Color palette exactly like the screenshot:
-        // Glowing cyan-emerald gradient in core, subtle teal/blue at perimeter
+        // Color palette matching Stitch 7c1e screenshot:
+        // Luminescent emerald (#00E599), vibrant cyan (#0EA5E9), deep teal, and subtle slate
         let color: string;
         if (mouseLuminescence > 0.4) {
-          color = `rgba(255, 255, 255, ${0.5 + mouseLuminescence * 0.5})`;
-        } else if (normalized > 0.75) {
-          // Core bright emerald/cyan
-          color = `rgba(10, 233, 138, ${0.75 + normalized * 0.25})`;
+          color = `rgba(255, 255, 255, ${0.6 + mouseLuminescence * 0.4})`;
+        } else if (normalized > 0.72) {
+          color = `rgba(0, 229, 153, ${0.8 + normalized * 0.2})`;
         } else if (normalized > 0.45) {
-          // Mid vibrant cyan
-          color = `rgba(0, 217, 255, ${0.55 + normalized * 0.35})`;
-        } else if (normalized > 0.2) {
-          // Subtle teal / dark cyan
-          color = `rgba(0, 180, 216, ${0.3 + normalized * 0.3})`;
+          color = `rgba(14, 165, 233, ${0.6 + normalized * 0.35})`;
+        } else if (normalized > 0.22) {
+          color = `rgba(16, 185, 129, ${0.35 + normalized * 0.3})`;
         } else {
-          // Faint perimeter dots
-          color = `rgba(148, 163, 184, ${0.12 * edgeFade})`;
+          color = `rgba(148, 163, 184, ${0.16 * edgeFade})`;
         }
 
         ctx.fillStyle = color;
 
-        // Render diamond or circle based on density
-        if (normalized > 0.58) {
+        // High elevation nodes render as delicate diamonds, others as rounded points
+        if (normalized > 0.62) {
           ctx.beginPath();
           ctx.moveTo(gx, gy - radius);
           ctx.lineTo(gx + radius, gy);
