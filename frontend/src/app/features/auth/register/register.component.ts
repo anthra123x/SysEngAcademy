@@ -19,9 +19,9 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         <!-- Left: Form Column -->
         <div class="auth-form-side">
           <div class="auth-header">
-            <a routerLink="/" class="brand-capsule" aria-label="SysEng Academy - Inicio">
-              <span class="brand-capsule__icon">&lt;/&gt;</span>
-              <span class="brand-capsule__name">SysEng<strong>Academy</strong></span>
+            <a routerLink="/" class="auth-brand-link" aria-label="SysEng Academy - Inicio">
+              <span class="auth-brand-link__icon">&lt;/&gt;</span>
+              <span class="auth-brand-link__name">SysEng<strong>Academy</strong></span>
             </a>
 
             @if (step() === 1) {
@@ -247,9 +247,9 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         min-height: calc(100vh - var(--header-height, 64px));
         position: relative;
         display: flex;
-        align-items: center;
+        align-items: stretch;
         justify-content: center;
-        padding: 2.5rem 1.5rem;
+        padding: clamp(10px, 1.5vw, 24px);
         background: #08090d;
         overflow: hidden;
       }
@@ -257,22 +257,22 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
       /* Ambient Glows */
       .bg-glow {
         position: absolute;
-        width: 600px;
-        height: 600px;
+        width: 700px;
+        height: 700px;
         border-radius: 50%;
-        filter: blur(140px);
+        filter: blur(150px);
         pointer-events: none;
         opacity: 0.12;
 
         &--cyan {
-          top: 10%;
-          left: 15%;
+          top: 5%;
+          left: 10%;
           background: #00d9ff;
         }
 
         &--emerald {
-          bottom: 10%;
-          right: 15%;
+          bottom: 5%;
+          right: 10%;
           background: #0ae98a;
         }
       }
@@ -282,69 +282,67 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         inset: 0;
         background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
                           linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 48px 48px;
+        background-size: 56px 56px;
         pointer-events: none;
       }
 
-      /* Floating Split Card */
+      /* Expansive Full-Page Split Card */
       .auth-split-card {
         position: relative;
         z-index: 10;
         width: 100%;
-        max-width: 980px;
-        min-height: 600px;
+        max-width: 1600px;
+        min-height: calc(100vh - 100px);
         display: grid;
-        grid-template-columns: 1.1fr 1fr;
-        background: rgba(14, 18, 28, 0.82);
-        backdrop-filter: blur(24px) saturate(160%);
-        -webkit-backdrop-filter: blur(24px) saturate(160%);
-        border: 1px solid rgba(255, 255, 255, 0.09);
+        grid-template-columns: minmax(440px, 520px) 1fr;
+        background: rgba(14, 18, 28, 0.88);
+        backdrop-filter: blur(28px) saturate(180%);
+        -webkit-backdrop-filter: blur(28px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 24px;
-        box-shadow: 0 24px 70px -15px rgba(0, 0, 0, 0.7),
-                    0 0 0 1px rgba(255, 255, 255, 0.03),
-                    0 0 40px rgba(0, 217, 255, 0.05);
+        box-shadow: 0 24px 80px -20px rgba(0, 0, 0, 0.8),
+                    0 0 0 1px rgba(255, 255, 255, 0.04),
+                    0 0 50px rgba(0, 217, 255, 0.05);
         overflow: hidden;
       }
 
       /* Left Form Column */
       .auth-form-side {
-        padding: clamp(2rem, 3.5vw, 3rem);
+        padding: clamp(2.5rem, 5vw, 4.5rem);
         display: flex;
         flex-direction: column;
         justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
       }
 
-      .brand-capsule {
+      .auth-brand-link {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 5px 12px 5px 6px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 9999px;
+        gap: 10px;
         text-decoration: none;
-        margin-bottom: 1.4rem;
-        transition: all 0.2s ease;
+        margin-bottom: 2rem;
+        transition: opacity 0.2s ease;
 
         &:hover {
-          background: rgba(255, 255, 255, 0.07);
-          border-color: rgba(0, 217, 255, 0.3);
+          opacity: 0.85;
         }
 
         &__icon {
           font-family: var(--font-mono, monospace);
-          font-size: 11px;
-          font-weight: 700;
+          font-size: 13px;
+          font-weight: 800;
           color: #08090d;
           background: #0ae98a;
-          padding: 3px 6px;
-          border-radius: 9999px;
+          padding: 4px 8px;
+          border-radius: 8px;
         }
 
         &__name {
-          font-size: 12px;
-          font-weight: 600;
-          color: #e2e8f0;
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #f8fafc;
+          letter-spacing: -0.01em;
 
           strong {
             color: #00d9ff;
