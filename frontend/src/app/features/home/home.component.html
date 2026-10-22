@@ -1,63 +1,165 @@
-<!-- HERO -->
+<!-- HERO VANGUARDISTA & TERMINAL EXCLUSIVO (STITCH) -->
     <section class="hero">
-      <div class="hero__bg-grid"></div>
+      <!-- Ambient Glows (Pulse & Tech Grid) -->
+      <div class="hero__glow hero__glow--mint" aria-hidden="true"></div>
+      <div class="hero__glow hero__glow--cyan" aria-hidden="true"></div>
+      <div class="hero__bg-grid" aria-hidden="true"></div>
+
       <div class="container hero__inner">
+        <!-- LEFT COLUMN: Narrative & Metrics -->
         <div class="hero__content">
+          <!-- Micro-pill runtime status -->
+          <div class="hero__badge">
+            <span class="badge-dot-wrap">
+              <span class="badge-ping"></span>
+              <span class="badge-dot"></span>
+            </span>
+            <span class="badge-text">
+              SYSENG.RUNTIME <span class="badge-version">v2.5</span>
+            </span>
+            <span class="badge-divider">|</span>
+            <span class="badge-sub">// cluster-ready</span>
+          </div>
+
+          <!-- Main Headlines -->
           <h1 class="hero__title">
-            Aprende <span>Programación.</span><br>
+            Aprende<br>
+            <span class="hero__title-gradient">Programación.</span><br>
             Domina tu carrera.
           </h1>
+
           <p class="hero__subtitle">
-            Rutas de aprendizaje estructuradas y cursos interactivos para
-            estudiantes de Ingeniería de Sistemas.
+            Rutas de aprendizaje estructuradas, algoritmos de alto rendimiento y entornos interactivos creados por y para estudiantes de Ingeniería de Sistemas.
           </p>
+
+          <!-- Action Buttons -->
           <div class="hero__actions">
-            <a routerLink="/rutas" class="btn btn-primary btn-lg">
-              Explorar Rutas
+            <a routerLink="/rutas" class="hero__btn hero__btn--primary">
+              <span>Explorar Rutas</span>
+              <svg class="hero__btn-icon" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </a>
-            <a routerLink="/cursos" class="btn btn-outline btn-lg">
-              Ver Cursos
+            <a routerLink="/cursos" class="hero__btn hero__btn--glass">
+              <span>Ver Cursos</span>
             </a>
           </div>
+
+          <!-- Metrics Row -->
           <div class="hero__stats">
             <div class="stat">
               <span class="stat__num">50+</span>
-              <span class="stat__label">Cursos</span>
+              <span class="stat__label">Cursos prácticos</span>
             </div>
             <div class="stat__divider"></div>
             <div class="stat">
               <span class="stat__num">200+</span>
-              <span class="stat__label">Lecciones</span>
+              <span class="stat__label">Retos de código</span>
             </div>
             <div class="stat__divider"></div>
             <div class="stat">
               <span class="stat__num">10+</span>
-              <span class="stat__label">Rutas</span>
+              <span class="stat__label">Especializaciones</span>
             </div>
             <div class="stat__divider"></div>
-            <div class="stat">
+            <div class="stat stat--highlight">
               <span class="stat__num">100%</span>
-              <span class="stat__label">Gratis</span>
+              <span class="stat__label">Gratuito</span>
             </div>
           </div>
         </div>
 
-        <div class="hero__code" aria-hidden="true">
-          <div class="code-window">
-            <div class="code-window__bar">
-              <span></span><span></span><span></span>
-              <span class="code-window__title">main.py</span>
+        <!-- RIGHT COLUMN: Interactive Terminal with subtle dynamism -->
+        <div class="hero__terminal-wrap">
+          <div class="terminal-card">
+            <!-- Window Bar -->
+            <div class="terminal-card__bar">
+              <!-- Window control dots -->
+              <div class="window-dots">
+                <span class="dot dot--red"></span>
+                <span class="dot dot--yellow"></span>
+                <span class="dot dot--green"></span>
+              </div>
+
+              <!-- Interactive Tabs -->
+              <div class="terminal-tabs" role="tablist">
+                @for (snip of terminalSnippets; track snip.id) {
+                  <button
+                    type="button"
+                    class="terminal-tab"
+                    [class.terminal-tab--active]="activeSnippetId() === snip.id"
+                    (click)="selectSnippet(snip.id)"
+                    role="tab"
+                    [attr.aria-selected]="activeSnippetId() === snip.id"
+                  >
+                    <span class="tab-indicator" [class.tab-indicator--active]="activeSnippetId() === snip.id"></span>
+                    <span>{{ snip.filename }}</span>
+                  </button>
+                }
+              </div>
+
+              <!-- Language Tag & Run Button -->
+              <div class="terminal-lang-badge">
+                <span class="lang-label">{{ activeSnippet().langBadge }}</span>
+                <button
+                  type="button"
+                  class="btn-run-code"
+                  (click)="triggerRun()"
+                  [disabled]="isCompiling()"
+                  title="Ejecutar código en sandbox simulado"
+                >
+                  <svg class="run-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                  <span>{{ isCompiling() ? '...' : 'Run' }}</span>
+                </button>
+              </div>
             </div>
-            <pre class="code-window__body"><code><span class="c"># SysEng Academy</span>
-<span class="k">def</span> <span class="f">aprender_programacion</span>():
-    ruta = <span class="s">"Fundamentos → POO"</span>
-    <span class="k">for</span> nivel <span class="k">in</span> ruta.niveles:
-        completar(nivel.lecciones)
-        practicar(nivel.ejercicios)
 
-    <span class="k">return</span> <span class="s">"Ingeniero de Sistemas"</span>
+            <!-- Editor Code Body -->
+            <div class="terminal-card__body">
+              <div class="code-view">
+                <!-- Line Numbers -->
+                <div class="line-numbers" aria-hidden="true">
+                  @for (line of activeSnippet().lines; track line.num) {
+                    <div class="line-num">{{ line.num }}</div>
+                  }
+                </div>
 
-<span class="f">aprender_programacion</span>()</code></pre>
+                <!-- Syntax Highlighted Code -->
+                <div class="code-lines">
+                  @for (line of activeSnippet().lines; track line.num) {
+                    <div class="code-line" [class]="line.indentClass ?? ''">
+                      @for (tok of line.tokens; track $index) {
+                        <span [class]="tok.cls">{{ tok.text }}</span>
+                      }
+                      @if ($last) {
+                        <span class="cursor-blink">_</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Terminal Output Footer -->
+            <div class="terminal-card__footer" [class.terminal-card__footer--compiling]="isCompiling()">
+              <div class="footer-left">
+                @if (isCompiling()) {
+                  <span class="compiling-spinner">⚙</span>
+                  <span class="compiling-text">Compilando AST y optimizando runtime...</span>
+                } @else {
+                  <span class="check-icon">✓</span>
+                  <span class="output-label">Output:</span>
+                  <span class="output-value">{{ activeSnippet().outputVal }}</span>
+                  <span class="output-note">{{ activeSnippet().outputNote }}</span>
+                }
+              </div>
+              <div class="footer-right">
+                <span class="status-pulse-dot" [class.status-pulse-dot--compiling]="isCompiling()"></span>
+                <span class="status-text">{{ isCompiling() ? 'calculando...' : activeSnippet().runtimeStatus }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

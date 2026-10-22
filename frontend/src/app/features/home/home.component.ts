@@ -6,6 +6,28 @@ import { formatRatingCount } from '../../core/services/courses.service';
 import { LearningPath, Course, Category } from '../../core/models';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
 
+export interface CodeToken {
+  text: string;
+  cls: string;
+}
+
+export interface CodeLine {
+  num: string;
+  indentClass?: string;
+  tokens: CodeToken[];
+}
+
+export interface TerminalSnippet {
+  id: string;
+  filename: string;
+  langBadge: string;
+  lines: CodeLine[];
+  outputCmd: string;
+  outputVal: string;
+  outputNote: string;
+  runtimeStatus: string;
+}
+
 interface SnakeStop {
   path: LearningPath;
   color: string;   // color de la categoría (identidad del nodo)
@@ -41,6 +63,84 @@ export class HomeComponent implements OnInit {
   featuredCourses = signal<Course[]>([]);
   categories      = signal<Category[]>([]);
   selectedCategory = signal<string>('all');
+
+  // Terminal interactivo Hero con dinamismo sutil
+  readonly terminalSnippets: TerminalSnippet[] = [
+    {
+      id: 'python',
+      filename: 'main.py',
+      langBadge: 'PYTHON',
+      lines: [
+        { num: '01', tokens: [{ text: '# SysEng Academy // Core Foundation', cls: 'tok-comment' }] },
+        { num: '02', tokens: [{ text: 'def ', cls: 'tok-keyword' }, { text: 'aprender_programacion', cls: 'tok-fn' }, { text: '():', cls: 'tok-punct' }] },
+        { num: '03', indentClass: 'indent-1', tokens: [{ text: 'ruta ', cls: 'tok-var' }, { text: '= ', cls: 'tok-punct' }, { text: '"Estructuras de Datos → Cloud"', cls: 'tok-str' }] },
+        { num: '04', indentClass: 'indent-1', tokens: [{ text: 'for ', cls: 'tok-keyword' }, { text: 'modulo ', cls: 'tok-var' }, { text: 'in ', cls: 'tok-keyword' }, { text: 'ruta.contenidos:', cls: 'tok-var' }] },
+        { num: '05', indentClass: 'indent-2', tokens: [{ text: 'dominar', cls: 'tok-fn' }, { text: '(modulo.proyectos)', cls: 'tok-punct' }] },
+        { num: '06', indentClass: 'indent-1', tokens: [{ text: 'return ', cls: 'tok-keyword' }, { text: '"Ingeniero de Sistemas"', cls: 'tok-str' }] },
+        { num: '07', tokens: [{ text: 'print', cls: 'tok-fn' }, { text: '(', cls: 'tok-punct' }, { text: 'aprender_programacion', cls: 'tok-fn' }, { text: '())', cls: 'tok-punct' }] },
+      ],
+      outputCmd: 'aprender_programacion()',
+      outputVal: '"Ingeniero de Sistemas"',
+      outputNote: '// Nivel Senior Alcanzado',
+      runtimeStatus: 'runtime ready',
+    },
+    {
+      id: 'typescript',
+      filename: 'graph.ts',
+      langBadge: 'TYPESCRIPT',
+      lines: [
+        { num: '01', tokens: [{ text: '// SysEng Core // Distributed Graph Engine', cls: 'tok-comment' }] },
+        { num: '02', tokens: [{ text: 'async function ', cls: 'tok-keyword' }, { text: 'optimizarRed', cls: 'tok-fn' }, { text: '(nodo: Cluster): ', cls: 'tok-punct' }, { text: 'Promise<Result>', cls: 'tok-type' }, { text: ' {', cls: 'tok-punct' }] },
+        { num: '03', indentClass: 'indent-1', tokens: [{ text: 'const ', cls: 'tok-keyword' }, { text: 'pipeline ', cls: 'tok-var' }, { text: '= await nodo.', cls: 'tok-punct' }, { text: 'compilarRuta', cls: 'tok-fn' }, { text: '();', cls: 'tok-punct' }] },
+        { num: '04', indentClass: 'indent-1', tokens: [{ text: 'for (const ', cls: 'tok-keyword' }, { text: 'etapa ', cls: 'tok-var' }, { text: 'of ', cls: 'tok-keyword' }, { text: 'pipeline.modulos) {', cls: 'tok-punct' }] },
+        { num: '05', indentClass: 'indent-2', tokens: [{ text: 'await etapa.', cls: 'tok-var' }, { text: 'desplegarSandbox', cls: 'tok-fn' }, { text: '({ latencia: ', cls: 'tok-punct' }, { text: '"< 1ms"', cls: 'tok-str' }, { text: ' });', cls: 'tok-punct' }] },
+        { num: '06', indentClass: 'indent-1', tokens: [{ text: '}', cls: 'tok-punct' }] },
+        { num: '07', indentClass: 'indent-1', tokens: [{ text: 'return ', cls: 'tok-keyword' }, { text: '"Cloud Architect Ready"', cls: 'tok-str' }, { text: ';', cls: 'tok-punct' }] },
+      ],
+      outputCmd: 'optimizarRed(cluster)',
+      outputVal: '"Cloud Architect Ready"',
+      outputNote: '// 100% Tests Pasados (0.4ms)',
+      runtimeStatus: 'cluster online',
+    },
+    {
+      id: 'rust',
+      filename: 'kernel.rs',
+      langBadge: 'RUST',
+      lines: [
+        { num: '01', tokens: [{ text: '// Zero-Cost Abstractions & Concurrency', cls: 'tok-comment' }] },
+        { num: '02', tokens: [{ text: 'pub fn ', cls: 'tok-keyword' }, { text: 'compilar_sistemas', cls: 'tok-fn' }, { text: '() -> ', cls: 'tok-punct' }, { text: 'Result', cls: 'tok-type' }, { text: '<Architect, Error> {', cls: 'tok-punct' }] },
+        { num: '03', indentClass: 'indent-1', tokens: [{ text: 'let ', cls: 'tok-keyword' }, { text: 'stack = ', cls: 'tok-var' }, { text: 'vec!', cls: 'tok-fn' }, { text: '["Rust", "Distributed", "Security"];', cls: 'tok-str' }] },
+        { num: '04', indentClass: 'indent-1', tokens: [{ text: 'let ', cls: 'tok-keyword' }, { text: 'runtime = SysEng::', cls: 'tok-var' }, { text: 'deploy', cls: 'tok-fn' }, { text: '(&stack)?;', cls: 'tok-punct' }] },
+        { num: '05', indentClass: 'indent-1', tokens: [{ text: 'runtime.', cls: 'tok-var' }, { text: 'verify_memory_safety', cls: 'tok-fn' }, { text: '();', cls: 'tok-punct' }] },
+        { num: '06', indentClass: 'indent-1', tokens: [{ text: 'Ok', cls: 'tok-type' }, { text: '(', cls: 'tok-punct' }, { text: 'Architect::Principal', cls: 'tok-str' }, { text: ')', cls: 'tok-punct' }] },
+        { num: '07', tokens: [{ text: '}', cls: 'tok-punct' }] },
+      ],
+      outputCmd: 'cargo run --release',
+      outputVal: 'Architect::Principal',
+      outputNote: '// Memory-Safe • Zero-Downtime',
+      runtimeStatus: 'cargo test: 0 errors',
+    }
+  ];
+
+  activeSnippetId = signal<string>('python');
+  isCompiling     = signal<boolean>(false);
+
+  activeSnippet = computed(() => {
+    return this.terminalSnippets.find(s => s.id === this.activeSnippetId()) ?? this.terminalSnippets[0];
+  });
+
+  selectSnippet(id: string) {
+    if (this.activeSnippetId() === id) return;
+    this.activeSnippetId.set(id);
+    this.triggerRun();
+  }
+
+  triggerRun() {
+    this.isCompiling.set(true);
+    setTimeout(() => {
+      this.isCompiling.set(false);
+    }, 320);
+  }
 
   displayedCourses = computed(() => {
     // En la página de inicio se muestran exclusivamente los 6 cursos destacados principales
