@@ -2,19 +2,16 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
-import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.component';
+import { AuthGamifiedVisualComponent } from '../gamified-visual/gamified-visual.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [RouterLink, FormsModule, HalftoneVisualComponent],
+  imports: [RouterLink, FormsModule, AuthGamifiedVisualComponent],
   template: `
     <div class="auth-page">
       <!-- Background Subtle Grid -->
       <div class="grid-lines" aria-hidden="true"></div>
-
-      <!-- Unified Dynamic Halftone & Particle Field spanning the entire page -->
-      <app-halftone-visual></app-halftone-visual>
 
       <!-- Main Fullscreen Layout -->
       <main class="auth-main-layout">
@@ -148,11 +145,9 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           </div>
         </div>
 
-        <!-- RIGHT SIDE: Fluid Organic Showcase area -->
+        <!-- RIGHT SIDE: Gamified Programming Showcase -->
         <div class="auth-showcase-column">
-          <div class="watermark-tag">
-            SYSENG // REVOLUTIONIZING SYSTEM LEARNING
-          </div>
+          <app-gamified-visual></app-gamified-visual>
         </div>
       </main>
 
@@ -605,26 +600,16 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
       }
 
-      /* RIGHT SHOWCASE COLUMN */
+      /* RIGHT SHOWCASE COLUMN (Gamified IDE Sandbox) */
       .auth-showcase-column {
         width: 50%;
         min-height: 100vh;
         position: relative;
         display: flex;
-        align-items: flex-end;
-        justify-content: flex-end;
-        padding: 24px 32px;
-        pointer-events: none;
-      }
-
-      .watermark-tag {
-        font-family: var(--font-mono, 'JetBrains Mono', monospace);
-        font-size: 10px;
-        font-weight: 500;
-        letter-spacing: 0.18em;
-        color: rgba(148, 163, 184, 0.35);
-        text-transform: uppercase;
-        user-select: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        overflow: hidden;
       }
 
       /* Alert Badges */
@@ -758,10 +743,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         }
 
         .auth-showcase-column {
-          width: 100%;
-          min-height: auto;
-          padding: 16px 20px;
-          justify-content: center;
+          display: none;
         }
       }
     `
