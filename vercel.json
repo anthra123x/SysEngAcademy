@@ -3,12 +3,6 @@
   "framework": null,
   "buildCommand": "cd frontend && npm install && npm run build && mkdir -p ../browser && cp -r dist/frontend/browser/* ../browser/ 2>/dev/null || true",
   "outputDirectory": "frontend/dist/frontend/browser",
-  "crons": [
-    {
-      "path": "/api/health",
-      "schedule": "*/10 * * * *"
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",
