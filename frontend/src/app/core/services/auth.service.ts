@@ -226,7 +226,11 @@ export class AuthService {
   warmupBackend(): void {
     if (typeof window !== 'undefined') {
       try {
-        fetch(`${this.api.baseUrl}/health`).catch(() => {});
+        fetch(`${this.api.baseUrl}/health`, {
+          method: 'GET',
+          cache: 'no-store',
+          keepalive: true,
+        }).catch(() => {});
       } catch {}
     }
   }
@@ -294,7 +298,54 @@ export class AuthService {
 
       let popup: Window | null = null;
       try {
-        popup = window.open(directAuthUrl, `syseng_oauth_${provider}`, windowFeatures);
+        // Abrir inmediatamente la ventana en 'about:blank' para respuesta instantánea (0ms de latencia de click)
+        popup = window.open('about:blank', `syseng_oauth_${provider}`, windowFeatures);
+        if (popup && !popup.closed) {
+          const providerName = provider === 'google' ? 'Google' : 'GitHub';
+          const brandColor = provider === 'google' ? '#4285F4' : '#00E599';
+          try {
+            popup.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Conectando con ${providerName} — SysEng Academy</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #08090D;
+      color: #F8FAFC;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255, 255, 255, 0.08);
+      border-top-color: ${brandColor};
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+      margin-bottom: 16px;
+    }
+    .title { font-size: 14px; font-weight: 600; color: #F8FAFC; margin-bottom: 6px; }
+    .subtitle { font-size: 12px; color: #94A3B8; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <div class="title">Conectando con ${providerName}...</div>
+  <div class="subtitle">Abriendo autenticación segura</div>
+</body>
+</html>`);
+            popup.document.close();
+          } catch {}
+          // Redirigir de inmediato al endpoint de OAuth
+          popup.location.replace(directAuthUrl);
+        }
       } catch {
         popup = null;
       }

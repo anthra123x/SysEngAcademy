@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
@@ -51,6 +51,8 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                   type="button"
                   class="btn-social"
                   (click)="registerWithSocial('google')"
+                  (mouseenter)="preloadSocial()"
+                  (focus)="preloadSocial()"
                   [disabled]="socialLoading() !== null"
                 >
                   <svg class="social-icon" viewBox="0 0 24 24" width="16" height="16">
@@ -66,6 +68,8 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                   type="button"
                   class="btn-social"
                   (click)="registerWithSocial('github')"
+                  (mouseenter)="preloadSocial()"
+                  (focus)="preloadSocial()"
                   [disabled]="socialLoading() !== null"
                 >
                   <svg class="social-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -717,7 +721,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
     `
   ]
 })
-export class RegisterComponent implements OnDestroy {
+export class RegisterComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private router = inject(Router);
 
@@ -734,6 +738,15 @@ export class RegisterComponent implements OnDestroy {
   resendCooldown = signal(0);
   error = signal<string>('');
   successMsg = signal<string>('');
+
+  ngOnInit(): void {
+    // Calentamiento temprano del backend al entrar a la vista de registro
+    this.auth.warmupBackend();
+  }
+
+  preloadSocial(): void {
+    this.auth.warmupBackend();
+  }
 
   registerWithSocial(provider: 'google' | 'github') {
     this.socialLoading.set(provider);

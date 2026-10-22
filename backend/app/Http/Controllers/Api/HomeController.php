@@ -58,8 +58,10 @@ class HomeController extends Controller
                 }
                 unset($c);
             }
+            return response()->json($payload)->header('Cache-Control', 'private, no-cache');
         }
 
-        return response()->json($payload);
+        return response()->json($payload)
+            ->header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     }
 }

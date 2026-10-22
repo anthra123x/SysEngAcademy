@@ -45,7 +45,8 @@ COPY . .
 # Generar autoload optimizado
 RUN composer dump-autoload --optimize --no-dev --ignore-platform-reqs
 
-# Copiar configuraciones de Nginx, Supervisor y Entrypoint
+# Copiar configuraciones de Nginx, Supervisor, OPcache y Entrypoint
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint

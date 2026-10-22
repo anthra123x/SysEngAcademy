@@ -16,6 +16,7 @@ class CategoryController extends Controller
             return Category::withCount('courses')->get()->toArray();
         });
 
-        return response()->json($categories);
+        return response()->json($categories)
+            ->header('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400');
     }
 }

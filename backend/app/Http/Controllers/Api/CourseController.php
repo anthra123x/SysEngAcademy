@@ -49,9 +49,11 @@ class CourseController extends Controller
                 }
                 unset($c);
             }
+            return response()->json($data)->header('Cache-Control', 'private, no-cache');
         }
 
-        return response()->json($data);
+        return response()->json($data)
+            ->header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     }
 
     public function show(Request $request, string $slug)
@@ -120,8 +122,11 @@ class CourseController extends Controller
                 ->where('user_id', $user->id)
                 ->first();
             $course['user_review'] = $userReview;
+
+            return response()->json($course)->header('Cache-Control', 'private, no-cache');
         }
 
-        return response()->json($course);
+        return response()->json($course)
+            ->header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     }
 }

@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from './layout/navbar/navbar.component';
 import { MobileBottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
 import { AiCompanionComponent } from './features/ai-companion/ai-companion.component';
 import { GlobalToastComponent } from './shared/components/global-toast.component';
+import { AuthService } from './core/services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -40,14 +41,20 @@ import { GlobalToastComponent } from './shared/components/global-toast.component
     }
   `]
 })
-export class App {
+export class App implements OnInit {
   private router = inject(Router);
+  private auth = inject(AuthService);
   readonly isClassroomMode = signal(
     this.checkClassroomMode(this.router.url)
   );
   readonly isAuthPage = signal(
     this.checkAuthPage(this.router.url)
   );
+
+  ngOnInit(): void {
+    // Calentamiento asíncrono y silencioso del backend (aprovecha la carga inicial para evitar arranques en frío)
+    this.auth.warmupBackend();
+  }
 
   private checkClassroomMode(url: string): boolean {
     const cleanUrl = (url || '').split('?')[0].split('#')[0];

@@ -51,6 +51,8 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                 type="button"
                 class="btn-social"
                 (click)="loginWithSocial('google')"
+                (mouseenter)="preloadSocial()"
+                (focus)="preloadSocial()"
                 [disabled]="socialLoading() !== null"
               >
                 <svg class="social-icon" viewBox="0 0 24 24" width="16" height="16">
@@ -67,6 +69,8 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
                 type="button"
                 class="btn-social"
                 (click)="loginWithSocial('github')"
+                (mouseenter)="preloadSocial()"
+                (focus)="preloadSocial()"
                 [disabled]="socialLoading() !== null"
               >
                 <svg class="social-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -790,6 +794,9 @@ export class LoginComponent implements OnInit {
   forgotSuccess = signal<string | null>(null);
 
   ngOnInit(): void {
+    // Calentamiento temprano del backend al entrar a la vista de login
+    this.authService.warmupBackend();
+
     const errorParam = this.route.snapshot.queryParamMap.get('error');
     if (errorParam) {
       if (errorParam === 'oauth_cancelled') {
@@ -800,6 +807,10 @@ export class LoginComponent implements OnInit {
         this.error.set(decodeURIComponent(errorParam));
       }
     }
+  }
+
+  preloadSocial(): void {
+    this.authService.warmupBackend();
   }
 
   submit(): void {

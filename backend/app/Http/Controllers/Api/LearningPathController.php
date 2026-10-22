@@ -96,7 +96,8 @@ class LearningPathController extends Controller
             return $paths->toArray();
         });
 
-        return response()->json($data);
+        return response()->json($data)
+            ->header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     }
 
     public function show(Request $request, string $slug)
@@ -241,8 +242,11 @@ class LearningPathController extends Controller
             $path['user_progress_percent'] = $totalLevels > 0 ? (int) round(($completedLevels / $totalLevels) * 100) : 0;
             $path['completed_levels_count'] = $completedLevels;
             $path['total_levels_count'] = $totalLevels;
+
+            return response()->json($path)->header('Cache-Control', 'private, no-cache');
         }
 
-        return response()->json($path);
+        return response()->json($path)
+            ->header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     }
 }
