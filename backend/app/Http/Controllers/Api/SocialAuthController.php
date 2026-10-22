@@ -35,15 +35,53 @@ class SocialAuthController extends Controller
     }
 
     /**
-     * Procesa el retorno del proveedor OAuth y despacha los datos al frontend.
+     * Endpoint API para intercambio directo de código OAuth (llamado desde el frontend SPA en Vercel).
      */
-    public function callback(Request $request, string $provider): Response
+    public function exchange(Request $request, string $provider): JsonResponse
     {
-        $frontendUrl = rtrim(config('app.frontend_url') ?: env('FRONTEND_URL', 'https://www.sysengacademy.site'), '/');
-        $state = (string) $request->query('state', '');
+        $code = (string) $request->input('code');
+        $state = (string) $request->input('state');
+        $redirectUri = (string) $request->input('redirect_uri');
+
+        if (empty($code)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El código de autorización OAuth es obligatorio.',
+            ], 422);
+        }
 
         try {
-            $result = $this->socialAuthService->handleCallback($provider, $state);
+            $result = $this->socialAuthService->handleCallback($provider, $state, $redirectUri ?: null);
+
+            return response()->json([
+                'success' => true,
+                'token' => $result['token'],
+                'user' => $result['user'],
+                'has_repo_scope' => $result['has_repo_scope'] ?? false,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'No se pudo verificar la autorización con el proveedor.',
+            ], 400);
+        }
+    }
+
+    /**
+     * Procesa el retorno del proveedor OAuth y despacha los datos al frontend.
+     */
+    public function callback(Request $request, string $provider): Response|JsonResponse
+    {
+        if ($request->wantsJson() || $request->isJson() || $request->has('exchange')) {
+            return $this->exchange($request, $provider);
+        }
+
+        $frontendUrl = rtrim(config('app.frontend_url') ?: env('FRONTEND_URL', 'https://www.sysengacademy.site'), '/');
+        $state = (string) $request->query('state', $request->input('state', ''));
+        $redirectUri = (string) $request->input('redirect_uri', '');
+
+        try {
+            $result = $this->socialAuthService->handleCallback($provider, $state, $redirectUri ?: null);
 
             $payloadJson = json_encode([
                 'type' => 'SYSENG_OAUTH_SUCCESS',

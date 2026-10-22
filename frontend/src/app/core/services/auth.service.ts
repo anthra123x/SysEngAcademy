@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, Observer, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { User } from '../models';
 
@@ -223,6 +223,36 @@ export class AuthService {
     this.setSession(res);
   }
 
+  exchangeSocialCode(
+    provider: string,
+    code: string,
+    state?: string | null,
+    redirectUri?: string | null
+  ): Observable<{ user: User; token: string; has_repo_scope?: boolean }> {
+    return this.api.post<{
+      success: boolean;
+      token: string;
+      user: User;
+      has_repo_scope?: boolean;
+      message?: string;
+    }>(`/auth/${provider}/exchange`, {
+      code,
+      state: state || undefined,
+      redirect_uri: redirectUri || undefined,
+    }).pipe(
+      map(res => {
+        if (!res.token || !res.user) {
+          throw new Error(res.message || 'Error al obtener la sesión.');
+        }
+        return {
+          user: res.user,
+          token: res.token,
+          has_repo_scope: res.has_repo_scope,
+        };
+      })
+    );
+  }
+
   warmupBackend(): void {
     if (typeof window !== 'undefined') {
       try {
@@ -253,6 +283,7 @@ export class AuthService {
       // Empaquetar estado para no depender del arranque síncrono del backend en Render
       const statePayload = {
         provider,
+        redirect_uri: callbackUrl,
         user_id: this._user()?.id || null,
         scope_type: scopeType || null,
         ts: Date.now(),

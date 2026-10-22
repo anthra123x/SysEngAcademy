@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->timestamp]));
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->whereIn('provider', ['google', 'github']);
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', ['google', 'github']);
+Route::post('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', ['google', 'github']);
+Route::post('/auth/{provider}/exchange', [SocialAuthController::class, 'exchange'])->whereIn('provider', ['google', 'github'])->middleware('throttle:30,1');
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:15,1');
 Route::post('/auth/register/request-code', [AuthController::class, 'requestRegistrationCode'])->middleware('throttle:15,1');
 Route::post('/auth/register/confirm', [AuthController::class, 'confirmRegistration'])->middleware('throttle:15,1');

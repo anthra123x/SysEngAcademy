@@ -5,6 +5,11 @@
   "outputDirectory": "frontend/dist/frontend/browser",
   "routes": [
     {
+      "src": "^/api/auth/(google|github)/callback.*$",
+      "methods": ["GET"],
+      "dest": "/index.html"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "https://sysengacademy.onrender.com/api/$1"
     },

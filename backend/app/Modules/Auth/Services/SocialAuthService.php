@@ -56,7 +56,7 @@ class SocialAuthService
      * Procesa el callback del proveedor OAuth, intercambia el código, sincroniza
      * la cuenta social y emite el token JWT para la sesión.
      */
-    public function handleCallback(string $provider, ?string $state = null): array
+    public function handleCallback(string $provider, ?string $state = null, ?string $redirectUri = null): array
     {
         $this->ensureSupportedProvider($provider);
 
@@ -72,6 +72,7 @@ class SocialAuthService
                         'provider' => $decoded['provider'],
                         'user_id' => $decoded['user_id'] ?? null,
                         'scope_type' => $decoded['scope_type'] ?? null,
+                        'redirect_uri' => $decoded['redirect_uri'] ?? null,
                     ];
                 }
             } catch (\Throwable) {
@@ -80,6 +81,7 @@ class SocialAuthService
         }
         $linkingUserId = $cachedState['user_id'] ?? null;
         $scopeType = $cachedState['scope_type'] ?? null;
+        $effectiveRedirectUri = $redirectUri ?: ($cachedState['redirect_uri'] ?? null);
 
         $clientSecret = config("services.{$provider}.client_secret");
         if (empty($clientSecret)) {
@@ -87,8 +89,13 @@ class SocialAuthService
             throw new \RuntimeException("Falta configurar la variable de entorno {$upper}_CLIENT_SECRET en el panel de Render.");
         }
 
-        /** @var \Laravel\Socialite\Two\User $socialiteUser */
-        $socialiteUser = Socialite::driver($provider)->stateless()->user();
+        /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+        $driver = Socialite::driver($provider)->stateless();
+        if ($effectiveRedirectUri) {
+            $driver->redirectUrl($effectiveRedirectUri);
+        }
+
+        $socialiteUser = $driver->user();
 
         $providerUserId = (string) $socialiteUser->getId();
         $email = $socialiteUser->getEmail();
