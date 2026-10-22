@@ -2,16 +2,19 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
-import { AuthGamifiedVisualComponent } from '../gamified-visual/gamified-visual.component';
+import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [RouterLink, FormsModule, AuthGamifiedVisualComponent],
+  imports: [RouterLink, FormsModule, HalftoneVisualComponent],
   template: `
     <div class="auth-page">
       <!-- Background Subtle Grid -->
       <div class="grid-lines" aria-hidden="true"></div>
+
+      <!-- Unified Dynamic Halftone & Particle Field spanning the entire page -->
+      <app-halftone-visual></app-halftone-visual>
 
       <!-- Main Fullscreen Layout -->
       <main class="auth-main-layout">
@@ -145,9 +148,11 @@ import { AuthGamifiedVisualComponent } from '../gamified-visual/gamified-visual.
           </div>
         </div>
 
-        <!-- RIGHT SIDE: Gamified Programming Showcase -->
+        <!-- RIGHT SIDE: Fluid Organic Showcase area -->
         <div class="auth-showcase-column">
-          <app-gamified-visual></app-gamified-visual>
+          <div class="watermark-tag">
+            SYSENG // REVOLUTIONIZING SYSTEM LEARNING
+          </div>
         </div>
       </main>
 
@@ -600,16 +605,26 @@ import { AuthGamifiedVisualComponent } from '../gamified-visual/gamified-visual.
         }
       }
 
-      /* RIGHT SHOWCASE COLUMN (Gamified IDE Sandbox) */
+      /* RIGHT SHOWCASE COLUMN */
       .auth-showcase-column {
         width: 50%;
         min-height: 100vh;
         position: relative;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        overflow: hidden;
+        align-items: flex-end;
+        justify-content: flex-end;
+        padding: 24px 32px;
+        pointer-events: none;
+      }
+
+      .watermark-tag {
+        font-family: var(--font-mono, 'JetBrains Mono', monospace);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        color: rgba(148, 163, 184, 0.35);
+        text-transform: uppercase;
+        user-select: none;
       }
 
       /* Alert Badges */
@@ -743,7 +758,10 @@ import { AuthGamifiedVisualComponent } from '../gamified-visual/gamified-visual.
         }
 
         .auth-showcase-column {
-          display: none;
+          width: 100%;
+          min-height: auto;
+          padding: 16px 20px;
+          justify-content: center;
         }
       }
     `
