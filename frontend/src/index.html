@@ -9,10 +9,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
   <meta name="description" content="Rutas de aprendizaje estructuradas, cursos interactivos con código en vivo y asistente de IA para estudiantes de Ingeniería de Sistemas.">
 
+  <!-- Canonical URL (Elimina contenido duplicado en buscadores) -->
+  <link rel="canonical" href="https://www.sysengacademy.site/">
+
+  <!-- Search Engine Crawlers & Indexing Directives -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="author" content="SysEng Academy">
+  <meta name="keywords" content="aprender a programar, ingenieria de software, ingenieria de sistemas, rutas de aprendizaje, cursos de programacion, codelab, retos de codigo, python, javascript, backend, frontend, inteligencia artificial, educacion online">
+
+  <!-- Google Search Console Verification Meta Tag (Reemplaza con tu token de Google Search Console) -->
+  <meta name="google-site-verification" content="GSC_VERIFICATION_PLACEHOLDER">
+
   <!-- High-Performance Typography & DNS Preconnections -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+  <!-- Google Analytics & Tag Manager Preconnections -->
+  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+  <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+  <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+  <link rel="dns-prefetch" href="https://www.google-analytics.com">
 
   <!-- Instant OAuth & Backend Origin Preconnections (Eliminates Click/Auth Latency) -->
   <link rel="preconnect" href="https://accounts.google.com" crossorigin>
@@ -34,26 +51,74 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png">
 
-  <!-- Open Graph & Social / Browser Link Previews -->
+  <!-- Open Graph & Social Previews (WhatsApp, LinkedIn, Facebook, Discord) -->
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SysEng Academy">
+  <meta property="og:locale" content="es_LA">
   <meta property="og:url" content="https://www.sysengacademy.site/">
   <meta property="og:title" content="SysEng Academy — Aprende Programación e Ingeniería de Software">
-  <meta property="og:description" content="Rutas de aprendizaje interactivas, retos de código en tiempo real y asistente con inteligencia artificial para estudiantes de ingeniería.">
-  <meta property="og:image" content="https://www.sysengacademy.site/icons/icon-512x512.png">
-  <meta property="og:image:width" content="512">
-  <meta property="og:image:height" content="512">
+  <meta property="og:description" content="Rutas de aprendizaje interactivas, retos de código en tiempo real y asistente con inteligencia artificial para estudiantes y desarrolladores.">
+  <meta property="og:image" content="https://www.sysengacademy.site/og-image.png">
+  <meta property="og:image:secure_url" content="https://www.sysengacademy.site/og-image.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="SysEng Academy — Formación interactiva en ingeniería de software">
 
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary">
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SysEng Academy — Aprende Programación e Ingeniería de Software">
-  <meta name="twitter:description" content="Rutas de aprendizaje interactivas, retos de código en tiempo real y asistente con inteligencia artificial para estudiantes de ingeniería.">
-  <meta name="twitter:image" content="https://www.sysengacademy.site/icons/icon-512x512.png">
+  <meta name="twitter:description" content="Rutas de aprendizaje interactivas, retos de código en tiempo real y asistente con inteligencia artificial para estudiantes y desarrolladores.">
+  <meta name="twitter:image" content="https://www.sysengacademy.site/og-image.png">
+  <meta name="twitter:image:alt" content="SysEng Academy — Formación interactiva en ingeniería de software">
 
   <!-- Web App Manifest & Browser Tab Icons -->
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="shortcut icon" href="/favicon.ico">
+
+  <!-- Structured Data / Rich Snippets (Schema.org JSON-LD para Google) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://www.sysengacademy.site/#website",
+        "url": "https://www.sysengacademy.site/",
+        "name": "SysEng Academy",
+        "description": "Plataforma de formación interactiva en ingeniería de sistemas y software con inteligencia artificial.",
+        "inLanguage": "es",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://www.sysengacademy.site/cursos?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "EducationalOrganization",
+        "@id": "https://www.sysengacademy.site/#organization",
+        "name": "SysEng Academy",
+        "url": "https://www.sysengacademy.site/",
+        "logo": "https://www.sysengacademy.site/icons/icon-512x512.png",
+        "image": "https://www.sysengacademy.site/og-image.png",
+        "description": "Rutas de aprendizaje interactivas, laboratorios de código en tiempo real y mentor de IA para estudiantes y profesionales.",
+        "sameAs": [
+          "https://github.com/anthra123x/SysEngAcademy"
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <!-- Google Analytics 4 (GA4) Configuration Hook -->
+  <script>
+    window.__GA_MEASUREMENT_ID__ = window.__GA_MEASUREMENT_ID__ || 'G-XXXXXXXXXX';
+  </script>
 </head>
 <body>
   <app-root></app-root>

@@ -1,0 +1,26 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /docente
+Disallow: /onboarding
+Disallow: /api/
+
+# Crawler specifics
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /docente
+Disallow: /onboarding
+Disallow: /api/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /docente
+Disallow: /onboarding
+Disallow: /api/
+
+# Canonical Host and Sitemap
+Host: https://www.sysengacademy.site
+Sitemap: https://www.sysengacademy.site/sitemap.xml

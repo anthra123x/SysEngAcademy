@@ -5,6 +5,8 @@ import { MobileBottomNavComponent } from './layout/bottom-nav/bottom-nav.compone
 import { AiCompanionComponent } from './features/ai-companion/ai-companion.component';
 import { GlobalToastComponent } from './shared/components/global-toast.component';
 import { AuthService } from './core/services/auth.service';
+import { SeoService } from './core/services/seo.service';
+import { AnalyticsService } from './core/services/analytics.service';
 
 @Component({
   selector: 'app-root',
@@ -44,6 +46,8 @@ import { AuthService } from './core/services/auth.service';
 export class App implements OnInit {
   private router = inject(Router);
   private auth = inject(AuthService);
+  private seo = inject(SeoService);
+  private analytics = inject(AnalyticsService);
   readonly isClassroomMode = signal(
     this.checkClassroomMode(this.router.url)
   );
