@@ -12,14 +12,16 @@ import { AnalyticsService } from './core/services/analytics.service';
   selector: 'app-root',
   imports: [RouterOutlet, NavbarComponent, MobileBottomNavComponent, AiCompanionComponent, GlobalToastComponent],
   template: `
-    @if (!isClassroomMode() && !isAuthPage()) {
+    @if (!isClassroomMode() && !isAuthPage() && !isOnboardingMode()) {
       <app-navbar />
     }
-    <main [class.classroom-mode]="isClassroomMode()" [class.auth-mode]="isAuthPage()">
+    <main [class.classroom-mode]="isClassroomMode()" [class.auth-mode]="isAuthPage()" [class.onboarding-mode]="isOnboardingMode()">
       <router-outlet />
     </main>
-    @if (!isClassroomMode() && !isAuthPage()) {
+    @if (!isClassroomMode() && !isAuthPage() && !isOnboardingMode()) {
       <app-mobile-bottom-nav />
+    }
+    @if (!isClassroomMode() && !isAuthPage()) {
       <app-ai-companion />
     }
     <app-global-toast />
@@ -29,14 +31,15 @@ import { AnalyticsService } from './core/services/analytics.service';
       min-height: 100vh;
       min-height: 100dvh;
       &.classroom-mode,
-      &.auth-mode {
+      &.auth-mode,
+      &.onboarding-mode {
         min-height: 100vh;
         min-height: 100dvh;
         padding-bottom: 0;
       }
 
       @media (max-width: 768px) {
-        &:not(.classroom-mode):not(.auth-mode) {
+        &:not(.classroom-mode):not(.auth-mode):not(.onboarding-mode) {
           padding-bottom: calc(var(--bottom-nav-height, 60px) + env(safe-area-inset-bottom, 0px) + 20px);
         }
       }
@@ -53,6 +56,9 @@ export class App implements OnInit {
   );
   readonly isAuthPage = signal(
     this.checkAuthPage(this.router.url)
+  );
+  readonly isOnboardingMode = signal(
+    this.checkOnboardingMode(this.router.url)
   );
 
   ngOnInit(): void {
@@ -97,6 +103,11 @@ export class App implements OnInit {
       cleanUrl.startsWith('/auth/verificar');
   }
 
+  private checkOnboardingMode(url: string): boolean {
+    const cleanUrl = (url || '').split('?')[0].split('#')[0];
+    return cleanUrl.startsWith('/onboarding');
+  }
+
   constructor() {
     if (typeof window !== 'undefined') {
       try {
@@ -109,6 +120,7 @@ export class App implements OnInit {
       if (event instanceof NavigationEnd) {
         this.isClassroomMode.set(this.checkClassroomMode(event.urlAfterRedirects));
         this.isAuthPage.set(this.checkAuthPage(event.urlAfterRedirects));
+        this.isOnboardingMode.set(this.checkOnboardingMode(event.urlAfterRedirects));
       }
     });
   }

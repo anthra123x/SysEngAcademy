@@ -171,6 +171,26 @@ export class OnboardingComponent implements OnInit {
     return full.split(' ')[0];
   });
 
+  readonly currentStageIndex = computed(() => {
+    switch (this.stage()) {
+      case 'welcome': return 1;
+      case 'tour': return 2;
+      case 'mission': return 3;
+      case 'assessment':
+      case 'analyzing': return 4;
+      case 'results': return 5;
+      default: return 1;
+    }
+  });
+
+  readonly stageProgressPercent = computed(() => {
+    return (this.currentStageIndex() / 5) * 100;
+  });
+
+  exitTour(): void {
+    this.router.navigate(['/']);
+  }
+
   // Estado del examen diagnóstico
   readonly currentQuestionIndex = signal<number>(0);
   readonly selectedOption = signal<string | null>(null);
