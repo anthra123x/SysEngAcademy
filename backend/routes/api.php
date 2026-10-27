@@ -20,7 +20,39 @@ use App\Http\Controllers\Api\TeacherController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes (Rate limited para prevenir abusos y ataques DoS / fuerza bruta)
-Route::get('/health', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->timestamp]));
+// Endpoints de salud y calentamiento continuo para cron-job.org y monitores uptime
+Route::match(['GET', 'HEAD'], '/health', function () {
+    $dbOk = false;
+    try {
+        \Illuminate\Support\Facades\DB::select('SELECT 1');
+        $dbOk = true;
+    } catch (\Throwable) {}
+
+    return response()->json([
+        'status' => 'ok',
+        'service' => 'SysEng Academy API',
+        'database' => $dbOk ? 'connected' : 'error',
+        'timestamp' => now()->timestamp,
+        'uptime_ping' => now()->toIso8601String(),
+    ]);
+});
+
+Route::match(['GET', 'HEAD'], '/ping', fn () => response('pong', 200, ['Content-Type' => 'text/plain']));
+
+Route::match(['GET', 'HEAD'], '/cron/keep-alive', function () {
+    $dbOk = false;
+    try {
+        \Illuminate\Support\Facades\DB::select('SELECT 1');
+        $dbOk = true;
+    } catch (\Throwable) {}
+
+    return response()->json([
+        'status' => 'alive',
+        'cron_source' => request()->header('User-Agent', 'cron-job'),
+        'database' => $dbOk ? 'warm' : 'retry',
+        'timestamp' => now()->timestamp,
+    ]);
+});
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->whereIn('provider', ['google', 'github']);
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', ['google', 'github']);
 Route::post('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', ['google', 'github']);

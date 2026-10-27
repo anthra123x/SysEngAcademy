@@ -123,7 +123,17 @@ HTML;
 
             return response($html, 200, ['Content-Type' => 'text/html']);
         } catch (\Throwable $e) {
-            $errorMessage = $e->getMessage() ?: 'No se pudo completar la autenticación.';
+            $rawMsg = $e->getMessage() ?: '';
+            if (str_contains($rawMsg, 'invalid_grant')) {
+                $errorMessage = 'La sesión de autorización con ' . ucfirst($provider) . ' expiró o no es válida. Por favor, intenta de nuevo.';
+            } elseif (str_contains($rawMsg, 'access_denied')) {
+                $errorMessage = 'Has cancelado el inicio de sesión con ' . ucfirst($provider) . '.';
+            } elseif (str_contains($rawMsg, 'redirect_uri_mismatch')) {
+                $errorMessage = 'La URL de retorno no coincide con la configurada en el proveedor.';
+            } else {
+                $errorMessage = 'No se pudo completar la autenticación con ' . ucfirst($provider) . '. Inténtalo nuevamente.';
+            }
+
             $errorJson = json_encode([
                 'type' => 'SYSENG_OAUTH_ERROR',
                 'provider' => $provider,

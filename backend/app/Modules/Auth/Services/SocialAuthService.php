@@ -82,6 +82,11 @@ class SocialAuthService
         $linkingUserId = $cachedState['user_id'] ?? null;
         $scopeType = $cachedState['scope_type'] ?? null;
         $effectiveRedirectUri = $redirectUri ?: ($cachedState['redirect_uri'] ?? null);
+        if (!$effectiveRedirectUri || str_contains($effectiveRedirectUri, 'onrender.com')) {
+            $effectiveRedirectUri = app()->isLocal()
+                ? "http://localhost:8000/api/auth/{$provider}/callback"
+                : "https://www.sysengacademy.site/api/auth/{$provider}/callback";
+        }
 
         $clientSecret = config("services.{$provider}.client_secret");
         if (empty($clientSecret)) {

@@ -38,12 +38,12 @@ return [
     'github' => [
         'client_id' => trim(env('GITHUB_CLIENT_ID') ?: 'Ov23liaGFMbw7ABOai7u', "\"' \t\n\r\0\x0B"),
         'client_secret' => trim((string) env('GITHUB_CLIENT_SECRET'), "\"' \t\n\r\0\x0B"),
-        'redirect' => env('GITHUB_REDIRECT_URI') ?: (rtrim(env('APP_URL', 'https://www.sysengacademy.site'), '/') . '/api/auth/github/callback'),
+        'redirect' => env('GITHUB_REDIRECT_URI') ?: 'https://www.sysengacademy.site/api/auth/github/callback',
     ],
 
     'google' => [
         'client_id' => trim(env('GOOGLE_CLIENT_ID') ?: '314182861423-0bodo7ijvgl1eno6h6ff8mnn0t4rfi4t.apps.googleusercontent.com', "\"' \t\n\r\0\x0B"),
         'client_secret' => trim((string) env('GOOGLE_CLIENT_SECRET'), "\"' \t\n\r\0\x0B"),
-        'redirect' => env('GOOGLE_REDIRECT_URI') ?: (rtrim(env('APP_URL', 'https://www.sysengacademy.site'), '/') . '/api/auth/google/callback'),
+        'redirect' => env('GOOGLE_REDIRECT_URI') ?: 'https://www.sysengacademy.site/api/auth/google/callback',
     ],
 ];
