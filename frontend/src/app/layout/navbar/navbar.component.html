@@ -44,7 +44,8 @@
               </a>
             }
             @if (!isTeacher()) {
-              <a routerLink="/perfil" [queryParams]="{ tab: 'streak' }"
+              <a routerLink="/perfil"
+                 [queryParams]="canRecoverStreak() ? { tab: 'streak', action: 'recover' } : { tab: 'streak' }"
                  class="streak-nav-pill"
                  [class.streak-nav-pill--active]="isStreakActive()"
                  [class.streak-nav-pill--pending]="isStreakPending()"
@@ -56,72 +57,13 @@
                       [class.is-pending]="isStreakPending()"
                       [class.is-recoverable]="canRecoverStreak()"
                       [class.is-extinguished]="isStreakExtinguished() && !canRecoverStreak()">
-                  <!-- Cyber Flame Vector Icon (Multi-layered gradient fire) -->
-                  <svg class="streak-flame-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <defs>
-                      <!-- Active Fiery Gradients -->
-                      <linearGradient id="navFlameOuterActive" x1="12" y1="2" x2="12" y2="23" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stop-color="#FFDD00"/>
-                        <stop offset="30%" stop-color="#FF6B00"/>
-                        <stop offset="100%" stop-color="#FF1A00"/>
-                      </linearGradient>
-                      <linearGradient id="navFlameInnerActive" x1="12" y1="11" x2="12" y2="20" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stop-color="#FFFFFF"/>
-                        <stop offset="40%" stop-color="#FFF385"/>
-                        <stop offset="100%" stop-color="#FFB703"/>
-                      </linearGradient>
-
-                      <!-- Pending Warning Gradients -->
-                      <linearGradient id="navFlameOuterPending" x1="12" y1="2" x2="12" y2="23" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stop-color="#FDE047"/>
-                        <stop offset="45%" stop-color="#F59E0B"/>
-                        <stop offset="100%" stop-color="#D97706"/>
-                      </linearGradient>
-                      <linearGradient id="navFlameInnerPending" x1="12" y1="11" x2="12" y2="20" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stop-color="#FEF9C3"/>
-                        <stop offset="100%" stop-color="#FBBF24"/>
-                      </linearGradient>
-
-                      <!-- Recoverable (Dormant Outer + Living Ember Spark) -->
-                      <linearGradient id="navFlameOuterDormant" x1="12" y1="2" x2="12" y2="23" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stop-color="#94A3B8"/>
-                        <stop offset="50%" stop-color="#475569"/>
-                        <stop offset="100%" stop-color="#334155"/>
-                      </linearGradient>
-                      <linearGradient id="navFlameInnerEmber" x1="12" y1="11" x2="12" y2="20" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stop-color="#FFD166"/>
-                        <stop offset="40%" stop-color="#FB8500"/>
-                        <stop offset="100%" stop-color="#EF4444"/>
-                      </linearGradient>
-
-                      <!-- Completely Cold Gradients -->
-                      <linearGradient id="navFlameOuterCold" x1="12" y1="2" x2="12" y2="23" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stop-color="#64748B"/>
-                        <stop offset="100%" stop-color="#334155"/>
-                      </linearGradient>
-                      <linearGradient id="navFlameInnerCold" x1="12" y1="11" x2="12" y2="20" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stop-color="#94A3B8"/>
-                        <stop offset="100%" stop-color="#475569"/>
-                      </linearGradient>
-                    </defs>
-
-                    <!-- Outer Flame Tongue -->
-                    <path class="flame-layer-outer"
-                          d="M12 2C11.38 4.67 9.5 6.5 9.5 9.5C9.5 10.2 9.7 10.85 10.05 11.4C8.75 10.5 8 9.15 8 7.5C6 9.6 4.8 12.4 4.8 15.5C4.8 19.5 8 22.8 12 22.8C16 22.8 19.2 19.5 19.2 15.5C19.2 11 16.2 6 12 2Z" />
-
-                    <!-- Inner Flame Core / Ember -->
-                    <path class="flame-layer-inner"
-                          d="M12 11.5C10.6 12.8 10 14.2 10 16C10 17.8 10.9 19.5 12 19.5C13.1 19.5 14 17.8 14 16C14 14.2 13.4 12.8 12 11.5Z" />
-                  </svg>
+                  <app-icon name="flame" [size]="13" />
                 </span>
 
                 <span class="streak-nav-count">{{ studentStreak() }}d</span>
 
                 @if (canRecoverStreak()) {
-                  <span class="streak-nav-recover-tag">
-                    <span class="recover-spark-icon">⚡</span>
-                    <span class="recover-label">Recuperar</span>
-                  </span>
+                  <span class="streak-nav-recover-btn">Recuperar</span>
                 }
               </a>
             }

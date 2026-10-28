@@ -95,6 +95,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   remoteLeaderboard = signal<LeaderboardEntry[]>([]);
   private studyTimer: any = null;
   private onDiagnosticUpdated = () => this.initLocalData();
+  private queryParamsSub?: any;
 
   // Tab state: student vs teacher
   activeTab = signal<'overview' | 'streak' | 'achievements' | 'leaderboard' | 'advisor' | 'security'>('overview');
@@ -677,15 +678,35 @@ readonly currentStudentEmail = computed(() => {
       window.addEventListener('syseng:xp_updated', this.onFeedbackReceived);
     }
 
-    const qp = this.route.snapshot.queryParams;
-    if ((qp['onboarding'] === 'true' || qp['tab'] === 'diagnostic') && !this.isTeacher()) {
-      this.router.navigate(['/onboarding']);
-    } else if (qp['tab'] === 'security' || qp['tab'] === 'password') {
-      this.activeTab.set('security');
-    }
+    this.queryParamsSub = this.route.queryParams.subscribe(qp => {
+      if ((qp['onboarding'] === 'true' || qp['tab'] === 'diagnostic') && !this.isTeacher()) {
+        this.router.navigate(['/onboarding']);
+      } else if (qp['tab'] === 'security' || qp['tab'] === 'password') {
+        this.activeTab.set('security');
+      } else if (qp['tab'] === 'streak') {
+        this.activeTab.set('streak');
+        this.streakService.loadStatus();
+        if (qp['action'] === 'recover' || qp['recover'] === 'true') {
+          setTimeout(() => {
+            const el = document.getElementById('streak-recovery-station');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 150);
+        }
+      } else if (qp['tab'] === 'achievements') {
+        this.activeTab.set('achievements');
+      } else if (qp['tab'] === 'leaderboard') {
+        this.activeTab.set('leaderboard');
+        this.loadLeaderboard();
+      } else if (qp['tab'] === 'advisor') {
+        this.activeTab.set('advisor');
+      }
+    });
   }
 
   ngOnDestroy() {
+    if (this.queryParamsSub) this.queryParamsSub.unsubscribe();
     if (this.frameTimer) clearInterval(this.frameTimer);
     if (typeof window !== 'undefined') {
       window.removeEventListener('syseng:diagnostic_completed', this.onDiagnosticUpdated);
