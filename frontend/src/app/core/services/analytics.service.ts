@@ -15,8 +15,7 @@ export class AnalyticsService {
   private router = inject(Router);
 
   // ID de Medición de Google Analytics 4 (GA4)
-  // Puede configurarse aquí directamente, vía window.__GA_MEASUREMENT_ID__ o en localStorage('syseng_ga_id')
-  readonly defaultMeasurementId = 'G-XXXXXXXXXX';
+  readonly defaultMeasurementId = 'G-7YS07CLHHN';
 
   private measurementId: string = this.resolveMeasurementId();
   private isInitialized = false;
