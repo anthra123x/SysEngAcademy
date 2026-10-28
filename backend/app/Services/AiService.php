@@ -54,6 +54,14 @@ class AiService
     }
 
     /**
+     * Permite invocar completion con un array estructurado de mensajes del sistema/usuario.
+     */
+    public function generateRawCompletion(array $messages): string
+    {
+        return $this->requestCompletion($messages);
+    }
+
+    /**
      * Genera un mini-quiz de práctica personalizado (bajo demanda) para la
      * lección actual. La IA devuelve JSON; aquí se valida y normaliza para
      * que el frontend pueda renderizarlo sin sorpresas.

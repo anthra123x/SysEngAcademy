@@ -57,16 +57,8 @@ class LessonController extends Controller
             }
         }
 
-        // Datos por usuario
-        $user = $request->user('jwt') ?: $request->user('sanctum');
-        if (! $user && $request->filled('student_email')) {
-            $email = strtolower(trim((string) $request->input('student_email')));
-            $user = \App\Models\User::where('email', $email)->first();
-        }
-        if (! $user && $request->hasHeader('X-User-Email')) {
-            $email = strtolower(trim((string) $request->header('X-User-Email')));
-            $user = \App\Models\User::where('email', $email)->first();
-        }
+        // Datos por usuario autenticado
+        $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
 
         $progress = $user
             ? LessonProgress::where('user_id', $user->id)
@@ -135,9 +127,7 @@ class LessonController extends Controller
      */
     protected function randomizeQuizForUser(array $questions, ?int $userId, int $quizId): array
     {
-        $guestId = request()->input('student_email')
-            ?: request()->header('X-User-Email')
-            ?: request()->header('X-Guest-Id')
+        $guestId = request()->header('X-Guest-Id')
             ?: request()->ip();
 
         $seed = $userId
@@ -273,12 +263,6 @@ class LessonController extends Controller
         $passed = $score >= 90;
 
         $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
-        if (!$user && $request->filled('student_email')) {
-            $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
-        }
-        if (!$user && $request->hasHeader('X-User-Email')) {
-            $user = \App\Models\User::where('email', strtolower(trim((string) $request->header('X-User-Email'))))->first();
-        }
 
         $courseProgress = null;
 
@@ -345,12 +329,6 @@ class LessonController extends Controller
         $request->validate(['score' => 'nullable|integer|min:0|max:100']);
 
         $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
-        if (!$user && $request->filled('student_email')) {
-            $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
-        }
-        if (!$user && $request->hasHeader('X-User-Email')) {
-            $user = \App\Models\User::where('email', strtolower(trim((string) $request->header('X-User-Email'))))->first();
-        }
 
         if (!$user) {
             return response()->json(['message' => 'Debes iniciar sesión para registrar tu progreso.'], 401);
@@ -538,12 +516,6 @@ class LessonController extends Controller
         }
 
         $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
-        if (!$user && $request->filled('student_email')) {
-            $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
-        }
-        if (!$user && $request->hasHeader('X-User-Email')) {
-            $user = \App\Models\User::where('email', strtolower(trim((string) $request->header('X-User-Email'))))->first();
-        }
 
         if (!$user) {
             abort(403, 'Debes iniciar sesión para acceder a esta lección.');

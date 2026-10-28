@@ -48,8 +48,7 @@ class StreakAndRankingTest extends TestCase
         $user->previous_streak = 0;
         $user->save();
 
-        $response = $this->postJson('/api/user/activity-ping', [
-            'email'         => $user->email,
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/user/activity-ping', [
             'delta_seconds' => 30,
             'tz'            => $tz,
             'action'        => 'pulse',
@@ -89,7 +88,7 @@ class StreakAndRankingTest extends TestCase
         $user->previous_streak = 0;
         $user->save();
 
-        $response = $this->getJson('/api/user/streak?email=' . urlencode($user->email));
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/user/streak');
 
         $response->assertStatus(200);
         $data = $response->json();
@@ -107,7 +106,10 @@ class StreakAndRankingTest extends TestCase
      */
     public function test_recovery_drill_endpoint_returns_exercise_without_plain_answer(): void
     {
-        $response = $this->getJson('/api/user/streak/recovery-drill');
+        $user = User::first();
+        $this->assertNotNull($user);
+
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/user/streak/recovery-drill');
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -139,8 +141,7 @@ class StreakAndRankingTest extends TestCase
         $user->save();
 
         // drill-1 tiene como respuesta correcta "ls"
-        $response = $this->postJson('/api/user/streak/recover', [
-            'email'    => $user->email,
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/user/streak/recover', [
             'drill_id' => 'drill-1',
             'answer'   => 'ls',
         ]);
@@ -176,8 +177,7 @@ class StreakAndRankingTest extends TestCase
         $user->previous_streak = 3;
         $user->save();
 
-        $response = $this->postJson('/api/user/streak/recover', [
-            'email'    => $user->email,
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/user/streak/recover', [
             'drill_id' => 'drill-1',
             'answer'   => 'comando_invalido',
         ]);

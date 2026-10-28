@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Auth\DTOs\LoginDTO;
 use App\Modules\Auth\DTOs\RegisterDTO;
 use App\Modules\Auth\Services\AuthService;
+use App\Rules\StrongPassword;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -29,7 +30,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name'     => 'required|string|min:3|max:255',
             'email'    => 'required|string|email|max:255|unique:users,email',
-            'password' => ['required', 'string', 'min:8', 'confirmed', 'regex:/[a-zA-Z]/', 'regex:/[0-9]/'],
+            'password' => ['required', 'string', 'confirmed', new StrongPassword()],
         ], [
             'name.required'      => 'El nombre completo es obligatorio.',
             'name.min'           => 'El nombre debe contener al menos 3 caracteres.',
@@ -177,12 +178,11 @@ class AuthController extends Controller
         $validated = $request->validate([
             'email'              => 'required|string|email',
             'code'               => 'required|string',
-            'password'          => ['required', 'string', 'min:6', 'confirmed'],
+            'password'          => ['required', 'string', 'confirmed', new StrongPassword()],
         ], [
             'email.required'     => 'El correo electrónico es obligatorio.',
             'code.required'      => 'El código de recuperación es obligatorio.',
             'password.required'  => 'La nueva contraseña es obligatoria.',
-            'password.min'       => 'La contraseña debe contener al menos 6 caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
@@ -199,10 +199,9 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'current_password' => 'nullable|string',
-            'password'         => ['required', 'string', 'min:6', 'confirmed'],
+            'password'         => ['required', 'string', 'confirmed', new StrongPassword()],
         ], [
             'password.required'  => 'La nueva contraseña es obligatoria.',
-            'password.min'       => 'La nueva contraseña debe contener al menos 6 caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 

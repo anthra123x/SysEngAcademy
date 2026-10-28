@@ -33,11 +33,10 @@ Route::match(['GET', 'HEAD'], '/health', function () {
         'service' => 'SysEng Academy API',
         'database' => $dbOk ? 'connected' : 'error',
         'timestamp' => now()->timestamp,
-        'uptime_ping' => now()->toIso8601String(),
     ]);
-});
+})->middleware('throttle:60,1');
 
-Route::match(['GET', 'HEAD'], '/ping', fn () => response('pong', 200, ['Content-Type' => 'text/plain']));
+Route::match(['GET', 'HEAD'], '/ping', fn () => response('pong', 200, ['Content-Type' => 'text/plain']))->middleware('throttle:60,1');
 
 Route::match(['GET', 'HEAD'], '/cron/keep-alive', function () {
     $dbOk = false;
@@ -48,11 +47,11 @@ Route::match(['GET', 'HEAD'], '/cron/keep-alive', function () {
 
     return response()->json([
         'status' => 'alive',
-        'cron_source' => request()->header('User-Agent', 'cron-job'),
         'database' => $dbOk ? 'warm' : 'retry',
         'timestamp' => now()->timestamp,
     ]);
-});
+})->middleware('throttle:60,1');
+
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->whereIn('provider', ['google', 'github']);
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', ['google', 'github']);
 Route::post('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', ['google', 'github']);
@@ -79,23 +78,23 @@ Route::get('/courses/{course}/forum', [ForumController::class, 'index']);
 Route::get('/forum/posts/{id}', [ForumController::class, 'show']);
 Route::get('/leaderboard', [LeaderboardController::class, 'index']);
 
-// Telemetría de Racha y Hábito de Estudio (público / híbrido con fallback de email o token)
-Route::post('/user/activity-ping', [StreakController::class, 'ping']);
-Route::get('/user/streak', [StreakController::class, 'status']);
-Route::get('/user/streak/recovery-drill', [StreakController::class, 'recoveryDrill']);
-Route::post('/user/streak/recover', [StreakController::class, 'recover']);
-
 // Code execution routes (public, rate limited)
 Route::get('/languages', [CodeExecutionController::class, 'languages']);
-Route::post('/code/execute', [CodeExecutionController::class, 'execute']);
-
-// Evaluación asistida por IA (híbrido: público con guardado automático para estudiantes autenticados)
-Route::post('/ai/evaluate-challenge', [AiChatController::class, 'evaluateChallenge']);
-Route::post('/ai/quiz-feedback', [AiChatController::class, 'quizFeedback']);
+Route::post('/code/execute', [CodeExecutionController::class, 'execute'])->middleware('throttle:30,1');
 
 // Protected routes: JWT stateless primero (sin consulta a BD), con
 // fallback a Sanctum para tokens legados / tests.
 Route::middleware('auth:jwt,sanctum')->group(function () {
+    // Telemetría de Racha y Hábito de Estudio (autenticado)
+    Route::post('/user/activity-ping', [StreakController::class, 'ping'])->middleware('throttle:60,1');
+    Route::get('/user/streak', [StreakController::class, 'status']);
+    Route::get('/user/streak/recovery-drill', [StreakController::class, 'recoveryDrill']);
+    Route::post('/user/streak/recover', [StreakController::class, 'recover'])->middleware('throttle:15,1');
+
+    // Evaluación asistida por IA (autenticado, rate limited)
+    Route::post('/ai/evaluate-challenge', [AiChatController::class, 'evaluateChallenge'])->middleware('throttle:15,1');
+    Route::post('/ai/quiz-feedback', [AiChatController::class, 'quizFeedback'])->middleware('throttle:15,1');
+
     // CodeLab (Retos & Sandbox Comunitario - Exclusivo para estudiantes autenticados)
     Route::get('/codelab/challenges', [\App\Http\Controllers\Api\CodelabController::class, 'index']);
     Route::get('/codelab/challenges/{slug}', [\App\Http\Controllers\Api\CodelabController::class, 'show']);
@@ -156,13 +155,12 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
     Route::post('/ai/diagnostic', [\App\Http\Controllers\Api\DiagnosticController::class, 'evaluate']);
 
     Route::get('/profile/feedbacks', [ProfileController::class, 'feedbacks']);
-    Route::get('/student/feedbacks', [ProfileController::class, 'feedbacks']);
     Route::post('/student/feedbacks/{id}/remediate', [ProfileController::class, 'remediateFeedback']);
     Route::post('/student/feedbacks/{id}/dismiss', [ProfileController::class, 'dismissFeedback']);
     Route::post('/student/feedbacks/clear-resolved', [ProfileController::class, 'clearResolvedFeedbacks']);
 
     // Teacher & Admin Dashboard routes
-    Route::prefix('teacher')->group(function () {
+    Route::prefix('teacher')->middleware('teacher.admin')->group(function () {
         Route::get('/overview', [TeacherController::class, 'overview']);
         Route::get('/students', [TeacherController::class, 'students']);
         Route::get('/students/{id}', [TeacherController::class, 'studentDetail']);

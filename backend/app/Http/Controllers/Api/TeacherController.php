@@ -40,7 +40,6 @@ class TeacherController extends Controller
      */
     public function overview(Request $request): JsonResponse
     {
-        $this->authorizeTeacher($request);
         if ($request->boolean('refresh') || $request->has('_t')) {
             $this->analyticsService->invalidateCache();
         }
@@ -54,7 +53,6 @@ class TeacherController extends Controller
      */
     public function students(Request $request): JsonResponse
     {
-        $this->authorizeTeacher($request);
         $search = $request->query('search');
         $students = $this->rosterService->getRoster($search);
 
@@ -66,7 +64,6 @@ class TeacherController extends Controller
      */
     public function studentDetail(Request $request, int $id): JsonResponse
     {
-        $this->authorizeTeacher($request);
         $detail = $this->managementService->getStudentDetail($id);
 
         return response()->json($detail);
@@ -77,8 +74,6 @@ class TeacherController extends Controller
      */
     public function updateStudent(Request $request, int $id): JsonResponse
     {
-        $this->authorizeTeacher($request);
-
         $validated = $request->validate([
             'name'         => 'sometimes|string|max:255',
             'role'         => 'sometimes|string|in:student,instructor,admin',
@@ -100,7 +95,6 @@ class TeacherController extends Controller
      */
     public function deleteStudent(Request $request, int $id): JsonResponse
     {
-        $this->authorizeTeacher($request);
         $this->managementService->deleteStudent($id);
         $this->analyticsService->invalidateCache();
 
@@ -112,17 +106,16 @@ class TeacherController extends Controller
      */
     public function sendProgressDigest(Request $request): JsonResponse
     {
-        $this->authorizeTeacher($request);
-
-        $students = \App\Models\User::whereNotNull('email_verified_at')
-            ->orWhere('role', 'student')
-            ->get();
+        $students = \App\Models\User::where('role', 'student')
+            ->whereNotNull('email_verified_at')
+            ->withCount('lessonProgress')
+            ->lazy(50);
 
         $sentCount = 0;
         foreach ($students as $student) {
             try {
                 $streak = max(1, $student->current_streak ?: 1);
-                $lessons = $student->lessonProgress()->count();
+                $lessons = (int) ($student->lesson_progress_count ?? 0);
                 $xp = max(50, $student->xp ?: 50);
 
                 TransactionalMailService::send(
@@ -154,11 +147,10 @@ class TeacherController extends Controller
      */
     public function sendStreakReminder(Request $request): JsonResponse
     {
-        $this->authorizeTeacher($request);
-
-        $students = \App\Models\User::whereNotNull('email_verified_at')
-            ->orWhere('role', 'student')
-            ->get();
+        $students = \App\Models\User::where('role', 'student')
+            ->whereNotNull('email_verified_at')
+            ->where('current_streak', '>', 0)
+            ->lazy(50);
 
         $sentCount = 0;
         foreach ($students as $student) {
@@ -192,8 +184,6 @@ class TeacherController extends Controller
      */
     public function sendFeedback(Request $request, int $id): JsonResponse
     {
-        $this->authorizeTeacher($request);
-
         $validated = $request->validate([
             'type'               => 'required|string|in:pedagogical,praise,warning_mild,warning_strict',
             'title'              => 'required|string|max:255',
@@ -249,8 +239,6 @@ class TeacherController extends Controller
      */
     public function listFeedbacks(Request $request, int $id): JsonResponse
     {
-        $this->authorizeTeacher($request);
-
         $feedbacks = \App\Models\StudentFeedback::where('student_id', $id)
             ->orderBy('created_at', 'desc')
             ->get();

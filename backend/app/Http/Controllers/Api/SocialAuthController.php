@@ -109,7 +109,7 @@ class SocialAuthController extends Controller
 
             if (window.opener && !window.opener.closed) {
                 try {
-                    window.opener.postMessage(payload, "*");
+                    window.opener.postMessage(payload, "{$frontendUrl}");
                 } catch(e) {}
                 window.close();
             } else {
@@ -156,7 +156,7 @@ HTML;
 
             if (window.opener && !window.opener.closed) {
                 try {
-                    window.opener.postMessage(errorData, "*");
+                    window.opener.postMessage(errorData, "{$frontendUrl}");
                 } catch(e) {}
                 window.close();
             } else {

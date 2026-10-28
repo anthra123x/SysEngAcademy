@@ -11,3 +11,13 @@ storage/framework/sessions/*
 storage/framework/views/*
 tests
 phpunit.result.cache
+.phpunit.result.cache
+*.md
+!README.md
+AGENTS.md
+CLAUDE.md
+opencode.json
+database/*.php
+!database/migrations
+!database/seeders
+!database/factories

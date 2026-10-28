@@ -184,15 +184,7 @@ class ProfileController extends Controller
 
     private function resolveUser(Request $request): ?User
     {
-        if ($user = $request->user()) {
-            return $user;
-        }
-
-        $email = $request->input('email') ?: $request->query('email');
-        if ($email) {
-            return User::where('email', strtolower(trim($email)))->first();
-        }
-
-        return User::first();
+        return $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
     }
 }
+

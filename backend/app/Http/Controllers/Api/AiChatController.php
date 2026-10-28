@@ -235,9 +235,6 @@ class AiChatController extends Controller
 
         $lesson = Lesson::with('module.course')->findOrFail($request->integer('lesson_id'));
         $user = $request->user('jwt') ?: $request->user('sanctum') ?: $request->user();
-        if (!$user && $request->filled('student_email')) {
-            $user = \App\Models\User::where('email', strtolower(trim((string) $request->input('student_email'))))->first();
-        }
 
         $challengeContext = [
             'title'       => $lesson->title,

@@ -17,7 +17,7 @@ class RegisterDTO
             name: trim($data['name'] ?? ''),
             email: strtolower(trim($data['email'] ?? '')),
             password: (string) ($data['password'] ?? ''),
-            role: $data['role'] ?? 'student'
+            role: 'student'
         );
     }
 }

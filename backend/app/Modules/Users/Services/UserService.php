@@ -27,8 +27,10 @@ class UserService
             return false;
         }
 
-        return in_array($user->role, ['admin', 'instructor'], true)
-            || $user->email === 'andrescamilomartinez330@gmail.com';
+        $adminEmail = config('app.admin_email') ?: env('ADMIN_EMAIL');
+
+        return in_array($user->role, ['admin', 'instructor', 'teacher'], true)
+            || (!empty($adminEmail) && strtolower((string) $user->email) === strtolower((string) $adminEmail));
     }
 
     /**

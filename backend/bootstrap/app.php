@@ -27,6 +27,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(
             fn (): never => throw new AuthenticationException('Unauthenticated.'),
         );
+
+        $middleware->alias([
+            'teacher.admin' => \App\Http\Middleware\EnsureTeacherOrAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
