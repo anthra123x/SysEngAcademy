@@ -48,14 +48,80 @@
                  class="streak-nav-pill"
                  [class.streak-nav-pill--active]="isStreakActive()"
                  [class.streak-nav-pill--pending]="isStreakPending()"
-                 [class.streak-nav-pill--extinguished]="isStreakExtinguished()"
+                 [class.streak-nav-pill--recoverable]="canRecoverStreak()"
+                 [class.streak-nav-pill--extinguished]="isStreakExtinguished() && !canRecoverStreak()"
                  [title]="streakNavTooltip()">
-                <span class="streak-icon-wrap" [class.is-extinguished]="isStreakExtinguished()">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.38 0 2.5-1.12 2.5-2.5 0-.61-.22-1.17-.59-1.61L12 11.83l-.91 1.06c-.37.44-.59 1-.59 1.61z"/><path d="M12 23c-4.97 0-9-4.03-9-9 0-4.14 2.8-7.63 6.64-8.66.42-.11.84.14.94.56.05.2.01.41-.1.58C9.56 7.82 9 9.35 9 11c0 .28.04.55.11.81.08.31.35.53.67.53h.08c.32-.04.57-.29.62-.61.32-2.14 1.76-3.87 3.73-4.57.41-.15.86.05 1.01.46.07.19.05.41-.05.58-.69 1.18-1.07 2.55-1.07 4 0 .38.07.75.2 1.09.12.31.42.51.75.51.11 0 .22-.02.32-.07.3-.15.48-.46.48-.8 0-1.02.3-1.99.82-2.81.25-.4.76-.53 1.16-.28.18.11.31.29.36.49 1.15 4.34-.35 9.07-3.79 11.67-.93.7-2.02 1.1-3.15 1.1z"/></svg>
+                <span class="streak-icon-wrap"
+                      [class.is-active]="isStreakActive()"
+                      [class.is-pending]="isStreakPending()"
+                      [class.is-recoverable]="canRecoverStreak()"
+                      [class.is-extinguished]="isStreakExtinguished() && !canRecoverStreak()">
+                  <!-- Cyber Flame Vector Icon (Multi-layered gradient fire) -->
+                  <svg class="streak-flame-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                      <!-- Active Fiery Gradients -->
+                      <linearGradient id="navFlameOuterActive" x1="12" y1="2" x2="12" y2="23" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#FFDD00"/>
+                        <stop offset="30%" stop-color="#FF6B00"/>
+                        <stop offset="100%" stop-color="#FF1A00"/>
+                      </linearGradient>
+                      <linearGradient id="navFlameInnerActive" x1="12" y1="11" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#FFFFFF"/>
+                        <stop offset="40%" stop-color="#FFF385"/>
+                        <stop offset="100%" stop-color="#FFB703"/>
+                      </linearGradient>
+
+                      <!-- Pending Warning Gradients -->
+                      <linearGradient id="navFlameOuterPending" x1="12" y1="2" x2="12" y2="23" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#FDE047"/>
+                        <stop offset="45%" stop-color="#F59E0B"/>
+                        <stop offset="100%" stop-color="#D97706"/>
+                      </linearGradient>
+                      <linearGradient id="navFlameInnerPending" x1="12" y1="11" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#FEF9C3"/>
+                        <stop offset="100%" stop-color="#FBBF24"/>
+                      </linearGradient>
+
+                      <!-- Recoverable (Dormant Outer + Living Ember Spark) -->
+                      <linearGradient id="navFlameOuterDormant" x1="12" y1="2" x2="12" y2="23" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#94A3B8"/>
+                        <stop offset="50%" stop-color="#475569"/>
+                        <stop offset="100%" stop-color="#334155"/>
+                      </linearGradient>
+                      <linearGradient id="navFlameInnerEmber" x1="12" y1="11" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#FFD166"/>
+                        <stop offset="40%" stop-color="#FB8500"/>
+                        <stop offset="100%" stop-color="#EF4444"/>
+                      </linearGradient>
+
+                      <!-- Completely Cold Gradients -->
+                      <linearGradient id="navFlameOuterCold" x1="12" y1="2" x2="12" y2="23" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#64748B"/>
+                        <stop offset="100%" stop-color="#334155"/>
+                      </linearGradient>
+                      <linearGradient id="navFlameInnerCold" x1="12" y1="11" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#94A3B8"/>
+                        <stop offset="100%" stop-color="#475569"/>
+                      </linearGradient>
+                    </defs>
+
+                    <!-- Outer Flame Tongue -->
+                    <path class="flame-layer-outer"
+                          d="M12 2C11.38 4.67 9.5 6.5 9.5 9.5C9.5 10.2 9.7 10.85 10.05 11.4C8.75 10.5 8 9.15 8 7.5C6 9.6 4.8 12.4 4.8 15.5C4.8 19.5 8 22.8 12 22.8C16 22.8 19.2 19.5 19.2 15.5C19.2 11 16.2 6 12 2Z" />
+
+                    <!-- Inner Flame Core / Ember -->
+                    <path class="flame-layer-inner"
+                          d="M12 11.5C10.6 12.8 10 14.2 10 16C10 17.8 10.9 19.5 12 19.5C13.1 19.5 14 17.8 14 16C14 14.2 13.4 12.8 12 11.5Z" />
+                  </svg>
                 </span>
+
                 <span class="streak-nav-count">{{ studentStreak() }}d</span>
+
                 @if (canRecoverStreak()) {
-                  <span class="streak-nav-recover-tag">Recuperar</span>
+                  <span class="streak-nav-recover-tag">
+                    <span class="recover-spark-icon">⚡</span>
+                    <span class="recover-label">Recuperar</span>
+                  </span>
                 }
               </a>
             }
