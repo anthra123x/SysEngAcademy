@@ -583,8 +583,8 @@
 
               @if (studentsAtRisk().length === 0) {
                 <div class="state-block" style="padding: 2rem 1rem; text-align: center;">
-                  <span style="display: flex; justify-content: center; margin-bottom: 0.5rem;"><app-icon name="check-circle" [size]="32" color="#0ae98a" /></span>
-                  <p class="state-title" style="color: #0ae98a; font-weight: 600;">Cohorte al día</p>
+                  <span style="display: flex; justify-content: center; margin-bottom: 0.5rem;"><app-icon name="check-circle" [size]="32" color="#22c55e" /></span>
+                  <p class="state-title" style="color: #22c55e; font-weight: 600;">Cohorte al día</p>
                   <p class="state-desc" style="color: #94a3b8; font-size: 0.85rem;">Todos los estudiantes registrados presentan actividad regular y buen rendimiento evaluativo.</p>
                 </div>
               } @else {
@@ -839,7 +839,7 @@
               <div class="dossier-diagnostic-card">
                 <div class="diagnostic-header">
                   <div class="diagnostic-title-wrap">
-                    <app-icon name="brain-circuit" [size]="16" color="#0AE98A" />
+                    <app-icon name="brain-circuit" [size]="16" color="#22c55e" />
                     <span class="diagnostic-title">Diagnóstico Académico en Tiempo Real · Byte IA</span>
                   </div>
                   <span class="diagnostic-badge" [class.badge-low-risk]="d.academic_summary.retention_risk_level === 'Bajo Riesgo'" [class.badge-mod-risk]="d.academic_summary.retention_risk_level === 'Riesgo Moderado'" [class.badge-high-risk]="d.academic_summary.retention_risk_level === 'Alto Riesgo'">
@@ -1035,7 +1035,7 @@
                 <div class="feedback-ai-box">
                   <div class="ai-box-header">
                     <span class="ai-box-title">
-                      <app-icon name="sparkles" [size]="14" color="#00f0ff" />
+                      <app-icon name="sparkles" [size]="14" color="#f4f4f5" />
                       Diagnóstico de Cátedra emitido por Byte IA:
                     </span>
                     <button type="button" class="btn btn-xs btn-outline" (click)="useAiDiagnosticInFeedback()">

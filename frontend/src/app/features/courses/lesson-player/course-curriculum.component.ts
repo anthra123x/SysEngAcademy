@@ -182,8 +182,8 @@ export interface CurriculumCourse {
       transition: background var(--transition-fast), color var(--transition-fast);
 
       &.is-done {
-        color: #0ae98a;
-        background: rgba(10, 233, 138, 0.15);
+        color: #22c55e;
+        background: rgba(34, 197, 94, 0.15);
       }
 
       &.is-locked {
@@ -203,7 +203,7 @@ export interface CurriculumCourse {
       font-size: 0.7rem;
     }
     .done-pill-text {
-      color: #0ae98a;
+      color: #22c55e;
       font-weight: 600;
       font-size: 0.7rem;
     }

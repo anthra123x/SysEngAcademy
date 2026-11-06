@@ -185,9 +185,9 @@ export class CodelabSolverComponent implements OnInit, AfterViewInit, OnDestroy 
         this.getLanguageExtension(lang),
         oneDark,
         EditorView.theme({
-          '&': { height: '100%', backgroundColor: '#08090D' },
-          '.cm-content': { padding: '16px 12px', caretColor: '#0AE98A' },
-          '.cm-gutters': { backgroundColor: '#0D1117', borderRight: '1px solid #1E2235', color: '#64748B' },
+          '&': { height: '100%', backgroundColor: '#09090b' },
+          '.cm-content': { padding: '16px 12px', caretColor: '#22c55e' },
+          '.cm-gutters': { backgroundColor: '#111215', borderRight: '1px solid #27272a', color: '#71717a' },
         }),
       ],
     });

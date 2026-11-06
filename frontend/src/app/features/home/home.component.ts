@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DecimalPipe, SlicePipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { HomeService } from '../../core/services/home.service';
 import { formatRatingCount } from '../../core/services/courses.service';
 import { LearningPath, Course, Category } from '../../core/models';
@@ -51,7 +51,7 @@ interface SnakeSeg {
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, SlicePipe, DecimalPipe, AppIconComponent],
+  imports: [RouterLink, DecimalPipe, AppIconComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -174,48 +174,48 @@ export class HomeComponent implements OnInit {
 
     const pathMilestones: Record<string, { badge: string; title: string; skills: string[] }> = {
       'fundamentos-programacion': {
-        badge: 'Hito 01 • Lógica & Algoritmia Base',
-        title: 'Pensamiento computacional estructurado, variables, control de flujo y resolución algorítmica esencial.',
+        badge: 'Hito 01',
+        title: 'Lógica & Algoritmia Base',
         skills: ['Variables & Tipos', 'Estructuras de Control', 'Pseudocódigo', 'Funciones'],
       },
       'desarrollo-orientado-objetos': {
-        badge: 'Hito 02 • Paradigma & Modelado OO',
-        title: 'Abstracción de software, encapsulamiento, herencia, polimorfismo y diseño modular con principios SOLID.',
+        badge: 'Hito 02',
+        title: 'Paradigma & Modelado OO',
         skills: ['Clases & Objetos', 'Herencia & Interfaces', 'Principios SOLID', 'Clean Code'],
       },
       'desarrollo-backend': {
-        badge: 'Hito 03 • Servidores & APIs Robustas',
-        title: 'Arquitectura de servicios REST, persistencia relacional SQL, seguridad, transacciones y autenticación JWT.',
+        badge: 'Hito 03',
+        title: 'Servidores & APIs REST',
         skills: ['APIs RESTful', 'SQL & Modelado BD', 'Autenticación JWT', 'Seguridad Web'],
       },
       'desarrollo-frontend': {
-        badge: 'Hito 04 • Interfaces Reactivas & SPA',
-        title: 'Maquetación responsive moderna, componentes dinámicos, TypeScript avanzado y experiencia de usuario fluida.',
+        badge: 'Hito 04',
+        title: 'Interfaces SPA & Reactivas',
         skills: ['Angular / TypeScript', 'Componentes UI', 'Gestión de Estado', 'Responsive UX'],
       },
       'desarrollo-fullstack': {
-        badge: 'Hito 05 • Integración End-to-End',
-        title: 'Conexión integral entre cliente, servidor y base de datos con despliegue productivo y comunicación asíncrona.',
+        badge: 'Hito 05',
+        title: 'Integración End-to-End',
         skills: ['Arquitectura Full Stack', 'Consumo de APIs', 'WebSockets', 'Despliegue Cloud'],
       },
       'devops': {
-        badge: 'Hito 06 • Contenedores & CI/CD',
-        title: 'Entornos reproducibles con Docker, automatización de entregas continuas, administración Linux y orquestación.',
+        badge: 'Hito 06',
+        title: 'Contenedores & CI/CD',
         skills: ['Docker & Compose', 'Pipelines CI/CD', 'Linux & Bash', 'Reverse Proxy'],
       },
       'git-y-control-versiones': {
-        badge: 'Hito 07 • Control de Versiones Pro',
-        title: 'Flujos de trabajo colaborativos en equipo, ramas profesionales, resolución de conflictos y Conventional Commits.',
+        badge: 'Hito 07',
+        title: 'Control de Versiones Pro',
         skills: ['Git Flow', 'Rebase & Merge', 'Pull Requests', 'Versionado Semántico'],
       },
       'ingenieria-de-requerimientos': {
-        badge: 'Hito 08 • Análisis & Calidad Software',
-        title: 'Levantamiento riguroso de especificaciones, modelado UML, casos de uso, arquitectura y testing QA formal.',
+        badge: 'Hito 08',
+        title: 'Arquitectura & Requerimientos',
         skills: ['Historias de Usuario', 'Diagramas UML', 'Criterios de Aceptación', 'Testing QA'],
       },
       'desarrollo-con-ia': {
-        badge: 'Hito 09 • IA Generativa & Agentes',
-        title: 'Integración práctica de modelos LLM, ingeniería de prompts, flujos RAG con embeddings y desarrollo aumentado.',
+        badge: 'Hito 09',
+        title: 'IA Generativa & Agentes',
         skills: ['Prompt Engineering', 'Agentes Autónomos', 'Embeddings & RAG', 'APIs de LLM'],
       },
     };
@@ -233,7 +233,7 @@ export class HomeComponent implements OnInit {
         skills: ['Ingeniería de Sistemas', 'Buenas Prácticas', 'Proyectos Reales'],
       };
 
-      const color = cat?.color || '#0AE98A';
+      const color = cat?.color || '#22c55e';
       const name = cat?.name || 'Ingeniería';
 
       let phaseLabel: string | undefined;
@@ -282,7 +282,7 @@ export class HomeComponent implements OnInit {
       segs.push({
         x1: pts[i - 1].x, y1: pts[i - 1].y,
         x2: pts[i].x,     y2: pts[i].y,
-        color: this.snakeStops()[i]?.color || '#0AE98A',
+        color: this.snakeStops()[i]?.color || '#22c55e',
         len: Math.round(len * 10) / 10,
         delay: Math.round(i * 0.12 * 10) / 10,
       });

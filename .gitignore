@@ -19,6 +19,10 @@ opencode.json
 *.log
 .phpunit.result.cache
 
+# Agent module documentation (local memory, excluded from production)
+frontend/src/app/**/README.md
+backend/app/**/README.md
+
 # Temporary DB validation scripts
 backend/database/content_report.php
 backend/database/validate_data.php

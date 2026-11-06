@@ -55,7 +55,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
               <li><a routerLink="/auth/login">Iniciar Sesión</a></li>
               <li><a routerLink="/auth/registro">Crear Cuenta</a></li>
               <li><a routerLink="/perfil">Mi Perfil &amp; Progreso</a></li>
-              <li><span class="copilot-hint" style="display:inline-flex; align-items:center; gap:6px;"><app-icon name="sparkles" [size]="12" color="var(--primary)" /> Consulta a Byte en la terminal</span></li>
+              <li><span class="copilot-hint" style="display:inline-flex; align-items:center; gap:6px;"><app-icon name="terminal" [size]="12" color="var(--text-secondary)" /> Asistente terminal interactivo</span></li>
             </ul>
           </div>
         </div>
@@ -81,10 +81,6 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       position: relative;
       margin-top: auto;
       z-index: 10;
-      /* Zona segura a la derecha para no chocar con el robot Byte 3D */
-      @media (min-width: 1024px) {
-        padding-right: 220px;
-      }
 
       &__container {
         padding-top: var(--sp-12);
@@ -132,24 +128,22 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           margin-top: var(--sp-2);
           padding: 4px 10px;
           border-radius: var(--radius-full, 9999px);
-          background: rgba(10, 233, 138, 0.06);
-          border: 1px solid rgba(10, 233, 138, 0.2);
+          background: var(--bg-surface-2);
+          border: 1px solid var(--border);
           width: fit-content;
 
           .status-indicator {
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            background: var(--primary, #0AE98A);
-            box-shadow: 0 0 8px var(--primary, #0AE98A);
-            animation: pulse-dot 2s infinite ease-in-out;
+            background: #22c55e;
           }
 
           .status-text {
             font-family: var(--font-mono);
             font-size: 0.68rem;
-            color: var(--primary, #0AE98A);
-            font-weight: 600;
+            color: var(--text-secondary);
+            font-weight: 500;
           }
         }
       }
@@ -165,9 +159,9 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           font-family: var(--font-mono);
           font-weight: 700;
           font-size: 0.85rem;
-          color: var(--primary, #0AE98A);
-          background: rgba(10, 233, 138, 0.12);
-          border: 1px solid rgba(10, 233, 138, 0.25);
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.14);
           padding: 3px 8px;
           border-radius: 4px;
         }
@@ -177,7 +171,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           font-weight: 600;
           letter-spacing: -0.02em;
           strong {
-            color: var(--primary, #0AE98A);
+            color: #a1a1aa;
             font-weight: 700;
           }
         }
@@ -212,7 +206,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
             display: inline-block;
 
             &:hover {
-              color: var(--primary, #0AE98A);
+              color: var(--text-primary);
               transform: translateX(3px);
             }
           }

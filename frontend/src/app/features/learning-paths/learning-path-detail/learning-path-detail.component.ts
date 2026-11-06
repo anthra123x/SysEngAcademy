@@ -172,11 +172,11 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
                           <a [routerLink]="['/cursos', primary.slug]" class="path-course-card path-course-card--primary">
                             <div class="pcc-header">
                               <div class="pcc-icon">
-                                <app-icon [category]="primary.category?.slug" [size]="22" [color]="primary.category?.color || '#0AE98A'" [strokeWidth]="2" />
+                                <app-icon [category]="primary.category?.slug" [size]="22" [color]="primary.category?.color || '#f4f4f5'" [strokeWidth]="2" />
                               </div>
                               <div class="pcc-badge-wrap">
                                 @if (primary.category) {
-                                  <span class="badge badge-category" [style.borderColor]="(primary.category.color || '#0AE98A') + '40'" [style.color]="primary.category.color || '#0AE98A'">
+                                  <span class="badge badge-category" [style.borderColor]="(primary.category.color || '#f4f4f5') + '40'" [style.color]="primary.category.color || '#f4f4f5'">
                                     {{ primary.category.name }}
                                   </span>
                                 }
@@ -325,7 +325,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
                       ⭐ {{ rec.complementary_badge || 'Recomendación' }}
                     </span>
                     @if (rec.category) {
-                      <span class="badge badge-category" [style.borderColor]="(rec.category.color || '#0AE98A') + '40'" [style.color]="rec.category.color || '#0AE98A'">
+                      <span class="badge badge-category" [style.borderColor]="(rec.category.color || '#f4f4f5') + '40'" [style.color]="rec.category.color || '#f4f4f5'">
                         {{ rec.category.name }}
                       </span>
                     }
@@ -333,7 +333,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
                   <div class="rec-card-main">
                     <div class="rec-icon">
-                      <app-icon [category]="rec.category?.slug" [size]="22" [color]="rec.category?.color || '#0AE98A'" [strokeWidth]="2" />
+                      <app-icon [category]="rec.category?.slug" [size]="22" [color]="rec.category?.color || '#f4f4f5'" [strokeWidth]="2" />
                     </div>
                     <div class="rec-info">
                       <h3 class="rec-title">{{ rec.title }}</h3>
@@ -421,18 +421,18 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
       .btn-primary {
         background: var(--primary);
-        color: #08090D !important;
+        color: #09090b !important;
         font-weight: var(--font-semibold);
         border: 1px solid var(--primary);
 
         &:visited {
-          color: #08090D !important;
+          color: #09090b !important;
         }
 
         &:hover {
           background: var(--primary-hover);
           border-color: var(--primary-hover);
-          color: #08090D !important;
+          color: #09090b !important;
           box-shadow: 0 4px 16px var(--primary-dim);
           transform: translateY(-1px);
         }
@@ -675,7 +675,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
         box-shadow: 0 0 20px rgba(10, 233, 138, 0.45);
 
         .station-num {
-          color: #08090D;
+          color: #09090b;
           font-weight: 900;
         }
       }
@@ -734,14 +734,14 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
     .station-card {
       background: var(--bg-surface);
-      border: 1.5px dashed rgba(139, 92, 246, 0.35);
+      border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       overflow: hidden;
       box-shadow: var(--shadow-md);
       transition: border-color var(--transition-base);
 
       &:hover {
-        border-color: rgba(139, 92, 246, 0.75);
+        border-color: var(--border-hover);
       }
 
       @media (max-width: 768px) {
@@ -853,7 +853,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       display: flex;
       flex-direction: column;
       background: var(--bg-surface-2);
-      border: 1.5px dashed rgba(139, 92, 246, 0.35);
+      border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: var(--sp-5);
       text-decoration: none;
@@ -861,8 +861,8 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       transition: all var(--transition-base);
 
       &:hover {
-        border-color: rgba(139, 92, 246, 0.85);
-        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+        border-color: var(--border-hover);
+        box-shadow: 0 8px 24px var(--border-hover);
         transform: translateY(-2px);
       }
 
@@ -878,7 +878,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
     .path-course-card--primary {
       background: linear-gradient(135deg, rgba(10, 233, 138, 0.05) 0%, var(--bg-surface-2) 100%);
-      border: 1.5px dashed rgba(10, 233, 138, 0.45);
+      border: 1px solid var(--border);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 
       &:hover {
@@ -887,7 +887,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
         .pcc-cta--primary {
           background: var(--primary-hover);
-          color: #08090D !important;
+          color: #09090b !important;
           border-color: var(--primary-hover);
           box-shadow: 0 0 16px rgba(10, 233, 138, 0.45);
 
@@ -924,7 +924,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       height: 38px;
       border-radius: var(--radius-md);
       background: var(--bg-surface-3);
-      border: 1.5px dashed rgba(139, 92, 246, 0.45);
+      border: 1px solid var(--border);
       display: grid;
       place-items: center;
       font-size: 1.25rem;
@@ -1090,7 +1090,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       margin-top: var(--sp-6);
       padding: var(--sp-5);
       background: rgba(255, 184, 0, 0.03);
-      border: 1px dashed rgba(255, 184, 0, 0.25);
+      border: 1px solid var(--border);
       border-radius: var(--radius-lg);
 
       @media (max-width: 768px) {
@@ -1162,7 +1162,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
 
         .pcc-cta--comp {
           background: #FFB800;
-          color: #08090D !important;
+          color: #09090b !important;
           border-color: #FFB800;
           box-shadow: 0 0 14px rgba(255, 184, 0, 0.35);
 

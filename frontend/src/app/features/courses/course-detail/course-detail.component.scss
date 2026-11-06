@@ -71,17 +71,17 @@
     }
 
     .badge-docs {
-      background: rgba(0, 217, 255, 0.12);
-      border: 1px solid rgba(0, 217, 255, 0.35);
-      color: #00D9FF;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
       font-weight: var(--font-medium);
     }
 
     .badge-free {
-      background: rgba(0, 230, 118, 0.12);
-      border: 1px solid rgba(0, 230, 118, 0.35);
-      color: #00E676;
-      font-weight: var(--font-bold);
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #22c55e;
+      font-weight: var(--font-semibold);
     }
 
     .course-title {
@@ -329,8 +329,8 @@
         }
 
         &.is-complete &__fill {
-          background: linear-gradient(90deg, #0AE98A, #10B981);
-          box-shadow: 0 0 10px rgba(10, 233, 138, 0.4);
+          background: #22c55e;
+          box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
         }
       }
 
@@ -394,7 +394,7 @@
     /* Methodology Card */
     .methodology-card {
       background: var(--bg-surface);
-      border: 1.5px dashed rgba(139, 92, 246, 0.35);
+      border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       padding: var(--sp-5) var(--sp-5);
 
@@ -499,7 +499,7 @@
       gap: var(--sp-3);
       padding: var(--sp-4);
       background: var(--bg-surface-2);
-      border: 1px dashed var(--border-hover);
+      border: 1px solid var(--border);
       border-radius: var(--radius-lg);
 
       .comm-icon {
@@ -617,7 +617,7 @@
     /* Highlights Card */
     .highlights-card {
       background: var(--bg-surface);
-      border: 1.5px dashed rgba(139, 92, 246, 0.35);
+      border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       padding: var(--sp-6);
       margin-bottom: var(--sp-10);
@@ -708,13 +708,13 @@
 
     .syllabus-module {
       background: var(--bg-surface);
-      border: 1.5px dashed rgba(139, 92, 246, 0.35);
+      border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       overflow: hidden;
       transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 
       &:hover {
-        border-color: rgba(139, 92, 246, 0.75);
+        border-color: var(--border-hover);
       }
 
       &.is-open {
@@ -750,7 +750,7 @@
       font-family: var(--font-mono);
       color: var(--primary);
       background: var(--primary-dim);
-      border: 1.5px dashed rgba(10, 233, 138, 0.45);
+      border: 1px solid var(--border);
       padding: 4px 10px;
       border-radius: var(--radius-md);
       white-space: nowrap;
@@ -1064,15 +1064,15 @@
 
       .btn-primary {
         background: var(--primary);
-        color: #08090D !important;
+        color: #09090b !important;
         border: 1px solid var(--primary);
         font-weight: var(--font-semibold);
 
-        &:visited { color: #08090D !important; }
+        &:visited { color: #09090b !important; }
         &:hover {
           background: var(--primary-hover);
           border-color: var(--primary-hover);
-          color: #08090D !important;
+          color: #09090b !important;
         }
       }
 
@@ -1144,7 +1144,7 @@
         color: #94a3b8;
         line-height: 1.55;
         margin-bottom: var(--sp-6);
-        strong { color: #00d9ff; }
+        strong { color: #f4f4f5; }
       }
 
       .modal-gate-actions {
@@ -1169,8 +1169,8 @@
       display: grid;
       grid-template-columns: 240px 1fr;
       gap: 2rem;
-      background: #0E111A;
-      border: 1px solid #202436;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 1.75rem;
       align-items: center;
@@ -1406,7 +1406,7 @@
         .rate-textarea {
           width: 100%;
           background: #080A10;
-          border: 1px solid #202436;
+          border: 1px solid var(--border);
           border-radius: 10px;
           padding: 0.85rem 1rem;
           color: #F8FAFC;
@@ -1435,9 +1435,9 @@
         font-weight: 600;
 
         &--success {
-          background: rgba(10, 233, 138, 0.12);
-          border: 1px solid rgba(10, 233, 138, 0.3);
-          color: #0AE98A;
+          background: rgba(34, 197, 94, 0.12);
+          border: 1px solid rgba(34, 197, 94, 0.3);
+          color: #22c55e;
         }
 
         &--error {
@@ -1488,8 +1488,8 @@
       }
 
       .empty-reviews-box {
-        background: #0E111A;
-        border: 1px dashed #202436;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
         border-radius: 14px;
         padding: 2.5rem 1.5rem;
         text-align: center;
@@ -1520,7 +1520,7 @@
       }
 
       .review-card {
-        background: #0E111A;
+        background: var(--bg-surface);
         border: 1px solid #1E2333;
         border-radius: 12px;
         padding: 1.25rem;

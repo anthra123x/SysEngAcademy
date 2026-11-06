@@ -59,23 +59,22 @@ import { StreakService } from '../../core/services/streak.service';
           <span class="nav-tab-label">Cursos</span>
         </a>
 
-        <!-- 4. Byte IA (Tutor interactivo de ingeniería) -->
+        <!-- 4. Asistente Terminal -->
         <button
           type="button"
           class="nav-tab-item nav-tab-item--byte"
           [class.is-active]="isByteOpen()"
           (click)="toggleByte($event)"
-          aria-label="Abrir asistente IA Byte"
+          aria-label="Abrir asistente de terminal"
         >
           <div class="nav-tab-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-              <rect x="9" y="9" width="6" height="6"></rect>
-              <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path>
+              <polyline points="4 17 10 11 4 5"></polyline>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
             </svg>
             <span class="byte-live-dot" aria-hidden="true"></span>
           </div>
-          <span class="nav-tab-label">Byte IA</span>
+          <span class="nav-tab-label">Terminal</span>
         </button>
 
         <!-- 5. Perfil o Ingreso -->
@@ -166,16 +165,16 @@ import { StreakService } from '../../core/services/streak.service';
         }
 
         &.is-active {
-          color: var(--primary, #0AE98A);
+          color: #f4f4f5;
 
           .nav-tab-icon {
             transform: translateY(-1px);
-            filter: drop-shadow(0 0 8px rgba(10, 233, 138, 0.35));
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
           }
 
           .nav-tab-label {
             font-weight: 600;
-            color: #F8FAFC;
+            color: #ffffff;
           }
 
           &::after {
@@ -186,9 +185,9 @@ import { StreakService } from '../../core/services/streak.service';
             transform: translateX(-50%);
             width: 24px;
             height: 2px;
-            background: var(--primary, #0AE98A);
+            background: #ffffff;
             border-radius: 0 0 2px 2px;
-            box-shadow: 0 0 8px var(--primary, #0AE98A);
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
           }
         }
       }
@@ -204,17 +203,15 @@ import { StreakService } from '../../core/services/streak.service';
           position: absolute;
           top: -1px;
           right: -1px;
-          width: 6px;
-          height: 6px;
+          width: 5px;
+          height: 5px;
           border-radius: 50%;
-          background: #00D9FF;
-          box-shadow: 0 0 6px #00D9FF;
-          animation: byte-pulse 2s infinite ease-in-out;
+          background: #22c55e;
         }
 
         &.is-active .byte-live-dot {
-          background: var(--primary, #0AE98A);
-          box-shadow: 0 0 8px var(--primary, #0AE98A);
+          background: #22c55e;
+          box-shadow: 0 0 4px #22c55e;
         }
       }
 
@@ -266,9 +263,9 @@ import { StreakService } from '../../core/services/streak.service';
         white-space: nowrap;
 
         &.is-active {
-          background: rgba(10, 233, 138, 0.2);
-          border-color: rgba(10, 233, 138, 0.4);
-          color: #0AE98A;
+          background: rgba(34, 197, 94, 0.15);
+          border-color: rgba(34, 197, 94, 0.35);
+          color: #22c55e;
         }
       }
 
@@ -279,7 +276,7 @@ import { StreakService } from '../../core/services/streak.service';
 
       @keyframes byte-pulse {
         0%, 100% { transform: scale(1); opacity: 0.9; }
-        50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 10px #00D9FF; }
+        50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 6px #22c55e; }
       }
     }
   `]

@@ -269,15 +269,15 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         display: block;
         width: 100%;
         min-height: 100vh;
-        background: #050911;
+        background: #09090b;
       }
 
       .auth-page {
         min-height: 100vh;
         min-height: 100dvh;
         width: 100%;
-        background: #050911;
-        color: #f8fafc;
+        background: #09090b;
+        color: #f4f4f5;
         position: relative;
         overflow-x: hidden;
       }
@@ -337,15 +337,15 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           width: 32px;
           height: 32px;
           border-radius: 8px;
-          background: linear-gradient(135deg, #00E599 0%, #14b8a6 100%);
-          color: #050911;
+          background: #ffffff;
+          color: #09090b;
           font-family: var(--font-mono, 'JetBrains Mono', monospace);
           font-size: 12px;
           font-weight: 800;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 14px rgba(0, 229, 153, 0.25);
+          box-shadow: 0 2px 10px rgba(255, 255, 255, 0.15);
           transition: transform 0.2s ease;
         }
 
@@ -359,10 +359,10 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           font-weight: 600;
           letter-spacing: 0.15em;
           text-transform: uppercase;
-          color: #94a3b8;
+          color: #a1a1aa;
 
           .text-brand {
-            color: #00E599;
+            color: #ffffff;
           }
         }
       }
@@ -382,7 +382,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
 
         .auth-subtitle {
           font-size: 0.88rem;
-          color: #94a3b8;
+          color: #a1a1aa;
           margin: 0;
           line-height: 1.45;
         }
@@ -400,10 +400,10 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         width: 100%;
         height: 44px;
         padding: 0 1rem;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.03);
-        color: #e2e8f0;
+        border-radius: 8px;
+        border: 1px solid #27272a;
+        background: #111215;
+        color: #d4d4d8;
         font-size: 0.875rem;
         font-weight: 500;
         display: flex;
@@ -414,8 +414,8 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         transition: all 0.15s ease;
 
         &:hover:not(:disabled) {
-          border-color: rgba(255, 255, 255, 0.25);
-          background: rgba(255, 255, 255, 0.06);
+          border-color: #3f3f46;
+          background: #18191e;
           color: #ffffff;
         }
 
@@ -440,7 +440,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         .divider-line {
           flex: 1;
           height: 1px;
-          background: rgba(255, 255, 255, 0.1);
+          background: #27272a;
         }
 
         .divider-text {
@@ -449,8 +449,8 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           font-size: 11px;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: #94a3b8;
-          background: #050911;
+          color: #71717a;
+          background: #09090b;
           flex-shrink: 0;
         }
       }
@@ -478,30 +478,30 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         font-family: var(--font-mono, 'JetBrains Mono', monospace);
         font-size: 0.75rem;
         font-weight: 500;
-        color: #cbd5e1;
+        color: #a1a1aa;
       }
 
       .field-input {
         width: 100%;
         height: 42px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
+        background: #111215;
+        border: 1px solid #27272a;
+        border-radius: 8px;
         padding: 0 0.9rem;
         font-size: 0.88rem;
-        color: #f8fafc;
+        color: #f4f4f5;
         outline: none;
         box-sizing: border-box;
         transition: all 0.15s ease;
 
         &::placeholder {
-          color: #64748b;
+          color: #52525b;
         }
 
         &:focus {
-          border-color: #00E599;
-          box-shadow: 0 0 0 1px #00E599;
-          background: rgba(255, 255, 255, 0.05);
+          border-color: #52525b;
+          box-shadow: 0 0 0 1px #52525b;
+          background: #18191e;
         }
 
         &.input-mono {
@@ -526,10 +526,10 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         width: 100%;
         height: 46px;
         padding: 0 1.25rem;
-        border-radius: 12px;
+        border-radius: 8px;
         border: none;
-        background: #00E599;
-        color: #030712;
+        background: #f4f4f5;
+        color: #09090b;
         font-size: 0.95rem;
         font-weight: 700;
         display: flex;
@@ -537,12 +537,11 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         justify-content: center;
         gap: 0.5rem;
         cursor: pointer;
-        box-shadow: 0 4px 20px rgba(0, 229, 153, 0.25);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
         transition: all 0.15s ease;
 
         &:hover:not(:disabled) {
-          background: #00c985;
-          box-shadow: 0 6px 26px rgba(0, 229, 153, 0.38);
+          background: #ffffff;
           transform: translateY(-1px);
 
           .arrow-svg {
@@ -574,8 +573,8 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         .btn-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(5, 9, 17, 0.3);
-          border-top-color: #050911;
+          border: 2px solid rgba(9, 9, 11, 0.3);
+          border-top-color: #09090b;
           border-radius: 50%;
           animation: spin 0.7s infinite linear;
         }
@@ -586,10 +585,10 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         margin-top: 2rem;
         text-align: center;
         font-size: 0.85rem;
-        color: #94a3b8;
+        color: #a1a1aa;
 
         .link-brand {
-          color: #00E599;
+          color: #ffffff;
           font-weight: 600;
           text-decoration: none;
           margin-left: 0.35rem;
@@ -611,7 +610,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         .btn-resend-inline {
           background: none;
           border: none;
-          color: #00E599;
+          color: #ffffff;
           font-size: 0.85rem;
           font-weight: 500;
           cursor: pointer;
@@ -622,7 +621,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
           }
 
           &:disabled {
-            color: #64748b;
+            color: #52525b;
             cursor: not-allowed;
           }
         }
@@ -630,7 +629,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         .btn-back-inline {
           background: none;
           border: none;
-          color: #94a3b8;
+          color: #a1a1aa;
           font-size: 0.8rem;
           cursor: pointer;
 
@@ -658,7 +657,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         font-size: 10px;
         font-weight: 500;
         letter-spacing: 0.18em;
-        color: rgba(148, 163, 184, 0.35);
+        color: rgba(113, 113, 122, 0.4);
         text-transform: uppercase;
         user-select: none;
       }

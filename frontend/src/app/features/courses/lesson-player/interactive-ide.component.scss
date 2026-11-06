@@ -303,9 +303,9 @@
 }
 
 .badge-approved {
-  background: rgba(10, 233, 138, 0.12);
-  border: 1px solid rgba(10, 233, 138, 0.35);
-  color: #0ae98a;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #22c55e;
   font-size: 11.5px;
   font-weight: 600;
   padding: 2px 8px;
@@ -322,9 +322,9 @@
   font-weight: 600;
 
   &.is-pass {
-    background: rgba(10, 233, 138, 0.12);
-    color: #0ae98a;
-    border: 1px solid rgba(10, 233, 138, 0.3);
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
   }
 
   &.is-fail {
@@ -369,15 +369,15 @@
 
   .run-triangle {
     font-size: 10px;
-    color: #0ae98a;
+    color: #22c55e;
     transition: transform 0.15s ease;
   }
 
   &:hover:not(:disabled) {
-    background: rgba(10, 233, 138, 0.08);
-    border-color: rgba(10, 233, 138, 0.45);
-    color: #0ae98a;
-    box-shadow: 0 0 14px rgba(10, 233, 138, 0.18);
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.45);
+    color: #22c55e;
+    box-shadow: 0 0 14px rgba(34, 197, 94, 0.18);
 
     .run-triangle {
       transform: scale(1.15);
@@ -398,7 +398,7 @@
   width: 12px;
   height: 12px;
   border: 2px solid rgba(255, 255, 255, 0.2);
-  border-top-color: #0ae98a;
+  border-top-color: #22c55e;
   border-radius: 50%;
   animation: macSpin 0.7s linear infinite;
   display: inline-block;
@@ -542,7 +542,7 @@
   border-radius: 3px;
   margin-left: 2px;
 
-  &.is-pass { background: rgba(10, 233, 138, 0.15); color: #0ae98a; }
+  &.is-pass { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
   &.is-fail { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
 }
 
@@ -643,7 +643,7 @@
 }
 
 .term-success-msg {
-  color: #0ae98a;
+  color: #22c55e;
   font-size: 12.5px;
   font-weight: 500;
   margin-top: 4px;
@@ -687,7 +687,7 @@
   padding: 8px 12px;
 
   &.is-pass {
-    border-color: rgba(10, 233, 138, 0.25);
+    border-color: rgba(34, 197, 94, 0.25);
   }
   &.is-fail {
     border-color: rgba(244, 63, 94, 0.25);
@@ -707,8 +707,8 @@
   border-radius: 3px;
 
   .is-pass & {
-    background: rgba(10, 233, 138, 0.15);
-    color: #0ae98a;
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
   }
   .is-fail & {
     background: rgba(244, 63, 94, 0.15);
@@ -746,7 +746,7 @@
     background: rgba(255, 255, 255, 0.05);
   }
 
-  .diff-expected { color: #0ae98a; }
+  .diff-expected { color: #22c55e; }
   .diff-actual { color: #f43f5e; }
   .diff-error { color: #fb7185; font-size: 11px; word-break: break-word; }
 }
@@ -854,8 +854,8 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 
   &.is-pass {
-    border-color: rgba(10, 233, 138, 0.35);
-    background: linear-gradient(180deg, rgba(10, 233, 138, 0.06), rgba(21, 22, 36, 0.9));
+    border-color: rgba(34, 197, 94, 0.35);
+    background: linear-gradient(180deg, rgba(34, 197, 94, 0.06), rgba(21, 22, 36, 0.9));
   }
 
   &.is-fail {
@@ -885,8 +885,8 @@
     border-radius: 5px;
 
     .is-pass & {
-      background: rgba(10, 233, 138, 0.18);
-      color: #0ae98a;
+      background: rgba(34, 197, 94, 0.18);
+      color: #22c55e;
     }
     .is-fail & {
       background: rgba(245, 158, 11, 0.18);
@@ -900,7 +900,7 @@
     letter-spacing: 0.02em;
 
     .is-pass & {
-      color: #0ae98a;
+      color: #22c55e;
     }
     .is-fail & {
       color: #fbbf24;
@@ -957,12 +957,12 @@
 }
 
 .strengths-list li::marker {
-  color: #0ae98a;
+  color: #22c55e;
 }
 
 .ai-retry-notice {
   background: rgba(245, 158, 11, 0.1);
-  border: 1px dashed rgba(245, 158, 11, 0.35);
+  border: 1px solid var(--border);
   padding: 8px 12px;
   border-radius: 6px;
   color: #fcd34d;
@@ -976,8 +976,8 @@
   bottom: 16px;
   right: 16px;
   background: #151624;
-  border: 1px solid rgba(10, 233, 138, 0.4);
-  color: #0ae98a;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #22c55e;
   padding: 6px 14px;
   border-radius: 6px;
   font-size: 12px;
@@ -1057,7 +1057,7 @@
 .github-modal-card {
   width: 100%;
   max-width: 520px;
-  background: #0E111A;
+  background: var(--bg-surface);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
@@ -1071,7 +1071,7 @@
     justify-content: space-between;
     padding: 1.15rem 1.4rem;
     background: #121622;
-    border-bottom: 1px solid #1E2235;
+    border-bottom: 1px solid var(--border);
 
     .header-title-row {
       display: flex;
@@ -1141,9 +1141,9 @@
       font-size: 0.82rem;
 
       &--connected {
-        background: rgba(10, 233, 138, 0.08);
-        border: 1px solid rgba(10, 233, 138, 0.25);
-        color: #0AE98A;
+        background: rgba(34, 197, 94, 0.08);
+        border: 1px solid rgba(34, 197, 94, 0.25);
+        color: #22c55e;
       }
 
       &--unconnected {
@@ -1184,8 +1184,8 @@
       }
 
       input {
-        background: #08090D;
-        border: 1px solid #1E2235;
+        background: var(--bg-base);
+        border: 1px solid var(--border);
         border-radius: 6px;
         padding: 0.5rem 0.7rem;
         color: #F8FAFC;
@@ -1200,15 +1200,15 @@
     }
 
     .sync-success-box {
-      background: rgba(10, 233, 138, 0.08);
-      border: 1px solid rgba(10, 233, 138, 0.25);
+      background: rgba(34, 197, 94, 0.08);
+      border: 1px solid rgba(34, 197, 94, 0.25);
       border-radius: 8px;
       padding: 0.9rem;
       text-align: center;
 
       .success-top-badge {
         font-size: 0.85rem;
-        color: #0ae98a;
+        color: #22c55e;
         margin-bottom: 0.4rem;
       }
 
@@ -1253,11 +1253,11 @@
     gap: 0.75rem;
     padding: 0.9rem 1.4rem;
     background: #121622;
-    border-top: 1px solid #1E2235;
+    border-top: 1px solid var(--border);
 
     .btn-cancel {
       background: transparent;
-      border: 1px solid #1E2235;
+      border: 1px solid var(--border);
       color: #94A3B8;
       padding: 0.45rem 0.9rem;
       border-radius: 6px;

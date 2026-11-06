@@ -21,7 +21,7 @@ import { AppIconComponent } from './app-icon.component';
             <app-icon
               [name]="toast.icon || (toast.type === 'error' ? 'alert-circle' : toast.type === 'warning' ? 'alert-triangle' : 'check-circle')"
               [size]="20"
-              [color]="toast.type === 'error' ? '#ef4444' : toast.type === 'warning' ? '#f59e0b' : '#0AE98A'"
+              [color]="toast.type === 'error' ? '#ef4444' : toast.type === 'warning' ? '#f59e0b' : '#22c55e'"
             />
           </div>
 
@@ -139,9 +139,9 @@ import { AppIconComponent } from './app-icon.component';
     .syseng-toast-xp {
       font-size: 0.8rem;
       font-weight: 800;
-      color: #0AE98A;
-      background: rgba(10, 233, 138, 0.15);
-      border: 1px solid rgba(10, 233, 138, 0.35);
+      color: #22c55e;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.35);
       padding: 2px 8px;
       border-radius: 4px;
       white-space: nowrap;

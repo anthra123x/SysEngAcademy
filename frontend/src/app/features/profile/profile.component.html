@@ -395,7 +395,7 @@
                         </div>
                       </span>
                       <span class="lcol-spec">
-                        <span class="cat-chip" [style.color]="st.email_verified ? '#0ae98a' : '#ff9d33'">
+                        <span class="cat-chip" [style.color]="st.email_verified ? '#22c55e' : '#ff9d33'">
                           {{ st.email_verified ? '✓ Verificado' : 'Pendiente' }}
                         </span>
                       </span>
@@ -522,7 +522,7 @@
                   <div class="sensor-card" [class.sensor-card--extinguished]="isStreakExtinguished()">
                     <div class="sensor-card__head">
                       <span class="sensor-label">RACHA DE ESTUDIO</span>
-                      <span class="sensor-code" [style.color]="isStreakExtinguished() ? '#94A3B8' : (isStreakActive() ? '#0AE98A' : '#F59E0B')">
+                      <span class="sensor-code" [style.color]="isStreakExtinguished() ? '#94A3B8' : (isStreakActive() ? '#22c55e' : '#F59E0B')">
                         {{ isStreakActive() ? '[STREAK_OK]' : (isStreakPending() ? '[STREAK_PEND]' : '[STREAK_OFF]') }}
                       </span>
                     </div>
@@ -623,7 +623,7 @@
                           <span class="col-pid">10{{ 40 + i }}</span>
                           <span class="col-title">
                             <span class="proc-icon">
-                              <app-icon [category]="enr.course?.category?.slug" [size]="14" [color]="enr.course?.category?.color || '#0AE98A'" [strokeWidth]="2" />
+                              <app-icon [category]="enr.course?.category?.slug" [size]="14" [color]="enr.course?.category?.color || '#22c55e'" [strokeWidth]="2" />
                             </span>
                             <strong>{{ enr.course?.title }}</strong>
                           </span>
@@ -938,7 +938,7 @@
                           <div class="badge-progress-box">
                             <div class="badge-progress-meta font-mono">
                               <span class="b-req">{{ b.requirement }}</span>
-                              <span class="b-pct" [style.color]="b.unlocked ? '#0ae98a' : '#38bdf8'">
+                              <span class="b-pct" [style.color]="b.unlocked ? '#22c55e' : '#38bdf8'">
                                 {{ b.currentCount }}/{{ b.targetCount }} ({{ b.progressPercent }}%)
                               </span>
                             </div>
@@ -946,7 +946,7 @@
                               <div
                                 class="badge-progress-fill"
                                 [style.width.%]="b.progressPercent"
-                                [style.background]="b.unlocked ? 'linear-gradient(90deg, #0ae98a, #00d9ff)' : '#38bdf8'"
+                                [style.background]="b.unlocked ? 'linear-gradient(90deg, #22c55e, #f4f4f5)' : '#38bdf8'"
                               ></div>
                             </div>
                           </div>
@@ -1212,7 +1212,7 @@
                             @if (f.ai_context_summary) {
                               <div class="feedback-ai-quote">
                                 <span class="ai-quote-label">
-                                  <app-icon name="sparkles" [size]="12" color="#00f0ff" />
+                                  <app-icon name="sparkles" [size]="12" color="#f4f4f5" />
                                   Fundamentado en el Análisis del Agente de Cátedra:
                                 </span>
                                 <p class="ai-quote-text">"{{ f.ai_context_summary }}"</p>
@@ -1247,8 +1247,8 @@
 
                   <div class="feedback-section-box">
                     <div class="terminal-subhead" style="background: #090c12;">
-                      <span class="term-dot" [style.background]="activeUnresolvedWarnings().length > 0 ? '#F43F5E' : '#0AE98A'" [style.box-shadow]="activeUnresolvedWarnings().length > 0 ? '0 0 6px #F43F5E' : '0 0 6px #0AE98A'"></span>
-                      <span class="term-subhead-title" [style.color]="activeUnresolvedWarnings().length > 0 ? '#F43F5E' : '#0AE98A'">
+                      <span class="term-dot" [style.background]="activeUnresolvedWarnings().length > 0 ? '#F43F5E' : '#22c55e'" [style.box-shadow]="activeUnresolvedWarnings().length > 0 ? '0 0 6px #F43F5E' : '0 0 6px #22c55e'"></span>
+                      <span class="term-subhead-title" [style.color]="activeUnresolvedWarnings().length > 0 ? '#F43F5E' : '#22c55e'">
                         HISTORIAL DE LLAMADOS DE ATENCIÓN ({{ activeWarnings().length }})
                       </span>
                       <div class="subhead-actions" style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
@@ -1324,7 +1324,7 @@
                             @if (f.ai_context_summary) {
                               <div class="feedback-ai-citation">
                                 <span class="citation-label">
-                                  <app-icon name="sparkles" [size]="11" color="#00f0ff" />
+                                  <app-icon name="sparkles" [size]="11" color="#f4f4f5" />
                                   Fundamentado en el Análisis del Agente de Cátedra:
                                 </span>
                                 <p class="citation-text">"{{ f.ai_context_summary }}"</p>
@@ -1451,13 +1451,13 @@
                 <!-- CONSOLA INTERACTIVA DE CONSEJERO TÉCNICO BYTE COPILOT -->
                 <div class="advisor-chat-terminal" style="margin-top: 20px; background: #0b0e14; border: 1px solid #161f2e; border-radius: 8px; overflow: hidden;">
                   <div class="terminal-subhead" style="background: #090c12;">
-                    <span class="term-dot" style="background: #00d9ff; box-shadow: 0 0 6px #00d9ff;"></span>
-                    <span class="term-subhead-title" style="color: #00d9ff;">CONSOLA EN VIVO: CONSULTOR TÉCNICO BYTE COPILOT</span>
+                    <span class="term-dot" style="background: #22c55e; box-shadow: 0 0 6px #22c55e;"></span>
+                    <span class="term-subhead-title" style="color: #f4f4f5;">CONSOLA EN VIVO: CONSULTOR TÉCNICO BYTE COPILOT</span>
                     <a routerLink="/ai-chat" class="btn btn-xs btn-outline" style="margin-left: auto;">Abrir Sala Completa IA ↗</a>
                   </div>
 
                   <!-- Chips de preguntas sugeridas -->
-                  <div class="advisor-chips-row" style="padding: 12px 16px 8px; display: flex; gap: 8px; flex-wrap: wrap; background: #080a0f; border-bottom: 1px solid #141c2a;">
+                  <div class="advisor-chips-row" style="padding: 12px 16px 8px; display: flex; gap: 8px; flex-wrap: wrap; background: var(--bg-base); border-bottom: 1px solid var(--bg-surface-2);">
                     <span style="font-size: 11px; color: #64748b; align-self: center;">Sugerencias:</span>
                     <button type="button" class="btn-term-run" style="font-size: 11px; cursor: pointer;" (click)="askAdvisor('¿Cómo destacar y prepararme para desarrollo backend profesional?')">
                       API Backend & PostgreSQL
@@ -1474,12 +1474,12 @@
                   <div class="advisor-messages-scroll" style="max-height: 280px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
                     @for (msg of advisorHistory(); track $index) {
                       <div class="advisor-msg" [style.align-self]="msg.role === 'user' ? 'flex-end' : 'flex-start'" [style.max-width]="'88%'">
-                        <div style="font-size: 10px; font-family: var(--font-mono); margin-bottom: 3px;" [style.color]="msg.role === 'user' ? '#0ae98a' : '#00d9ff'">
+                        <div style="font-size: 10px; font-family: var(--font-mono); margin-bottom: 3px;" [style.color]="msg.role === 'user' ? '#22c55e' : '#f4f4f5'">
                           {{ msg.role === 'user' ? 'Tú (Estudiante)' : 'Byte Copilot' }} • {{ msg.timeAgo }}
                         </div>
                         <div style="padding: 10px 14px; border-radius: 6px; font-size: 13px; line-height: 1.5;"
                              [style.background]="msg.role === 'user' ? '#141c2c' : '#0d131f'"
-                             [style.border]="msg.role === 'user' ? '1px solid #233147' : '1px solid #1a273b'"
+                             [style.border]="msg.role === 'user' ? '1px solid var(--border)' : '1px solid var(--border)'"
                              [style.color]="msg.role === 'user' ? '#f1f5f9' : '#e2e8f0'">
                           {{ msg.text }}
                         </div>
@@ -1488,8 +1488,8 @@
 
                     @if (advisorLoading()) {
                       <div class="advisor-msg" style="align-self: flex-start;">
-                        <div style="font-size: 10px; font-family: var(--font-mono); color: #00d9ff; margin-bottom: 3px;">Byte Copilot procesando...</div>
-                        <div style="padding: 10px 14px; border-radius: 6px; background: #0d131f; border: 1px solid #1a273b; color: #64748b; font-family: var(--font-mono); font-size: 12px;">
+                        <div style="font-size: 10px; font-family: var(--font-mono); color: #f4f4f5; margin-bottom: 3px;">Byte Copilot procesando...</div>
+                        <div style="padding: 10px 14px; border-radius: 6px; background: #0d131f; border: 1px solid var(--border); color: #64748b; font-family: var(--font-mono); font-size: 12px;">
                           Consultando modelo y analizando tu perfil...
                         </div>
                       </div>
@@ -1497,14 +1497,14 @@
                   </div>
 
                   <!-- Input para enviar consulta -->
-                  <div class="advisor-input-bar" style="padding: 12px 16px; background: #080a0f; border-top: 1px solid #161f2e; display: flex; gap: 8px;">
+                  <div class="advisor-input-bar" style="padding: 12px 16px; background: var(--bg-base); border-top: 1px solid #161f2e; display: flex; gap: 8px;">
                     <input
                       type="text"
                       [ngModel]="advisorQuery()"
                       (ngModelChange)="advisorQuery.set($event)"
                       (keydown.enter)="askAdvisor()"
                       placeholder="Escribe tu consulta técnica o vocacional a Byte Copilot..."
-                      style="flex: 1; background: #0d1117; border: 1px solid #1e293b; color: #f8fafc; padding: 9px 12px; border-radius: 4px; font-size: 13px; font-family: var(--font-sans);"
+                      style="flex: 1; background: var(--bg-surface-2); border: 1px solid var(--border); color: #f8fafc; padding: 9px 12px; border-radius: 4px; font-size: 13px; font-family: var(--font-sans);"
                       [disabled]="advisorLoading()"
                     />
                     <button
@@ -1536,8 +1536,8 @@
 
                 <div class="feedback-section-box" style="margin-top: 16px;">
                   <div class="terminal-subhead" style="background: #090c12;">
-                    <span class="term-dot" style="background: #00f0ff; box-shadow: 0 0 6px #00f0ff;"></span>
-                    <span class="term-subhead-title" style="color: #00f0ff;">
+                    <span class="term-dot" style="background: #22c55e; box-shadow: 0 0 6px #22c55e;"></span>
+                    <span class="term-subhead-title" style="color: #f4f4f5;">
                       GESTIÓN DE CREDENCIALES &amp; RESTABLECIMIENTO DE CONTRASEÑA
                     </span>
                     <span class="term-badge" style="margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: #64748b;">
@@ -1550,9 +1550,9 @@
                       <button
                         type="button"
                         class="btn-term-run"
-                        [style.background]="!isResetMode() ? '#00f0ff' : '#141c2a'"
-                        [style.color]="!isResetMode() ? '#08090d' : '#94a3b8'"
-                        [style.border]="!isResetMode() ? '1px solid #00f0ff' : '1px solid #233147'"
+                        [style.background]="!isResetMode() ? '#f4f4f5' : 'var(--bg-surface-2)'"
+                        [style.color]="!isResetMode() ? 'var(--bg-base)' : '#94a3b8'"
+                        [style.border]="!isResetMode() ? '1px solid #f4f4f5' : '1px solid var(--border)'"
                         style="cursor: pointer; font-family: var(--font-mono); font-size: 12px; padding: 7px 14px; border-radius: 4px; font-weight: 600;"
                         (click)="isResetMode.set(false); passwordError.set(''); passwordSuccess.set('');"
                       >
@@ -1561,9 +1561,9 @@
                       <button
                         type="button"
                         class="btn-term-run"
-                        [style.background]="isResetMode() ? '#00f0ff' : '#141c2a'"
-                        [style.color]="isResetMode() ? '#08090d' : '#94a3b8'"
-                        [style.border]="isResetMode() ? '1px solid #00f0ff' : '1px solid #233147'"
+                        [style.background]="isResetMode() ? '#f4f4f5' : 'var(--bg-surface-2)'"
+                        [style.color]="isResetMode() ? 'var(--bg-base)' : '#94a3b8'"
+                        [style.border]="isResetMode() ? '1px solid #f4f4f5' : '1px solid var(--border)'"
                         style="cursor: pointer; font-family: var(--font-mono); font-size: 12px; padding: 7px 14px; border-radius: 4px; font-weight: 600;"
                         (click)="isResetMode.set(true); passwordError.set(''); passwordSuccess.set('');"
                       >
@@ -1580,7 +1580,7 @@
                     </p>
 
                     @if (isResetMode()) {
-                      <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: #0c1017; padding: 12px 16px; border-radius: 6px; border: 1px solid #1a2233;">
+                      <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--bg-surface); padding: 12px 16px; border-radius: 6px; border: 1px solid var(--border);">
                         <button
                           type="button"
                           class="btn btn-secondary"
@@ -1595,7 +1595,7 @@
                     }
 
                     @if (passwordSuccess()) {
-                      <div style="background: rgba(10, 233, 138, 0.1); border: 1px solid #0ae98a; color: #0ae98a; padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+                      <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; color: #22c55e; padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
                         <span style="font-weight: 700;">✓</span>
                         <span>{{ passwordSuccess() }}</span>
                       </div>
@@ -1619,7 +1619,7 @@
                             [ngModel]="resetCode()"
                             (ngModelChange)="resetCode.set($event)"
                             name="resetCode"
-                            style="background: #0d1117; border: 1px solid #1e293b; color: #00f0ff; padding: 10px 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 15px; letter-spacing: 2px;"
+                            style="background: var(--bg-surface-2); border: 1px solid var(--border); color: #f4f4f5; padding: 10px 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 15px; letter-spacing: 2px;"
                             required
                           />
                         </div>
@@ -1632,7 +1632,7 @@
                             [ngModel]="currentPassword()"
                             (ngModelChange)="currentPassword.set($event)"
                             name="currentPassword"
-                            style="background: #0d1117; border: 1px solid #1e293b; color: #f8fafc; padding: 10px 14px; border-radius: 6px; font-size: 14px;"
+                            style="background: var(--bg-surface-2); border: 1px solid var(--border); color: #f8fafc; padding: 10px 14px; border-radius: 6px; font-size: 14px;"
                           />
                         </div>
                       }
@@ -1645,7 +1645,7 @@
                           [ngModel]="newPassword()"
                           (ngModelChange)="newPassword.set($event)"
                           name="newPassword"
-                          style="background: #0d1117; border: 1px solid #1e293b; color: #f8fafc; padding: 10px 14px; border-radius: 6px; font-size: 14px;"
+                          style="background: var(--bg-surface-2); border: 1px solid var(--border); color: #f8fafc; padding: 10px 14px; border-radius: 6px; font-size: 14px;"
                           required
                         />
                       </div>
@@ -1658,7 +1658,7 @@
                           [ngModel]="confirmNewPassword()"
                           (ngModelChange)="confirmNewPassword.set($event)"
                           name="confirmNewPassword"
-                          style="background: #0d1117; border: 1px solid #1e293b; color: #f8fafc; padding: 10px 14px; border-radius: 6px; font-size: 14px;"
+                          style="background: var(--bg-surface-2); border: 1px solid var(--border); color: #f8fafc; padding: 10px 14px; border-radius: 6px; font-size: 14px;"
                           required
                         />
                       </div>
@@ -1708,7 +1708,7 @@
 
                     <div style="display: flex; flex-direction: column; gap: 14px;">
                       <!-- GOOGLE ROW -->
-                      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: #0d1117; border: 1px solid #1e293b; border-radius: 8px; flex-wrap: wrap; gap: 12px;">
+                      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: var(--bg-surface-2); border: 1px solid var(--border); border-radius: 8px; flex-wrap: wrap; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                           <svg width="22" height="22" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
@@ -1739,7 +1739,7 @@
                             <button
                               type="button"
                               class="btn-term-run"
-                              style="background: #141c2a; color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
+                              style="background: var(--bg-surface-2); color: #f4f4f5; border: 1px solid var(--border); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
                               (click)="connectSocial('google')"
                               [disabled]="socialLoading() !== null"
                             >
@@ -1750,7 +1750,7 @@
                       </div>
 
                       <!-- GITHUB ROW -->
-                      <div style="padding: 16px 18px; background: #0d1117; border: 1px solid #1e293b; border-radius: 8px; display: flex; flex-direction: column; gap: 14px;">
+                      <div style="padding: 16px 18px; background: var(--bg-surface-2); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; gap: 14px;">
                         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                           <div style="display: flex; align-items: center; gap: 12px;">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff">
@@ -1782,7 +1782,7 @@
                               <button
                                 type="button"
                                 class="btn-term-run"
-                                style="background: #141c2a; color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
+                                style="background: var(--bg-surface-2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
                                 (click)="connectSocial('github', 'public_repo')"
                                 [disabled]="socialLoading() !== null"
                               >
@@ -1804,7 +1804,7 @@
                               <button
                                 type="button"
                                 class="btn-term-run"
-                                style="background: #141c2a; color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
+                                style="background: var(--bg-surface-2); color: #f4f4f5; border: 1px solid var(--border); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;"
                                 (click)="connectSocial('github', 'public_repo')"
                                 [disabled]="socialLoading() !== null"
                               >
@@ -1816,7 +1816,7 @@
 
                         <!-- Gamification Metrics & Recent Commits -->
                         @if (socialStatus()?.github?.connected) {
-                          <div style="background: #090d16; border: 1px solid #1e293b; border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
+                          <div style="background: var(--bg-base); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
                             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                               <div style="display: flex; gap: 14px; font-size: 12px;">
                                 <span style="color: #94a3b8;">
@@ -1832,7 +1832,7 @@
                             </div>
 
                             @if ((socialStatus()?.github?.recent_syncs?.length || 0) > 0) {
-                              <div style="border-top: 1px solid #1e293b; padding-top: 8px;">
+                              <div style="border-top: 1px solid var(--border); padding-top: 8px;">
                                 <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 600; margin-bottom: 6px;">
                                   Commits Recientes
                                 </div>
@@ -1846,7 +1846,7 @@
                                       </div>
                                       <div style="display: flex; gap: 10px; font-size: 11px; font-family: var(--font-mono);">
                                         @if (sync.commit_url) {
-                                          <a [href]="sync.commit_url" target="_blank" rel="noopener noreferrer" style="color: #00f0ff; text-decoration: none;">
+                                          <a [href]="sync.commit_url" target="_blank" rel="noopener noreferrer" style="color: #f4f4f5; text-decoration: none;">
                                             Commit ↗
                                           </a>
                                         }
@@ -1861,7 +1861,7 @@
                                 </div>
                               </div>
                             } @else {
-                              <div style="font-size: 12px; color: #64748b; font-style: italic; border-top: 1px solid #1e293b; padding-top: 8px;">
+                              <div style="font-size: 12px; color: #64748b; font-style: italic; border-top: 1px solid var(--border); padding-top: 8px;">
                                 💡 Aún no has sincronizado proyectos. ¡Entra a CodeLab o al curso "Git desde cero" y presiona "Subir a GitHub" en el editor para ganar tus primeros +25 XP!
                               </div>
                             }

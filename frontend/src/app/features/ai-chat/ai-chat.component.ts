@@ -201,12 +201,12 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #00d9ff;
+        color: #22c55e;
         width: 64px;
         height: 64px;
         margin: 0 auto;
-        background: rgba(0, 217, 255, 0.08);
-        border: 1px solid rgba(0, 217, 255, 0.25);
+        background: rgba(34, 197, 94, 0.08);
+        border: 1px solid rgba(34, 197, 94, 0.25);
         border-radius: 12px;
       }
       h2 { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); }
@@ -265,9 +265,9 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         width: 32px;
         height: 32px;
         border-radius: 6px;
-        background: rgba(0, 217, 255, 0.1);
-        border: 1px solid rgba(0, 217, 255, 0.25);
-        color: #00d9ff;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #f4f4f5;
       }
 
       &__bubble { padding: var(--sp-4); max-width: 70%; }

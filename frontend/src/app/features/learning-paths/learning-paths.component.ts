@@ -31,12 +31,12 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         } @else {
           <div class="paths-grid">
             @for (path of paths(); track path.id) {
-              <a [routerLink]="['/rutas', path.slug]" class="path-card" [style.--c]="path.category?.color || '#0AE98A'">
+              <a [routerLink]="['/rutas', path.slug]" class="path-card" [style.--c]="path.category?.color || '#f4f4f5'">
                 <!-- Top Accent Line & Header -->
                 <div class="path-card__header">
                   <div class="cat-pill">
                     <span class="cat-icon" [style.background]="getCategoryBg(path.category?.color)">
-                      <app-icon [category]="path.category?.slug" [size]="16" [color]="path.category?.color || '#0AE98A'" [strokeWidth]="2" />
+                      <app-icon [category]="path.category?.slug" [size]="16" [color]="path.category?.color || '#f4f4f5'" [strokeWidth]="2" />
                     </span>
                     <span class="cat-name">{{ path.category?.name ?? 'Ingeniería' }}</span>
                   </div>
@@ -118,8 +118,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     .path-card {
       display: flex;
       flex-direction: column;
-      background: rgba(16, 20, 32, 0.88);
-      border: 1.5px dashed color-mix(in srgb, var(--c, var(--primary)) 35%, rgba(255, 255, 255, 0.14));
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       overflow: hidden;
       text-decoration: none;
@@ -130,7 +130,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
 
       &:hover {
         border-color: var(--c, var(--primary));
-        border-style: dashed;
+        
         box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 0 24px color-mix(in srgb, var(--c, var(--primary)) 22%, transparent);
         transform: translateY(-4px);
 
@@ -152,7 +152,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         justify-content: space-between;
         gap: var(--sp-3);
         padding: var(--sp-4) var(--sp-5);
-        background: linear-gradient(180deg, rgba(22, 25, 38, 0.6) 0%, transparent 100%);
+        background: var(--bg-surface-2); border-bottom: 1px solid var(--border);
       }
 
       .cat-pill {
@@ -169,7 +169,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          border: 1.5px dashed color-mix(in srgb, var(--c, var(--primary)) 50%, rgba(255, 255, 255, 0.18));
+          border: 1px solid var(--border);
           transition: all var(--transition-fast);
         }
 
@@ -247,7 +247,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       &__footer {
         padding: var(--sp-3) var(--sp-5);
         border-top: 1px solid var(--border);
-        background: rgba(10, 12, 20, 0.4);
+        background: var(--bg-surface-2);
 
         .explore-btn {
           display: flex;

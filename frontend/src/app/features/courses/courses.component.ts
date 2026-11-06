@@ -196,7 +196,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
                 <a [routerLink]="['/cursos', course.slug]" class="course-card">
                   <div class="course-card__thumb">
                     <span class="course-thumb__icon">
-                      <app-icon [category]="course.category?.slug" [size]="42" [color]="course.category?.color || '#0AE98A'" [strokeWidth]="1.8" />
+                      <app-icon [category]="course.category?.slug" [size]="42" [color]="course.category?.color || '#f4f4f5'" [strokeWidth]="1.8" />
                     </span>
                   </div>
                   <div class="course-card__body">
@@ -296,7 +296,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
 
     .filter-count-pill {
       background: var(--primary);
-      color: #08090D;
+      color: var(--bg-surface-2);
       font-size: 11px;
       font-weight: 700;
       padding: 1px 6px;
@@ -305,8 +305,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
 
     /* BARRA LATERAL DE FILTROS (ESTÁTICA Y ALINEADA) */
     .filters {
-      background: #0E111A;
-      border: 1.5px dashed rgba(139, 92, 246, 0.35);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 14px;
       padding: 1.15rem;
       position: relative;
@@ -320,7 +320,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         min-height: 42px;
         margin-bottom: 1.25rem;
         padding-bottom: 0.75rem;
-        border-bottom: 1px solid #1A1F30;
+        border-bottom: 1px solid var(--border);
       }
 
       .filters-title-wrap {
@@ -405,8 +405,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
 
       .search-input {
         width: 100%;
-        background: #08090D;
-        border: 1px solid #202436;
+        background: var(--bg-surface-2);
+        border: 1px solid var(--border);
         color: #F8FAFC;
         border-radius: 6px;
         padding: 8px 30px 8px 32px;
@@ -448,8 +448,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         width: 100%;
         appearance: none;
         -webkit-appearance: none;
-        background: #08090D;
-        border: 1px solid #202436;
+        background: var(--bg-surface-2);
+        border: 1px solid var(--border);
         color: #F8FAFC;
         border-radius: 6px;
         padding: 8px 30px 8px 10px;
@@ -463,7 +463,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         }
 
         option {
-          background: #0E111A;
+          background: var(--bg-surface);
           color: #F8FAFC;
         }
       }
@@ -486,8 +486,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     }
 
     .diff-seg-btn {
-      background: #121622;
-      border: 1px solid #202436;
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border);
       color: #94A3B8;
       font-size: 11px;
       font-weight: 500;
@@ -499,20 +499,20 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
 
       &:hover {
         color: #F8FAFC;
-        border-color: #2E344E;
+        border-color: var(--border-hover);
       }
 
       &.is-active {
-        background: #1A2030;
+        background: var(--bg-surface-3);
         color: #F8FAFC;
         border-color: #38BDF8;
         font-weight: 600;
       }
 
       &--beginner.is-active {
-        background: rgba(10, 233, 138, 0.12);
-        color: #0AE98A;
-        border-color: rgba(10, 233, 138, 0.4);
+        background: rgba(34, 197, 94, 0.12);
+        color: #22c55e;
+        border-color: rgba(34, 197, 94, 0.4);
       }
 
       &--intermediate.is-active {
@@ -541,8 +541,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       gap: 8px;
       margin-bottom: 1.25rem;
       padding: 0.65rem 0.85rem;
-      background: #0E111A;
-      border: 1px solid #202436;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
       flex-wrap: wrap;
 
@@ -563,8 +563,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #161B26;
-        border: 1px solid #283048;
+        background: var(--bg-surface-2);
+        border: 1px solid var(--border);
         color: #F8FAFC;
         font-size: 11px;
         padding: 3px 8px;
@@ -598,9 +598,9 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     .results-count {
       flex: none;
       padding: .3rem .75rem;
-      border: 1px solid #202436;
+      border: 1px solid var(--border);
       border-radius: 99px;
-      background: #0E111A;
+      background: var(--bg-surface);
       font-size: 0.75rem;
       font-weight: 600;
       color: #94A3B8;
@@ -623,8 +623,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
     .course-card {
       display: flex;
       flex-direction: column;
-      background: #0E111A;
-      border: 1.5px dashed rgba(139, 92, 246, 0.32);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 14px;
       overflow: hidden;
       text-decoration: none;
@@ -638,8 +638,8 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       }
 
       &:hover {
-        border-color: rgba(139, 92, 246, 0.85);
-        box-shadow: 0 10px 24px -4px rgba(0, 0, 0, 0.5), 0 0 16px rgba(139, 92, 246, 0.15);
+        border-color: var(--border-hover);
+        box-shadow: 0 10px 24px -4px rgba(0, 0, 0, 0.5), 0 0 16px var(--border-hover);
         transform: translateY(-2px);
 
         h3 {
@@ -665,7 +665,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           height: auto;
           min-height: 96px;
           flex-shrink: 0;
-          border-right: 1px solid #1E2536;
+          border-right: 1px solid var(--border);
           border-bottom: none;
           padding: 0 8px;
         }
@@ -707,7 +707,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(180deg, #121622 0%, #0E111A 100%);
+        background: var(--bg-surface-2);
         border-bottom: none;
       }
 
@@ -744,7 +744,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
           letter-spacing: 0.04em;
           color: var(--primary);
           background: rgba(10, 233, 138, 0.08);
-          border: 1px dashed rgba(10, 233, 138, 0.35);
+          border: 1px solid var(--border);
           border-radius: 6px;
           padding: 1px 6px;
           white-space: nowrap;
@@ -811,7 +811,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
         gap: 0.5rem;
         font-family: var(--font-mono);
         align-items: center;
-        border-top: 1px solid #161B26;
+        border-top: 1px solid var(--bg-surface-2);
         padding-top: 0.5rem;
         margin-top: auto;
       }

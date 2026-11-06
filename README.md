@@ -89,6 +89,14 @@ Con `AI_PROVIDER=openrouter` el chat puede consumir el endpoint en streaming:
 POST /api/ai/conversations/{id}/stream   →  text/event-stream (SSE)
 ```
 
+## Mapa de módulos
+
+| Módulo | Ruta | Responsabilidad | README local |
+|---|---|---|---|
+| Home | `frontend/src/app/features/home` | Vista principal agregada, landing técnica y catálogo rápido | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/home/README.md) |
+| Auth | `frontend/src/app/features/auth` | Login, registro, verificación PIN, recuperación y callbacks OAuth con animación halftone | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/auth/README.md) |
+| AI Companion | `frontend/src/app/features/ai-companion` | Consola interactiva flotante Developer CLI Drawer (`syseng:copilot`) | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/ai-companion/README.md) |
+
 ## Testing
 
 ```bash

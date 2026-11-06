@@ -470,7 +470,7 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       display: grid; grid-template-columns: 120px 150px 110px 1fr; gap: .75rem;
       padding: .4rem .75rem; font-size: .75rem; font-weight: var(--font-bold);
       text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted);
-      border-bottom: 1px dashed var(--border-hover);
+      border-bottom: 1px solid var(--border);
     }
     .memory-board__grid {
       display: flex; flex-direction: column; gap: .45rem;

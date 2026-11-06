@@ -46,9 +46,9 @@ import {
         z-index: 0;
         background: radial-gradient(
           circle at 75% 42%,
-          rgba(0, 229, 153, 0.16) 0%,
-          rgba(14, 165, 233, 0.10) 38%,
-          rgba(5, 9, 17, 0) 72%
+          rgba(34, 197, 94, 0.08) 0%,
+          rgba(244, 244, 245, 0.02) 40%,
+          rgba(9, 9, 11, 0) 72%
         );
       }
 
@@ -180,30 +180,30 @@ export class HalftoneVisualComponent implements AfterViewInit, OnDestroy {
         // Radius calculation
         const radius = 0.8 + totalEnergy * 2.4;
 
-        // Color and glow selection matching the natural emerald & cyan Stitch palette
+        // Color selection matching the neutral CLI & subtle terminal green palette
         let color: string;
 
         if (totalEnergy > 0.65) {
-          // Wave crest: electric cyan in upper right, bright neon emerald in mid wave
-          if (ny < 0.32 && nx > 0.58) {
-            color = `rgba(14, 165, 233, ${0.75 + totalEnergy * 0.25})`;
+          // Wave crest: crisp monochrome white in upper right, terminal green in mid wave
+          if (ny < 0.35 && nx > 0.58) {
+            color = `rgba(244, 244, 245, ${0.7 + totalEnergy * 0.3})`;
           } else {
-            color = `rgba(0, 229, 153, ${0.75 + totalEnergy * 0.25})`;
+            color = `rgba(34, 197, 94, ${0.7 + totalEnergy * 0.3})`;
           }
         } else if (totalEnergy > 0.4) {
-          // Mid wave: cyan and teal
+          // Mid wave: subtle terminal green and clean zinc
           if (ny < 0.38 && nx > 0.55) {
-            color = `rgba(56, 189, 248, ${0.5 + totalEnergy * 0.3})`;
+            color = `rgba(212, 212, 216, ${0.45 + totalEnergy * 0.25})`;
           } else {
-            color = `rgba(16, 185, 129, ${0.45 + totalEnergy * 0.3})`;
+            color = `rgba(34, 197, 94, ${0.4 + totalEnergy * 0.25})`;
           }
         } else if (totalEnergy > 0.2) {
-          // Transition / deep teal
-          color = `rgba(13, 148, 136, ${0.25 + totalEnergy * 0.25})`;
+          // Transition / neutral zinc
+          color = `rgba(161, 161, 170, ${0.2 + totalEnergy * 0.2})`;
         } else {
-          // Ambient dots: very subtle slate on the left side, blending seamlessly
-          const ambientAlpha = 0.09 + blendFactor * 0.08;
-          color = `rgba(148, 163, 184, ${ambientAlpha})`;
+          // Ambient dots: subtle zinc on the left side, blending seamlessly with #09090b
+          const ambientAlpha = 0.08 + blendFactor * 0.07;
+          color = `rgba(113, 113, 122, ${ambientAlpha})`;
         }
 
         ctx.fillStyle = color;
