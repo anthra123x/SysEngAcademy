@@ -95,6 +95,7 @@ POST /api/ai/conversations/{id}/stream   →  text/event-stream (SSE)
 |---|---|---|---|
 | Home | `frontend/src/app/features/home` | Vista principal agregada, landing técnica y catálogo rápido | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/home/README.md) |
 | Auth | `frontend/src/app/features/auth` | Login, registro, verificación PIN, recuperación y callbacks OAuth con animación halftone | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/auth/README.md) |
+| Onboarding | `frontend/src/app/features/onboarding` | Inducción interactiva, calibración diagnóstica y recomendación de rutas | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/onboarding/README.md) |
 | AI Companion | `frontend/src/app/features/ai-companion` | Consola interactiva flotante Developer CLI Drawer (`syseng:copilot`) | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/ai-companion/README.md) |
 
 ## Testing
