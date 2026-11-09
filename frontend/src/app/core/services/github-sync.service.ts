@@ -42,7 +42,6 @@ export interface GitHubSyncResult {
   xp_earned: number;
   total_xp?: number;
   level?: number;
-  streak?: number;
   message: string;
 }
 

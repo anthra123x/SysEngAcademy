@@ -71,7 +71,6 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
   readonly aiGeneratedQuestions = signal<QuizQuestion[]>([]);
 
   readonly sendingDigest = signal(false);
-  readonly sendingStreak = signal(false);
   readonly actionNotification = signal('');
 
   // Estados para modal de retroalimentación & llamado de atención
@@ -124,18 +123,6 @@ export class TeacherDashboardComponent implements OnInit, OnDestroy {
         setTimeout(() => this.actionNotification.set(''), 6000);
       },
       error: () => this.sendingDigest.set(false),
-    });
-  }
-
-  triggerStreakReminder() {
-    this.sendingStreak.set(true);
-    this.teacherSvc.sendStreakReminder().subscribe({
-      next: res => {
-        this.sendingStreak.set(false);
-        this.actionNotification.set(res.message);
-        setTimeout(() => this.actionNotification.set(''), 6000);
-      },
-      error: () => this.sendingStreak.set(false),
     });
   }
 

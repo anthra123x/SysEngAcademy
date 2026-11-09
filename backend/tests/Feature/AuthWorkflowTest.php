@@ -45,7 +45,6 @@ class AuthWorkflowTest extends TestCase
                     'email',
                     'role',
                     'email_verified_at',
-                    'current_streak',
                     'xp',
                 ],
                 'token',
@@ -53,7 +52,6 @@ class AuthWorkflowTest extends TestCase
                 'message',
             ])
             ->assertJsonPath('user.role', 'student')
-            ->assertJsonPath('user.current_streak', 1)
             ->assertJsonPath('user.xp', 50)
             ->assertJsonPath('verification_required', false);
 

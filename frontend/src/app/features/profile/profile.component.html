@@ -127,11 +127,10 @@
                         <span class="xp-next">{{ xpToNextLevel() }} XP para Nivel {{ userLevel() + 1 }}</span>
                       </div>
                     </div>
-                    <div class="meta-row meta-row--streak">
-                      <span class="meta-k">Racha Activa:</span>
-                      <span class="meta-v streak-tag">
-                        <strong style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="flame" [size]="14" /> {{ currentStreak() }} {{ currentStreak() === 1 ? 'día' : 'días' }}</strong>
-                        <span class="streak-boost">({{ streakMultiplier() }}x Boost)</span>
+                    <div class="meta-row meta-row--completed">
+                      <span class="meta-k">Cursos Completados:</span>
+                      <span class="meta-v">
+                        <strong>{{ completedCount() }} de {{ enrollments().length }}</strong>
                       </span>
                     </div>
                      <div class="meta-row meta-row--spec">
@@ -227,17 +226,6 @@
                   <span class="term-tab__prompt">$</span>
                   <span class="term-tab__cmd">whoami</span>
                   <span class="term-tab__flag">--courses</span>
-                </button>
-
-                <button
-                  type="button"
-                  class="term-tab term-tab--streak"
-                  [class.is-active]="activeTab() === 'streak'"
-                  (click)="activeTab.set('streak')"
-                >
-                  <span class="term-tab__prompt">$</span>
-                  <span class="term-tab__cmd">streak</span>
-                  <span class="term-tab__flag" style="display:inline-flex; align-items:center; gap:4px;"><app-icon name="flame" [size]="12" /> {{ currentStreak() }}d</span>
                 </button>
 
                 <button
@@ -503,7 +491,7 @@
             }
 
             <!-- ========================================================
-                 VISTA ESTUDIANTE: PESTAÑAS EXISTENTES (WHOAMI, STREAK, ETC)
+                 VISTA ESTUDIANTE: PESTAÑAS EXISTENTES (WHOAMI, LOGROS, ETC)
                  ======================================================== -->
             @if (!isTeacher() && activeTab() === 'overview') {
               <div class="tab-pane animate-fade-in">
@@ -519,34 +507,15 @@
                     </div>
                   </div>
 
-                  <div class="sensor-card" [class.sensor-card--extinguished]="isStreakExtinguished()">
+                  <div class="sensor-card">
                     <div class="sensor-card__head">
-                      <span class="sensor-label">RACHA DE ESTUDIO</span>
-                      <span class="sensor-code" [style.color]="isStreakExtinguished() ? '#94A3B8' : (isStreakActive() ? '#22c55e' : '#F59E0B')">
-                        {{ isStreakActive() ? '[STREAK_OK]' : (isStreakPending() ? '[STREAK_PEND]' : '[STREAK_OFF]') }}
-                      </span>
+                      <span class="sensor-label">NIVEL DE INGENIERO</span>
+                      <span class="sensor-code">[SYS_LVL]</span>
                     </div>
-                    @if (isStreakExtinguished()) {
-                      <div class="sensor-num" style="display:inline-flex; align-items:center; gap:6px; color: #94A3B8;">
-                        <span style="opacity: 0.45;"><app-icon name="flame" [size]="18" /></span> 0d (Apagada)
-                      </div>
-                      <div class="sensor-footer">
-                        @if (canRecoverStreak()) {
-                          <a (click)="activeTab.set('streak')" style="cursor: pointer;" class="sensor-sub font-semibold" style="color: #f97316;">
-                            🔥 Perdiste {{ previousStreak() }}d · ¡Recupérala! →
-                          </a>
-                        } @else {
-                          <span class="sensor-sub">Récord: {{ maxStreak() }} días</span>
-                        }
-                      </div>
-                    } @else {
-                      <div class="sensor-num" [class.text-orange]="isStreakActive()" [style.color]="isStreakPending() ? '#FBBF24' : null" style="display:inline-flex; align-items:center; gap:6px;">
-                        <app-icon name="flame" [size]="18" /> {{ currentStreak() }}d
-                      </div>
-                      <div class="sensor-footer">
-                        <span class="sensor-sub">Récord: {{ maxStreak() }} días</span>
-                      </div>
-                    }
+                    <div class="sensor-num">Nivel {{ userLevel() }}</div>
+                    <div class="sensor-footer">
+                      <span class="sensor-sub">{{ rankTitle() }}</span>
+                    </div>
                   </div>
 
                   <div class="sensor-card">
@@ -658,213 +627,6 @@
               </div>
             }
 
-            @if (!isTeacher() && activeTab() === 'streak') {
-              <div class="tab-pane animate-fade-in">
-                <div class="section-terminal-bar">
-                  <div class="terminal-bar-title">
-                    <span class="term-prefix">systemctl status</span>
-                    <span class="term-arg">student-streak.service</span>
-                  </div>
-                  @if (isStreakActive()) {
-                    <span class="term-status-badge text-orange" style="display:inline-flex; align-items:center; gap:6px;"><app-icon name="flame" [size]="14" /> RACHA CONSECUTIVA ACTIVA</span>
-                  } @else if (isStreakPending()) {
-                    <span class="term-status-badge" style="display:inline-flex; align-items:center; gap:6px; color: #fbbf24; border-color: rgba(251, 191, 36, 0.3);"><app-icon name="zap" [size]="14" /> RACHA EN PAUSA (PENDIENTE HOY)</span>
-                  } @else {
-                    <span class="term-status-badge" style="display:inline-flex; align-items:center; gap:6px; color: #94a3b8; border-color: rgba(148, 163, 184, 0.3);"><app-icon name="flame" [size]="14" style="opacity: 0.45;" /> RACHA APAGADA (INACTIVA)</span>
-                  }
-                </div>
-
-                <!-- ESTACIÓN DE RECUPERACIÓN / REACTIVACIÓN DE RACHA -->
-                @if (canRecoverStreak() || isStreakExtinguished()) {
-                  <div id="streak-recovery-station" class="streak-recovery-station animate-fade-in">
-                    <div class="recovery-banner-head">
-                      <div class="recovery-banner-info">
-                        <div class="recovery-status-pill">
-                          @if (canRecoverStreak()) {
-                            <span class="pill-dot pill-dot--orange"></span>
-                            <span>RECUPERACIÓN DISPONIBLE · {{ previousStreak() }} DÍAS PERDIDOS</span>
-                          } @else {
-                            <span class="pill-dot pill-dot--cyan"></span>
-                            <span>IGNICIÓN DE PRIMER DÍA DE RACHA</span>
-                          }
-                        </div>
-                        <h2 class="recovery-banner-title">
-                          @if (canRecoverStreak()) {
-                            🔥 ¡Tu racha se ha apagado! Recupérala ahora
-                          } @else {
-                            ⚡ Enciende tu fuego de estudio consecutivo
-                          }
-                        </h2>
-                        <p class="recovery-banner-desc">
-                          @if (canRecoverStreak()) {
-                            Al no registrar actividad continua tu racha se apagó temporalmente. ¡No te desanimes! Resuelve este <strong>ejercicio técnico sencillo</strong> para reactivar tu fuego inmediatamente y restaurar tu racha a <strong>{{ previousStreak() + 1 }} días</strong>.
-                          } @else {
-                            Completa este breve ejercicio de verificación técnica para encender tu primer día de racha de estudio y comenzar a acumular bonificaciones de XP.
-                          }
-                        </p>
-                      </div>
-
-                      <button type="button" class="btn-refresh-drill" (click)="refreshRecoveryDrill()" [disabled]="isRecovering()" title="Cargar otro ejercicio del banco">
-                        <span>Cambiar Ejercicio ⟳</span>
-                      </button>
-                    </div>
-
-                    @if (recoveryDrill(); as drill) {
-                      <div class="drill-interactive-shell">
-                        <div class="drill-topbar">
-                          <span class="drill-tag-badge">[{{ drill.category }}]</span>
-                          <span class="drill-diff-badge">Dificultad: {{ drill.difficulty }}</span>
-                          <span class="drill-reward-badge">+35 XP &amp; Reactivación</span>
-                        </div>
-
-                        <div class="drill-question-box">
-                          <p class="drill-question-text">{{ drill.question }}</p>
-                          @if (drill.code_snippet) {
-                            <pre class="drill-code-snippet"><code>{{ drill.code_snippet }}</code></pre>
-                          }
-                        </div>
-
-                        <div class="drill-options-grid">
-                          @for (opt of drill.options; track opt) {
-                            <button type="button"
-                                    class="drill-option-card"
-                                    [class.is-selected]="selectedRecoveryOption() === opt"
-                                    [disabled]="isRecovering()"
-                                    (click)="selectRecoveryOption(opt)">
-                              <span class="opt-radio">{{ selectedRecoveryOption() === opt ? '◉' : '○' }}</span>
-                              <span class="opt-label font-mono">{{ opt }}</span>
-                            </button>
-                          }
-                        </div>
-
-                        @if (recoveryErrorMessage()) {
-                          <div class="drill-alert drill-alert--error animate-fade-in">
-                            <span class="alert-icon">✕</span>
-                            <div class="alert-text">
-                              <strong>Respuesta no válida:</strong> {{ recoveryErrorMessage() }}
-                            </div>
-                          </div>
-                        }
-
-                        @if (recoverySuccessMessage()) {
-                          <div class="drill-alert drill-alert--success animate-fade-in">
-                            <span class="alert-icon">✓</span>
-                            <div class="alert-text">
-                              <strong>¡Fuego encendido!</strong> {{ recoverySuccessMessage() }}
-                            </div>
-                          </div>
-                        }
-
-                        <div class="drill-footer-actions">
-                          <button type="button"
-                                  class="btn-submit-drill"
-                                  [disabled]="!selectedRecoveryOption() || isRecovering()"
-                                  (click)="submitRecoveryDrill()">
-                            @if (isRecovering()) {
-                              <span class="drill-spinner"></span>
-                              <span>Verificando solución en el servidor...</span>
-                            } @else {
-                              <span>Reactivar y Recuperar Racha 🔥 (+35 XP)</span>
-                            }
-                          </button>
-                          @if (drill.hint) {
-                            <span class="drill-hint-txt">💡 Pista: {{ drill.hint }}</span>
-                          }
-                        </div>
-                      </div>
-                    } @else {
-                      <div class="drill-loading-shell">
-                        <span class="drill-spinner"></span>
-                        <span>Cargando reto de recuperación...</span>
-                      </div>
-                    }
-                  </div>
-                }
-
-                <div class="streak-dashboard-layout">
-                  <div class="streak-hero-card" [class.is-extinguished]="isStreakExtinguished()">
-                    <div class="streak-flame-box" [class.is-extinguished]="isStreakExtinguished()">
-                      <span class="flame-big" [class.is-extinguished]="isStreakExtinguished()">
-                        <app-icon name="flame" [size]="36" />
-                      </span>
-                      <div class="flame-counter">
-                        <span class="counter-num">{{ currentStreak() }}</span>
-                        <span class="counter-lbl">
-                          @if (isStreakExtinguished()) { DÍAS (APAGADA) } @else if (isStreakPending()) { DÍAS (EN PAUSA) } @else { {{ currentStreak() === 1 ? 'DÍA CONSECUTIVO' : 'DÍAS CONSECUTIVOS' }} }
-                        </span>
-                      </div>
-                    </div>
-
-                    <div class="streak-stats-row">
-                      <div class="streak-stat-item">
-                        <span class="stat-k">Racha Histórica Máxima</span>
-                        <span class="stat-v">{{ maxStreak() }} días</span>
-                      </div>
-                      <div class="streak-stat-item">
-                        <span class="stat-k">Multiplicador XP</span>
-                        <span class="stat-v" [class.text-success]="!isStreakExtinguished()" [class.text-muted]="isStreakExtinguished()">
-                          {{ isStreakExtinguished() ? '1.0x (Pausado)' : streakMultiplier() + 'x Boost' }}
-                        </span>
-                      </div>
-                      <div class="streak-stat-item">
-                        <span class="stat-k">Tiempo Activo Hoy</span>
-                        <span class="stat-v text-cyan">{{ todayStudyMinutes() }} min de estudio</span>
-                      </div>
-                      <div class="streak-stat-item streak-stat-item--today">
-                        <span class="stat-k">Estado de Hoy</span>
-                        @if (isStreakActive()) {
-                          <span class="stat-v text-success">✓ Sesión Activa Registrada (+25 XP)</span>
-                        } @else if (isStreakPending()) {
-                          <span class="stat-v" style="color: #fbbf24;">⚡ Pendiente de estudiar hoy</span>
-                        } @else {
-                          <span class="stat-v" style="color: #f87171;">✕ Sin actividad (Racha apagada)</span>
-                        }
-                      </div>
-                    </div>
-
-                    <div class="streak-action-box">
-                      @if (isStreakExtinguished()) {
-                        <div class="extinguished-action-banner">
-                          <app-icon name="alert-triangle" [size]="15" />
-                          <span>Tu racha está apagada por inactividad. Resuelve el reto superior o avanza en tus cursos para reactivarla.</span>
-                        </div>
-                      } @else if (isStreakPending()) {
-                        <div class="pending-action-banner">
-                          <app-icon name="zap" [size]="15" />
-                          <span>Racha en espera: Dedica unos minutos a tus lecciones hoy para consolidar tu día consecutivo.</span>
-                        </div>
-                      } @else {
-                        <div class="checked-in-banner">
-                          <app-icon name="check-circle" [size]="15" />
-                          <span>Telemetría en tiempo real: Tu racha se actualiza automáticamente conforme trabajas y estudias en la plataforma.</span>
-                        </div>
-                      }
-                    </div>
-                  </div>
-
-                  <div class="streak-week-card">
-                    <h3 class="streak-card-title">Matriz de Actividad Semanal</h3>
-                    <p class="streak-card-desc">Cada día de estudio, resolución de retos CLI o lecciones superadas mantiene tu flujo de aprendizaje continuo.</p>
-
-                    <div class="week-days-grid">
-                      @for (day of weekDays(); track day.dayName) {
-                        <div class="week-day-cell" [class.is-done]="day.completed" [class.is-today]="day.isToday">
-                          <span class="day-name">{{ day.dayName }}</span>
-                          <span class="day-date font-mono" style="font-size: 10px; color: #64748b; margin-top: 2px;">{{ day.shortDate }}</span>
-                          <div class="day-indicator" style="margin-top: 4px;">
-                            @if (day.completed) { <span><app-icon name="flame" [size]="14" /></span> } @else if (day.isToday) { <span><app-icon name="zap" [size]="14" /></span> } @else { <span>·</span> }
-                          </div>
-                          <span class="day-status-txt">
-                            @if (day.completed) { OK } @else if (day.isToday) { HOY } @else { PEND }
-                          </span>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                </div>
-              </div>
-            }
-
             @if (!isTeacher() && activeTab() === 'achievements') {
               <div class="tab-pane animate-fade-in">
                 <div class="section-terminal-bar">
@@ -915,7 +677,7 @@
                     [class.is-active]="selectedBadgeFilter() === 'special'"
                     (click)="selectedBadgeFilter.set('special')"
                   >
-                    Rachas & Nivel
+                    Nivel & Dedicación
                   </button>
                 </div>
 
@@ -1057,7 +819,6 @@
                     <span class="lcol-title">RANGO / TÍTULO</span>
                     <span class="lcol-level">NIVEL</span>
                     <span class="lcol-metrics">DESEMPEÑO</span>
-                    <span class="lcol-streak">RACHA</span>
                     <span class="lcol-xp">XP TOTAL</span>
                   </div>
                   @for (entry of leaderboard(); track entry.rank) {
@@ -1094,16 +855,6 @@
                         <span class="metric-lessons" [title]="'Lecciones completadas'">
                           {{ entry.completedLessons }} lecc.
                         </span>
-                      </span>
-                      <span class="lcol-streak">
-                        @if (entry.streak && entry.streak > 0) {
-                          <span class="streak-pill-active">
-                            <app-icon name="flame" [size]="12" color="#f97316" />
-                            {{ entry.streak }}d
-                          </span>
-                        } @else {
-                          <span class="streak-pill-zero">0d</span>
-                        }
                       </span>
                       <span class="lcol-xp">
                         <span class="xp-badge-pill">{{ entry.xp }} XP</span>
@@ -1465,8 +1216,8 @@
                     <button type="button" class="btn-term-run" style="font-size: 11px; cursor: pointer;" (click)="askAdvisor('¿Cuál es la mejor estrategia para dominar algoritmos complejos y Big-O?')">
                       Algoritmos & Big-O
                     </button>
-                    <button type="button" class="btn-term-run" style="font-size: 11px; cursor: pointer;" (click)="askAdvisor('¿Cómo maximizar mi XP y mi racha de estudio diaria?')">
-                      Maximizar XP & Racha
+                    <button type="button" class="btn-term-run" style="font-size: 11px; cursor: pointer;" (click)="askAdvisor('¿Cómo maximizar mi XP y subir de nivel?')">
+                      Maximizar XP & Nivel
                     </button>
                   </div>
 

@@ -86,12 +86,12 @@ class CodelabService
                 ];
             }
 
-            $streakUsers = User::where('current_streak', '>=', 1)
-                ->orderBy('current_streak', 'desc')
+            $topUsers = User::where('xp', '>', 50)
+                ->orderBy('xp', 'desc')
                 ->take(3)
                 ->get();
 
-            foreach ($streakUsers as $su) {
+            foreach ($topUsers as $su) {
                 $suHandle = Str::slug($su->name, '');
                 if (empty($suHandle)) {
                     $suHandle = explode('@', $su->email)[0];
@@ -99,7 +99,7 @@ class CodelabService
                 $activityFeed[] = [
                     'icon' => 'verified',
                     'user' => '@' . $suHandle,
-                    'text' => "mantiene racha activa de {$su->current_streak} días con {$su->xp} XP.",
+                    'text' => "acumula {$su->xp} XP en retos y prácticas de ingeniería.",
                     'time' => 'hoy',
                 ];
             }

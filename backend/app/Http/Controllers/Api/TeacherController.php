@@ -114,9 +114,9 @@ class TeacherController extends Controller
         $sentCount = 0;
         foreach ($students as $student) {
             try {
-                $streak = max(1, $student->current_streak ?: 1);
                 $lessons = (int) ($student->lesson_progress_count ?? 0);
                 $xp = max(50, $student->xp ?: 50);
+                $studyMins = (int) round(((int) ($student->total_study_seconds ?: 0)) / 60);
 
                 TransactionalMailService::send(
                     toEmail: $student->email,
@@ -125,7 +125,7 @@ class TeacherController extends Controller
                     viewData: [
                         'userName'         => $student->name,
                         'userEmail'        => $student->email,
-                        'streakDays'       => $streak,
+                        'studyMinutes'     => $studyMins,
                         'completedLessons' => $lessons,
                         'totalXp'          => $xp,
                     ]
@@ -138,43 +138,6 @@ class TeacherController extends Controller
 
         return response()->json([
             'message' => "Se despacharon {$sentCount} correos de progreso con diseño institucional a los estudiantes.",
-            'sent_count' => $sentCount,
-        ]);
-    }
-
-    /**
-     * Envía alertas por correo de racha inactiva o riesgo de retraso con datos reales.
-     */
-    public function sendStreakReminder(Request $request): JsonResponse
-    {
-        $students = \App\Models\User::where('role', 'student')
-            ->whereNotNull('email_verified_at')
-            ->where('current_streak', '>', 0)
-            ->lazy(50);
-
-        $sentCount = 0;
-        foreach ($students as $student) {
-            try {
-                $streak = max(1, $student->current_streak ?: 1);
-
-                TransactionalMailService::send(
-                    toEmail: $student->email,
-                    subject: '🔥 ¡Alerta! Tu racha en SysEng Academy está por vencerse',
-                    view: 'emails.streak-reminder',
-                    viewData: [
-                        'userName'   => $student->name,
-                        'userEmail'  => $student->email,
-                        'streakDays' => $streak,
-                    ]
-                );
-                $sentCount++;
-            } catch (\Throwable $e) {
-                logger()->error("Error enviando recordatorio a {$student->email}: " . $e->getMessage());
-            }
-        }
-
-        return response()->json([
-            'message' => "Se despacharon {$sentCount} correos de alerta de racha/atraso con diseño institucional.",
             'sent_count' => $sentCount,
         ]);
     }

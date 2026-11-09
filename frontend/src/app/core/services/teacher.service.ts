@@ -680,18 +680,6 @@ export class TeacherService {
     );
   }
 
-  sendStreakReminder(): Observable<{ message: string; sent_count: number }> {
-    return this.api.post<{ message: string; sent_count: number }>('/teacher/send-streak-reminders', {}).pipe(
-      catchError(() => {
-        const students = this.getLocalStudents();
-        return of({
-          message: `Se despacharon alertas de inactividad de racha a los estudiantes para prevenir atrasos en la cátedra.`,
-          sent_count: students.length,
-        });
-      })
-    );
-  }
-
   // --- GESTIÓN DE ACTIVIDADES Y QUIZZES ---
   private getLocalActivities(): TeacherActivity[] {
     if (typeof window === 'undefined') return DEFAULT_TEACHER_ACTIVITIES;

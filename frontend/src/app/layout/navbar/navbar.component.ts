@@ -2,7 +2,6 @@ import { Component, inject, signal, computed, HostListener, OnInit, OnDestroy } 
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
-import { StreakService } from '../../core/services/streak.service';
 import { NotificationService, InboxNotification } from '../../core/services/notification.service';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
 import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from '../../core/constants/ascii-avatars';
@@ -16,7 +15,6 @@ import { STUDENT_MINI_AVATARS, TEACHER_MINI_AVATARS, getStoredMiniAvatar } from 
 export class NavbarComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   router = inject(Router);
-  streakService = inject(StreakService);
   notificationService = inject(NotificationService);
 
   dropdownOpen = signal(false);
@@ -109,30 +107,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return 'Estudiante';
   });
 
-  readonly studentStreak = computed(() => {
-    return this.streakService.currentStreak();
-  });
-
-  readonly isStreakActive = computed(() => this.streakService.isStreakActive());
-  readonly isStreakPending = computed(() => this.streakService.isStreakPending());
-  readonly isStreakExtinguished = computed(() => this.streakService.isStreakExtinguished());
-  readonly canRecoverStreak = computed(() => this.streakService.canRecoverStreak());
-  readonly previousStreak = computed(() => this.streakService.previousStreak());
-
-  readonly streakNavTooltip = computed(() => {
-    if (this.canRecoverStreak()) {
-      return `¡Racha apagada! Perdiste ${this.previousStreak()}d. Haz clic para recuperarla con un ejercicio sencillo.`;
-    }
-    if (this.isStreakExtinguished()) {
-      return 'Racha apagada (0 días). Realiza un reto o estudia para encenderla.';
-    }
-    if (this.isStreakPending()) {
-      return `Racha de ${this.studentStreak()}d en pausa. ¡Estudia hoy para mantenerla!`;
-    }
-    return `🔥 Racha de ${this.studentStreak()}d activa hoy. ¡Excelente constancia!`;
-  });
-
-
   readonly unreadNotificationsCount = computed(() => this.notificationService.unreadCount());
   readonly notifications = computed(() => this.notificationService.inboxNotifications());
 
@@ -169,7 +143,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
       case 'github_sync': return 'git-commit';
       case 'course': return 'book-open';
       case 'quiz': return 'file-text';
-      case 'streak': return 'flame';
       case 'level': return 'zap';
       case 'welcome': return 'sparkles';
       default: return 'bell';

@@ -184,12 +184,10 @@ class GitHubSyncService
             \Illuminate\Support\Facades\Log::warning("Error registrando notificación de GitHub Sync: {$e->getMessage()}");
         }
 
-        // Registrar actividad diaria / racha si es el primer hito del día
+        // Registrar actividad diaria si es el primer hito del día
         $today = now()->toDateString();
         if ($user->last_activity_date !== $today) {
             $user->last_activity_date = $today;
-            $user->current_streak = max(1, ($user->current_streak ?: 0) + 1);
-            $user->max_streak = max($user->max_streak ?: 1, $user->current_streak);
             $user->save();
         }
 
@@ -206,7 +204,6 @@ class GitHubSyncService
             'xp_earned'   => 25,
             'total_xp'    => (int) $user->xp,
             'level'       => $levelProg['level'],
-            'streak'      => (int) $user->current_streak,
             'message'     => "¡Proyecto subido exitosamente a tu repositorio en GitHub! Ganaste +25 XP.",
         ];
     }

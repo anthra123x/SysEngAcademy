@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { CoursesService } from '../../core/services/courses.service';
-import { StreakService } from '../../core/services/streak.service';
 import { TeacherService, TeacherStudent, TeacherActivity, TeacherOverviewResponse, StudentFeedbackItem } from '../../core/services/teacher.service';
 import { Enrollment } from '../../core/models';
 import { AppIconComponent } from '../../shared/components/app-icon.component';
@@ -45,7 +44,6 @@ export interface LeaderboardEntry {
   completedCourses?: number;
   solvedChallenges?: number;
   avgQuizScore: number;
-  streak?: number;
   studyMinutes?: number;
   progressPercent?: number;
   xpToNextLevel?: number;
@@ -67,13 +65,6 @@ export interface PathRecommendation {
   matchScore: number;
 }
 
-export interface StreakDay {
-  dayName: string;
-  shortDate: string;
-  completed: boolean;
-  isToday: boolean;
-}
-
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -87,18 +78,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  readonly streakService = inject(StreakService);
 
   enrollments = signal<Enrollment[]>([]);
   loading = signal(true);
-  readonly todayStudyMinutes = computed(() => this.streakService.todayStudyMinutes());
   remoteLeaderboard = signal<LeaderboardEntry[]>([]);
   private studyTimer: any = null;
   private onDiagnosticUpdated = () => this.initLocalData();
   private queryParamsSub?: any;
 
   // Tab state: student vs teacher
-  activeTab = signal<'overview' | 'streak' | 'achievements' | 'leaderboard' | 'advisor' | 'security'>('overview');
+  activeTab = signal<'overview' | 'achievements' | 'leaderboard' | 'advisor' | 'security'>('overview');
   activeTeacherTab = signal<'overview' | 'students' | 'activities' | 'advisor'>('overview');
   selectedBadgeFilter = signal<'all' | 'unlocked' | 'challenges' | 'courses' | 'special'>('all');
 
@@ -133,7 +122,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     effect(() => {
       const tab = this.activeTab();
       if (tab === 'leaderboard') this.loadLeaderboard();
-      if (tab === 'streak') this.streakService.loadStatus();
     });
   }
 
@@ -433,22 +421,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   selectedAvatarId = signal<string>('professor_owl');
   showAvatarModal = signal(false);
 
-  // Streak state
-  readonly currentStreak = computed(() => this.streakService.currentStreak());
-  readonly previousStreak = computed(() => this.streakService.previousStreak());
-  readonly maxStreak = computed(() => this.streakService.maxStreak());
-  readonly canRecoverStreak = computed(() => this.streakService.canRecoverStreak());
-  readonly flameState = computed(() => this.streakService.flameState());
-  readonly isStreakActive = computed(() => this.streakService.isStreakActive());
-  readonly isStreakPending = computed(() => this.streakService.isStreakPending());
-  readonly isStreakExtinguished = computed(() => this.streakService.isStreakExtinguished());
-  readonly todayCheckedIn = computed(() => this.streakService.isActiveToday());
-  readonly recoveryDrill = computed(() => this.streakService.recoveryDrill());
-  readonly isRecovering = computed(() => this.streakService.isRecovering());
-  readonly recoverySuccessMessage = computed(() => this.streakService.recoverySuccessMessage());
-  readonly recoveryErrorMessage = computed(() => this.streakService.recoveryErrorMessage());
-  readonly selectedRecoveryOption = signal<string>('');
-
   // Diagnostic & Advisor AI state
   diagnosticCompleted = signal(false);
   diagnosticFinished = signal(false);
@@ -683,17 +655,6 @@ readonly currentStudentEmail = computed(() => {
         this.router.navigate(['/onboarding']);
       } else if (qp['tab'] === 'security' || qp['tab'] === 'password') {
         this.activeTab.set('security');
-      } else if (qp['tab'] === 'streak') {
-        this.activeTab.set('streak');
-        this.streakService.loadStatus();
-        if (qp['action'] === 'recover' || qp['recover'] === 'true') {
-          setTimeout(() => {
-            const el = document.getElementById('streak-recovery-station');
-            if (el) {
-              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-          }, 150);
-        }
       } else if (qp['tab'] === 'achievements') {
         this.activeTab.set('achievements');
       } else if (qp['tab'] === 'leaderboard') {
@@ -857,8 +818,7 @@ readonly currentStudentEmail = computed(() => {
       this.selectedAvatarId.set(pool[0].id);
     }
 
-    // Cargar datos reales y telemetría de racha
-    this.streakService.loadStatus();
+    // Cargar ranking real
     this.loadLeaderboard();
 
     const userKeyDiagRes = this.getUserStorageKey('diagnostic_result');
@@ -979,76 +939,6 @@ readonly currentStudentEmail = computed(() => {
     this.closeAvatarModal();
   }
 
-  readonly streakMultiplier = computed(() => {
-    const s = this.currentStreak();
-    if (s >= 14) return 1.40;
-    if (s >= 7)  return 1.25;
-    if (s >= 3)  return 1.10;
-    return 1.0;
-  });
-
-  readonly weekDays = computed<StreakDay[]>(() => {
-    const matrix = this.streakService.weeklyMatrix();
-    if (matrix && matrix.length > 0) {
-      return matrix.map(m => {
-        const parts = m.date.split('-');
-        const shortDate = parts.length === 3 ? `${parts[2]}/${parts[1]}` : m.date;
-        return {
-          dayName: m.day.toUpperCase(),
-          shortDate,
-          completed: m.active,
-          isToday: m.is_today,
-        };
-      });
-    }
-
-    const names = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
-    const now = new Date();
-    const currentDayIdx = (now.getDay() + 6) % 7;
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - currentDayIdx);
-
-    return names.map((name, i) => {
-      const dayDate = new Date(monday);
-      dayDate.setDate(monday.getDate() + i);
-      const dayNum = String(dayDate.getDate()).padStart(2, '0');
-      const monthNum = String(dayDate.getMonth() + 1).padStart(2, '0');
-      return {
-        dayName: name,
-        shortDate: `${dayNum}/${monthNum}`,
-        completed: i === currentDayIdx,
-        isToday: i === currentDayIdx,
-      };
-    });
-  });
-
-  doDailyCheckIn() {
-    this.streakService.recordActivity('pulse');
-  }
-
-  selectRecoveryOption(opt: string) {
-    this.selectedRecoveryOption.set(opt);
-  }
-
-  refreshRecoveryDrill() {
-    const currentId = this.recoveryDrill()?.id;
-    this.selectedRecoveryOption.set('');
-    this.streakService.fetchRecoveryDrill(currentId);
-  }
-
-  submitRecoveryDrill() {
-    const drill = this.recoveryDrill();
-    const answer = this.selectedRecoveryOption();
-    if (!drill || !answer || this.isRecovering()) return;
-
-    this.streakService.recoverStreak(drill.id, answer).subscribe({
-      next: () => {
-        this.selectedRecoveryOption.set('');
-      },
-      error: () => {},
-    });
-  }
-
   askAdvisor(suggestedPrompt?: string) {
     const q = (suggestedPrompt || this.advisorQuery()).trim();
     if (!q || this.advisorLoading()) return;
@@ -1061,13 +951,12 @@ readonly currentStudentEmail = computed(() => {
 
     this.api.post<{ reply?: string; answer?: string; message?: string }>('/ai/ask', {
       message: q,
-      context: `Estudiante: ${this.auth.user()?.name || 'Estudiante'}. Nivel: ${this.userLevel()}. Especialidad: ${this.specialization().title}. Racha: ${this.currentStreak()} días. Cursos completados: ${this.completedCount()}.`
+      context: `Estudiante: ${this.auth.user()?.name || 'Estudiante'}. Nivel: ${this.userLevel()}. Especialidad: ${this.specialization().title}. Cursos completados: ${this.completedCount()}.`
     }).subscribe({
       next: (res) => {
         this.advisorLoading.set(false);
         const botReply = res?.reply || res?.answer || res?.message || 'He analizado tu consulta. Para tu nivel actual, te recomiendo avanzar con ejercicios de lógica de programación y completar los retos de terminal antes de pasar a arquitectura avanzada.';
         this.advisorHistory.update(h => [...h, { role: 'assistant', text: botReply, timeAgo: 'ahora' }]);
-        this.streakService.recordActivity('pulse');
       },
       error: () => {
         this.advisorLoading.set(false);
@@ -1083,10 +972,10 @@ readonly currentStudentEmail = computed(() => {
       return 'Para destacar en Backend, domina el diseño de APIs REST idempotentes, control transaccional en bases de datos relacionales (PostgreSQL) y manejo de concurrencia. ¡Tu siguiente paso ideal es el curso de Introducción al Backend!';
     }
     if (lower.includes('algoritmo') || lower.includes('reto') || lower.includes('dijkstra') || lower.includes('grafo')) {
-      return 'Los algoritmos requieren práctica continua: comienza analizando la complejidad temporal Big-O (O(1), O(log n), O(n)) y resuelve al menos un reto CLI al día para mantener tu racha activa.';
+      return 'Los algoritmos requieren práctica continua: comienza analizando la complejidad temporal Big-O (O(1), O(log n), O(n)) y resuelve ejercicios de terminal para afianzar tus habilidades.';
     }
-    if (lower.includes('racha') || lower.includes('xp') || lower.includes('ranking')) {
-      return 'Para maximizar tu XP y escalar en el ranking: cada lección otorga +20 XP, los retos +50 XP, completar cursos +150 XP y mantener rachas diarias otorga bonificaciones progresivas (+25 XP por día consecutivo).';
+    if (lower.includes('xp') || lower.includes('ranking')) {
+      return 'Para maximizar tu XP y escalar en el ranking: cada lección otorga +20 XP, los retos +50 XP y completar cursos +250 XP.';
     }
     return `Basado en tu perfil actual (Nivel ${this.userLevel()} - ${this.specialization().title}): te recomiendo continuar con tu curso asignado en la pestaña whoami y resolver ejercicios prácticos para obtener experiencia acelerada.`;
   }
@@ -1309,10 +1198,9 @@ readonly currentStudentEmail = computed(() => {
     const fromChallenges = this.solvedChallengesCount() * 100;
     const fromLessons = Math.max(0, this.completedCount() * 25);
     const fromCourses = this.enrollments().filter(e => e.completed_at !== null || e.progress_percent === 100).length * 250;
-    const streakBonus = Math.max(0, this.currentStreak()) * 20;
     const welcomeBonus = 50;
 
-    return Math.max(50, welcomeBonus + fromLessons + fromChallenges + fromCourses + streakBonus);
+    return Math.max(50, welcomeBonus + fromLessons + fromChallenges + fromCourses);
   });
 
   readonly userLevel = computed(() => {
@@ -1429,30 +1317,15 @@ readonly currentStudentEmail = computed(() => {
           level: 'bronze',
           shaFingerprint: 'sha256:7f8a91b2c4e5f6a1',
         },
-        {
-          id: 'streak_fire',
-          title: 'Disciplina & Constancia',
-          category: 'special',
-          icon: 'flame',
-          description: 'Mantuviste una racha de estudio de al menos 5 días.',
-          requirement: 'Racha >= 5 días',
-          targetCount: 5,
-          currentCount: 5,
-          progressPercent: 100,
-          unlocked: true,
-          level: 'silver',
-          shaFingerprint: 'sha256:f5e4d3c2b1a09876',
-        },
       ];
     }
 
     const hasDiag = this.diagnosticCompleted();
     const challenges = this.solvedChallengesCount();
     const codelabCreated = this.codelabCreatedCount();
-    const streak = this.currentStreak();
     const enrollmentsCount = this.enrollments().length;
     const completedCourses = this.completedCount();
-    const studyMins = this.todayStudyMinutes();
+    const studyMins = 0;
     const totalXp = this.totalXp();
     const userLevel = this.userLevel();
 
@@ -1766,7 +1639,7 @@ readonly currentStudentEmail = computed(() => {
         shaFingerprint: 'sha256:golden90quizmaster',
       },
 
-      // 3. Rachas, Nivel, XP y Enfoque Profundo (special)
+      // 3. Nivel, XP y Enfoque Profundo (special)
       {
         id: 'diagnostic_done',
         title: 'Calibración de Nivel',
@@ -1780,48 +1653,6 @@ readonly currentStudentEmail = computed(() => {
         unlocked: hasDiag,
         level: 'silver',
         shaFingerprint: 'sha256:c7d8e9f0a1b2c3',
-      },
-      {
-        id: 'streak_3',
-        title: 'Hábito de Código',
-        category: 'special',
-        icon: 'flame',
-        description: 'Estudiaste durante 3 días consecutivos en la plataforma.',
-        requirement: 'Racha >= 3 días',
-        targetCount: 3,
-        currentCount: Math.min(3, streak),
-        progressPercent: Math.min(100, Math.round((streak / 3) * 100)),
-        unlocked: streak >= 3,
-        level: 'bronze',
-        shaFingerprint: 'sha256:3d3e3f4a5b6c7d8e',
-      },
-      {
-        id: 'streak_fire',
-        title: 'Disciplina de Fuego',
-        category: 'special',
-        icon: 'flame',
-        description: 'Mantuviste una racha de estudio ininterrumpida de al menos 5 días.',
-        requirement: 'Racha >= 5 días',
-        targetCount: 5,
-        currentCount: Math.min(5, streak),
-        progressPercent: Math.min(100, Math.round((streak / 5) * 100)),
-        unlocked: streak >= 5,
-        level: 'silver',
-        shaFingerprint: 'sha256:f5e4d3c2b1a09876',
-      },
-      {
-        id: 'streak_week',
-        title: 'Semana Implacable',
-        category: 'special',
-        icon: 'flame',
-        description: 'Completaste 7 días seguidos de actividad técnica y código sin pausas.',
-        requirement: 'Racha >= 7 días',
-        targetCount: 7,
-        currentCount: Math.min(7, streak),
-        progressPercent: Math.min(100, Math.round((streak / 7) * 100)),
-        unlocked: streak >= 7,
-        level: 'gold',
-        shaFingerprint: 'sha256:7d7d7d7d7d7d7d7d',
       },
       {
         id: 'level_up_3',
@@ -2049,7 +1880,6 @@ readonly currentStudentEmail = computed(() => {
             completedCourses: entry.completedCourses ?? entry.completed_courses_count ?? 0,
             solvedChallenges: entry.solvedChallenges ?? 0,
             avgQuizScore: entry.avgQuizScore ?? entry.average_quiz_score ?? 100,
-            streak: entry.streak ?? 0,
             studyMinutes: entry.studyMinutes ?? 0,
             xp: isMe ? (this.totalXp() || xp) : xp,
             isCurrentUser: isMe,
@@ -2059,7 +1889,7 @@ readonly currentStudentEmail = computed(() => {
     }
 
     // Fallback local en tiempo real excluyendo usuarios fantasma
-    const studentsMap = new Map<string, { name: string; email: string; xp: number; completedCount: number; avgQuiz: number; streak: number }>();
+    const studentsMap = new Map<string, { name: string; email: string; xp: number; completedCount: number; avgQuiz: number }>();
 
     // 1. Estudiante activo en sesión
     const currentUser = this.auth.user();
@@ -2071,7 +1901,6 @@ readonly currentStudentEmail = computed(() => {
         xp: this.totalXp() || 50,
         completedCount: this.completedCount() || 0,
         avgQuiz: 100,
-        streak: this.currentStreak() || 0,
       });
     }
 
@@ -2114,7 +1943,6 @@ readonly currentStudentEmail = computed(() => {
                   xp: studentXp,
                   completedCount: completed,
                   avgQuiz: score,
-                  streak: 1,
                 });
               }
             }
@@ -2172,7 +2000,6 @@ readonly currentStudentEmail = computed(() => {
         specialization: isMe ? this.specialization().title : 'Ingeniería de Software & Arquitectura',
         completedLessons: st.completedCount,
         avgQuizScore: st.avgQuiz,
-        streak: st.streak,
         xp: st.xp,
         isCurrentUser: isMe,
         badgePill: badge,

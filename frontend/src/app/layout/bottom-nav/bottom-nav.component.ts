@@ -1,7 +1,6 @@
 import { Component, inject, computed, signal, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { StreakService } from '../../core/services/streak.service';
 
 @Component({
   selector: 'app-mobile-bottom-nav',
@@ -90,11 +89,6 @@ import { StreakService } from '../../core/services/streak.service';
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
-              @if (studentStreak() > 0) {
-                <span class="tab-badge-streak" [class.is-active]="isStreakActive()">
-                  {{ studentStreak() }}d
-                </span>
-              }
             </div>
             <span class="nav-tab-label">Perfil</span>
           </a>
@@ -248,27 +242,6 @@ import { StreakService } from '../../core/services/streak.service';
         animation: fire-pulse 1.8s infinite ease-in-out;
       }
 
-      .tab-badge-streak {
-        position: absolute;
-        top: -5px;
-        right: -10px;
-        background: rgba(245, 158, 11, 0.2);
-        border: 1px solid rgba(245, 158, 11, 0.4);
-        color: #F59E0B;
-        font-size: 8.5px;
-        font-weight: 700;
-        padding: 0 4px;
-        border-radius: 9999px;
-        line-height: 12px;
-        white-space: nowrap;
-
-        &.is-active {
-          background: rgba(34, 197, 94, 0.15);
-          border-color: rgba(34, 197, 94, 0.35);
-          color: #22c55e;
-        }
-      }
-
       @keyframes fire-pulse {
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.2); }
@@ -284,7 +257,6 @@ import { StreakService } from '../../core/services/streak.service';
 export class MobileBottomNavComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   router = inject(Router);
-  streakService = inject(StreakService);
 
   readonly isByteOpen = signal(false);
 
@@ -332,7 +304,4 @@ export class MobileBottomNavComponent implements OnInit, OnDestroy {
     const user = this.auth.user();
     return user?.role === 'admin' || user?.role === 'instructor';
   });
-
-  readonly studentStreak = computed(() => this.streakService.currentStreak());
-  readonly isStreakActive = computed(() => this.streakService.isStreakActive());
 }

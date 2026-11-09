@@ -91,8 +91,6 @@ class AuthService
                     'password'            => $pending['password'],
                     'role'                => $pending['role'] ?? 'student',
                     'email_verified_at'   => now(),
-                    'current_streak'      => 1,
-                    'max_streak'          => 1,
                     'last_activity_date'  => now()->toDateString(),
                     'today_study_seconds' => 0,
                     'total_study_seconds' => 0,

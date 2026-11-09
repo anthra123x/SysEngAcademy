@@ -63,7 +63,7 @@
     {
       "name": "Mi Perfil",
       "short_name": "Perfil",
-      "description": "Ver progreso, racha y proyectos",
+      "description": "Ver progreso, logros y proyectos",
       "url": "/perfil",
       "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     }

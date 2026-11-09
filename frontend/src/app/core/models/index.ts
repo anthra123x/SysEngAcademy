@@ -6,7 +6,6 @@ export interface User {
   role: 'student' | 'instructor' | 'admin';
   email_verified_at?: string;
   xp?: number;
-  streak?: number;
 }
 
 export interface Category {

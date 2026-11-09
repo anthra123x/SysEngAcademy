@@ -11,7 +11,7 @@ class NotificationTest extends TestCase
 {
     public function test_user_can_fetch_notifications_and_sync_achievements()
     {
-        $user = User::factory()->create(['current_streak' => 3, 'xp' => 500]);
+        $user = User::factory()->create(['xp' => 500]);
 
         $response = $this->actingAs($user)->getJson('/api/notifications');
 

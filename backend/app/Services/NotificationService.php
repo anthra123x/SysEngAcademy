@@ -68,7 +68,6 @@ class NotificationService
             ->distinct('language')
             ->count('language');
 
-        $streak = (int) ($user->current_streak ?? 0);
         $xp = (int) ($user->xp ?? 0);
         $studyMins = (int) round(($user->today_study_seconds ?? 0) / 60);
         $totalStudyMins = (int) round(($user->total_study_seconds ?? 0) / 60);
@@ -90,7 +89,7 @@ class NotificationService
                 $user,
                 'welcome',
                 '🚀 ¡Bienvenido a SysEng Academy!',
-                'Tu entorno de ingeniería está listo. Explora tus rutas de estudio, compila retos en la terminal y mantén tu racha activa.',
+                'Tu entorno de ingeniería está listo. Explora tus rutas de estudio, compila retos en la terminal y sube de nivel con tu experiencia práctica.',
                 ['route' => '/rutas', 'icon' => 'terminal']
             );
         }
@@ -250,29 +249,6 @@ class NotificationService
                 'description' => 'Mantienes un promedio sobresaliente igual o superior al 90% en quizzes.',
                 'icon'        => 'medal',
                 'unlocked'    => $quizzesCount >= 3 && $avgQuizScore >= 90.0,
-            ],
-
-            // Rachas & Constancia
-            [
-                'id'          => 'streak_3',
-                'title'       => 'Hábito de Código',
-                'description' => 'Estudiaste durante 3 días consecutivos sin perder el ritmo.',
-                'icon'        => 'flame',
-                'unlocked'    => $streak >= 3,
-            ],
-            [
-                'id'          => 'streak_fire',
-                'title'       => 'Disciplina de Fuego',
-                'description' => 'Mantuviste una racha de estudio ininterrumpida de al menos 5 días.',
-                'icon'        => 'flame',
-                'unlocked'    => $streak >= 5,
-            ],
-            [
-                'id'          => 'streak_week',
-                'title'       => 'Semana Implacable',
-                'description' => 'Completaste 7 días seguidos de actividad técnica y código.',
-                'icon'        => 'flame',
-                'unlocked'    => $streak >= 7,
             ],
 
             // Niveles y XP

@@ -90,12 +90,12 @@ export class OnboardingComponent implements OnInit {
       badge: 'COMPONENTE 01 // NAVEGACIÓN Y COCKPIT',
       title: 'Inicio & Cockpit Central',
       subtitle: 'Tu base de operaciones diaria en SysEng Academy',
-      description: 'Desde aquí tienes acceso inmediato a tu racha de estudio diaria (🔥), notificaciones sin leer, tus métricas de práctica y la última lección activa recomendada.',
+      description: 'Desde aquí tienes acceso inmediato a tus notificaciones sin leer, tus métricas de práctica, nivel y la última lección activa recomendada.',
       routeLocation: 'Página de Inicio ( / )',
       routeLink: '/',
       highlights: [
         { icon: 'home', title: 'Acceso Directo a tu Lección', desc: 'Retoma de inmediato la materia en la que estabas practicando con un solo clic.' },
-        { icon: 'flame', title: 'Racha de Estudio y Notificaciones', desc: 'Protege tu racha diaria y revisa avisos de logros en la campanita superior.' },
+        { icon: 'bell', title: 'Notificaciones y Logros', desc: 'Revisa avisos de logros y actualizaciones académicas en la campanita superior.' },
         { icon: 'sparkles', title: 'Asistente Byte IA Siempre Listo', desc: 'Tu tutor pedagógico listo para resolver dudas en el momento.' }
       ],
       ctaText: 'Siguiente: Rutas de Aprendizaje →'
@@ -143,19 +143,19 @@ export class OnboardingComponent implements OnInit {
         { icon: 'check-circle', title: 'Batería de Pruebas Automáticas', desc: 'Valida tu lógica al instante con tests unitarios integrados.' },
         { icon: 'bot', title: 'Tutor Socrático Byte IA', desc: 'Respuestas pedagógicas que guían tu razonamiento sin darte la solución masticada.' }
       ],
-      ctaText: 'Siguiente: Perfil & Racha →'
+      ctaText: 'Siguiente: Perfil & Métricas →'
     },
     {
       step: 5,
       badge: 'COMPONENTE 05 // HISTORIAL Y MÉTRICAS',
       title: 'Perfil del Estudiante, Métricas & Logros',
       subtitle: 'Tu expediente de crecimiento como futuro ingeniero',
-      description: 'Monitorea tus horas acumuladas de estudio, tu racha activa, tu nivel y XP, el dictamen diagnóstico de calibración y tu vitrina de insignias desbloqueadas.',
+      description: 'Monitorea tus horas acumuladas de estudio, tu nivel y XP, el dictamen diagnóstico de calibración y tu vitrina de insignias desbloqueadas.',
       routeLocation: 'Perfil del Estudiante ( /perfil )',
       routeLink: '/perfil',
       highlights: [
         { icon: 'user', title: 'Expediente y Nivel XP', desc: 'Sigue tu evolución de Cadete hasta Desarrollador Senior mediante puntos de experiencia.' },
-        { icon: 'flame', title: 'Calendario de Rachas', desc: 'Registra tus días consecutivos de práctica y recupera rachas congeladas.' },
+        { icon: 'award', title: 'Vitrina de Certificaciones', desc: 'Registra tus logros verificados criptográficamente y diplomas alcanzados.' },
         { icon: 'shield', title: 'Dictamen Diagnóstico Guardado', desc: 'Revisa siempre las recomendaciones personalizadas emitidas por la IA.' }
       ],
       ctaText: 'Finalizar Tour y Elegir mi Misión →'

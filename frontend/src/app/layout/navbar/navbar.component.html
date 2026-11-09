@@ -43,30 +43,6 @@
                 <span>Vista Estudiante</span>
               </a>
             }
-            @if (!isTeacher()) {
-              <a routerLink="/perfil"
-                 [queryParams]="canRecoverStreak() ? { tab: 'streak', action: 'recover' } : { tab: 'streak' }"
-                 class="streak-nav-pill"
-                 [class.streak-nav-pill--active]="isStreakActive()"
-                 [class.streak-nav-pill--pending]="isStreakPending()"
-                 [class.streak-nav-pill--recoverable]="canRecoverStreak()"
-                 [class.streak-nav-pill--extinguished]="isStreakExtinguished() && !canRecoverStreak()"
-                 [title]="streakNavTooltip()">
-                <span class="streak-icon-wrap"
-                      [class.is-active]="isStreakActive()"
-                      [class.is-pending]="isStreakPending()"
-                      [class.is-recoverable]="canRecoverStreak()"
-                      [class.is-extinguished]="isStreakExtinguished() && !canRecoverStreak()">
-                  <app-icon name="flame" [size]="13" />
-                </span>
-
-                <span class="streak-nav-count">{{ studentStreak() }}d</span>
-
-                @if (canRecoverStreak()) {
-                  <span class="streak-nav-recover-btn">Recuperar</span>
-                }
-              </a>
-            }
 
             <!-- Campanita de Notificaciones -->
             <div class="notifications-nav-wrap">

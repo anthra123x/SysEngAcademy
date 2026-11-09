@@ -78,7 +78,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: {
       title: 'Mi Perfil de Aprendizaje — SysEng Academy',
-      description: 'Consulta tus rachas de estudio, certificados, retos completados y estadísticas en SysEng Academy.',
+      description: 'Consulta tus horas de estudio, certificados, retos completados y estadísticas en SysEng Academy.',
     }
   },
   {

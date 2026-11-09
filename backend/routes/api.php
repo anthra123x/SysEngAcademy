@@ -15,7 +15,6 @@ use App\Http\Controllers\Api\LearningPathController;
 use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SocialAuthController;
-use App\Http\Controllers\Api\StreakController;
 use App\Http\Controllers\Api\TeacherController;
 use Illuminate\Support\Facades\Route;
 
@@ -85,12 +84,6 @@ Route::post('/code/execute', [CodeExecutionController::class, 'execute'])->middl
 // Protected routes: JWT stateless primero (sin consulta a BD), con
 // fallback a Sanctum para tokens legados / tests.
 Route::middleware('auth:jwt,sanctum')->group(function () {
-    // Telemetría de Racha y Hábito de Estudio (autenticado)
-    Route::post('/user/activity-ping', [StreakController::class, 'ping'])->middleware('throttle:60,1');
-    Route::get('/user/streak', [StreakController::class, 'status']);
-    Route::get('/user/streak/recovery-drill', [StreakController::class, 'recoveryDrill']);
-    Route::post('/user/streak/recover', [StreakController::class, 'recover'])->middleware('throttle:15,1');
-
     // Evaluación asistida por IA (autenticado, rate limited)
     Route::post('/ai/evaluate-challenge', [AiChatController::class, 'evaluateChallenge'])->middleware('throttle:15,1');
     Route::post('/ai/quiz-feedback', [AiChatController::class, 'quizFeedback'])->middleware('throttle:15,1');
@@ -169,6 +162,5 @@ Route::middleware('auth:jwt,sanctum')->group(function () {
         Route::post('/students/{id}/feedback', [TeacherController::class, 'sendFeedback']);
         Route::get('/students/{id}/feedbacks', [TeacherController::class, 'listFeedbacks']);
         Route::post('/send-digest', [TeacherController::class, 'sendProgressDigest']);
-        Route::post('/send-streak-reminders', [TeacherController::class, 'sendStreakReminder']);
     });
 });

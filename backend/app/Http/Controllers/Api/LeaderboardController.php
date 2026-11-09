@@ -12,7 +12,7 @@ class LeaderboardController extends Controller
 {
     /**
      * Retorna el ranking global de estudiantes reales en tiempo real según XP,
-     * cursos completados, lecciones aprobadas, racha y telemetría de estudio.
+     * cursos completados, lecciones aprobadas y telemetría de estudio.
      * Excluye cuentas administrativas, docentes y usuarios fantasma/pruebas.
      */
     public function index(Request $request): JsonResponse
@@ -61,7 +61,6 @@ class LeaderboardController extends Controller
                 return $p->completed_at && $p->lesson && in_array($p->lesson->type, ['practice', 'challenge', 'interactive']);
             })->count();
 
-            $streak = max(0, $user->current_streak ?: 0);
             $totalStudyMins = (int) round(((int) ($user->total_study_seconds ?: 0)) / 60);
 
             // Cálculo unificado canónico mediante XpService
@@ -101,7 +100,6 @@ class LeaderboardController extends Controller
                 'completedCourses'  => $completedCourses,
                 'solvedChallenges'  => $solvedChallenges,
                 'avgQuizScore'      => $avgQuizScore,
-                'streak'            => $streak,
                 'studyMinutes'      => $totalStudyMins,
                 'xp'                => $xp,
                 'isCurrentUser'     => $isCurrent,

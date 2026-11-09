@@ -284,7 +284,7 @@ export class AiCompanionComponent implements OnInit, OnDestroy, AfterViewChecked
         } else if (url.includes('/leccion')) {
           contextualTip = { icon: 'code', text: 'Si te bloqueas en este ejercicio, haz clic en mí para darte pistas.', tag: 'Tutor en Vivo' };
         } else if (url.includes('/perfil')) {
-          contextualTip = { icon: 'award', text: '¡Revisa tu racha y nivel! La constancia hace al ingeniero.', tag: 'Progreso SysEng' };
+          contextualTip = { icon: 'award', text: '¡Revisa tu nivel y XP! La constancia hace al ingeniero.', tag: 'Progreso SysEng' };
         }
         this.speakTip(contextualTip, 9000);
       }
@@ -624,7 +624,7 @@ def tiene_ciclo(grafo: dict, inicio: str) -> bool:
 |:---|:---|:---|
 | [CRITICO] | > 7 días sin actividad en IDE | Mensaje socrático de bienvenida con reto nivel 1 |
 | [WARN] | Fallos repetidos (>3) en mismo Quiz | Desbloquear pista guiada automática |
-| [OK] | Avance continuo semanal | Insignia de racha en perfil |
+| [OK] | Avance continuo semanal | Insignia de constancia en perfil |
 
 ### 3 Tácticas Pedagógicas de Choque
 1. **Descomposición Atómica**: Dividir la lección con fricción en 2 submódulos de 5 minutos.

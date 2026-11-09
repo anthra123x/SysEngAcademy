@@ -218,8 +218,8 @@
           </tr>
           <tr>
             <td class="stat-card">
-              <div class="stat-num" style="color: #FF9D33;">🔥 {{ $streakDays ?? 5 }} D</div>
-              <div class="stat-lbl">Racha Consecutiva</div>
+              <div class="stat-num" style="color: #38BDF8;">⏱️ {{ $studyMinutes ?? 45 }} M</div>
+              <div class="stat-lbl">Tiempo de Estudio</div>
             </td>
             <td class="stat-card">
               <div class="stat-num">{{ $passedQuizzes ?? 2 }}</div>

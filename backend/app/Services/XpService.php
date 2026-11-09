@@ -38,18 +38,13 @@ class XpService
     public const COURSE_COMPLETED_XP = 250;
 
     /**
-     * Puntos por día de racha activa de estudio.
-     */
-    public const STREAK_DAY_XP = 20;
-
-    /**
      * Puntos por cada bloque de 10 minutos de estudio efectivo medido por telemetría.
      */
     public const STUDY_10MIN_XP = 5;
 
     /**
      * Calcula los puntos de experiencia (XP) reales y verificados de un estudiante
-     * consolidando su actividad en lecciones, retos, quizzes, cursos, racha y méritos docentes.
+     * consolidando su actividad en lecciones, retos, quizzes, cursos y méritos docentes.
      */
     public static function calculateEarnedXp(User $user): int
     {
@@ -81,10 +76,6 @@ class XpService
             ->count();
         $coursesXp = $completedCoursesCount * self::COURSE_COMPLETED_XP;
 
-        // Bonificación por racha activa
-        $streakDays = max(0, (int) ($user->current_streak ?: 0));
-        $streakXp = $streakDays * self::STREAK_DAY_XP;
-
         // Telemetría de tiempo de estudio efectivo (5 XP cada 10 minutos)
         $totalStudyMins = (int) round(((int) ($user->total_study_seconds ?: 0)) / 60);
         $studyXp = (int) floor($totalStudyMins / 10) * self::STUDY_10MIN_XP;
@@ -92,7 +83,7 @@ class XpService
         // Modificadores docentes (elogios o llamados de atención con impacto de XP)
         $feedbackXp = (int) StudentFeedback::where('student_id', $user->id)->sum('xp_impact');
 
-        $total = self::BASE_WELCOME_XP + $regularLessonsXp + $challengesXp + $quizzesXp + $coursesXp + $streakXp + $studyXp + $feedbackXp;
+        $total = self::BASE_WELCOME_XP + $regularLessonsXp + $challengesXp + $quizzesXp + $coursesXp + $studyXp + $feedbackXp;
 
         // El XP nunca debe ser menor al bono de bienvenida base
         return max(self::BASE_WELCOME_XP, $total);
