@@ -338,7 +338,7 @@
     .lesson-player-page {
       position: relative;
       min-height: calc(100vh - 60px);
-      background: var(--bg-base);
+      background: transparent;
       overflow-x: hidden;
       padding-top: var(--sp-6);
       padding-bottom: var(--sp-20);

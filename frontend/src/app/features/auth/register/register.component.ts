@@ -269,14 +269,14 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
         display: block;
         width: 100%;
         min-height: 100vh;
-        background: #09090b;
+        background: transparent;
       }
 
       .auth-page {
         min-height: 100vh;
         min-height: 100dvh;
         width: 100%;
-        background: #09090b;
+        background: transparent;
         color: #f4f4f5;
         position: relative;
         overflow-x: hidden;
@@ -284,14 +284,7 @@ import { HalftoneVisualComponent } from '../halftone-visual/halftone-visual.comp
 
       /* Subtle grid background covering entire screen */
       .grid-lines {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        z-index: 0;
-        background-size: 48px 48px;
-        background-image: 
-          linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        display: none;
       }
 
       /* Fullscreen Split Layout: 50% left, 50% right */

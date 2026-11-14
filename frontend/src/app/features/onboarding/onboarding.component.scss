@@ -7,7 +7,7 @@
 :host {
   display: block;
   min-height: calc(100vh - 65px);
-  background: var(--bg-base, #09090b);
+  background: transparent;
   color: var(--text-primary, #F8FAFC);
   font-family: var(--font-sans, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
 }

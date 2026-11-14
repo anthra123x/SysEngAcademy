@@ -13,9 +13,7 @@ import { AnalyticsService } from './core/services/analytics.service';
   selector: 'app-root',
   imports: [RouterOutlet, NavbarComponent, MobileBottomNavComponent, AiCompanionComponent, GlobalToastComponent, AsciiBackgroundComponent],
   template: `
-    @if (!isClassroomMode()) {
-      <app-ascii-background />
-    }
+    <app-ascii-background />
     @if (!isClassroomMode() && !isAuthPage() && !isOnboardingMode()) {
       <app-navbar />
     }

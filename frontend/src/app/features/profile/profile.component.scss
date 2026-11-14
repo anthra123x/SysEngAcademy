@@ -2,7 +2,7 @@
       padding: calc(var(--header-height, 64px) + var(--sp-6)) 0 var(--sp-12);
       min-height: 100vh;
       min-height: 100dvh;
-      background: var(--bg-base);
+      background: transparent;
 
       @media (max-width: 768px) {
         padding-top: var(--sp-4);

@@ -118,7 +118,7 @@ import { AuthService } from '../../../core/services/auth.service';
       align-items: center;
       justify-content: center;
       padding: var(--sp-6, 1.5rem) var(--sp-4, 1rem);
-      background: var(--bg-base, #09090b);
+      background: transparent;
     }
 
     .verify-card {
