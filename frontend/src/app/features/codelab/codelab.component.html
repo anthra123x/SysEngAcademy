@@ -788,49 +788,82 @@
   @if (activeCommentsChallenge(); as activeChallenge) {
     <div class="codelab-modal-backdrop" (click)="closeCommentsModal()">
       <div class="codelab-modal codelab-modal--comments" (click)="$event.stopPropagation()">
-        <div class="codelab-modal__header">
-          <div class="modal-title-wrap">
-            <span class="prompt-sym">&gt;</span>
-            <h2 class="modal-challenge-title">{{ activeChallenge.title }}</h2>
-            <div class="modal-meta-pills">
-              <span class="badge-difficulty" [ngClass]="'badge-difficulty--' + activeChallenge.difficulty">
-                <span class="dot"></span>
-                {{ activeChallenge.difficulty }}
-              </span>
-              <span class="badge-tag">{{ activeChallenge.acceptanceRate }}% éxito</span>
-              <span class="badge-tag badge-tag--xp">+{{ activeChallenge.xp }} XP</span>
-            </div>
+        <!-- Terminal Top Bar -->
+        <div class="modal-terminal-bar">
+          <div class="terminal-bar-left">
+            <span class="terminal-dot dot-red"></span>
+            <span class="terminal-dot dot-yellow"></span>
+            <span class="terminal-dot dot-green"></span>
+            <span class="terminal-bar-title">// DISCUSION &amp; APORTES TECNICOS</span>
           </div>
+          <button class="btn-close-modal" (click)="closeCommentsModal()" type="button" aria-label="Cerrar modal">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
 
-          <button class="btn-close-modal" (click)="closeCommentsModal()" type="button" aria-label="Cerrar modal">✕</button>
+        <!-- Challenge Header / Context Banner -->
+        <div class="comments-modal-header">
+          <div class="modal-challenge-heading">
+            <span class="terminal-prompt">&gt;</span>
+            <h2 class="modal-challenge-title">{{ activeChallenge.title }}</h2>
+          </div>
+          <div class="modal-meta-pills">
+            <span class="badge-difficulty" [ngClass]="'badge-difficulty--' + activeChallenge.difficulty">
+              <span class="dot"></span>
+              {{ activeChallenge.difficulty }}
+            </span>
+            <span class="badge-tag">{{ activeChallenge.acceptanceRate }}% éxito</span>
+            <span class="badge-tag badge-tag--xp">+{{ activeChallenge.xp }} XP</span>
+            @if (activeChallenge.isOfficial) {
+              <span class="badge-origin badge-origin--official">OFICIAL</span>
+            } @else if (activeChallenge.author.isCurrentUser) {
+              <span class="badge-origin badge-origin--user">TU RETO</span>
+            }
+          </div>
         </div>
 
         <div class="codelab-modal__body comments-modal-body">
-          <!-- Input Form -->
-          <div class="new-comment-box">
+          <!-- Input Form: Terminal Box -->
+          <div class="new-comment-terminal">
+            <div class="comment-terminal-header">
+              <span class="terminal-label">
+                <span class="accent-char">$</span> nuevo_aporte
+              </span>
+              <span class="terminal-hint">Complejidad O(N), enfoque o dudas</span>
+            </div>
+
             <textarea
               class="comment-textarea"
               [(ngModel)]="newCommentContent"
               rows="3"
-              placeholder="Escribe tu reflexión, técnica usada o pregunta..."
+              placeholder="Explica tu enfoque algorítmico, complejidad O(...) o formula una duda técnica..."
             ></textarea>
 
-            <input
-              type="text"
-              class="comment-snippet-input"
-              [(ngModel)]="newCommentSnippet"
-              placeholder="Snippet clave opcional (ej: curr.left, curr.right = curr.right, curr.left)"
-            />
+            <div class="snippet-input-row">
+              <span class="snippet-prefix">code:</span>
+              <input
+                type="text"
+                class="comment-snippet-input"
+                [(ngModel)]="newCommentSnippet"
+                placeholder="Snippet clave opcional (ej: if (!root) return null; swap(l, r);)"
+              />
+            </div>
 
             <div class="new-comment-actions">
-              <span class="char-count">{{ newCommentContent().length }}/2000</span>
+              <span class="char-count" [class.char-count--warn]="newCommentContent().length > 1800">
+                {{ newCommentContent().length }}/2000
+              </span>
               <button
-                class="btn btn-sm btn-primary"
+                class="btn-submit-comment"
                 (click)="submitComment()"
                 [disabled]="newCommentContent().trim().length < 3 || isSubmittingComment()"
                 type="button"
               >
-                {{ isSubmittingComment() ? 'Publicando...' : 'Comentar (+15 XP)' }}
+                @if (isSubmittingComment()) {
+                  <span>Publicando...</span>
+                } @else {
+                  <span>[ Publicar Aporte <strong class="xp-tag">+15 XP</strong> ]</span>
+                }
               </button>
             </div>
           </div>
@@ -838,14 +871,31 @@
           <!-- Feed de Comentarios -->
           <div class="comments-feed-section">
             <div class="feed-header">
-              <h4>Aportes de la Comunidad ({{ commentsList().length }})</h4>
+              <div class="feed-title">
+                <span class="feed-prompt">//</span>
+                <span>APORTES DE LA COMUNIDAD</span>
+                <span class="feed-count">[{{ commentsList().length }}]</span>
+              </div>
             </div>
 
             @if (isLoadingComments()) {
-              <div class="comments-loading">Cargando aportes...</div>
+              <div class="comments-loading">
+                <span class="loading-cursor">_</span> Cargando aportes registrados...
+              </div>
             } @else if (commentsList().length === 0) {
               <div class="comments-empty">
-                <p>Aún no hay comentarios en este reto. ¡Sé el primero en compartir tu enfoque!</p>
+                <div class="empty-terminal-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </div>
+                <div class="empty-title">Aún no hay aportes en este reto</div>
+                <p class="empty-desc">
+                  Sé el primero en compartir tu enfoque, análisis asintótico o iniciar una discusión técnica.
+                </p>
+                <div class="empty-hint">
+                  <span class="hint-bullet">•</span> Tu aporte verificado te otorga <strong>+15 XP</strong>
+                </div>
               </div>
             } @else {
               <div class="comments-list">
@@ -853,8 +903,15 @@
                   <div class="comment-item">
                     <div class="comment-item__header">
                       <div class="comment-author-meta">
+                        <div class="author-avatar-cli" [class.author-avatar-cli--ai]="comment.author.isAi">
+                          {{ comment.author.isAi ? 'AI' : (comment.author.username.charAt(0) | uppercase) }}
+                        </div>
                         <span class="comment-author-name">&#64;{{ comment.author.username }}</span>
-                        <span class="comment-author-role">{{ comment.author.isAi ? 'Byte AI' : comment.author.role }}</span>
+                        @if (comment.author.isAi) {
+                          <span class="badge-role badge-role--ai">Byte AI</span>
+                        } @else if (comment.author.role) {
+                          <span class="badge-role">{{ comment.author.role }}</span>
+                        }
                       </div>
                       <span class="comment-time">{{ comment.createdAt }}</span>
                     </div>
@@ -862,7 +919,12 @@
                     <p class="comment-content">{{ comment.content }}</p>
 
                     @if (comment.codeSnippet) {
-                      <pre class="comment-code-snippet"><code>{{ comment.codeSnippet }}</code></pre>
+                      <div class="comment-code-block">
+                        <div class="code-block-header">
+                          <span class="file-tag">// snippet</span>
+                        </div>
+                        <pre><code>{{ comment.codeSnippet }}</code></pre>
+                      </div>
                     }
                   </div>
                 }
@@ -872,10 +934,15 @@
         </div>
 
         <div class="codelab-modal__footer comments-modal-footer">
-          <button class="btn btn-outline" (click)="closeCommentsModal()" type="button">Cerrar</button>
-          <button class="btn btn-primary" (click)="openSolver(activeChallenge); closeCommentsModal()" type="button">
-            <span>Abrir en el Editor</span>
-          </button>
+          <div class="footer-hint">
+            <span class="key-pill">ESC</span> para cerrar
+          </div>
+          <div class="footer-buttons">
+            <button class="btn btn-outline" (click)="closeCommentsModal()" type="button">[ Cerrar ]</button>
+            <button class="btn btn-primary" (click)="openSolver(activeChallenge); closeCommentsModal()" type="button">
+              <span>[ Abrir en Solver → ]</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

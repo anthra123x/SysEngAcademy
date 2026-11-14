@@ -78,12 +78,18 @@ export class CodelabComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Hotkey: CTRL+K or CMD+K focuses search
+  // Hotkey: CTRL+K or CMD+K focuses search, ESC closes modals
   @HostListener('window:keydown', ['$event'])
   handleKeyboardShortcut(event: KeyboardEvent): void {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
       this.searchInputRef?.nativeElement.focus();
+    } else if (event.key === 'Escape') {
+      if (this.activeCommentsChallenge()) {
+        this.closeCommentsModal();
+      } else if (this.isCreateModalOpen()) {
+        this.closeCreateModal();
+      }
     }
   }
 
