@@ -250,7 +250,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       position: relative;
       min-height: 100vh;
       min-height: 100dvh;
-      background: var(--bg-base);
+      background: transparent;
       overflow-x: hidden;
       padding-top: calc(var(--header-height, 64px) + var(--sp-6));
       padding-bottom: calc(var(--bottom-nav-height, 60px) + 36px);

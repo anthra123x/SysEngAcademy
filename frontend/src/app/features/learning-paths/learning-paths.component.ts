@@ -83,7 +83,7 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
       position: relative;
       min-height: 100vh;
       min-height: 100dvh;
-      background: var(--bg-base);
+      background: transparent;
       overflow-x: hidden;
     }
 

@@ -4,14 +4,18 @@ import { NavbarComponent } from './layout/navbar/navbar.component';
 import { MobileBottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
 import { AiCompanionComponent } from './features/ai-companion/ai-companion.component';
 import { GlobalToastComponent } from './shared/components/global-toast.component';
+import { AsciiBackgroundComponent } from './shared/components/ascii-background.component';
 import { AuthService } from './core/services/auth.service';
 import { SeoService } from './core/services/seo.service';
 import { AnalyticsService } from './core/services/analytics.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavbarComponent, MobileBottomNavComponent, AiCompanionComponent, GlobalToastComponent],
+  imports: [RouterOutlet, NavbarComponent, MobileBottomNavComponent, AiCompanionComponent, GlobalToastComponent, AsciiBackgroundComponent],
   template: `
+    @if (!isClassroomMode()) {
+      <app-ascii-background />
+    }
     @if (!isClassroomMode() && !isAuthPage() && !isOnboardingMode()) {
       <app-navbar />
     }
@@ -28,6 +32,9 @@ import { AnalyticsService } from './core/services/analytics.service';
   `,
   styles: [`
     main {
+      position: relative;
+      z-index: 1;
+      background: transparent;
       min-height: 100vh;
       min-height: 100dvh;
       &.classroom-mode,
