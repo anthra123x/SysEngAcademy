@@ -61,6 +61,7 @@ export class CodelabSolverComponent implements OnInit, AfterViewInit, OnDestroy 
   readonly selectedLang = signal<string>('python');
   readonly activeLeftTab = signal<'enunciado' | 'soluciones'>('enunciado');
   readonly activeConsoleTab = signal<'testcases' | 'salida'>('testcases');
+  readonly selectedTestCaseIndex = signal<number>(0);
 
   readonly isRunning = signal<boolean>(false);
   readonly executionResult = signal<CodeExecutionResponse | undefined>(undefined);
