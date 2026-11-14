@@ -394,13 +394,17 @@
       <div class="catalog-with-sidebar-grid">
         <!-- Main Catalog Rows (Left Column) -->
         <div class="catalog-main-col">
-          <!-- Table Header -->
-          <div class="table-header-row">
-            <div class="col-status">ESTADO</div>
-            <div class="col-title">TÍTULO DEL DESAFÍO</div>
-            <div class="col-difficulty">DIFICULTAD</div>
-            <div class="col-author">AUTOR</div>
-            <div class="col-actions">ACCIÓN</div>
+          <!-- Catalog Header Bar -->
+          <div class="catalog-header-bar">
+            <div class="catalog-header-bar__left">
+              <span class="prompt-sym">$</span>
+              <span class="catalog-title">RETOS DISPONIBLES</span>
+              <span class="catalog-count-pill">{{ challenges().length }}</span>
+            </div>
+            <div class="catalog-header-bar__right">
+              <span class="catalog-legend-item"><span class="legend-dot legend-dot--solved"></span> Resuelto</span>
+              <span class="catalog-legend-item"><span class="legend-dot legend-dot--pending"></span> Pendiente</span>
+            </div>
           </div>
 
           <!-- Empty State -->
@@ -417,95 +421,117 @@
           <div class="challenge-rows-list">
             @for (item of challenges(); track item.id) {
               <article class="challenge-row" [class.is-solved]="item.status === 'solved'">
-                <!-- Status Col -->
-                <div class="row-col col-status">
+                <!-- Status Indicator (Left) -->
+                <div class="row-status">
                   @if (item.status === 'solved') {
-                    <span class="status-pill status-pill--solved" title="Resuelto">✓</span>
+                    <span class="status-indicator status-indicator--solved" title="Desafío Resuelto">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </span>
                   } @else if (item.status === 'my_creation') {
-                    <span class="status-pill status-pill--creation" title="Tu Creación">★</span>
+                    <span class="status-indicator status-indicator--creation" title="Tu Reto Publicado">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                    </span>
                   } @else {
-                    <span class="status-pill status-pill--pending" title="Pendiente">○</span>
+                    <span class="status-indicator status-indicator--pending" title="Pendiente">
+                      <span class="status-dot"></span>
+                    </span>
                   }
                 </div>
 
-                <!-- Title & Tags Col -->
-                <div class="row-col col-title">
-                  <div class="challenge-title-group">
-                    <h3 class="challenge-title" (click)="openSolver(item)" [title]="item.title">
-                      {{ item.title }}
-                    </h3>
-                    @if (item.isOfficial) {
-                      <span class="origin-badge origin-badge--official">OFICIAL</span>
-                    }
-                    @if (item.author.isCurrentUser) {
-                      <span class="origin-badge origin-badge--user">TU RETO</span>
-                    }
-                  </div>
-
-                  <p class="challenge-desc-snippet">{{ item.description }}</p>
-
-                  <div class="challenge-tags-row">
-                    @for (t of item.tags.slice(0, 2); track t) {
-                      <span class="tag-pill">{{ t }}</span>
-                    }
-                    @if (item.languages && item.languages.length > 0) {
-                      <span class="tag-pill tag-pill--lang">{{ item.languages[0] }}</span>
-                      @if (item.languages.length > 1) {
-                        <span class="tag-pill tag-pill--more">+{{ item.languages.length - 1 }}</span>
+                <!-- Main Content Body (Center) -->
+                <div class="row-body">
+                  <!-- Row 1: Title & Main Specs -->
+                  <div class="row-header">
+                    <div class="title-group">
+                      <h3 class="challenge-title" (click)="openSolver(item)" [title]="item.title">
+                        {{ item.title }}
+                      </h3>
+                      @if (item.isOfficial) {
+                        <span class="origin-tag origin-tag--official">OFICIAL</span>
                       }
-                    }
-                  </div>
-                </div>
+                      @if (item.author.isCurrentUser) {
+                        <span class="origin-tag origin-tag--user">TU RETO</span>
+                      }
+                    </div>
 
-                <!-- Difficulty Col -->
-                <div class="row-col col-difficulty">
-                  <span class="badge-difficulty" [ngClass]="'badge-difficulty--' + item.difficulty">
-                    <span class="dot"></span>
-                    {{ item.difficulty === 'facil' ? 'Fácil' : item.difficulty === 'media' ? 'Media' : item.difficulty === 'dificil' ? 'Difícil' : 'Hardcore' }}
-                  </span>
-                  <span class="acceptance-text">{{ item.acceptanceRate }}% éxito</span>
-                </div>
-
-                <!-- Author Col -->
-                <div class="row-col col-author">
-                  <div class="author-avatar-sm" [class.author-avatar-sm--official]="item.isOfficial" [class.author-avatar-sm--ai]="item.author.isAi || item.author.username === 'byte_ai'">
-                    @if (item.author.isAi || item.author.username === 'byte_ai') {
-                      <span>AI</span>
-                    } @else if (item.isOfficial) {
-                      <span>★</span>
-                    } @else {
-                      {{ item.author.avatarInitial || item.author.name[0] }}
-                    }
+                    <div class="header-badges">
+                      <span class="badge-difficulty" [ngClass]="'badge-difficulty--' + item.difficulty">
+                        <span class="dot"></span>
+                        {{ item.difficulty === 'facil' ? 'Fácil' : item.difficulty === 'media' ? 'Media' : item.difficulty === 'dificil' ? 'Difícil' : 'Hardcore' }}
+                      </span>
+                      <span class="badge-xp">+{{ item.xp }} XP</span>
+                    </div>
                   </div>
-                  <div class="author-meta-block">
-                    <span class="author-handle">&#64;{{ item.author.username }}</span>
-                    <span class="author-subtext">
-                      {{ (item.author.isAi || item.author.username === 'byte_ai') ? 'Byte AI' : (item.isOfficial ? 'Docente' : item.author.role) }}
+
+                  <!-- Row 2: Description Snippet -->
+                  <p class="challenge-snippet">{{ item.description }}</p>
+
+                  <!-- Row 3: Metadata Footer -->
+                  <div class="row-footer">
+                    <div class="tags-list">
+                      @for (t of item.tags.slice(0, 3); track t) {
+                        <span class="tag-pill">{{ t }}</span>
+                      }
+                      @if (item.languages && item.languages.length > 0) {
+                        <span class="tag-pill tag-pill--lang">{{ item.languages[0] }}</span>
+                        @if (item.languages.length > 1) {
+                          <span class="tag-pill tag-pill--more">+{{ item.languages.length - 1 }}</span>
+                        }
+                      }
+                    </div>
+
+                    <span class="meta-separator" aria-hidden="true">•</span>
+
+                    <span class="meta-stat">
+                      <span class="meta-label">Éxito:</span>
+                      <strong class="meta-value">{{ item.acceptanceRate }}%</strong>
                     </span>
+
+                    <span class="meta-separator" aria-hidden="true">•</span>
+
+                    <div class="author-inline">
+                      <span class="meta-label">por</span>
+                      <span class="author-handle">&#64;{{ item.author.username }}</span>
+                      @if (item.author.isAi || item.author.username === 'byte_ai') {
+                        <span class="author-role-tag">Byte AI</span>
+                      } @else if (item.isOfficial) {
+                        <span class="author-role-tag">Docente</span>
+                      } @else {
+                        <span class="author-role-tag">{{ item.author.role }}</span>
+                      }
+                    </div>
                   </div>
                 </div>
 
-                <!-- Actions Col -->
-                <div class="row-col col-actions">
-                  <div class="metrics-counter-group">
+                <!-- Actions Block (Right) -->
+                <div class="row-actions">
+                  <div class="social-counters">
                     <button
-                      class="btn-vote"
+                      class="btn-stat btn-stat--vote"
                       [class.is-voted]="item.userVoted"
                       (click)="voteChallenge(item, $event)"
                       [title]="item.userVoted ? 'Retirar voto' : 'Apoyar este reto (+1)'"
                       type="button"
                     >
-                      <span class="vote-sym">▲</span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                      </svg>
                       <span>{{ item.upvotes }}</span>
                     </button>
 
                     <button
-                      class="btn-comments"
+                      class="btn-stat btn-stat--comments"
                       (click)="openCommentsModal(item, $event)"
                       [title]="'Comentarios (' + item.commentsCount + ')'"
                       type="button"
                     >
-                      <span class="comment-sym">💬</span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                      </svg>
                       <span>{{ item.commentsCount }}</span>
                     </button>
                   </div>
@@ -513,7 +539,7 @@
                   <button
                     class="btn btn-sm"
                     [class.btn-outline]="item.status === 'solved'"
-                    [class.btn-secondary]="item.status !== 'solved'"
+                    [class.btn-primary]="item.status !== 'solved'"
                     (click)="openSolver(item)"
                     type="button"
                   >
