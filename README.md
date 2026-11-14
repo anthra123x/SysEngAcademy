@@ -93,12 +93,13 @@ POST /api/ai/conversations/{id}/stream   →  text/event-stream (SSE)
 
 | Módulo | Ruta | Responsabilidad | README local |
 |---|---|---|---|
-| Home | `frontend/src/app/features/home` | Vista principal agregada, landing técnica y catálogo rápido | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/home/README.md) |
-| Auth | `frontend/src/app/features/auth` | Login, registro, verificación PIN, recuperación y callbacks OAuth con animación halftone | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/auth/README.md) |
-| Onboarding | `frontend/src/app/features/onboarding` | Inducción interactiva, calibración diagnóstica y recomendación de rutas | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/onboarding/README.md) |
-| AI Companion | `frontend/src/app/features/ai-companion` | Consola interactiva flotante Developer CLI Drawer (`syseng:copilot`) | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/ai-companion/README.md) |
-| Perfil | `frontend/src/app/features/profile` | Panel de control de estudiante, logros, XP y clasificación sin rachas | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/features/profile/README.md) |
-| Layout | `frontend/src/app/layout` | Encabezado global (Navbar), barra móvil (BottomNav) y pie de página | [README local](file:///home/omicron/Documentos/ariscourse/frontend/src/app/layout/README.md) |
+| Home | `frontend/src/app/features/home` | Vista principal agregada, landing técnica y catálogo rápido | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/features/home/README.md) |
+| Auth | `frontend/src/app/features/auth` | Login, registro, verificación PIN, recuperación y callbacks OAuth con animación halftone | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/features/auth/README.md) |
+| Onboarding | `frontend/src/app/features/onboarding` | Inducción interactiva, calibración diagnóstica y recomendación de rutas | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/features/onboarding/README.md) |
+| AI Companion | `frontend/src/app/features/ai-companion` | Consola interactiva flotante Developer CLI Drawer (`syseng:copilot`) | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/features/ai-companion/README.md) |
+| Perfil | `frontend/src/app/features/profile` | Panel de control de estudiante, logros, XP y clasificación sin rachas | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/features/profile/README.md) |
+| CodeLab | `frontend/src/app/features/codelab` | Arena de retos de programación, solver con CodeMirror, ejecución multilingüe y ranking | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/features/codelab/README.md) |
+| Layout | `frontend/src/app/layout` | Encabezado global (Navbar), barra móvil (BottomNav) y pie de página | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/layout/README.md) |
 
 ## Testing
 
