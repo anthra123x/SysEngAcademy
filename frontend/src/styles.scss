@@ -113,7 +113,7 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
-  overflow-x: hidden;
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -125,7 +125,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
   min-height: 100vh;
   min-height: 100dvh;

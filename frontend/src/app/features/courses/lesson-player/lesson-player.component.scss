@@ -394,7 +394,7 @@
       position: relative;
       min-height: calc(100vh - 52px);
       background: transparent;
-      overflow-x: hidden;
+      overflow-x: clip;
       padding-top: var(--sp-6);
       padding-bottom: var(--sp-20);
     }
@@ -545,7 +545,7 @@
       grid-template-columns: minmax(0, 1fr) 320px;
       gap: var(--sp-8);
       align-items: start;
-      animation: fade-up 0.4s 0.05s ease both;
+      animation: fade-in 0.3s ease both;
 
       @media (max-width: 1024px) {
         grid-template-columns: 1fr;
@@ -1335,15 +1335,24 @@
 
     // === Sidebar ===
     .player-side {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
       position: sticky;
-      top: calc(var(--header-height) + var(--sp-4));
-      max-height: calc(100vh - var(--header-height) - var(--sp-8));
+      top: calc(52px + 1rem);
+      max-height: calc(100vh - 52px - 2rem);
+      align-self: start;
+      z-index: 20;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      overflow: visible;
       display: flex;
       flex-direction: column;
+
+      &:not(:has(app-course-curriculum)) {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: var(--sp-4);
+      }
 
       @media (max-width: 1024px) {
         .drawer-mobile-header {
@@ -1389,6 +1398,9 @@
         height: 100vh;
         max-height: 100vh;
         z-index: 2100;
+        background: #111215;
+        border: none;
+        border-left: 1px solid var(--border);
         border-radius: 0;
         box-shadow: -8px 0 32px rgba(0, 0, 0, 0.7);
         display: none;
@@ -1397,6 +1409,7 @@
 
         &.open {
           display: flex;
+          flex-direction: column;
           animation: slideDrawer 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       }

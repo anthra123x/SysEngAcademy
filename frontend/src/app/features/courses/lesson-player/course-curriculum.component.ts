@@ -127,41 +127,100 @@ export interface CurriculumCourse {
     </div>
   `,
   styles: [`
-    :host { display: block; }
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
 
     .panel {
-      position: sticky; top: 1.5rem;
-      display: flex; flex-direction: column;
-      max-height: calc(100vh - 3rem);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 52px - 2rem);
+      height: 100%;
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      background: var(--bg-surface);
-      box-shadow: var(--shadow-md);
+      border-radius: var(--radius-lg, 8px);
+      background: rgba(17, 18, 22, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
       overflow: hidden;
     }
 
     /* ---------- Cabecera ---------- */
-    .panel__head { padding: 1.1rem 1.15rem 1rem; border-bottom: 1px solid var(--border); background: var(--bg-surface-2); }
-    .panel__eyebrow { margin: 0 0 .2rem; font-size: .7rem; letter-spacing: .09em; text-transform: uppercase; color: var(--text-muted); }
-    .panel__title {
-      display: block; font-size: 1.02rem; font-weight: var(--font-semibold);
-      color: var(--text-primary); text-decoration: none; line-height: 1.3;
+    .panel__head {
+      padding: 1.1rem 1.15rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(24, 25, 30, 0.8);
+      flex-shrink: 0;
     }
-    .panel__title:hover { color: var(--primary); }
+    .panel__eyebrow {
+      margin: 0 0 .25rem;
+      font-size: .68rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-family: var(--font-mono, monospace);
+    }
+    .panel__title {
+      display: block;
+      font-size: 0.98rem;
+      font-weight: var(--font-semibold);
+      color: var(--text-primary);
+      text-decoration: none;
+      line-height: 1.35;
+      transition: color var(--transition-fast);
+    }
+    .panel__title:hover {
+      color: var(--accent);
+    }
 
-    .progress { margin-top: .9rem; }
-    .progress__row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .4rem; }
-    .progress__pct { font-size: .78rem; font-weight: var(--font-semibold); color: var(--accent); }
-    .progress__count { font-size: .72rem; color: var(--text-muted); }
-    .progress__track { height: 5px; border-radius: 99px; background: var(--bg-surface-3); overflow: hidden; }
+    .progress { margin-top: .85rem; }
+    .progress__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: .35rem;
+      font-family: var(--font-mono, monospace);
+    }
+    .progress__pct { font-size: .75rem; font-weight: var(--font-semibold); color: var(--accent); }
+    .progress__count { font-size: .7rem; color: var(--text-muted); }
+    .progress__track {
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
     .progress__fill {
-      height: 100%; border-radius: 99px;
-      background: linear-gradient(90deg, var(--primary), var(--accent));
+      height: 100%;
+      border-radius: 99px;
+      background: var(--accent, #22c55e);
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
       transition: width .35s ease;
     }
 
     /* ---------- Secciones ---------- */
-    .panel__body { overflow-y: auto; overscroll-behavior: contain; }
+    .panel__body {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      flex: 1 1 auto;
+      min-height: 0;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+      }
+      &::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.28);
+      }
+    }
 
     .section { border-bottom: 1px solid var(--border); }
     .section:last-child { border-bottom: 0; }
@@ -222,22 +281,22 @@ export interface CurriculumCourse {
       border-left: 3px solid transparent;
       transition: background var(--transition-fast), color var(--transition-fast);
     }
-    .lesson:hover { background: var(--bg-surface-2); color: var(--text-primary); }
+    .lesson:hover { background: rgba(255, 255, 255, 0.04); color: var(--text-primary); }
     .lesson.is-active {
-      background: color-mix(in srgb, var(--primary) 9%, transparent);
-      border-left-color: var(--primary);
+      background: rgba(34, 197, 94, 0.08);
+      border-left-color: var(--accent);
       color: var(--text-primary); font-weight: var(--font-medium);
     }
     .lesson__state {
       display: grid; place-items: center; flex: none;
       width: 1.15rem; height: 1.15rem; border-radius: 50%;
       font-size: .62rem;
-      color: var(--text-muted); background: var(--bg-surface-3);
+      color: var(--text-muted); background: rgba(255, 255, 255, 0.06);
     }
-    .lesson.is-done .lesson__state { color: var(--bg-base); background: var(--accent); font-weight: var(--font-bold); }
-    .lesson.is-active .lesson__state { color: var(--primary); background: color-mix(in srgb, var(--primary) 16%, transparent); }
+    .lesson.is-done .lesson__state { color: #090a0d; background: var(--accent); font-weight: var(--font-bold); }
+    .lesson.is-active .lesson__state { color: var(--accent); background: rgba(34, 197, 94, 0.16); }
     .lesson__title { font-size: .82rem; line-height: 1.35; flex: 1; min-width: 0; }
-    .lesson__time { font-size: .7rem; color: var(--text-muted); flex: none; }
+    .lesson__time { font-size: .7rem; color: var(--text-muted); flex: none; font-family: var(--font-mono, monospace); }
 
     /* Lección Bloqueada */
     .lesson.is-locked {
@@ -302,7 +361,17 @@ export interface CurriculumCourse {
     }
 
     @media (max-width: 1024px) {
-      .panel { position: static; max-height: none; }
+      .panel {
+        position: static;
+        max-height: none;
+        height: auto;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
     }
   `],
 })
