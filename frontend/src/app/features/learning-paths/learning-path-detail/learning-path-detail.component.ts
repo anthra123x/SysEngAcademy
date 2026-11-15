@@ -15,9 +15,6 @@ import { AppIconComponent } from '../../../shared/components/app-icon.component'
       </div>
     } @else if (path()) {
       <div class="path-detail">
-        <!-- Matrix Blueprint Dot Grid Pattern (Pizarra) -->
-        <div class="chalkboard-dots-bg" aria-hidden="true"></div>
-
         <!-- Hero Section -->
         <div class="path-hero">
           <div class="container path-hero__inner">

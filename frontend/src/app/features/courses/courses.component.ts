@@ -12,9 +12,6 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   imports: [RouterLink, FormsModule, SlicePipe, DecimalPipe, AppIconComponent],
   template: `
     <div class="courses-page">
-      <!-- Matrix Blueprint Dot Grid Pattern (Pizarra) -->
-      <div class="chalkboard-dots-bg" aria-hidden="true"></div>
-
       <div class="container courses-container">
         <div class="courses-layout">
           <!-- Mobile Filters Trigger -->

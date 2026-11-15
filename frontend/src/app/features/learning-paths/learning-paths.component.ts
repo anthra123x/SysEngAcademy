@@ -9,9 +9,6 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
   imports: [RouterLink, AppIconComponent],
   template: `
     <div class="paths-page">
-      <!-- Matrix Blueprint Dot Grid Pattern (Pizarra) -->
-      <div class="chalkboard-dots-bg" aria-hidden="true"></div>
-
       <!-- Main Paths Content -->
       <div class="container paths-container">
         @if (loading()) {
