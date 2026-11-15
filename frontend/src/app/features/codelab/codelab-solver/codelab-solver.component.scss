@@ -2,11 +2,18 @@
 // CODELAB SOLVER WORKBENCH — CLI MINIMALIST ENGINEERING DESIGN SYSTEM
 // =============================================================================
 
+:host {
+  display: block;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 .solver-page {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--header-height, 64px));
-  height: calc(100dvh - var(--header-height, 64px));
+  height: 100vh;
+  height: 100dvh;
   background: transparent;
   color: var(--text-primary);
   overflow: hidden;
@@ -14,7 +21,7 @@
   @media (max-width: 768px) {
     height: 100vh;
     height: 100dvh;
-    padding-bottom: var(--bottom-nav-height, 58px);
+    padding-bottom: 0;
   }
 }
 
@@ -191,6 +198,7 @@
   display: grid;
   grid-template-columns: 460px 1fr;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 
   @media (max-width: 1100px) {
@@ -253,10 +261,10 @@
     padding: var(--sp-4);
     position: relative;
     background-image:
-      linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-      linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-      url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22360%22%20height%3D%22360%22%20viewBox%3D%220%200%20360%20360%22%3E%3Cstyle%3Etext%7Bfont-family%3Aui-monospace%2CMenlo%2CMonaco%2CConsolas%2Cmonospace%3Bfont-size%3A11px%3Bfill%3Argba%28255%2C255%2C255%2C0.09%29%3Bfont-weight%3A500%3Bletter-spacing%3A0.5px%7D.acc%7Bfill%3Argba%2834%2C197%2C94%2C0.22%29%3Bfont-weight%3A700%7Dcircle%7Bfill%3Argba%28255%2C255%2C255%2C0.09%29%7D%3C/style%3E%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%2260%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%22120%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%22180%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%22240%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%22300%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%22360%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%220%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%22120%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%22180%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%22240%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%22300%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%22360%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%220%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%2260%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22120%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22180%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22240%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22300%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22360%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%220%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%2260%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%22120%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%22180%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%22240%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%22300%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%22360%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22240%22%20cy%3D%220%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22240%22%20cy%3D%2260%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22240%22%20cy%3D%22120%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22240%22%20cy%3D%22180%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22240%22%20cy%3D%22240%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22240%22%20cy%3D%22300%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22240%22%20cy%3D%22360%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%220%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%2260%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22120%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22180%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22240%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22360%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22360%22%20cy%3D%220%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22360%22%20cy%3D%2260%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22360%22%20cy%3D%22120%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22360%22%20cy%3D%22180%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22360%22%20cy%3D%22240%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22360%22%20cy%3D%22300%22%20r%3D%221.2%22/%3E%3Ccircle%20cx%3D%22360%22%20cy%3D%22360%22%20r%3D%221.2%22/%3E%3Ctext%20x%3D%2222%22%20y%3D%2234%22%3E%7B%20%7D%3C/text%3E%3Ctext%20x%3D%2286%22%20y%3D%2232%22%3E//%3C/text%3E%3Ctext%20x%3D%22148%22%20y%3D%2235%22%20class%3D%22acc%22%3E%3D%26gt%3B%3C/text%3E%3Ctext%20x%3D%22212%22%20y%3D%2234%22%3E%5B%20%5D%3C/text%3E%3Ctext%20x%3D%22268%22%20y%3D%2232%22%3E0x7F%3C/text%3E%3Ctext%20x%3D%22332%22%20y%3D%2235%22%3E%2B%2B%3C/text%3E%3Ctext%20x%3D%2228%22%20y%3D%2294%22%3E%3A%3A%3C/text%3E%3Ctext%20x%3D%2282%22%20y%3D%2292%22%20class%3D%22acc%22%3E%26lt%3B/%26gt%3B%3C/text%3E%3Ctext%20x%3D%22142%22%20y%3D%2295%22%3E0b101%3C/text%3E%3Ctext%20x%3D%22210%22%20y%3D%2292%22%20class%3D%22acc%22%3Efn%28%29%3C/text%3E%3Ctext%20x%3D%22274%22%20y%3D%2294%22%3E%26amp%3B%26amp%3B%3C/text%3E%3Ctext%20x%3D%22334%22%20y%3D%2293%22%3E%21%3D%3C/text%3E%3Ctext%20x%3D%2224%22%20y%3D%22154%22%3E-%26gt%3B%3C/text%3E%3Ctext%20x%3D%2288%22%20y%3D%22155%22%3E%3A%3D%3C/text%3E%3Ctext%20x%3D%22154%22%20y%3D%22152%22%3E~%3C/text%3E%3Ctext%20x%3D%22204%22%20y%3D%22154%22%20class%3D%22acc%22%3Estd%3A%3A%3C/text%3E%3Ctext%20x%3D%22278%22%20y%3D%22152%22%3E%3B%3C/text%3E%3Ctext%20x%3D%22336%22%20y%3D%22154%22%3E%7C%7C%3C/text%3E%3Ctext%20x%3D%2218%22%20y%3D%22214%22%3E%2Aptr%3C/text%3E%3Ctext%20x%3D%2288%22%20y%3D%22212%22%3E%CE%BB%3C/text%3E%3Ctext%20x%3D%22144%22%20y%3D%22215%22%3E%3D%3D%3D%3C/text%3E%3Ctext%20x%3D%22214%22%20y%3D%22214%22%20class%3D%22acc%22%3E%26lt%3BT%26gt%3B%3C/text%3E%3Ctext%20x%3D%22268%22%20y%3D%22212%22%3Enull%3C/text%3E%3Ctext%20x%3D%22334%22%20y%3D%22215%22%20class%3D%22acc%22%3E%26lt%3B%26lt%3B%3C/text%3E%3Ctext%20x%3D%2226%22%20y%3D%22274%22%3E%23%3C/text%3E%3Ctext%20x%3D%2288%22%20y%3D%22272%22%3E01%3C/text%3E%3Ctext%20x%3D%22142%22%20y%3D%22275%22%20class%3D%22acc%22%3E%26amp%3Bmut%3C/text%3E%3Ctext%20x%3D%22206%22%20y%3D%22272%22%3Easync%3C/text%3E%3Ctext%20x%3D%22276%22%20y%3D%22274%22%3E%3F%3F%3C/text%3E%3Ctext%20x%3D%22324%22%20y%3D%22275%22%3E%7B...%7D%3C/text%3E%3Ctext%20x%3D%2224%22%20y%3D%22334%22%3E10%3C/text%3E%3Ctext%20x%3D%2274%22%20y%3D%22332%22%3Estruct%3C/text%3E%3Ctext%20x%3D%22144%22%20y%3D%22335%22%3E0x00%3C/text%3E%3Ctext%20x%3D%22208%22%20y%3D%22332%22%3Eawait%3C/text%3E%3Ctext%20x%3D%22276%22%20y%3D%22334%22%3E%3D%3D%3C/text%3E%3Ctext%20x%3D%22326%22%20y%3D%22332%22%20class%3D%22acc%22%3Evoid%3C/text%3E%3C/svg%3E");
-    background-size: 30px 30px, 30px 30px, 360px 360px;
+      linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+      linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+      url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22360%22%20height%3D%22360%22%20viewBox%3D%220%200%20360%20360%22%3E%20%3Cstyle%3E%20text%7Bfont-family%3Aui-monospace%2CMenlo%2CMonaco%2CConsolas%2Cmonospace%3Bfont-size%3A11px%3Bfill%3Argba(255%2C255%2C255%2C0.035)%3Bfont-weight%3A500%7D%20.acc%7Bfill%3Argba(34%2C197%2C94%2C0.07)%3Bfont-weight%3A700%7D%20circle%7Bfill%3Argba(255%2C255%2C255%2C0.03)%7D%20%3C%2Fstyle%3E%20%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%220%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%220%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22270%22%20cy%3D%220%22%20r%3D%221%22%2F%3E%20%3Ccircle%20cx%3D%220%22%20cy%3D%2290%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2290%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%2290%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22270%22%20cy%3D%2290%22%20r%3D%221%22%2F%3E%20%3Ccircle%20cx%3D%220%22%20cy%3D%22180%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%22180%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%22180%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22270%22%20cy%3D%22180%22%20r%3D%221%22%2F%3E%20%3Ccircle%20cx%3D%220%22%20cy%3D%22270%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%22270%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22180%22%20cy%3D%22270%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22270%22%20cy%3D%22270%22%20r%3D%221%22%2F%3E%20%3Ctext%20x%3D%2224%22%20y%3D%2232%22%3E%7B%20%7D%3C%2Ftext%3E%20%3Ctext%20x%3D%22110%22%20y%3D%2236%22%3E%2F%2F%3C%2Ftext%3E%20%3Ctext%20x%3D%22200%22%20y%3D%2228%22%20class%3D%22acc%22%3E%3D%26gt%3B%3C%2Ftext%3E%20%3Ctext%20x%3D%22290%22%20y%3D%2234%22%3E%5B%20%5D%3C%2Ftext%3E%20%3Ctext%20x%3D%2250%22%20y%3D%2285%22%3E0x7F%3C%2Ftext%3E%20%3Ctext%20x%3D%22145%22%20y%3D%2292%22%3E%3A%3A%3C%2Ftext%3E%20%3Ctext%20x%3D%22235%22%20y%3D%2288%22%20class%3D%22acc%22%3E%26lt%3B%2F%26gt%3B%3C%2Ftext%3E%20%3Ctext%20x%3D%22320%22%20y%3D%2282%22%3E%2B%2B%3C%2Ftext%3E%20%3Ctext%20x%3D%2220%22%20y%3D%22145%22%20class%3D%22acc%22%3Efn()%3C%2Ftext%3E%20%3Ctext%20x%3D%22115%22%20y%3D%22152%22%3E%26amp%3B%26amp%3B%3C%2Ftext%3E%20%3Ctext%20x%3D%22205%22%20y%3D%22142%22%3E!%3D%3C%2Ftext%3E%20%3Ctext%20x%3D%22285%22%20y%3D%22150%22%3E-%26gt%3B%3C%2Ftext%3E%20%3Ctext%20x%3D%2265%22%20y%3D%22205%22%3E%3A%3D%3C%2Ftext%3E%20%3Ctext%20x%3D%22150%22%20y%3D%22212%22%3E~%3C%2Ftext%3E%20%3Ctext%20x%3D%22230%22%20y%3D%22202%22%20class%3D%22acc%22%3Estd%3A%3A%3C%2Ftext%3E%20%3Ctext%20x%3D%22325%22%20y%3D%22210%22%3E%3B%3C%2Ftext%3E%20%3Ctext%20x%3D%2225%22%20y%3D%22265%22%3E%7C%7C%3C%2Ftext%3E%20%3Ctext%20x%3D%22115%22%20y%3D%22275%22%3E*ptr%3C%2Ftext%3E%20%3Ctext%20x%3D%22205%22%20y%3D%22260%22%3E%CE%BB%3C%2Ftext%3E%20%3Ctext%20x%3D%22285%22%20y%3D%22272%22%3E%3D%3D%3D%3C%2Ftext%3E%20%3Ctext%20x%3D%2260%22%20y%3D%22325%22%3E0b101%3C%2Ftext%3E%20%3Ctext%20x%3D%22155%22%20y%3D%22335%22%3Enull%3C%2Ftext%3E%20%3Ctext%20x%3D%22240%22%20y%3D%22326%22%20class%3D%22acc%22%3E%26lt%3B%26lt%3B%3C%2Ftext%3E%20%3Ctext%20x%3D%22325%22%20y%3D%22332%22%3E%23%3C%2Ftext%3E%20%3C%2Fsvg%3E");
+    background-size: 36px 36px, 36px 36px, 360px 360px;
   }
 }
 
