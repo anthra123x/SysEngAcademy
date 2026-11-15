@@ -99,6 +99,7 @@ POST /api/ai/conversations/{id}/stream   →  text/event-stream (SSE)
 | AI Companion | `frontend/src/app/features/ai-companion` | Consola interactiva flotante Developer CLI Drawer (`syseng:copilot`) | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/features/ai-companion/README.md) |
 | Perfil | `frontend/src/app/features/profile` | Panel de control de estudiante, logros, XP y clasificación sin rachas | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/features/profile/README.md) |
 | CodeLab | `frontend/src/app/features/codelab` | Arena de retos de programación, solver con CodeMirror, ejecución multilingüe y ranking | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/features/codelab/README.md) |
+| Cursos | `frontend/src/app/features/courses` | Catálogo de cursos, temarios curriculares y aula interactiva con editor de código | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/features/courses/README.md) |
 | Layout | `frontend/src/app/layout` | Encabezado global (Navbar), barra móvil (BottomNav) y pie de página | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/layout/README.md) |
 | Shared | `frontend/src/app/shared` | Componentes transversales, iconos y fondo interactivo dinámico de símbolos ASCII | [README local](file:///home/omicron/Documentos/sysengacademy/frontend/src/app/shared/README.md) |
 
