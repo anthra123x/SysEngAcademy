@@ -989,7 +989,7 @@
         &--time { color: var(--text-primary); }
         &--speed { color: var(--accent); }
         &--memory { color: var(--text-primary); }
-        &--eff { color: #a855f7; }
+        &--eff { color: var(--accent); }
       }
     }
   }
