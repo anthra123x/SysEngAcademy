@@ -72,8 +72,8 @@ export interface LanguageMeta {
 const macEditorTheme = EditorView.theme(
   {
     '&': {
-      backgroundColor: '#11121d',
-      color: '#f1f5f9',
+      backgroundColor: '#090a0d',
+      color: '#f4f4f5',
       height: '100%',
       fontSize: '14px',
       fontFamily: '"JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, monospace',
@@ -81,20 +81,20 @@ const macEditorTheme = EditorView.theme(
     },
     '.cm-content': {
       padding: '16px 14px 28px 14px',
-      caretColor: '#a855f7',
+      caretColor: '#22c55e',
     },
     '.cm-cursor, .cm-dropCursor': {
-      borderLeftColor: '#a855f7',
+      borderLeftColor: '#22c55e',
       borderLeftWidth: '2px',
     },
     '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-      backgroundColor: 'rgba(168, 85, 247, 0.25) !important',
+      backgroundColor: 'rgba(34, 197, 94, 0.22) !important',
     },
     '.cm-gutters': {
-      backgroundColor: '#11121d',
-      color: '#4e536e',
+      backgroundColor: '#0c0d11',
+      color: '#52525b',
       border: 'none',
-      borderRight: '1px solid rgba(255, 255, 255, 0.04)',
+      borderRight: '1px solid rgba(255, 255, 255, 0.06)',
       paddingLeft: '10px',
       paddingRight: '10px',
       userSelect: 'none',
@@ -107,11 +107,11 @@ const macEditorTheme = EditorView.theme(
       fontSize: '13px',
     },
     '.cm-activeLine': {
-      backgroundColor: 'rgba(255, 255, 255, 0.035)',
+      backgroundColor: 'rgba(255, 255, 255, 0.025)',
     },
     '.cm-activeLineGutter': {
       backgroundColor: 'transparent',
-      color: '#94a3b8',
+      color: '#a1a1aa',
       fontWeight: '600',
     },
     '.cm-scroller': {
@@ -126,23 +126,23 @@ const macEditorTheme = EditorView.theme(
 );
 
 const macHighlightStyle = HighlightStyle.define([
-  { tag: tags.keyword, color: '#c084fc', fontWeight: '600' },
-  { tag: [tags.name, tags.deleted, tags.character, tags.macroName], color: '#fde047' },
+  { tag: tags.keyword, color: '#22c55e', fontWeight: '600' },
+  { tag: [tags.name, tags.deleted, tags.character, tags.macroName], color: '#f4f4f5' },
   { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: '#60a5fa' },
   { tag: [tags.typeName, tags.className, tags.labelName], color: '#38bdf8' },
-  { tag: [tags.color, tags.constant(tags.name), tags.standard(tags.name)], color: '#facc15' },
-  { tag: [tags.definition(tags.name), tags.separator], color: '#e2e8f0' },
-  { tag: [tags.angleBracket, tags.bracket], color: '#94a3b8' },
+  { tag: [tags.color, tags.constant(tags.name), tags.standard(tags.name)], color: '#fbbf24' },
+  { tag: [tags.definition(tags.name), tags.separator], color: '#e4e4e7' },
+  { tag: [tags.angleBracket, tags.bracket], color: '#71717a' },
   { tag: [tags.number, tags.changed, tags.annotation, tags.modifier, tags.self, tags.namespace], color: '#fb923c' },
   { tag: [tags.string, tags.special(tags.string)], color: '#4ade80' },
-  { tag: [tags.meta, tags.comment], color: '#64748b', fontStyle: 'italic' },
+  { tag: [tags.meta, tags.comment], color: '#71717a', fontStyle: 'italic' },
   { tag: tags.strong, fontWeight: 'bold' },
   { tag: tags.emphasis, fontStyle: 'italic' },
   { tag: tags.link, color: '#60a5fa', textDecoration: 'underline' },
-  { tag: tags.atom, color: '#c084fc' },
-  { tag: tags.bool, color: '#c084fc', fontWeight: '600' },
-  { tag: tags.null, color: '#c084fc', fontWeight: '600' },
-  { tag: tags.operator, color: '#e2e8f0' },
+  { tag: tags.atom, color: '#22c55e' },
+  { tag: tags.bool, color: '#22c55e', fontWeight: '600' },
+  { tag: tags.null, color: '#22c55e', fontWeight: '600' },
+  { tag: tags.operator, color: '#e4e4e7' },
   { tag: tags.invalid, color: '#f87171' },
 ]);
 
@@ -354,7 +354,7 @@ export class InteractiveIdeComponent implements AfterViewInit, OnDestroy {
   readonly testing = signal<boolean>(false);
   readonly aiEvaluating = signal<boolean>(false);
 
-  readonly activeTerminalTab = signal<'terminal' | 'tests' | 'ai'>('terminal');
+  readonly activeTerminalTab = signal<'terminal' | 'tests'>('terminal');
   readonly executionResult = signal<CodeExecutionResponse | null>(null);
   readonly aiEvaluation = signal<AiChallengeEvaluation | null>(null);
   readonly toastMessage = signal<string | null>(null);
@@ -746,7 +746,7 @@ git log --oneline
     if (!lid || !code || this.aiEvaluating() || this.running()) return;
 
     this.aiEvaluating.set(true);
-    this.activeTerminalTab.set('ai');
+    this.activeTerminalTab.set('terminal');
 
     const lang = this.activeLangDef().id;
     this.coursesSvc.evaluateChallengeWithAi(lid, code, lang).subscribe({
@@ -797,7 +797,7 @@ git log --oneline
       this.coursesSvc.saveStudentCode(lid, this.code());
     }
     const successMsg = method === 'ai'
-      ? `¡Aprobado con ${score}% por Byte IA! Reto superado.`
+      ? `¡Aprobado con ${score}%! Reto superado.`
       : '¡Pruebas superadas con éxito! Ejercicio aprobado por el Sistema.';
     this.showToast(successMsg);
     this.challengeSolved.emit({
