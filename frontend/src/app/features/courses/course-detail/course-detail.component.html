@@ -619,15 +619,27 @@
     } @else {
       <div class="container" style="padding: var(--sp-20) var(--sp-4); text-align: center; min-height: 60vh; display: flex; align-items: center; justify-content: center;">
         <div class="empty-state-card" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: var(--sp-12); max-width: 520px; width: 100%; box-shadow: var(--shadow-xl);">
-          <div style="margin-bottom: var(--sp-4); display: flex; justify-content: center;">
-            <app-icon name="search" [size]="52" color="var(--text-muted)" />
-          </div>
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--sp-3);">Curso no encontrado</h2>
-          <p style="color: var(--text-secondary); margin-bottom: var(--sp-6); line-height: 1.6;">El curso al que intentas acceder no existe o no está disponible en este momento.</p>
-          <div style="display: flex; gap: var(--sp-3); justify-content: center; flex-wrap: wrap;">
-            <a routerLink="/cursos" class="btn btn-primary">Ver Catálogo de Cursos</a>
-            <a routerLink="/rutas" class="btn btn-outline">Explorar Rutas</a>
-          </div>
+          @if (isServerError()) {
+            <div style="margin-bottom: var(--sp-4); display: flex; justify-content: center;">
+              <app-icon name="alert-triangle" [size]="52" color="#ef4444" />
+            </div>
+            <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--sp-3);">Servidor no disponible</h2>
+            <p style="color: var(--text-secondary); margin-bottom: var(--sp-6); line-height: 1.6;">No fue posible conectar con el servidor backend para cargar el curso (Error 503 / Servicio suspendido o no disponible). Por favor intenta de nuevo.</p>
+            <div style="display: flex; gap: var(--sp-3); justify-content: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary" (click)="reloadCourse()">Reintentar conexión</button>
+              <a routerLink="/cursos" class="btn btn-outline">Ver Catálogo</a>
+            </div>
+          } @else {
+            <div style="margin-bottom: var(--sp-4); display: flex; justify-content: center;">
+              <app-icon name="search" [size]="52" color="var(--text-muted)" />
+            </div>
+            <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin-bottom: var(--sp-3);">Curso no encontrado</h2>
+            <p style="color: var(--text-secondary); margin-bottom: var(--sp-6); line-height: 1.6;">El curso al que intentas acceder no existe o no está disponible en este momento.</p>
+            <div style="display: flex; gap: var(--sp-3); justify-content: center; flex-wrap: wrap;">
+              <a routerLink="/cursos" class="btn btn-primary">Ver Catálogo de Cursos</a>
+              <a routerLink="/rutas" class="btn btn-outline">Explorar Rutas</a>
+            </div>
+          }
         </div>
       </div>
     }

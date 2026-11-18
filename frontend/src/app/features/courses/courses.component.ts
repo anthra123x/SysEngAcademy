@@ -176,6 +176,17 @@ import { AppIconComponent } from '../../shared/components/app-icon.component';
                 <div class="course-card skeleton" style="height:280px;"></div>
               }
             </div>
+          } @else if (isServerError()) {
+            <div class="empty-state error-state">
+              <div class="empty-icon" style="color: #ef4444;">
+                <app-icon name="alert-triangle" [size]="44" color="#ef4444" />
+              </div>
+              <h3>Servidor backend no disponible</h3>
+              <p>No se pudo establecer conexión con el servidor (Error 503 / Servicio no disponible). Verifica el estado del backend e inténtalo de nuevo.</p>
+              <button type="button" class="btn btn-outline btn-sm" style="margin-top: 1rem;" (click)="load()">
+                Reintentar conexión
+              </button>
+            </div>
           } @else if (courses().length === 0) {
             <div class="empty-state">
               <div class="empty-icon">
@@ -840,6 +851,7 @@ export class CoursesComponent implements OnInit {
   courses     = signal<Course[]>([]);
   categories  = signal<Category[]>([]);
   loading     = signal(true);
+  isServerError = signal(false);
   total       = signal(0);
   currentPage = signal(1);
   lastPage    = signal(1);
@@ -864,17 +876,21 @@ export class CoursesComponent implements OnInit {
 
   load() {
     this.loading.set(true);
+    this.isServerError.set(false);
     const params: CourseFilters = { ...this.filters, page: this.currentPage() };
 
     this.coursesSvc.getAll(params).subscribe({
       next: (res: PaginatedResponse<Course> & { meta?: { total: number; last_page: number } }) => {
+        this.isServerError.set(false);
         this.courses.set(res.data ?? []);
         const meta = (res as { meta?: { total: number; last_page: number } }).meta;
         this.total.set(meta?.total ?? res.total ?? (res.data?.length ?? 0));
         this.lastPage.set(meta?.last_page ?? res.last_page ?? 1);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err: any) => {
+        const status = err?.status;
+        this.isServerError.set(status === 503 || status === 502 || status === 504 || status === 0);
         this.courses.set([]);
         this.total.set(0);
         this.loading.set(false);

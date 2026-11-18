@@ -24,6 +24,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
 
   course        = signal<Course | null>(null);
   loading       = signal(true);
+  isServerError = signal(false);
   enrolling     = signal(false);
   openModules   = signal<Set<number>>(new Set());
   activeTab     = signal<'curriculum' | 'forum' | 'reviews'>('curriculum');
@@ -165,9 +166,11 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
       const slug = params.get('slug');
       if (slug) {
         this.loading.set(true);
+        this.isServerError.set(false);
         this.loadReviews(slug);
         this.coursesSvc.getBySlug(slug).subscribe({
           next: (c) => {
+            this.isServerError.set(false);
             this.course.set(c);
             if (this.auth.isAuthenticated() && c && !c.enrolled && c.id) {
               this.coursesSvc.enroll(c.id).subscribe({
@@ -186,7 +189,9 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
               this.openModules.set(new Set<number>(c.modules.map(m => Number(m.id))));
             }
           },
-          error: () => {
+          error: (err: any) => {
+            const status = err?.status;
+            this.isServerError.set(status === 503 || status === 502 || status === 504 || status === 0);
             this.course.set(null);
             this.loading.set(false);
           },
@@ -221,6 +226,25 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
       window.removeEventListener('pageshow', this.progressListener);
       window.removeEventListener('teacher:students-updated', this.progressListener);
     }
+  }
+
+  reloadCourse() {
+    const slug = this.route.snapshot.paramMap.get('slug');
+    if (!slug) return;
+    this.loading.set(true);
+    this.isServerError.set(false);
+    this.coursesSvc.getBySlug(slug).subscribe({
+      next: (c) => {
+        this.course.set(c);
+        this.loading.set(false);
+      },
+      error: (err: any) => {
+        const status = err?.status;
+        this.isServerError.set(status === 503 || status === 502 || status === 504 || status === 0);
+        this.course.set(null);
+        this.loading.set(false);
+      }
+    });
   }
 
   verifyProgressRealtime() {
